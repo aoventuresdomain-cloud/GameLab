@@ -106,3 +106,43 @@ jobs:
           name: holdfast-windows-${{ github.sha }}
           path: build/windows
           retention-days: ${{ github.event_name == 'push' && 30 || 7 }}
+
+  # HF-M1-03: each exported build plays one full run with the bot aura, and any
+  # error in its log fails the job.
+  smoke-web:
+    needs: holdfast
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: holdfast-web-${{ github.sha }}
+          path: build/web
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Play one run in headless Chrome
+        run: |
+          npm install --no-save --no-package-lock playwright-core@1
+          python3 -m http.server 8060 --directory build/web &
+          sleep 1
+          node tools/ci/web_smoke.mjs "http://localhost:8060/index.html?autoplay=1&seed=1" 240
+
+  smoke-windows:
+    needs: holdfast
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: holdfast-windows-${{ github.sha }}
+          path: build/windows
+      - name: Play one run in the Windows build
+        shell: pwsh
+        run: |
+          $log = & build/windows/Holdfast.console.exe --headless -- --autoplay --seed=1 2>&1 | Out-String
+          Write-Output $log
+          if ($LASTEXITCODE -ne 0) { Write-Output "::error::Holdfast exited with $LASTEXITCODE"; exit 1 }
+          if ($log -notmatch 'AUTOPLAY DONE') { Write-Output "::error::no finished run in the log"; exit 1 }
+          if ($log -match '(?m)^(SCRIPT )?ERROR:') { Write-Output "::error::errors in the log"; exit 1 }

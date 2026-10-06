@@ -4,10 +4,16 @@ extends SceneTree
 ##   godot --headless --path <project> -s res://addons/gamelab_kit/testing/run_tests.gd -- <res://dir> [...]
 ##
 ## Finds every test_*.gd under the given folders (recursively), runs each test_*
-## method of each KitTestCase and exits 0 when all pass, 1 otherwise.
+## method of each KitTestCase and exits 0 when all pass, 1 otherwise. Tests run
+## once the tree is up (nodes added to tree.root get _ready), and a test may be a
+## coroutine (await tree.process_frame).
 
 
 func _initialize() -> void:
+	_run.call_deferred()
+
+
+func _run() -> void:
 	var dirs := OS.get_cmdline_user_args()
 	if dirs.is_empty():
 		printerr("run_tests: give at least one res:// folder after --")
@@ -40,7 +46,7 @@ func _initialize() -> void:
 				continue
 			seen[name] = true
 			case._begin_test()
-			case.call(name)
+			await case.call(name)
 			var failures: PackedStringArray = case._end_test()
 			if failures.is_empty():
 				passed += 1
