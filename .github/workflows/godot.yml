@@ -92,14 +92,11 @@ jobs:
           path: reports
           if-no-files-found: ignore
       - name: Export web (single-threaded) and Windows
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
         run: |
           mkdir -p build/web build/windows
           tools/ci/godot.sh --headless --path games/holdfast --export-release "Web" ../../build/web/index.html
-          # GodotSteam goes into the desktop build only (pinned in kit/services/steam/godotsteam.json).
-          python3 tools/fetch_godotsteam.py games/holdfast
-          tools/ci/godot.sh --headless --path games/holdfast --import
+          # GodotSteam is not in the build yet: its releases have no build for Godot 4.6
+          # (HF-M1-05 is blocked on that choice). Without it the Steam service is a no-op.
           tools/ci/godot.sh --headless --path games/holdfast --export-release "Windows Desktop" ../../build/windows/Holdfast.exe
           ls -la build/web build/windows
       # HF-M1-06: what an unsigned macOS export costs. Recorded, never blocking.
