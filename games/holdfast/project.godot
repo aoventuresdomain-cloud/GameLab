@@ -1,6 +1,6 @@
 ; Engine configuration file.
-; Minimal project file so the run UI can be opened and tested. KIT-01 owns the
-; kit addon wiring and the pinned Godot version; merge its settings over this.
+; The Studio Kit is linked in as addons/gamelab_kit by tools/link_kit.py (not
+; committed). The Godot version is pinned in /.godot-version.
 
 config_version=5
 
@@ -16,6 +16,10 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gamelab_kit/plugin.cfg")
 
 [gui]
 

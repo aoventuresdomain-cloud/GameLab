@@ -1,0 +1,122 @@
+{
+  "$id": "gamelab-pack/v0",
+  "title": "GameLab content pack, format v0 (base)",
+  "description": "Base schema every game extends with \"$extends\". A pack is a folder with pack.json (the manifest) and the JSON content files it lists. Packs are data only.",
+  "format_version": 0,
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "manifest": {
+      "type": "object",
+      "required": ["format_version", "id", "name", "version", "files"],
+      "additionalProperties": false,
+      "properties": {
+        "format_version": {"enum": [0]},
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"$ref": "#/$defs/name"},
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "description": {"type": "string"},
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "pattern": "^[a-z0-9_-]+\\.json$"}
+        }
+      }
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "levels": {"type": "array", "items": {"$ref": "#/$defs/level"}},
+        "enemies": {"type": "array", "items": {"$ref": "#/$defs/enemy"}},
+        "towers": {"type": "array", "items": {"$ref": "#/$defs/tower"}},
+        "staff": {"type": "array", "items": {"$ref": "#/$defs/staff"}},
+        "upgrade_nodes": {"type": "array", "items": {"$ref": "#/$defs/upgrade_node"}}
+      }
+    },
+    "level": {
+      "type": "object",
+      "required": ["id", "name", "waves"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"$ref": "#/$defs/name"},
+        "waves": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/wave"}}
+      }
+    },
+    "wave": {
+      "type": "object",
+      "required": ["spawns"],
+      "properties": {
+        "delay": {"type": "number", "minimum": 0},
+        "spawns": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/spawn"}}
+      }
+    },
+    "spawn": {
+      "type": "object",
+      "required": ["enemy", "count"],
+      "properties": {
+        "enemy": {"type": "string", "x-ref": "enemies"},
+        "count": {"type": "integer", "minimum": 1},
+        "interval": {"type": "number", "minimum": 0}
+      }
+    },
+    "enemy": {
+      "type": "object",
+      "required": ["id", "name", "health", "speed"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"$ref": "#/$defs/name"},
+        "health": {"type": "number", "exclusiveMinimum": 0},
+        "speed": {"type": "number", "minimum": 0}
+      }
+    },
+    "tower": {
+      "type": "object",
+      "required": ["id", "name", "damage", "range", "cooldown"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"$ref": "#/$defs/name"},
+        "damage": {"type": "number", "minimum": 0},
+        "range": {"type": "number", "exclusiveMinimum": 0},
+        "cooldown": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "staff": {
+      "type": "object",
+      "required": ["id", "name", "class"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"$ref": "#/$defs/name"},
+        "class": {"$ref": "#/$defs/id"}
+      }
+    },
+    "upgrade_node": {
+      "type": "object",
+      "required": ["id", "name", "cost"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"$ref": "#/$defs/name"},
+        "cost": {"type": "integer", "minimum": 0},
+        "requires": {"type": "array", "items": {"type": "string", "x-ref": "upgrade_nodes"}},
+        "effects": {"type": "array", "items": {"$ref": "#/$defs/effect"}}
+      }
+    },
+    "effect": {
+      "type": "object",
+      "required": ["stat"],
+      "additionalProperties": false,
+      "properties": {
+        "stat": {"$ref": "#/$defs/id"},
+        "add": {"type": "number"},
+        "multiply": {"type": "number", "minimum": 0}
+      }
+    }
+  }
+}

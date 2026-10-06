@@ -24,6 +24,21 @@ games/<name>/      one Godot project per game, with its own plan.md, content, te
 .github/workflows/ kit tests on every change; per-game jobs by path
 ```
 
+## Getting started
+
+1. Install the Godot version in `.godot-version` (the one place it is pinned; every CI job reads it).
+2. Link the Studio Kit into every project: `python3 tools/link_kit.py`. Each `games/<name>/addons/gamelab_kit` (and `tools/kit-host/addons/gamelab_kit`) becomes a symlink to `kit/` on Linux and macOS, or a directory junction on Windows (no admin rights or developer mode needed). The links are not committed. Re-run after adding a game; `--check` verifies them, `--copy` copies instead where links are not possible.
+3. Open `games/<name>/project.godot` in Godot. Edits under `addons/gamelab_kit/` are edits to `kit/`.
+
+Tests, headless:
+
+```
+godot --headless --path tools/kit-host --import
+godot --headless --path tools/kit-host -s res://addons/gamelab_kit/testing/run_tests.gd -- res://addons/gamelab_kit/tests
+godot --headless --path games/holdfast --import
+godot --headless --path games/holdfast -s res://addons/gamelab_kit/testing/run_tests.gd -- res://tests
+```
+
 ## Rules that keep the studio and games apart
 
 - Each game is its own Godot project under `games/` and uses the kit as an addon linked from `kit/`.

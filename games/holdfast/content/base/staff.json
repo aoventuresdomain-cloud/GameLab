@@ -1,0 +1,5 @@
+{
+  "staff": [
+    {"id": "bryn", "name": "Bryn", "class": "warden", "damage": 3, "range": 130, "cooldown": 0.8, "xp_per_level": 5, "damage_per_level": 1}
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "enemies": [
+    {"id": "grunt", "name": "Grunt", "health": 10, "speed": 40, "radius": 10, "damage": 5, "gold": 2, "xp_chance": 0.3, "xp_value": 1},
+    {"id": "runner", "name": "Runner", "health": 6, "speed": 75, "radius": 8, "damage": 3, "gold": 3, "xp_chance": 0.2, "xp_value": 1},
+    {"id": "brute", "name": "Brute", "health": 45, "speed": 24, "radius": 16, "damage": 15, "gold": 12, "xp_chance": 1.0, "xp_value": 3}
+  ]
+}

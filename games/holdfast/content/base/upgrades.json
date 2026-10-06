@@ -1,0 +1,16 @@
+{
+  "upgrade_nodes": [
+    {"id": "aura_focus_1", "name": "Focused aura I", "cost": 40, "effects": [{"stat": "aura_dps", "add": 3}]},
+    {"id": "keep_walls_1", "name": "Stone walls I", "cost": 60, "effects": [{"stat": "keep_health", "add": 25}]},
+    {"id": "aura_reach_1", "name": "Wider aura I", "cost": 90, "requires": ["aura_focus_1"], "effects": [{"stat": "aura_radius", "add": 12}]},
+    {"id": "tower_drills_1", "name": "Archer drills I", "cost": 110, "effects": [{"stat": "tower_damage", "add": 2}]},
+    {"id": "staff_training_1", "name": "Staff training I", "cost": 130, "effects": [{"stat": "staff_damage", "add": 1.5}]},
+    {"id": "tithe_1", "name": "Tithe I", "cost": 160, "effects": [{"stat": "gold_multiplier", "multiply": 1.25}]},
+    {"id": "aura_focus_2", "name": "Focused aura II", "cost": 220, "requires": ["aura_focus_1"], "effects": [{"stat": "aura_dps", "add": 5}]},
+    {"id": "keep_walls_2", "name": "Stone walls II", "cost": 280, "requires": ["keep_walls_1"], "effects": [{"stat": "keep_health", "add": 50}]},
+    {"id": "aura_reach_2", "name": "Wider aura II", "cost": 360, "requires": ["aura_reach_1"], "effects": [{"stat": "aura_radius", "add": 18}]},
+    {"id": "tower_drills_2", "name": "Archer drills II", "cost": 450, "requires": ["tower_drills_1"], "effects": [{"stat": "tower_damage", "add": 4}]},
+    {"id": "tithe_2", "name": "Tithe II", "cost": 600, "requires": ["tithe_1"], "effects": [{"stat": "gold_multiplier", "multiply": 1.3}]},
+    {"id": "aura_focus_3", "name": "Focused aura III", "cost": 800, "requires": ["aura_focus_2"], "effects": [{"stat": "aura_dps", "add": 8}]}
+  ]
+}
