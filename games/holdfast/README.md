@@ -10,7 +10,7 @@ Offline single-player incremental tower defence with recruitable staff. Steam fi
 
 `scenes/main.tscn` runs start screen → run (HUD) → summary → play again. The UI binds only to `scripts/ui/run_state_source.gd`: signals (`run_started`, `gold_changed`, `keep_health_changed`, `wave_changed`, `run_ended`) and `get_*`/`is_running()` reads. It never writes rule state; only `scripts/run_flow.gd` calls `start_run()`.
 
-Today the `RunSource` node is `scripts/stub_run_source.gd` (fake waves from a seeded generator). To wire the real rules, extend `run_state_source.gd` in an adapter over the kit engine, emit the same signals, and swap the `RunSource` node's script. No UI change is needed.
+The `RunSource` node is `scripts/holdfast_run_source.gd` (`HoldfastRunSource`), an adapter over the kit's simulation engine running Holdfast's rules. It extends `run_state_source.gd` and emits the same signals, so the UI doesn't know which source it has. A seeded run ends the same way in the playable build as headless (`tests/test_holdfast_rules.gd`, `test_headless_and_playable_build_match`). `scripts/stub_run_source.gd` (fake waves from a seeded generator) is kept only for the UI tests.
 
 The window is laid out at 1280×720 and scaled (`canvas_items`), so 1920×1080 is the same layout at 1.5×. Tests:
 
