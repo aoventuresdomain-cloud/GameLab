@@ -1,0 +1,81 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/run_summary.gd" id="1_summary"]
+
+[node name="RunSummary" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_summary")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Centre" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Centre"]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+
+[node name="Column" type="VBoxContainer" parent="Centre/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="Title" type="Label" parent="Centre/Panel/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ScreenTitle"
+theme_override_font_sizes/font_size = 52
+text = "Holdfast holds!"
+horizontal_alignment = 1
+
+[node name="Stats" type="GridContainer" parent="Centre/Panel/Column"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/h_separation = 48
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="GoldCaption" type="Label" parent="Centre/Panel/Column/Stats"]
+layout_mode = 2
+text = "Gold earned"
+
+[node name="GoldValue" type="Label" parent="Centre/Panel/Column/Stats"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudValue"
+text = "0"
+horizontal_alignment = 2
+
+[node name="WavesCaption" type="Label" parent="Centre/Panel/Column/Stats"]
+layout_mode = 2
+text = "Waves cleared"
+
+[node name="WavesValue" type="Label" parent="Centre/Panel/Column/Stats"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudValue"
+text = "0 / 0"
+horizontal_alignment = 2
+
+[node name="PlayAgainButton" type="Button" parent="Centre/Panel/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Play again"

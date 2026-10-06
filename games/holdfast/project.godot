@@ -1,0 +1,27 @@
+; Engine configuration file.
+; Minimal project file so the run UI can be opened and tested. KIT-01 owns the
+; kit addon wiring and the pinned Godot version; merge its settings over this.
+
+config_version=5
+
+[application]
+
+config/name="Holdfast"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.6", "GL Compatibility")
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[gui]
+
+theme/custom="res://assets/ui/theme.tres"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

@@ -1,0 +1,81 @@
+[gd_resource type="Theme" load_steps=5 format=3]
+
+[sub_resource type="StyleBoxFlat" id="panel"]
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 24.0
+content_margin_bottom = 12.0
+bg_color = Color(0.08, 0.09, 0.12, 0.82)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="button_normal"]
+content_margin_left = 32.0
+content_margin_top = 14.0
+content_margin_right = 32.0
+content_margin_bottom = 14.0
+bg_color = Color(0.73, 0.47, 0.15, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.2, 0.12, 0.04, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="button_hover"]
+content_margin_left = 32.0
+content_margin_top = 14.0
+content_margin_right = 32.0
+content_margin_bottom = 14.0
+bg_color = Color(0.86, 0.58, 0.2, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.93, 0.75, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="bar_fill"]
+bg_color = Color(0.36, 0.75, 0.33, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[resource]
+default_font_size = 26
+Button/colors/font_color = Color(1, 0.98, 0.92, 1)
+Button/colors/font_hover_color = Color(1, 1, 1, 1)
+Button/colors/font_pressed_color = Color(1, 1, 1, 1)
+Button/colors/font_focus_color = Color(1, 1, 1, 1)
+Button/font_sizes/font_size = 34
+Button/styles/normal = SubResource("button_normal")
+Button/styles/hover = SubResource("button_hover")
+Button/styles/pressed = SubResource("button_hover")
+Button/styles/focus = SubResource("button_hover")
+HudCaption/base_type = &"Label"
+HudCaption/colors/font_color = Color(0.85, 0.85, 0.8, 1)
+HudCaption/font_sizes/font_size = 22
+HudValue/base_type = &"Label"
+HudValue/colors/font_color = Color(1, 0.98, 0.92, 1)
+HudValue/colors/font_outline_color = Color(0, 0, 0, 1)
+HudValue/constants/outline_size = 6
+HudValue/font_sizes/font_size = 36
+Label/colors/font_color = Color(1, 0.98, 0.92, 1)
+Label/colors/font_outline_color = Color(0, 0, 0, 1)
+Label/constants/outline_size = 4
+PanelContainer/styles/panel = SubResource("panel")
+ProgressBar/styles/fill = SubResource("bar_fill")
+ScreenTitle/base_type = &"Label"
+ScreenTitle/colors/font_color = Color(1, 0.86, 0.5, 1)
+ScreenTitle/colors/font_outline_color = Color(0.15, 0.08, 0.02, 1)
+ScreenTitle/constants/outline_size = 10
+ScreenTitle/font_sizes/font_size = 72

@@ -1,0 +1,94 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
+
+[node name="Hud" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_hud")
+
+[node name="TopBar" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 96.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Row" type="HBoxContainer" parent="TopBar"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 48
+
+[node name="Gold" type="VBoxContainer" parent="TopBar/Row"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Caption" type="Label" parent="TopBar/Row/Gold"]
+layout_mode = 2
+theme_type_variation = &"HudCaption"
+text = "Gold"
+
+[node name="GoldValue" type="Label" parent="TopBar/Row/Gold"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudValue"
+text = "0"
+
+[node name="Wave" type="VBoxContainer" parent="TopBar/Row"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Caption" type="Label" parent="TopBar/Row/Wave"]
+layout_mode = 2
+theme_type_variation = &"HudCaption"
+text = "Wave"
+
+[node name="WaveValue" type="Label" parent="TopBar/Row/Wave"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudValue"
+text = "0 / 0"
+
+[node name="Keep" type="VBoxContainer" parent="TopBar/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Header" type="HBoxContainer" parent="TopBar/Row/Keep"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Caption" type="Label" parent="TopBar/Row/Keep/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudCaption"
+text = "Keep"
+
+[node name="KeepValue" type="Label" parent="TopBar/Row/Keep/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudCaption"
+text = "0 / 0"
+
+[node name="KeepBar" type="ProgressBar" parent="TopBar/Row/Keep"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+size_flags_vertical = 6
+mouse_filter = 2
+max_value = 1.0
+show_percentage = false
