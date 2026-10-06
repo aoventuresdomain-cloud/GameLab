@@ -1,6 +1,6 @@
 # GameLab work board
 
-*Owned by the Head of Engineering. One section per game plus the Kit. Every item has one owner and 2-5 checkable Done when lines; review and QA go against those lines. Only the Head of Engineering changes an item's status and merges.*
+*Owned by the Head of Engineering. One section per game plus the Kit. Every item has one owner and 2-5 checkable Done when lines before anyone works on it; review and QA go against those lines. Only the Head of Engineering changes an item's status and merges (once CI is green); engineers never merge their own work. Every finding goes in **Findings** below with an owner before anyone fixes it. Dates come only from `studio/estimates.md`.*
 
 **Statuses:** Ready · In progress · In review · In QA · Done · Blocked
 **QA depth:** `full` (core logic: kit, save and offline earnings, Steam, release pipeline) · `screens` (interface only: sanity plus a walk of changed screens) · `sanity`. Unlabelled means full.
@@ -159,9 +159,30 @@
   - [ ] A recommendation: stay on Godot or switch to Unity, with the reason.
   - [ ] Sent to the CEO through the Chief of Staff with one question and the recommendation marked.
 
+## Findings
+
+*Every finding from review, QA, CI or the Advisor goes here with an owner before anyone fixes it. Closed findings stay, marked Fixed with the PR.*
+
+| ID | Item | Finding | Severity | Owner | Status |
+|---|---|---|---|---|---|
+| F-001 | HF-M1-04 | Readability not yet confirmed in the Windows build and the browser (only desktop Linux so far) | Minor | Head of QA and Validation | Open: waits on KIT-05 builds |
+
+## Test changes
+
+*Only the Head of Engineering may OK changing a test, never on the assumption that the code is right. Ask QA or the Advisor when unclear.*
+
+| Date | Test | Change | Why | OK'd by |
+|---|---|---|---|---|
+| | | None yet | | |
+
+## Advisor views
+
+| Date | Item | Advisor view | Decision |
+|---|---|---|---|
+| 2026-10-06 | KIT-02, HF-M1-01 | The headless simulator and the playable build must share one rules engine, including a bot model of the mouse aura, or balance drifts from Gate 2 on. Shared engine in `kit/`, Holdfast combat rules in `games/holdfast/`. | Accepted: folded into KIT-02 and HF-M1-01 Done when lines |
+
 ## Decisions and open questions
 
-- 2026-10-06: Shared simulation engine (timestep, seed, bot runner) in `kit/`; Holdfast's combat rules in `games/holdfast/`; the headless simulator and the playable build run the same rules, including a bot model of the aura. Game Design Advisor point, accepted (KIT-02, HF-M1-01).
 - 2026-10-06: The repository stays public for now (CEO decision), to go private once the idea matures. Until then `games/holdfast/plan.md` is a build excerpt and nothing commercially sensitive is committed (`CLAUDE.md`).
 - 2026-10-06: Gate 1 web build is played from a password-protected itch.io draft page (not a public release), uploaded by CI with butler. Agreed with the Setup Desk.
 - 2026-10-06: Godot pinned at 4.6-stable. KIT-01 owns `project.godot`; KIT-05 runs the UI tests in CI (overlaps from HF-M1-04, settled by the Head of Engineering).
