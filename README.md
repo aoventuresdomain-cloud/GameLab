@@ -38,4 +38,4 @@ games/<name>/      one Godot project per game, with its own plan.md, content, te
 python3 tools/studio/check_repo.py
 ```
 
-Runs in CI on every pull request. It checks the repository layout, that every board item has one owner and 2-5 Done when lines, and that `kit/` names no game.
+Runs in CI on every pull request. It checks the repository layout, that every board item has one owner and 2-5 Done when lines, that `kit/` names no game, and that no £ or € amounts are committed (the repository is public).
