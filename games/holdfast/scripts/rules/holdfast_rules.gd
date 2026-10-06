@@ -24,6 +24,8 @@ const TICK_RATE := 10
 const OUTCOME_RUNNING := "running"
 const OUTCOME_WON := "won"
 const OUTCOME_LOST := "lost"
+## Setup failed (unknown level); the run is over before it starts.
+const OUTCOME_INVALID := "invalid"
 
 const DEFAULT_WAVE_DELAY := 5.0
 const DEFAULT_INTERVAL := 1.0
@@ -89,7 +91,14 @@ var staff: Attacker
 var outcome := OUTCOME_RUNNING
 ## 1-based number of the latest wave that has started; 0 before the first.
 var wave := 0
+## Waves whose every enemy was killed. A wave with an enemy that reached the
+## keep is never cleared.
 var waves_cleared := 0
+
+## Why setup failed, or "" when it did not.
+var setup_error := ""
+## Log setup errors with push_error. Tests that provoke one on purpose turn it off.
+var report_errors := true
 
 var _rng: SimRng
 var _enemy_types: Dictionary = {}
@@ -98,6 +107,7 @@ var _schedule: Array = []
 var _next_spawn := 0
 var _wave_starts: PackedFloat64Array = []
 var _wave_remaining: PackedInt32Array = []
+var _wave_leaked: PackedByteArray = []
 var _next_uid := 1
 
 
@@ -106,7 +116,13 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	var content: Dictionary = config.get("content", {})
 	level_id = str(config.get("level", ""))
 	var level: Dictionary = content.get("levels", {}).get(level_id, {})
-	assert(not level.is_empty(), "unknown level %s" % level_id)
+	if level.is_empty():
+		# Not assert: asserts are stripped from release builds.
+		setup_error = "unknown level %s" % level_id
+		if report_errors:
+			push_error("HoldfastRules: " + setup_error)
+		outcome = OUTCOME_INVALID
+		return
 	_enemy_types = content.get("enemies", {})
 
 	var stats := HoldfastRules.upgrade_stats(content.get("upgrade_nodes", {}), config.get("upgrades", []))
@@ -163,6 +179,7 @@ func _build_schedule(level: Dictionary) -> void:
 				last = maxf(last, at)
 				count_in_wave += 1
 		_wave_remaining.append(count_in_wave)
+		_wave_leaked.append(0)
 		start = last
 	# Stable order: by time, then wave, then file order (sort_custom is not stable).
 	for i in _schedule.size():
@@ -175,7 +192,9 @@ static func upgrade_stats(nodes: Dictionary, purchased: Array) -> Dictionary:
 	var stats := {}
 	for id in purchased:
 		var node: Dictionary = nodes.get(id, {})
-		assert(not node.is_empty(), "unknown upgrade %s" % id)
+		if node.is_empty():
+			push_error("HoldfastRules: unknown upgrade %s, ignored" % id)
+			continue
 		for effect in node.get("effects", []):
 			var stat := str(effect["stat"])
 			var entry: Dictionary = stats.get(stat, {"add": 0.0, "multiply": 1.0})
@@ -258,7 +277,7 @@ func _move_enemies(dt: float) -> void:
 		var travel := enemy.speed * dt
 		if dist - travel <= reach:
 			keep_health = maxi(keep_health - enemy.damage, 0)
-			_wave_gone(enemy.wave)
+			_wave_gone(enemy.wave, false)
 			continue
 		enemy.position -= enemy.position / dist * travel
 		still.append(enemy)
@@ -299,7 +318,7 @@ func _collect_dead() -> void:
 		# Drawn for every kill, in a fixed order, so the sequence stays deterministic.
 		if _rng.chance(enemy.xp_chance) and enemy.xp_value > 0:
 			_gain_xp(enemy.xp_value)
-		_wave_gone(enemy.wave)
+		_wave_gone(enemy.wave, true)
 	enemies = alive
 
 
@@ -311,9 +330,11 @@ func _gain_xp(amount: int) -> void:
 		staff_level += 1
 
 
-func _wave_gone(w: int) -> void:
+func _wave_gone(w: int, killed: bool) -> void:
 	_wave_remaining[w] -= 1
-	if _wave_remaining[w] == 0:
+	if not killed:
+		_wave_leaked[w] = 1
+	if _wave_remaining[w] == 0 and _wave_leaked[w] == 0:
 		waves_cleared += 1
 
 
@@ -351,10 +372,15 @@ func snapshot() -> Dictionary:
 		"result": result(),
 		"staff_xp": staff_xp,
 		"aura": [aura_active, aura_position.x, aura_position.y],
-		"tower": [tower.ready_in, tower.last_target, tower.damage],
-		"staff": [staff.ready_in, staff.last_target, staff.damage],
+		"tower": _attacker_state(tower),
+		"staff": _attacker_state(staff),
 		"next_spawn": _next_spawn,
 		"next_uid": _next_uid,
 		"wave_remaining": Array(_wave_remaining),
+		"wave_leaked": Array(_wave_leaked),
 		"enemies": list,
 	}
+
+
+static func _attacker_state(a: Attacker) -> Array:
+	return [] if a == null else [a.ready_in, a.last_target, a.damage]

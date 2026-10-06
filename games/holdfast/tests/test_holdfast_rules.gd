@@ -138,3 +138,47 @@ func test_rules_have_no_rendering_or_input_dependency() -> void:
 			expect_false(ClassDB.is_parent_class(script.get_instance_base_type(), "Node"), file + " is not a Node")
 			for banned in ["get_tree\\(", "\\bInput\\.", "RenderingServer", "\\bTime\\.", "OS\\.get_ticks", "(?<![\\w.])rand[fi]\\(", "(?<![\\w.])randomize\\(", "draw_"]:
 				expect_true(RegEx.create_from_string(banned).search(script.source_code) == null, "%s matches %s" % [file, banned])
+
+
+func _quiet_content(speed: float) -> Dictionary:
+	# One wave of two fast grunts; the tower and staff do no damage.
+	var content: Dictionary = HoldfastContent.base().duplicate(true)
+	var level: Dictionary = content["levels"]["outpost"]
+	level["waves"] = [{"spawns": [{"enemy": "grunt", "count": 2, "interval": 0.5}]}]
+	level["keep_health"] = 1000
+	content["enemies"]["grunt"]["speed"] = speed
+	content["towers"]["archer_post"]["damage"] = 0.0
+	content["staff"]["bryn"]["damage"] = 0.0
+	content["staff"]["bryn"]["damage_per_level"] = 0.0
+	return content
+
+
+## F-005: a wave counts as cleared only when every enemy in it was killed.
+func test_a_wave_with_an_enemy_that_reached_the_keep_is_not_cleared() -> void:
+	var config := HoldfastContent.run_config("outpost", [], _quiet_content(400.0))
+	# No controller, so no aura: both grunts reach the keep.
+	var engine := SimEngine.new(HoldfastRules.new(), null, 1, config, HoldfastRules.TICK_RATE)
+	engine.run_to_end(10000)
+	var result: Dictionary = engine.rules.result()
+	expect_eq(result["outcome"], HoldfastRules.OUTCOME_WON, "every spawn is gone and the keep stands")
+	expect_eq(result["kills"], 0)
+	expect_eq(result["waves_cleared"], 0, "a leaked wave is not cleared")
+
+
+func test_a_wave_killed_in_full_is_cleared() -> void:
+	var config := HoldfastContent.run_config("outpost", [], _quiet_content(20.0))
+	var report := SimBotRunner.run(HoldfastRules.new(), HoldfastAuraBot.new(), 1, config, 100000, HoldfastRules.TICK_RATE)
+	expect_eq(report["result"]["kills"], 2, "the aura bot killed both")
+	expect_eq(report["result"]["waves_cleared"], 1)
+
+
+## F-006: an unknown level ends the run cleanly, in release builds too.
+func test_unknown_level_ends_the_run_without_crashing() -> void:
+	var rules := HoldfastRules.new()
+	rules.report_errors = false
+	rules.setup(HoldfastContent.run_config("no_such_level"), SimRng.new(1))
+	expect_eq(rules.setup_error, "unknown level no_such_level")
+	expect_true(rules.is_finished())
+	expect_eq(rules.outcome, HoldfastRules.OUTCOME_INVALID)
+	rules.step(0.1, {})
+	expect_false(rules.snapshot().is_empty(), "snapshot still works")

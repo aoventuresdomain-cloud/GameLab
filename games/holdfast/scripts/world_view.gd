@@ -22,7 +22,9 @@ const ENEMY_COLOURS := {
 	"brute": Color("#6a3d7a"),
 }
 
-@onready var source: HoldfastRunSource = get_node(source_path)
+## Any run_state_source.gd. Only a HoldfastRunSource has rules to draw and a
+## cursor to feed; with another source (the UI tests' stub) the field stays empty.
+@onready var source: Node = get_node(source_path)
 
 ## Last mouse position in viewport coordinates, or null when the mouse has left.
 var _mouse: Variant = null
@@ -40,7 +42,7 @@ func _notification(what: int) -> void:
 
 func _process(_delta: float) -> void:
 	position = get_viewport_rect().size / 2.0 + Vector2(0, 40)
-	if source.is_running():
+	if source is HoldfastRunSource and source.is_running():
 		source.set_cursor(screen_to_world(_mouse) if _mouse is Vector2 else null)
 	queue_redraw()
 
@@ -55,8 +57,10 @@ func world_to_screen(at: Vector2) -> Vector2:
 
 
 func _draw() -> void:
-	var rules := source.get_rules()
 	draw_rect(Rect2(-get_viewport_rect().size, get_viewport_rect().size * 2.0), COLOUR_GROUND)
+	if not source is HoldfastRunSource:
+		return
+	var rules: HoldfastRules = source.get_rules()
 	if rules == null:
 		return
 	draw_circle(Vector2.ZERO, rules.keep_radius, COLOUR_KEEP)

@@ -13,7 +13,7 @@ studio/            board.md (work board, Head of Engineering), slate.md (games, 
 kit/               Studio Kit, a Godot 4 addon shared by every game
   sim/             deterministic simulation engine: fixed timestep, seeded RNG, bot runner (no rendering)
   packs/           pack loader and schema validation
-  services/        save, steam, telemetry
+  services/        platform services (steam today; save and telemetry later)
   schema/          base JSON schemas; games extend them
   tests/           kit tests, run for every game
 agents/            shared designer agents (design, balance loop, art, digest)
