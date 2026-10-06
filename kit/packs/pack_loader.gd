@@ -114,7 +114,7 @@ static func _read_json(pack_dir: String, file_name: String, errors: PackedString
 		return null
 	var json := JSON.new()
 	if json.parse(FileAccess.get_file_as_string(full_path)) != OK:
-		errors.append("%s:%d: invalid JSON: %s" % [file_name, json.get_error_line(), json.get_error_message()])
+		errors.append("%s:%d: invalid JSON: %s" % [file_name, json.get_error_line() + 1, json.get_error_message()])
 		return null
 	return json.data
 

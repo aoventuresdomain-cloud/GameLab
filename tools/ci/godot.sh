@@ -4,7 +4,8 @@
 #   tools/ci/godot.sh --headless --path games/holdfast --quit
 set -uo pipefail
 log="$(mktemp)"
-godot "$@" 2>&1 | tee "$log"
+# A script that fails to compile can leave Godot running its main scene forever.
+timeout "${GODOT_TIMEOUT:-600}" godot "$@" 2>&1 | tee "$log"
 status=${PIPESTATUS[0]}
 if [ "$status" -ne 0 ]; then
   echo "::error::godot exited with $status"

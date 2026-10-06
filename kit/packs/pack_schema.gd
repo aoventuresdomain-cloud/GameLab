@@ -38,7 +38,7 @@ func _load_merged(schema_path: String, chain: Array) -> Dictionary:
 		return {}
 	var json := JSON.new()
 	if json.parse(text) != OK:
-		errors.append("%s:%d: %s" % [schema_path, json.get_error_line(), json.get_error_message()])
+		errors.append("%s:%d: %s" % [schema_path, json.get_error_line() + 1, json.get_error_message()])
 		return {}
 	if typeof(json.data) != TYPE_DICTIONARY:
 		errors.append("%s: schema must be a JSON object" % schema_path)
