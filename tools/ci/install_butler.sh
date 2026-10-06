@@ -8,8 +8,8 @@
 # review (the release pipeline is qa:full).
 set -euo pipefail
 
-BUTLER_VERSION=""
-BUTLER_SHA256=""
+BUTLER_VERSION="15.32.0"
+BUTLER_SHA256="2335971394ef6596f95ded0833e85ee28755e13761716ef4c91d6b11f69162f5"
 
 version="$BUTLER_VERSION"
 if [ -z "$version" ]; then
