@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Repository checks for GameLab: layout, board format and the kit boundary.
+"""Repository checks for GameLab: layout, board format, the kit boundary and no money figures.
 
 Exits non-zero with one line per problem. Run from anywhere: python3 tools/studio/check_repo.py
 """
@@ -33,6 +33,9 @@ OWNER_LINE = re.compile(r"^- \*\*Owner:\*\* \S")
 DONE_WHEN_LINE = re.compile(r"^- \*\*Done when:\*\*\s*$")
 CHECKBOX_LINE = re.compile(r"^\s+- \[[ x]\] \S")
 # Files in kit/ that are scanned for game names.
+# The repository is public: no prices or money figures in committed text.
+MONEY = re.compile(r"[£€]\s?\d")
+SCANNED_SUFFIXES = {".md", ".gd", ".cfg", ".json", ".tscn", ".tres", ".py", ".yml", ".yaml", ".txt"}
 KIT_TEXT_SUFFIXES = {".gd", ".cfg", ".json", ".md", ".tscn", ".tres", ".gdshader"}
 
 
@@ -112,11 +115,22 @@ def check_kit_boundary(problems):
                 problems.append(f"kit boundary: {rel}:{n} names a game")
 
 
+def check_no_money(problems):
+    for path in sorted(ROOT.rglob("*")):
+        if ".git" in path.parts or not path.is_file() or path.suffix not in SCANNED_SUFFIXES:
+            continue
+        rel = path.relative_to(ROOT)
+        for n, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+            if MONEY.search(line):
+                problems.append(f"public repo: {rel}:{n} has a money figure")
+
+
 def main():
     problems = []
     check_layout(problems)
     check_board(problems)
     check_kit_boundary(problems)
+    check_no_money(problems)
     for problem in problems:
         print(problem)
     if problems:
