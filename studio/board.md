@@ -31,7 +31,8 @@
   - [ ] `games/holdfast/addons/gamelab_kit/` resolves to `kit/` (link or a scripted sync step), on Linux CI and on a Windows checkout, and the method is written in `README.md`.
   - [ ] `godot --headless --path games/holdfast --quit` opens the project with the kit addon enabled and no errors in CI.
   - [ ] Holdfast code calls a kit class, covered by a test.
-  - [ ] The Godot version is pinned in one place and used by every CI job.
+  - [ ] The Godot version is pinned in one place (4.6-stable, the version HF-M1-04 was tested on) and used by every CI job.
+  - [ ] `games/holdfast/project.godot` is owned by this item from now on and keeps the display, renderer and theme settings HF-M1-04 added.
 
 ### KIT-02 Shared simulation engine: timestep, seed and bot runner
 - **Owner:** Gameplay Engineer
@@ -70,6 +71,7 @@
 - **Depends on:** KIT-01
 - **Done when:**
   - [ ] Kit tests run on every pull request; Holdfast tests and exports run when `kit/` or `games/holdfast/` change; any red job blocks merge.
+  - [ ] The Holdfast job runs the UI tests (`godot --headless --path games/holdfast --script res://tests/run_ui_tests.gd`) after an import step.
   - [ ] Every push to `main` produces a Windows build and a web build of Holdfast as downloadable CI artifacts.
   - [ ] The web export runs in a current desktop browser without special server headers (single-threaded export).
   - [ ] The only secret before M4 is `BUTLER_API_KEY`, used to upload the web build to the restricted itch.io draft page for Gate 1 (never published); `tools/release/` documents every secret the pipeline uses.
@@ -111,7 +113,7 @@
 
 ### HF-M1-04 Run HUD and run flow screens
 - **Owner:** UI Engineer
-- **Status:** Ready
+- **Status:** In QA (merged in #3; readability in the Windows build and browser waits on KIT-05 builds)
 - **QA:** screens
 - **Depends on:** HF-M1-03 (can start on stub data)
 - **Done when:**
@@ -162,4 +164,5 @@
 - 2026-10-06: Shared simulation engine (timestep, seed, bot runner) in `kit/`; Holdfast's combat rules in `games/holdfast/`; the headless simulator and the playable build run the same rules, including a bot model of the aura. Game Design Advisor point, accepted (KIT-02, HF-M1-01).
 - 2026-10-06: The repository stays public for now (CEO decision), to go private once the idea matures. Until then `games/holdfast/plan.md` is a build excerpt and nothing commercially sensitive is committed (`CLAUDE.md`).
 - 2026-10-06: Gate 1 web build is played from a password-protected itch.io draft page (not a public release), uploaded by CI with butler. Agreed with the Setup Desk.
+- 2026-10-06: Godot pinned at 4.6-stable. KIT-01 owns `project.godot`; KIT-05 runs the UI tests in CI (overlaps from HF-M1-04, settled by the Head of Engineering).
 - Open (decide in M1): macOS at launch or Windows and Steam Deck only (HF-M1-06).
