@@ -11,7 +11,7 @@
 
 ### STU-01 Repository layout, board and slate
 - **Owner:** Head of Engineering
-- **Status:** In review
+- **Status:** Done
 - **QA:** sanity
 - **Done when:**
   - [x] The repository has `studio/`, `kit/`, `agents/`, `tools/`, `games/holdfast/` and `.github/workflows/` as in `gamelab-studio.md` section 3.
@@ -160,6 +160,6 @@
 ## Decisions and open questions
 
 - 2026-10-06: Shared simulation engine (timestep, seed, bot runner) in `kit/`; Holdfast's combat rules in `games/holdfast/`; the headless simulator and the playable build run the same rules, including a bot model of the aura. Game Design Advisor point, accepted (KIT-02, HF-M1-01).
-- 2026-10-06: The repository is public, so `games/holdfast/plan.md` holds only the build-facing excerpt until the repository is made private (Setup Desk).
+- 2026-10-06: The repository stays public for now (CEO decision), to go private once the idea matures. Until then `games/holdfast/plan.md` is a build excerpt and nothing commercially sensitive is committed (`CLAUDE.md`).
 - 2026-10-06: Gate 1 web build is played from a password-protected itch.io draft page (not a public release), uploaded by CI with butler. Agreed with the Setup Desk.
 - Open (decide in M1): macOS at launch or Windows and Steam Deck only (HF-M1-06).
