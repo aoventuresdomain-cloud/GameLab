@@ -56,7 +56,7 @@
 
 ### KIT-04 Steam service with a safe fallback
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** In QA (merged in #7). Line 1's version pin lands with the Godot 4.7.2 bump (F-009)
 - **QA:** full
 - **Depends on:** KIT-01
 - **Done when:**
@@ -66,7 +66,7 @@
 
 ### KIT-05 CI pipeline: tests and exports
 - **Owner:** Gameplay Engineer
-- **Status:** In progress (CI and exports merged in #5; itch.io upload F-004 and required checks still to do)
+- **Status:** In QA (merged in #5 and #7). Line 1's "red blocks merge" waits on required checks (F-008)
 - **QA:** full
 - **Depends on:** KIT-01
 - **Done when:**
@@ -102,7 +102,7 @@
 
 ### HF-M1-03 One playable level in Windows and web builds
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** In QA (merged in #7; full round at Gate 1)
 - **QA:** full
 - **Depends on:** HF-M1-01, KIT-05
 - **Done when:**
@@ -125,7 +125,7 @@
 
 ### HF-M1-05 Test Steam achievement fires
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** Blocked (code and the no-op path merged in #7; needs the Godot 4.7.2 bump with F-009 and F-011, then the CEO's Windows PC with Steam via the Setup Desk)
 - **QA:** full
 - **Depends on:** KIT-04, HF-M1-03
 - **Done when:**
@@ -135,12 +135,19 @@
 
 ### HF-M1-06 macOS export cost check
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** In QA (merged in #7)
 - **QA:** sanity
 - **Depends on:** KIT-05
 - **Done when:**
   - [ ] CI attempts an unsigned macOS export once and records pass or fail.
   - [ ] A short note on this item states what shipping macOS would add (signing, notarisation, testing, cost) and a recommendation for Gate 1.
+- **Note (from #7):** the unsigned export succeeds in CI (a 62 MB universal zip; ETC2/ASTC texture import is now enabled in `project.godot`). Shipping macOS would add:
+  - Signing: an Apple Developer Program membership (a paid yearly sign-up, so CEO go-ahead first) and a Developer ID certificate held as CI secrets.
+  - Notarisation: every build goes to Apple's notary service and gets its ticket stapled; without it, macOS blocks the app on first launch. Steam does not do this for us.
+  - Steam: a second GodotSteam template pin (macOS) and a Mac depot.
+  - Testing: QA on a real Mac (Apple Silicon at least). Nobody in the studio has one today.
+  - Engine: no code changes; the export already builds unsigned.
+- **Recommendation (accepted by the Head of Engineering):** no macOS build at Gate 1. Mac players use the itch.io web build. The unsigned export stays in CI as a free early warning. macOS at Steam launch goes to the CEO as one question in the Gate 1 brief.
 
 ### HF-M1-07 Gate 1 full QA round
 - **Owner:** Head of QA and Validation (per job)
@@ -167,14 +174,19 @@
 | ID | Item | Finding | Severity | Owner | Status |
 |---|---|---|---|---|---|
 | F-001 | HF-M1-04 | Readability not yet confirmed in the Windows build and the browser (only desktop Linux so far) | Minor | Head of QA and Validation | Open: waits on KIT-05 builds |
-| F-002 | HF-M1-02 | The bot wins every run on placeholder numbers, so the progression report says nothing about balance yet; the report must say so | Minor | Balance Analyst (M2); report note by Gameplay Engineer | Deferred to M2 |
-| F-003 | HF-M1-02 | `tools/progression.gd --out` with an absolute path writes under the project folder instead | Minor | Gameplay Engineer | Open |
-| F-005 | HF-M1-01 | `waves_cleared` counts waves whose enemies reached the keep. Ruling: a wave is cleared only when every enemy in it was killed; add a test | Minor | Gameplay Engineer | Open |
-| F-006 | HF-M1-01 | `HoldfastRules.setup` uses `assert` for bad config, which release exports strip; use `push_error` and return early | Minor | Gameplay Engineer | Open |
-| F-007 | KIT-01 | `kit/README.md` lists `services/`, which doesn't exist yet | Minor | Gameplay Engineer | Open: fix with KIT-04 |
+| F-002 | HF-M1-02 | The bot wins every run on placeholder numbers, so the progression report says nothing about balance yet; the report must say so | Minor | Balance Analyst (M2); report note by Gameplay Engineer | Report note Fixed (#7); balance deferred to M2 |
+| F-003 | HF-M1-02 | `tools/progression.gd --out` with an absolute path writes under the project folder instead | Minor | Gameplay Engineer | Fixed (#7) |
+| F-005 | HF-M1-01 | `waves_cleared` counts waves whose enemies reached the keep. Ruling: a wave is cleared only when every enemy in it was killed; add a test | Minor | Gameplay Engineer | Fixed (#7) |
+| F-006 | HF-M1-01 | `HoldfastRules.setup` uses `assert` for bad config, which release exports strip; use `push_error` and return early | Minor | Gameplay Engineer | Fixed (#7) |
+| F-007 | KIT-01 | `kit/README.md` lists `services/`, which doesn't exist yet | Minor | Gameplay Engineer | Fixed (#7) |
 | F-008 | KIT-02, KIT-05 | Only `repo-checks` is required on `main`, so red kit or Holdfast jobs don't block merge; add `kit-tests`, `holdfast` and `kit-link-windows` as required checks | Major | Setup Desk (CEO's hands) | Open: in the Gate 1 checklist; the Head of Engineering checks them before every merge until then |
-| F-009 | KIT-04, HF-M1-05 | GodotSteam publishes no build for Godot 4.6 (only module templates for 4.5.2 and 4.7.x), so the Windows build can't fire a Steam achievement on the current pin | Major (Gate 1) | Gameplay Engineer | Open: decision 2026-10-06, bump to 4.7.2 in its own qa:full PR |
-| F-004 | KIT-05 | No CI upload of the web build to the itch.io Draft page yet, and `tools/release/README.md` does not list `BUTLER_API_KEY` | Major (Gate 1) | Gameplay Engineer | Open |
+| F-009 | KIT-04, HF-M1-05 | GodotSteam publishes no build for Godot 4.6 (only module templates for 4.5.2 and 4.7.x), so the Windows build can't fire a Steam achievement on the current pin | Major (Gate 1) | Gameplay Engineer | Open: decision 2026-10-06, bump to 4.7.2 in its own qa:full PR (next Gameplay Engineer PR) |
+| F-004 | KIT-05 | No CI upload of the web build to the itch.io Draft page yet, and `tools/release/README.md` does not list `BUTLER_API_KEY` | Major (Gate 1) | Gameplay Engineer | Fixed (#7): first upload from `main` succeeded on 2026-10-06 after F-014 |
+| F-010 | KIT-05 | `itch-draft` downloads butler from `LATEST` and hands it `BUTLER_API_KEY`, so an unpinned binary sees a secret. Pin a butler version and check its SHA-256, as for the GodotSteam template | Major | Gameplay Engineer | Open: fold into the 4.7.2 bump PR |
+| F-011 | HF-M1-05 | `steam_hooks.gd` unlocks the "level cleared" achievement whenever the keep didn't fall, so an `OUTCOME_INVALID` run would unlock it. Check for `OUTCOME_WON`, and have `HoldfastRunSource` refuse to start a run when `setup_error` is set; add a test | Minor | Gameplay Engineer | Open: fix in the 4.7.2 bump PR, before the achievement can fire |
+| F-012 | KIT-05 | `smoke-web` waits a fixed `sleep 1` for `http.server` before loading the page, which can fail on a slow runner. Poll the URL until it responds | Minor | Gameplay Engineer | Open: fix in the 4.7.2 bump PR |
+| F-013 | HF-M1-03 | `smoke-windows` runs `--headless`, so CI never exercises the Windows renderer (the web smoke run does render, through SwiftShader) | Minor | Head of QA and Validation | Open: play the Windows build in HF-M1-07; the CEO's Steam check also covers it |
+| F-014 | KIT-05 | First `itch-draft` run on `main` (after #7): butler logged in with `BUTLER_API_KEY`, but itch.io refused the build with "Please verify your account's email address before uploading a build". `itch-draft` stays red on every push to `main` until this is done | Major (Gate 1) | Setup Desk (CEO's hands: verify the itch.io account email) | Fixed 2026-10-06: email verified, `itch-draft` re-run on `main` passed |
 
 ## Test changes
 
@@ -197,4 +209,5 @@
 - 2026-10-06: Godot pinned at 4.6-stable. KIT-01 owns `project.godot`; KIT-05 runs the UI tests in CI (overlaps from HF-M1-04, settled by the Head of Engineering).
 - 2026-10-06: Godot pin moves from 4.6-stable to 4.7.2, because GodotSteam ships Windows export templates for 4.7.x but nothing for 4.6. The Windows export uses GodotSteam's template (pinned by file name and SHA-256); the web export stays on stock templates. Rejected: 4.5.2 (older engine, downgrade) and building GodotSteam ourselves (slow and fragile). Head of Engineering (F-009).
 - Open (M3 or replays): floating-point results may differ between Linux CI and Windows players; harmless for M1, matters if saves or replays must match exactly across machines.
-- Open (decide in M1): macOS at launch or Windows and Steam Deck only (HF-M1-06).
+- 2026-10-06: No macOS build at Gate 1; Mac players use the itch.io web build, and the unsigned macOS export stays in CI as an early warning. Head of Engineering (HF-M1-06).
+- Open (CEO, in the Gate 1 brief): ship macOS at Steam launch or Windows and Steam Deck only. Needs a paid Apple Developer sign-up and a Mac for QA (HF-M1-06 note).
