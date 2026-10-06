@@ -14,6 +14,7 @@ import json
 import os
 import shutil
 import sys
+import urllib.error
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -30,6 +31,16 @@ def get_json(url):
         request.add_header("Authorization", f"Bearer {token}")
     with urllib.request.urlopen(request, timeout=60) as response:
         return json.load(response)
+
+
+def _show_candidates():
+    """Print recent releases of the repositories GodotSteam's GDExtension has lived in."""
+    for repo in ("GodotSteam/GodotSteam-GDExtension", "GodotSteam/GodotSteam"):
+        try:
+            for release in get_json(API.format(repo=repo) + "?per_page=6"):
+                print(f"  {repo} {release['tag_name']}: {', '.join(a['name'] for a in release['assets'])}")
+        except urllib.error.HTTPError as error:
+            print(f"  {repo}: {error}")
 
 
 def main():
@@ -51,14 +62,14 @@ def main():
     try:
         release = get_json(f"{releases_url}/tags/{pin['tag']}")
     except urllib.error.HTTPError as error:
-        print(f"GodotSteam release {pin['tag']} not found ({error}). Recent tags:")
-        for release in get_json(releases_url + "?per_page=10"):
-            print("  " + release["tag_name"])
+        print(f"GodotSteam release {pin['tag']} not found ({error}).")
+        _show_candidates()
         return 1
     print(f"GodotSteam {pin['tag']} assets: {', '.join(a['name'] for a in release['assets'])}")
     assets = [a for a in release["assets"] if pin["asset_contains"] in a["name"] and a["name"].endswith(".zip")]
     if len(assets) != 1:
         print(f"expected one asset containing {pin['asset_contains']!r} in {pin['tag']}, found: {[a['name'] for a in release['assets']]}")
+        _show_candidates()
         return 1
     asset = assets[0]
     print(f"downloading {asset['name']}")
