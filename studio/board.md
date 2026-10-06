@@ -72,7 +72,7 @@
   - [ ] Kit tests run on every pull request; Holdfast tests and exports run when `kit/` or `games/holdfast/` change; any red job blocks merge.
   - [ ] Every push to `main` produces a Windows build and a web build of Holdfast as downloadable CI artifacts.
   - [ ] The web export runs in a current desktop browser without special server headers (single-threaded export).
-  - [ ] The workflow uses no secrets until M4 (Steam upload), and `tools/release/` documents what it will need.
+  - [ ] The only secret before M4 is `BUTLER_API_KEY`, used to upload the web build to the restricted itch.io draft page for Gate 1 (never published); `tools/release/` documents every secret the pipeline uses.
 
 ## Holdfast
 
@@ -161,4 +161,5 @@
 
 - 2026-10-06: Shared simulation engine (timestep, seed, bot runner) in `kit/`; Holdfast's combat rules in `games/holdfast/`; the headless simulator and the playable build run the same rules, including a bot model of the aura. Game Design Advisor point, accepted (KIT-02, HF-M1-01).
 - 2026-10-06: The repository is public, so `games/holdfast/plan.md` holds only the build-facing excerpt until the repository is made private (Setup Desk).
+- 2026-10-06: Gate 1 web build is played from a password-protected itch.io draft page (not a public release), uploaded by CI with butler. Agreed with the Setup Desk.
 - Open (decide in M1): macOS at launch or Windows and Steam Deck only (HF-M1-06).
