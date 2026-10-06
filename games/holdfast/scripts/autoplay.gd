@@ -2,10 +2,14 @@ extends Node
 ## Plays one full run with the bot aura and reports it, for CI smoke tests of the
 ## exported builds. Off unless asked for:
 ##   desktop:  Holdfast.exe --headless -- --autoplay [--seed=N]
+##   (windowed, the game waits a few seconds after the run before quitting)
 ##   web:      index.html?autoplay=1[&seed=N]
 ## Prints "AUTOPLAY DONE {result json}" when the run ends; the desktop build then quits.
 
 const SPEED := 8.0
+## Seconds a windowed desktop run stays open after the run ends, so Steam can
+## record the achievement and show its overlay before the game quits.
+const WINDOWED_QUIT_DELAY := 4.0
 
 @export var flow_path: NodePath
 @export var source_path: NodePath
@@ -28,8 +32,11 @@ func _ready() -> void:
 func _on_run_ended(summary: Dictionary) -> void:
 	print("AUTOPLAY DONE " + JSON.stringify(summary.get("result", summary), "", true))
 	Engine.time_scale = 1.0
-	if not OS.has_feature("web"):
-		get_tree().quit(0)
+	if OS.has_feature("web"):
+		return
+	if DisplayServer.get_name() != "headless":
+		await get_tree().create_timer(WINDOWED_QUIT_DELAY).timeout
+	get_tree().quit(0)
 
 
 ## Command-line user args (--key or --key=value) or, on the web, the page's query string.

@@ -1,5 +1,5 @@
 name: Set up Godot
-description: Installs the Godot version pinned in .godot-version (and, optionally, its export templates), then links the Studio Kit into every project.
+description: Installs the Godot version pinned in .godot-version (and, optionally, its export templates), each checked against tools/ci/godot.sha512, then links the Studio Kit into every project.
 inputs:
   templates:
     description: Also install export templates
@@ -20,7 +20,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ~/godot
-        key: godot-${{ steps.version.outputs.version }}-linux
+        key: godot-${{ steps.version.outputs.version }}-linux-${{ hashFiles('tools/ci/godot.sha512') }}
 
     - name: Download Godot
       if: steps.cache-godot.outputs.cache-hit != 'true'
@@ -28,7 +28,9 @@ runs:
       run: |
         v="${{ steps.version.outputs.version }}"
         mkdir -p ~/godot
-        curl -fsSL -o /tmp/godot.zip "https://github.com/godotengine/godot/releases/download/${v}-stable/Godot_v${v}-stable_linux.x86_64.zip"
+        f="Godot_v${v}-stable_linux.x86_64.zip"
+        curl -fsSL -o /tmp/godot.zip "https://github.com/godotengine/godot/releases/download/${v}-stable/$f"
+        tools/ci/verify_godot_download.sh "$f" /tmp/godot.zip
         unzip -q /tmp/godot.zip -d ~/godot
         mv ~/godot/Godot_v${v}-stable_linux.x86_64 ~/godot/godot
 
@@ -38,7 +40,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ~/.local/share/godot/export_templates
-        key: godot-templates-${{ steps.version.outputs.version }}
+        key: godot-templates-${{ steps.version.outputs.version }}-${{ hashFiles('tools/ci/godot.sha512') }}
 
     - name: Download export templates
       if: inputs.templates == 'true' && steps.cache-templates.outputs.cache-hit != 'true'
@@ -47,7 +49,9 @@ runs:
         v="${{ steps.version.outputs.version }}"
         dest=~/.local/share/godot/export_templates/${v}.stable
         mkdir -p "$dest"
-        curl -fsSL -o /tmp/templates.tpz "https://github.com/godotengine/godot/releases/download/${v}-stable/Godot_v${v}-stable_export_templates.tpz"
+        f="Godot_v${v}-stable_export_templates.tpz"
+        curl -fsSL -o /tmp/templates.tpz "https://github.com/godotengine/godot/releases/download/${v}-stable/$f"
+        tools/ci/verify_godot_download.sh "$f" /tmp/templates.tpz
         unzip -q /tmp/templates.tpz -d /tmp/templates
         mv /tmp/templates/templates/* "$dest/"
         ls "$dest"

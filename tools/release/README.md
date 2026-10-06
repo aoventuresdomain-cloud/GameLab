@@ -20,7 +20,8 @@ request runs never see the secret.
 Every tool CI downloads for a build is pinned, never "latest":
 
 - Godot and its export templates: by version in `/.godot-version`, from Godot's
-  official GitHub releases.
+  official GitHub releases, each checked against the SHA-512 in
+  `tools/ci/godot.sha512` (copied from the release's own `SHA512-SUMS.txt`).
 - GodotSteam's Windows template: by release, file name and SHA-256 in
   `tools/ci/fetch_godotsteam.sh`. The Windows build is exported with it, and
   `steam_api64.dll` ships beside `Holdfast.exe`.
