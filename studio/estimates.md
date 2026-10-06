@@ -43,4 +43,4 @@ Build time only, in weeks of team work. These leave out tester and playtest wind
 | M6 Launch prep | 2 to 3 weeks | Medium | Fix rounds from the release QA round |
 | M7 Steam launch | About 1 week | Medium | Release build and store checks |
 
-**Total build:** about 24 to 30 weeks (roughly 6 to 7 months). This is not a calendar date. The plan's own waits come on top, chiefly the Gate 3 demo test before M5.
+**Total build:** about 21 to 28 weeks (roughly 5 to 7 months). This is not a calendar date. The plan's own waits come on top, chiefly the Gate 3 demo test before M5.
