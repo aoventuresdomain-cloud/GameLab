@@ -4,7 +4,7 @@
 
 | # | Game | Status | Current milestone | Next decision | Plan |
 |---|---|---|---|---|---|
-| 1 | **Holdfast** (working title): incremental tower defence with recruitable staff, Steam first | Active | M1 tech proof | Gate 1: stay on Godot or switch to Unity | `games/holdfast/plan.md` |
+| 1 | **Holdfast** (working title): incremental tower defence with recruitable heroes, Steam first | Active | M1 tech proof | Gate 1: stay on Godot or switch to Unity | `games/holdfast/plan.md` |
 | 2 | Not chosen yet | Idea stage | None | Small playable test only after Holdfast Gate 3; full build only after Holdfast launches on Steam (Gate 4), unless Holdfast is stopped first | None |
 
 ## History
