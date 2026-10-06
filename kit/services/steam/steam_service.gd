@@ -68,6 +68,19 @@ func unlock_achievement(achievement: String) -> bool:
 	return set_ok and stored
 
 
+## Clears an achievement and stores it (test setups only; games never call this in
+## normal play). Returns true when Steam accepted both; callers may retry, so a
+## refusal is not logged.
+func clear_achievement(achievement: String) -> bool:
+	if not _initialised:
+		return false
+	var clear_ok: bool = _steam.call("clearAchievement", achievement)
+	var stored := clear_ok and store_stats()
+	if stored:
+		_log("achievement %s: cleared" % achievement)
+	return stored
+
+
 ## Sends stats and achievements to Steam. Returns true when Steam accepted.
 func store_stats() -> bool:
 	if not _initialised:
@@ -81,11 +94,17 @@ func poll() -> void:
 		_steam.call("run_callbacks")
 
 
+## True when GodotSteam is in this build, whether or not Steam can run here.
+## Logged with the unavailable reason so CI can prove a desktop build carries it.
+static func has_godotsteam() -> bool:
+	return Engine.has_singleton(SINGLETON)
+
+
 func _unavailable(reason: String) -> bool:
 	_reason = reason
 	if not _logged:
 		_logged = true
-		_log("unavailable (%s); Steam features are off" % reason)
+		_log("unavailable (%s; GodotSteam loaded: %s); Steam features are off" % [reason, "yes" if has_godotsteam() else "no"])
 	return false
 
 
