@@ -125,7 +125,7 @@
 
 ### HF-M1-05 Test Steam achievement fires
 - **Owner:** Gameplay Engineer
-- **Status:** In QA (code in #7, GodotSteam in the Windows build in #10). Lines 1 and 2 need the Steam check on the CEO's Windows PC via the Setup Desk (F-015 fixed in #12), on the first green `main` after F-018
+- **Status:** In QA (code in #7, GodotSteam in the Windows build in #10). Lines 1 and 2 need the Steam check on the CEO's Windows PC via the Setup Desk (F-015 fixed in #12), on `cad3bc8`, the HF-M1-07 fixed commit (Setup Desk checklist sent 2026-10-06)
 - **QA:** full
 - **Depends on:** KIT-04, HF-M1-03
 - **Done when:**
@@ -151,7 +151,7 @@
 
 ### HF-M1-07 Gate 1 full QA round
 - **Owner:** Head of QA and Validation (per job)
-- **Status:** Blocked (waits on HF-M1-01 to HF-M1-06)
+- **Status:** Building: round started 2026-10-06 on fixed commit `cad3bc8`; merges frozen to blocker and major fixes (docs-only allowed)
 - **QA:** full
 - **Done when:**
   - [ ] One fixed build (commit recorded) is tested end to end against every M1 Done when line on this board.
@@ -190,8 +190,8 @@
 | F-015 | HF-M1-05 | `smoke-windows` proves the GodotSteam template ran but not that the `Steam` singleton loads, because `SteamService.init` returns at the headless check first. Log `Engine.has_singleton("Steam")` in the unavailable message and have `smoke-windows` assert it, so the CEO's Steam session isn't the first test | Major (Gate 1) | Gameplay Engineer | Fixed (#12): `smoke-windows` asserts `GodotSteam loaded: yes` |
 | F-016 | KIT-05 | `tools/release/README.md` says every downloaded tool is pinned, but the Godot editor and export templates are pinned by version only, not SHA-256 like GodotSteam and butler. Add the two checksums or reword the README | Minor | Gameplay Engineer | Fixed (#12): CI checks Godot downloads against the official SHA-512 sums |
 | F-017 | HF-M1-05 | Spacewar's `ACH_WIN_ONE_GAME` may already be unlocked on the CEO's Steam account, so the unlock would not show. Add an opt-in `--steam-reset-test-achievement` flag (app 480 only, never on by default) that clears it at startup, and a `steam-test.bat` in the Windows CI artifact that runs `Holdfast.console.exe --autoplay --steam-reset-test-achievement`, so the CEO's check is one double-click | Minor | Gameplay Engineer | Fixed (#12): `steam-test.bat` is in the Windows artifact |
-| F-018 | HF-M1-03, HF-M1-04 | The HUD bar covers the top ~120 px of the play area at 720p, so enemies arriving from the top and the aura pass underneath it (UI Engineer's F-001 screenshots). Fit the drawn world into the area below the HUD | Minor (fix before Gate 1) | UI Engineer (may change `world_view.gd` placement and scale only; drawing, input and rules stay as they are) | In review (#14) |
-| F-019 | HF-M1-03, HF-M1-04 | `games/holdfast/README.md` still says the `RunSource` node is `stub_run_source.gd` and that wiring the real rules is future work, but `main.tscn` uses `HoldfastRunSource` since #7 (Head of QA, preparing HF-M1-07) | Minor (docs) | Gameplay Engineer | Open: docs-only, may merge during the Gate 1 freeze |
+| F-018 | HF-M1-03, HF-M1-04 | The HUD bar covers the top ~120 px of the play area at 720p, so enemies arriving from the top and the aura pass underneath it (UI Engineer's F-001 screenshots). Fit the drawn world into the area below the HUD | Minor (fix before Gate 1) | UI Engineer (may change `world_view.gd` placement and scale only; drawing, input and rules stay as they are) | Fixed (#14): keep centred below the HUD, view scale 0.85-1, new layout test at 720p and 1080p |
+| F-019 | HF-M1-03, HF-M1-04 | `games/holdfast/README.md` still says the `RunSource` node is `stub_run_source.gd` and that wiring the real rules is future work, but `main.tscn` uses `HoldfastRunSource` since #7 (Head of QA, preparing HF-M1-07) | Minor (docs) | Gameplay Engineer | Fixed (#16) |
 
 ## Test changes
 
