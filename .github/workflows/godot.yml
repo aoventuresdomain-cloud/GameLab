@@ -1,0 +1,108 @@
+name: godot
+
+# Kit tests on every pull request. Holdfast tests and exports when kit/,
+# games/holdfast/ or the pipeline change, and on every push to main (which
+# also keeps the Windows and web builds as downloadable artifacts).
+# Any red job blocks merge (branch protection: require these checks).
+# No secrets are used until M4 (Steam upload); see tools/release/README.md.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: godot-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      holdfast: ${{ steps.filter.outputs.holdfast }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: filter
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "holdfast=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          changed="$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")"
+          echo "$changed"
+          if echo "$changed" | grep -qE '^(kit/|games/holdfast/|tools/link_kit.py|tools/ci/|\.godot-version|\.github/)'; then
+            echo "holdfast=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "holdfast=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  kit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-godot
+      - name: Import the kit host project
+        run: tools/ci/godot.sh --headless --path tools/kit-host --import
+      - name: Kit tests
+        run: tools/ci/godot.sh --headless --path tools/kit-host -s res://addons/gamelab_kit/testing/run_tests.gd -- res://addons/gamelab_kit/tests
+
+  kit-link-windows:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Link the kit on a Windows checkout
+        run: |
+          python tools/link_kit.py
+          python tools/link_kit.py --check
+
+  holdfast:
+    needs: changes
+    if: needs.changes.outputs.holdfast == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-godot
+        with:
+          templates: "true"
+      - name: Import the project
+        run: tools/ci/godot.sh --headless --path games/holdfast --import
+      - name: Open the project with the kit enabled
+        run: tools/ci/godot.sh --headless --path games/holdfast --quit
+      - name: Kit tests inside Holdfast
+        run: tools/ci/godot.sh --headless --path games/holdfast -s res://addons/gamelab_kit/testing/run_tests.gd -- res://addons/gamelab_kit/tests
+      - name: Holdfast tests
+        run: tools/ci/godot.sh --headless --path games/holdfast -s res://addons/gamelab_kit/testing/run_tests.gd -- res://tests
+      - name: Run UI tests
+        run: tools/ci/godot.sh --headless --path games/holdfast --script res://tests/run_ui_tests.gd
+      - name: Ten simulated hours of progression (60 s budget, determinism check)
+        run: tools/ci/godot.sh --headless --path games/holdfast -s res://tools/progression.gd -- --hours=10 --seed=1 --budget=60 --out=../../reports
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: holdfast-progression-${{ github.sha }}
+          path: reports
+          if-no-files-found: ignore
+      - name: Export web (single-threaded) and Windows
+        run: |
+          mkdir -p build/web build/windows
+          tools/ci/godot.sh --headless --path games/holdfast --export-release "Web" ../../build/web/index.html
+          tools/ci/godot.sh --headless --path games/holdfast --export-release "Windows Desktop" ../../build/windows/Holdfast.exe
+          ls -la build/web build/windows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: holdfast-web-${{ github.sha }}
+          path: build/web
+          retention-days: ${{ github.event_name == 'push' && 30 || 7 }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: holdfast-windows-${{ github.sha }}
+          path: build/windows
+          retention-days: ${{ github.event_name == 'push' && 30 || 7 }}

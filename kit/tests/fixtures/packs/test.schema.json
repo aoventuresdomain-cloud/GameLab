@@ -1,0 +1,13 @@
+{
+  "$extends": "res://addons/gamelab_kit/schema/pack.v0.schema.json",
+  "title": "Test game schema: extends the base with one extra enemy field",
+  "$defs": {
+    "enemy": {
+      "required": ["reward"],
+      "additionalProperties": false,
+      "properties": {
+        "reward": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

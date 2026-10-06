@@ -1,0 +1,194 @@
+{
+  "$extends": "res://addons/gamelab_kit/schema/pack.v0.schema.json",
+  "title": "Holdfast content pack schema (extends GameLab pack format v0)",
+  "$defs": {
+    "level": {
+      "required": [
+        "keep_health",
+        "keep_radius",
+        "spawn_radius",
+        "aura",
+        "tower",
+        "staff"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "keep_health": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "keep_radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "spawn_radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "first_wave_delay": {
+          "type": "number",
+          "minimum": 0
+        },
+        "aura": {
+          "type": "object",
+          "required": [
+            "radius",
+            "dps"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "dps": {
+              "type": "number",
+              "minimum": 0
+            },
+            "cursor_speed": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "tower": {
+          "$ref": "#/$defs/tower_placement"
+        },
+        "staff": {
+          "$ref": "#/$defs/staff_placement"
+        }
+      }
+    },
+    "wave": {
+      "additionalProperties": false
+    },
+    "spawn": {
+      "additionalProperties": false
+    },
+    "enemy": {
+      "required": [
+        "damage",
+        "gold",
+        "radius"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "damage": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "gold": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "xp_chance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "xp_value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "tower": {
+      "additionalProperties": false
+    },
+    "staff": {
+      "required": [
+        "damage",
+        "range",
+        "cooldown",
+        "xp_per_level",
+        "damage_per_level"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "damage": {
+          "type": "number",
+          "minimum": 0
+        },
+        "range": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "cooldown": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "xp_per_level": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "damage_per_level": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "upgrade_node": {
+      "additionalProperties": false
+    },
+    "effect": {
+      "properties": {
+        "stat": {
+          "enum": [
+            "aura_dps",
+            "aura_radius",
+            "keep_health",
+            "gold_multiplier",
+            "tower_damage",
+            "staff_damage"
+          ]
+        }
+      }
+    },
+    "tower_placement": {
+      "type": "object",
+      "required": [
+        "id",
+        "x",
+        "y"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-ref": "towers"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "staff_placement": {
+      "type": "object",
+      "required": [
+        "id",
+        "x",
+        "y"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-ref": "staff"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

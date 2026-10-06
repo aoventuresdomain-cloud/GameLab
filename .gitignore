@@ -1,0 +1,15 @@
+# Godot caches and imports
+.godot/
+*.translation
+
+# Kit links made by tools/link_kit.py (never committed)
+games/*/addons/gamelab_kit
+tools/kit-host/addons/gamelab_kit
+
+# Local builds and reports
+build/
+reports/
+
+# OS clutter
+.DS_Store
+Thumbs.db

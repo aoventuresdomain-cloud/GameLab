@@ -1,0 +1,4 @@
+{"enemies": [
+  {"id": "walker", "name": "Walker", "health": 10, "speed": 30, "reward": 2},
+  {"id": "runner", "name": "res://evil.gd", "health": 4.5, "speed": 60, "reward": 1}
+]}

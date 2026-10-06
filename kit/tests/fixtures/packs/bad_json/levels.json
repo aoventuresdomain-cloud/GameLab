@@ -1,0 +1,6 @@
+{"levels": [
+  {"id": "first", "name": "First", "waves": [
+    {"spawns": [{"enemy": "walker", "count": 3, "interval": 1.0}]},
+    {"delay": 2, "spawns": [{"enemy": "runner", "count": 5}]}
+  ]}
+]}
