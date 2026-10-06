@@ -82,6 +82,14 @@ jobs:
         run: tools/ci/godot.sh --headless --path games/holdfast -s res://addons/gamelab_kit/testing/run_tests.gd -- res://tests
       - name: Run UI tests
         run: tools/ci/godot.sh --headless --path games/holdfast --script res://tests/run_ui_tests.gd
+      - name: Ten simulated hours of progression (60 s budget, determinism check)
+        run: tools/ci/godot.sh --headless --path games/holdfast -s res://tools/progression.gd -- --hours=10 --seed=1 --budget=60 --out=../../reports
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: holdfast-progression-${{ github.sha }}
+          path: reports
+          if-no-files-found: ignore
       - name: Export web (single-threaded) and Windows
         run: |
           mkdir -p build/web build/windows
