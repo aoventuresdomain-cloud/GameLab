@@ -25,7 +25,7 @@
 
 ### KIT-01 Kit as a Godot addon, linked into Holdfast
 - **Owner:** Gameplay Engineer
-- **Status:** In review (PR #5)
+- **Status:** In QA (merged in #5; full round at Gate 1)
 - **QA:** full
 - **Done when:**
   - [ ] `games/holdfast/addons/gamelab_kit/` resolves to `kit/` (link or a scripted sync step), on Linux CI and on a Windows checkout, and the method is written in `README.md`.
@@ -36,7 +36,7 @@
 
 ### KIT-02 Shared simulation engine: timestep, seed and bot runner
 - **Owner:** Gameplay Engineer
-- **Status:** In review (PR #5)
+- **Status:** In QA (merged in #5). Line 2 is met by the parity test only until HF-M1-03 wires the build; line 4 waits on required checks
 - **QA:** full
 - **Done when:**
   - [ ] `kit/sim/` provides a fixed-timestep loop, a seeded random generator and a bot runner that drive any game's rules through one interface; it has no rendering or scene-tree dependency.
@@ -46,7 +46,7 @@
 
 ### KIT-03 Pack format v0 and pack loader
 - **Owner:** Gameplay Engineer
-- **Status:** In review (PR #5)
+- **Status:** In QA (merged in #5; full round at Gate 1)
 - **QA:** full
 - **Done when:**
   - [ ] `kit/schema/` holds a versioned base JSON schema for levels, enemies, towers, staff and upgrade nodes, which games extend.
@@ -66,7 +66,7 @@
 
 ### KIT-05 CI pipeline: tests and exports
 - **Owner:** Gameplay Engineer
-- **Status:** In progress (CI and exports in PR #5; itch.io upload still to do, F-004)
+- **Status:** In progress (CI and exports merged in #5; itch.io upload F-004 and required checks still to do)
 - **QA:** full
 - **Depends on:** KIT-01
 - **Done when:**
@@ -82,7 +82,7 @@
 
 ### HF-M1-01 Holdfast combat rules on the shared engine
 - **Owner:** Gameplay Engineer
-- **Status:** In review (PR #5)
+- **Status:** In QA (merged in #5). Line 3 is met by the parity test; the exported build switches over in HF-M1-03
 - **QA:** full
 - **Depends on:** KIT-02, KIT-03
 - **Done when:**
@@ -92,7 +92,7 @@
 
 ### HF-M1-02 Ten hours of progression headless in under a minute
 - **Owner:** Gameplay Engineer
-- **Status:** In review (PR #5)
+- **Status:** In QA (merged in #5; full round at Gate 1)
 - **QA:** full
 - **Depends on:** HF-M1-01
 - **Done when:**
@@ -110,6 +110,7 @@
   - [ ] Enemies drop gold; the run ends when the keep falls or the last wave is cleared.
   - [ ] The CI web build and Windows build both play one full run with no errors in the log.
   - [ ] Placeholder art only (CC0), with sources listed in `games/holdfast/assets/CREDITS.md`.
+  - [ ] `scenes/main.tscn` uses `HoldfastRunSource` (the kit engine), so the exported builds run the real rules, and the UI tests pass with the stub pinned.
 
 ### HF-M1-04 Run HUD and run flow screens
 - **Owner:** UI Engineer
@@ -168,6 +169,10 @@
 | F-001 | HF-M1-04 | Readability not yet confirmed in the Windows build and the browser (only desktop Linux so far) | Minor | Head of QA and Validation | Open: waits on KIT-05 builds |
 | F-002 | HF-M1-02 | The bot wins every run on placeholder numbers, so the progression report says nothing about balance yet; the report must say so | Minor | Balance Analyst (M2); report note by Gameplay Engineer | Deferred to M2 |
 | F-003 | HF-M1-02 | `tools/progression.gd --out` with an absolute path writes under the project folder instead | Minor | Gameplay Engineer | Open |
+| F-005 | HF-M1-01 | `waves_cleared` counts waves whose enemies reached the keep. Ruling: a wave is cleared only when every enemy in it was killed; add a test | Minor | Gameplay Engineer | Open |
+| F-006 | HF-M1-01 | `HoldfastRules.setup` uses `assert` for bad config, which release exports strip; use `push_error` and return early | Minor | Gameplay Engineer | Open |
+| F-007 | KIT-01 | `kit/README.md` lists `services/`, which doesn't exist yet | Minor | Gameplay Engineer | Open: fix with KIT-04 |
+| F-008 | KIT-02, KIT-05 | Only `repo-checks` is required on `main`, so red kit or Holdfast jobs don't block merge; add `kit-tests`, `holdfast` and `kit-link-windows` as required checks | Major | Setup Desk (CEO's hands) | Open: asked via Chief of Staff |
 | F-004 | KIT-05 | No CI upload of the web build to the itch.io Draft page yet, and `tools/release/README.md` does not list `BUTLER_API_KEY` | Major (Gate 1) | Gameplay Engineer | Open |
 
 ## Test changes
@@ -189,4 +194,5 @@
 - 2026-10-06: The repository stays public for now (CEO decision), to go private once the idea matures. Until then `games/holdfast/plan.md` is a build excerpt and nothing commercially sensitive is committed (`CLAUDE.md`).
 - 2026-10-06: Gate 1 web build is played from a password-protected itch.io draft page (not a public release), uploaded by CI with butler. Agreed with the Setup Desk.
 - 2026-10-06: Godot pinned at 4.6-stable. KIT-01 owns `project.godot`; KIT-05 runs the UI tests in CI (overlaps from HF-M1-04, settled by the Head of Engineering).
+- Open (M3 or replays): floating-point results may differ between Linux CI and Windows players; harmless for M1, matters if saves or replays must match exactly across machines.
 - Open (decide in M1): macOS at launch or Windows and Steam Deck only (HF-M1-06).
