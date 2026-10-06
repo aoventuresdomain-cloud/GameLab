@@ -3,7 +3,8 @@ extends Node2D
 ##
 ## Reads the run source's rules for drawing only; it never changes or steps them.
 ## Placeholder art: shapes drawn in code (see assets/CREDITS.md). The keep sits
-## at this node's position, which follows the centre of the visible area.
+## at this node's position. The view is scaled so the whole spawn ring fits in
+## the visible area below the HUD bar, at any window size.
 
 @export var source_path: NodePath
 
@@ -16,6 +17,14 @@ const COLOUR_TOWER := Color("#7f8fa6")
 const COLOUR_STAFF := Color("#e1a95f")
 const COLOUR_SHOT := Color(1.0, 0.95, 0.6, 0.9)
 const COLOUR_HEALTH := Color("#d64545")
+## Height kept clear for the HUD bar at the 1280x720 base size (scenes/ui/hud.tscn
+## draws it from y = 16 to about y = 121).
+const HUD_CLEARANCE := 132.0
+const BOTTOM_MARGIN := 16.0
+## Drawn beyond the spawn ring: the largest enemy's radius plus its health bar.
+const RING_EDGE := 32.0
+## Spawn ring radius used before a run has rules (start screen, the UI tests' stub).
+const DEFAULT_SPAWN_RADIUS := 420.0
 const ENEMY_COLOURS := {
 	"grunt": Color("#9c5b5b"),
 	"runner": Color("#c47e3a"),
@@ -41,10 +50,25 @@ func _notification(what: int) -> void:
 
 
 func _process(_delta: float) -> void:
-	position = get_viewport_rect().size / 2.0 + Vector2(0, 40)
+	_fit_below_hud()
 	if source is HoldfastRunSource and source.is_running():
 		source.set_cursor(screen_to_world(_mouse) if _mouse is Vector2 else null)
 	queue_redraw()
+
+
+## Centres the keep in the area below the HUD and scales the view down (never
+## up) so the spawn ring and anything on it stays in that area.
+func _fit_below_hud() -> void:
+	var view := get_viewport_rect()
+	var area := Rect2(view.position.x, view.position.y + HUD_CLEARANCE,
+			view.size.x, maxf(view.size.y - HUD_CLEARANCE - BOTTOM_MARGIN, 1.0))
+	var ring := DEFAULT_SPAWN_RADIUS
+	if source is HoldfastRunSource and source.get_rules() != null:
+		ring = source.get_rules().spawn_radius
+	var reach := (ring + RING_EDGE) * 2.0
+	var fit := minf(1.0, minf(area.size.x / reach, area.size.y / reach))
+	position = area.get_center()
+	scale = Vector2(fit, fit)
 
 
 ## Viewport position to world position (the keep is at the origin).
