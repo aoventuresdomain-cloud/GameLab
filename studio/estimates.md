@@ -26,6 +26,6 @@ Weeks are counted from that approval. Revised 2026-10-06 after the CEO's playtes
 |---|---|---|---|---|
 | Windows determinism and screenshots, Mac build and live Steam check, pacing bands, pack v1, save service, style guide | Gameplay Engineer, Balance Analyst, Product Designer | +1 week | Medium | Windows hash drift; the unsigned Mac build with GodotSteam |
 | Core of a run: lead a hero, enemies fight back, parity holds | Gameplay Engineer | +2 to 3 weeks | Low | Keeping player input deterministic for the simulator |
-| Slice content (biome, 5 levels, 4 staff with led movesets, upgrade tree, blessings), home and keep screens, feel, simulator gating | Gameplay Engineer, UI Engineer | +5 to 6 weeks | Low | Pacing rework rounds |
+| Slice content (biome, 5 levels, 4 heroes with led movesets, upgrade tree, blessings), home and keep screens, feel, simulator gating | Gameplay Engineer, UI Engineer | +5 to 6 weeks | Low | Pacing rework rounds |
 | Tester sessions and report (5-10 outside testers) | Player Researcher | +6 to 7 weeks | Low | Recruiting; starts at approval so it overlaps the build |
 | Gate 2 QA round and brief | Head of QA and Validation, Head of Engineering | +7 to 8 weeks | Low | Fix rounds |
