@@ -25,7 +25,7 @@
 
 ### KIT-01 Kit as a Godot addon, linked into Holdfast
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** In review (PR #5)
 - **QA:** full
 - **Done when:**
   - [ ] `games/holdfast/addons/gamelab_kit/` resolves to `kit/` (link or a scripted sync step), on Linux CI and on a Windows checkout, and the method is written in `README.md`.
@@ -36,7 +36,7 @@
 
 ### KIT-02 Shared simulation engine: timestep, seed and bot runner
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** In review (PR #5)
 - **QA:** full
 - **Done when:**
   - [ ] `kit/sim/` provides a fixed-timestep loop, a seeded random generator and a bot runner that drive any game's rules through one interface; it has no rendering or scene-tree dependency.
@@ -46,7 +46,7 @@
 
 ### KIT-03 Pack format v0 and pack loader
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** In review (PR #5)
 - **QA:** full
 - **Done when:**
   - [ ] `kit/schema/` holds a versioned base JSON schema for levels, enemies, towers, staff and upgrade nodes, which games extend.
@@ -66,7 +66,7 @@
 
 ### KIT-05 CI pipeline: tests and exports
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** In progress (CI and exports in PR #5; itch.io upload still to do, F-004)
 - **QA:** full
 - **Depends on:** KIT-01
 - **Done when:**
@@ -82,7 +82,7 @@
 
 ### HF-M1-01 Holdfast combat rules on the shared engine
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** In review (PR #5)
 - **QA:** full
 - **Depends on:** KIT-02, KIT-03
 - **Done when:**
@@ -92,7 +92,7 @@
 
 ### HF-M1-02 Ten hours of progression headless in under a minute
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** In review (PR #5)
 - **QA:** full
 - **Depends on:** HF-M1-01
 - **Done when:**
@@ -166,6 +166,9 @@
 | ID | Item | Finding | Severity | Owner | Status |
 |---|---|---|---|---|---|
 | F-001 | HF-M1-04 | Readability not yet confirmed in the Windows build and the browser (only desktop Linux so far) | Minor | Head of QA and Validation | Open: waits on KIT-05 builds |
+| F-002 | HF-M1-02 | The bot wins every run on placeholder numbers, so the progression report says nothing about balance yet; the report must say so | Minor | Balance Analyst (M2); report note by Gameplay Engineer | Deferred to M2 |
+| F-003 | HF-M1-02 | `tools/progression.gd --out` with an absolute path writes under the project folder instead | Minor | Gameplay Engineer | Open |
+| F-004 | KIT-05 | No CI upload of the web build to the itch.io Draft page yet, and `tools/release/README.md` does not list `BUTLER_API_KEY` | Major (Gate 1) | Gameplay Engineer | Open |
 
 ## Test changes
 
@@ -173,7 +176,7 @@
 
 | Date | Test | Change | Why | OK'd by |
 |---|---|---|---|---|
-| | | None yet | | |
+| 2026-10-06 | `games/holdfast/tests/run_ui_tests.gd` | Pin the stub run source instead of the real rules | Its "wave advances" check encoded the stub's pacing; once the real rules are wired in, it would test level balance rather than the UI. The real rules keep their own end-to-end coverage (parity test, exported-build autoplay smoke test) | Head of Engineering |
 
 ## Advisor views
 
