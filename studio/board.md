@@ -130,7 +130,7 @@
 - **Depends on:** KIT-04, HF-M1-03
 - **Done when:**
   - [ ] Clearing the level in the Windows build unlocks one achievement on Valve's test app (480) through the kit Steam service.
-  - [ ] Evidence on the item: the log line and a screenshot of the Steam overlay notification, from a Windows PC with Steam running.
+  - [ ] Evidence on the item, from a Windows PC with Steam running: the log line `[steam] achievement ACH_WIN_ONE_GAME: unlocked` and a screenshot of the Steam overlay notification (or, if the overlay doesn't show for a game started outside Steam, of Spacewar's achievements page with the unlock time).
   - [ ] The web build and CI runs are unaffected (no-op path, tests green).
 
 ### HF-M1-06 macOS export cost check
@@ -189,6 +189,7 @@
 | F-014 | KIT-05 | First `itch-draft` run on `main` (after #7): butler logged in with `BUTLER_API_KEY`, but itch.io refused the build with "Please verify your account's email address before uploading a build". `itch-draft` stays red on every push to `main` until this is done | Major (Gate 1) | Setup Desk (CEO's hands: verify the itch.io account email) | Fixed 2026-10-06: email verified, `itch-draft` re-run on `main` passed |
 | F-015 | HF-M1-05 | `smoke-windows` proves the GodotSteam template ran but not that the `Steam` singleton loads, because `SteamService.init` returns at the headless check first. Log `Engine.has_singleton("Steam")` in the unavailable message and have `smoke-windows` assert it, so the CEO's Steam session isn't the first test | Major (Gate 1) | Gameplay Engineer | Open: small PR before the Setup Desk hands HF-M1-05 to the CEO |
 | F-016 | KIT-05 | `tools/release/README.md` says every downloaded tool is pinned, but the Godot editor and export templates are pinned by version only, not SHA-256 like GodotSteam and butler. Add the two checksums or reword the README | Minor | Gameplay Engineer | Open |
+| F-017 | HF-M1-05 | Spacewar's `ACH_WIN_ONE_GAME` may already be unlocked on the CEO's Steam account, so the unlock would not show. Add an opt-in `--steam-reset-test-achievement` flag (app 480 only, never on by default) that clears it at startup, and a `steam-test.bat` in the Windows CI artifact that runs `Holdfast.console.exe --autoplay --steam-reset-test-achievement`, so the CEO's check is one double-click | Minor | Gameplay Engineer | Open: same PR as F-015 |
 
 ## Test changes
 
@@ -212,4 +213,5 @@
 - 2026-10-06: Godot pin moves from 4.6-stable to 4.7.2, because GodotSteam ships Windows export templates for 4.7.x but nothing for 4.6. The Windows export uses GodotSteam's template (pinned by file name and SHA-256); the web export stays on stock templates. Rejected: 4.5.2 (older engine, downgrade) and building GodotSteam ourselves (slow and fragile). Head of Engineering (F-009).
 - Open (M3 or replays): floating-point results may differ between Linux CI and Windows players; harmless for M1, matters if saves or replays must match exactly across machines.
 - 2026-10-06: No macOS build at Gate 1; Mac players use the itch.io web build, and the unsigned macOS export stays in CI as an early warning. Head of Engineering (HF-M1-06).
+- 2026-10-06: HF-M1-05 line 2 also accepts Spacewar's achievements page with the unlock time, in case the overlay doesn't show for a game started outside Steam (Head of Engineering, Setup Desk question).
 - Open (CEO, in the Gate 1 brief): ship macOS at Steam launch or Windows and Steam Deck only. Needs a paid Apple Developer sign-up and a Mac for QA (HF-M1-06 note).
