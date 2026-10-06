@@ -4,7 +4,8 @@ name: godot
 # games/holdfast/ or the pipeline change, and on every push to main (which
 # also keeps the Windows and web builds as downloadable artifacts).
 # Any red job blocks merge (branch protection: require these checks).
-# No secrets are used until M4 (Steam upload); see tools/release/README.md.
+# One secret: BUTLER_API_KEY, used only by the main-only itch.io draft upload
+# (set up by the owner through the Setup Desk). See tools/release/README.md.
 
 on:
   pull_request:
@@ -163,3 +164,33 @@ jobs:
           if ($LASTEXITCODE -ne 0) { Write-Output "::error::Holdfast exited with $LASTEXITCODE"; exit 1 }
           if ($log -notmatch 'AUTOPLAY DONE') { Write-Output "::error::no finished run in the log"; exit 1 }
           if ($log -match '(?m)^(SCRIPT )?ERROR:') { Write-Output "::error::errors in the log"; exit 1 }
+
+  # Every push to main uploads the web build to the owner's private itch.io
+  # draft page for Gate 1. Butler only uploads files; it cannot change the
+  # page's visibility, so the page stays a draft.
+  itch-draft:
+    needs: [holdfast, smoke-web]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ITCH_TARGET: aoventuresdomain-cloud/holdfast-tech-proof:html5
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: holdfast-web-${{ github.sha }}
+          path: build/web
+      - name: Install butler
+        run: |
+          curl -fsSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler
+          chmod +x butler/butler
+          butler/butler -V
+      - name: Upload the web build to the itch.io draft page
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          if [ -z "$BUTLER_API_KEY" ]; then
+            echo "::error::BUTLER_API_KEY is not set (Setup Desk)"; exit 1
+          fi
+          butler/butler push build/web "$ITCH_TARGET" --userversion "${GITHUB_SHA::12}"
