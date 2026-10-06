@@ -1,9 +1,10 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/run_flow.gd" id="1_flow"]
 [ext_resource type="Script" path="res://scripts/holdfast_run_source.gd" id="2_run"]
 [ext_resource type="Script" path="res://scripts/world_view.gd" id="6_world"]
 [ext_resource type="Script" path="res://scripts/autoplay.gd" id="7_autoplay"]
+[ext_resource type="Script" path="res://scripts/steam_hooks.gd" id="8_steam"]
 [ext_resource type="PackedScene" path="res://scenes/ui/start_screen.tscn" id="3_start"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="4_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/run_summary.tscn" id="5_summary"]
@@ -34,4 +35,8 @@ layer = 10
 [node name="Autoplay" type="Node" parent="."]
 script = ExtResource("7_autoplay")
 flow_path = NodePath("..")
+source_path = NodePath("../RunSource")
+
+[node name="SteamHooks" type="Node" parent="."]
+script = ExtResource("8_steam")
 source_path = NodePath("../RunSource")

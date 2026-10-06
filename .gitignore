@@ -13,3 +13,4 @@ reports/
 # OS clutter
 .DS_Store
 Thumbs.db
+games/*/addons/godotsteam

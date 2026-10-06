@@ -91,11 +91,28 @@ jobs:
           path: reports
           if-no-files-found: ignore
       - name: Export web (single-threaded) and Windows
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           mkdir -p build/web build/windows
           tools/ci/godot.sh --headless --path games/holdfast --export-release "Web" ../../build/web/index.html
+          # GodotSteam goes into the desktop build only (pinned in kit/services/steam/godotsteam.json).
+          python3 tools/fetch_godotsteam.py games/holdfast
+          tools/ci/godot.sh --headless --path games/holdfast --import
           tools/ci/godot.sh --headless --path games/holdfast --export-release "Windows Desktop" ../../build/windows/Holdfast.exe
           ls -la build/web build/windows
+      # HF-M1-06: what an unsigned macOS export costs. Recorded, never blocking.
+      - name: Try an unsigned macOS export
+        id: macos
+        continue-on-error: true
+        run: |
+          mkdir -p build/macos
+          tools/ci/godot.sh --headless --path games/holdfast --export-release "macOS" ../../build/macos/Holdfast.zip
+          ls -la build/macos
+      - name: Record the macOS result
+        if: always()
+        run: |
+          echo "macOS unsigned export: ${{ steps.macos.outcome }}" | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: holdfast-web-${{ github.sha }}
