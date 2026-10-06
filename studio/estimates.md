@@ -20,11 +20,12 @@ Merged and waiting on the Gate 1 full round (finish with HF-M1-07): KIT-01, KIT-
 
 ## Holdfast M2 (fun slice) → Gate 2: proposed, starts only when the CEO approves Gate 1 and the M2 plan
 
-Weeks are counted from that approval. Low confidence until the tester route is approved and the pacing bands exist.
+Weeks are counted from that approval. Revised 2026-10-06 after the CEO's playtest: leading a hero, enemies that fight back, tower health, a home screen and two more upgrade branches add about 2 weeks. Low confidence until the tester route is approved and the pacing bands exist.
 
 | Stage | Owner | Est. finish | Confidence | Main risk |
 |---|---|---|---|---|
-| Windows determinism, pacing bands, pack v1, save service, style guide | Gameplay Engineer, Balance Analyst, Product Designer | +1 week | Medium | Windows hash drift found by the new check |
-| Slice content (biome, 5 levels, 4 staff, upgrade tree, blessings), screens, feel, simulator gating | Gameplay Engineer, UI Engineer | +3 to 4 weeks | Low | Pacing rework rounds |
-| Tester sessions and report (5-10 outside testers) | Player Researcher | +4 to 5 weeks | Low | Recruiting; starts at approval so it overlaps the build |
-| Gate 2 QA round and brief | Head of QA and Validation, Head of Engineering | +5 to 6 weeks | Low | Fix rounds |
+| Windows determinism and screenshots, Mac build and live Steam check, pacing bands, pack v1, save service, style guide | Gameplay Engineer, Balance Analyst, Product Designer | +1 week | Medium | Windows hash drift; the unsigned Mac build with GodotSteam |
+| Core of a run: lead a hero, enemies fight back, parity holds | Gameplay Engineer | +2 to 3 weeks | Low | Keeping player input deterministic for the simulator |
+| Slice content (biome, 5 levels, 4 staff with led movesets, upgrade tree, blessings), home and keep screens, feel, simulator gating | Gameplay Engineer, UI Engineer | +5 to 6 weeks | Low | Pacing rework rounds |
+| Tester sessions and report (5-10 outside testers) | Player Researcher | +6 to 7 weeks | Low | Recruiting; starts at approval so it overlaps the build |
+| Gate 2 QA round and brief | Head of QA and Validation, Head of Engineering | +7 to 8 weeks | Low | Fix rounds |
