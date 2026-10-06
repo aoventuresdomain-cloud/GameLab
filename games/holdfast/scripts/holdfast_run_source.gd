@@ -14,6 +14,8 @@ extends "res://scripts/ui/run_state_source.gd"
 @export var use_bot := false
 ## When false, nothing moves until step() is called (used by tests).
 @export var auto_step := true
+## When false, a refused run is not logged as an error (tests that cause one).
+var report_errors := true
 
 var upgrades: Array = []
 
@@ -36,6 +38,8 @@ func _process(delta: float) -> void:
 
 
 ## Starts a run. With a fixed rng_seed, play-again runs use rng_seed + run number.
+## Refuses (no run_started, nothing running) when the rules reject the setup,
+## for example an unknown level.
 func start_run() -> void:
 	var content := HoldfastContent.base()
 	if content.is_empty():
@@ -43,9 +47,16 @@ func start_run() -> void:
 		return
 	var run_seed := rng_seed + _runs
 	_runs += 1
-	_rules = HoldfastRules.new()
+	var rules := HoldfastRules.new()
+	rules.report_errors = report_errors
 	var controller: SimController = HoldfastAuraBot.new() if use_bot else _player
-	_engine = SimEngine.new(_rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content), HoldfastRules.TICK_RATE)
+	var engine := SimEngine.new(rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content), HoldfastRules.TICK_RATE)
+	if rules.setup_error != "":
+		if report_errors:
+			push_error("Holdfast: cannot start a run: " + rules.setup_error)
+		return
+	_rules = rules
+	_engine = engine
 	_running = true
 	_last = {}
 	run_started.emit()

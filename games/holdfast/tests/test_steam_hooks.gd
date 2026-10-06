@@ -18,3 +18,11 @@ func test_steam_hooks_use_the_test_app_and_survive_without_steam() -> void:
 	expect_false(source.is_running(), "the run ended without Steam getting in the way")
 	expect_eq(hooks.steam.log_lines.size(), 1, "logged once")
 	main.free()
+
+
+func test_only_a_won_run_unlocks_the_level_achievement() -> void:
+	var hooks := preload("res://scripts/steam_hooks.gd")
+	expect_true(hooks.clears_level({"result": {"outcome": HoldfastRules.OUTCOME_WON}}), "won")
+	expect_false(hooks.clears_level({"keep_fell": true, "result": {"outcome": HoldfastRules.OUTCOME_LOST}}), "lost")
+	expect_false(hooks.clears_level({"keep_fell": false, "result": {"outcome": HoldfastRules.OUTCOME_INVALID}}), "invalid run, keep never fell")
+	expect_false(hooks.clears_level({"keep_fell": false}), "no result")

@@ -23,5 +23,10 @@ func _process(_delta: float) -> void:
 
 
 func _on_run_ended(summary: Dictionary) -> void:
-	if not summary.get("keep_fell", true):
+	if clears_level(summary):
 		steam.unlock_achievement(LEVEL_CLEARED_ACHIEVEMENT)
+
+
+## Only a won run clears the level; a lost or invalid run never unlocks it.
+static func clears_level(summary: Dictionary) -> bool:
+	return summary.get("result", {}).get("outcome") == HoldfastRules.OUTCOME_WON
