@@ -6,6 +6,8 @@
 
 ## 3. The game
 
+**Theme: The Last Lighthouse** (CEO, 6 Oct 2026). A lighthouse on a coast swallowed by a living fog. Fog creatures come out of the dark. Your Hero is the Keeper, whose lantern is their light and their weapon. Recruits are survivors you rescue from the sea, and upgrading the keep makes the beam reach further and push the fog back. "Holdfast" is the working title until the name check.
+
 **Run (3-8 minutes):**
 1. Pick a level, a squad of Recruits for your deploy slots (2 to start, up to 4), and 1 of 3 offered blessings (temporary boosts for this run).
 2. Enemies come in waves. You move your Hero on the battlefield (WASD or a controller stick); the Hero attacks on their own within range and has one active ability, set by their skill path, on a cooldown. Towers and Recruits fight on their own.
