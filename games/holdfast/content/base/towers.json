@@ -1,0 +1,5 @@
+{
+  "towers": [
+    {"id": "archer_post", "name": "Archer post", "damage": 4, "range": 170, "cooldown": 1.0}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "format_version": 0,
+  "id": "base",
+  "name": "Holdfast base content",
+  "version": "0.1.0",
+  "description": "M1 tech proof content: one level, three enemies, one tower, one staff and a stub upgrade tree. Placeholder numbers, tuned in M2.",
+  "files": ["enemies.json", "towers.json", "staff.json", "levels.json", "upgrades.json"]
+}

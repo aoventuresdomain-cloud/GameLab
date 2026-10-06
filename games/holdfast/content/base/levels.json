@@ -1,0 +1,22 @@
+{
+  "levels": [
+    {
+      "id": "outpost",
+      "name": "The Outpost",
+      "keep_health": 100,
+      "keep_radius": 36,
+      "spawn_radius": 420,
+      "first_wave_delay": 2,
+      "aura": {"radius": 70, "dps": 12, "cursor_speed": 1800},
+      "tower": {"id": "archer_post", "x": -90, "y": 30},
+      "staff": {"id": "bryn", "x": 80, "y": -40},
+      "waves": [
+        {"spawns": [{"enemy": "grunt", "count": 6, "interval": 1.5}]},
+        {"delay": 4, "spawns": [{"enemy": "grunt", "count": 8, "interval": 1.2}, {"enemy": "runner", "count": 3, "interval": 2.0}]},
+        {"delay": 4, "spawns": [{"enemy": "grunt", "count": 10, "interval": 1.0}, {"enemy": "runner", "count": 5, "interval": 1.6}]},
+        {"delay": 5, "spawns": [{"enemy": "grunt", "count": 10, "interval": 0.9}, {"enemy": "runner", "count": 6, "interval": 1.4}, {"enemy": "brute", "count": 1, "interval": 0}]},
+        {"delay": 5, "spawns": [{"enemy": "grunt", "count": 14, "interval": 0.8}, {"enemy": "runner", "count": 8, "interval": 1.2}, {"enemy": "brute", "count": 2, "interval": 6}]}
+      ]
+    }
+  ]
+}
