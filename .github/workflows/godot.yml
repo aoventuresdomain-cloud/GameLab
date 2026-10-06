@@ -141,7 +141,12 @@ jobs:
         run: |
           npm install --no-save --no-package-lock playwright-core@1
           python3 -m http.server 8060 --directory build/web &
-          sleep 1
+          # Wait until the server answers (up to 15 s) rather than guessing.
+          for _ in $(seq 1 75); do
+            curl -fsS -o /dev/null http://localhost:8060/index.html && break
+            sleep 0.2
+          done
+          curl -fsS -o /dev/null http://localhost:8060/index.html || { echo "::error::web server did not start"; exit 1; }
           node tools/ci/web_smoke.mjs "http://localhost:8060/index.html?autoplay=1&seed=1" 240
 
   smoke-windows:
