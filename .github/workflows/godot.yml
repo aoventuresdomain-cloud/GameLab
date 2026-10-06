@@ -100,6 +100,8 @@ jobs:
           tools/ci/godot.sh --headless --path games/holdfast --export-release "Web" ../../build/web/index.html
           tools/ci/godot.sh --headless --path games/holdfast --export-release "Windows Desktop" ../../build/windows/Holdfast.exe
           cp build/godotsteam/steam_api64.dll build/windows/
+          # One double-click for the manual Steam check (HF-M1-05, F-017).
+          cp games/holdfast/tools/steam-test.bat build/windows/
           ls -la build/web build/windows
       # HF-M1-06: what an unsigned macOS export costs. Recorded, never blocking.
       - name: Try an unsigned macOS export
@@ -170,6 +172,7 @@ jobs:
           if ($log -match '(?m)^(SCRIPT )?ERROR:') { Write-Output "::error::errors in the log"; exit 1 }
           # F-015: the build must carry GodotSteam (the run is headless, so Steam itself stays off).
           if ($log -notmatch 'GodotSteam loaded: yes') { Write-Output "::error::GodotSteam is not loaded in the Windows build"; exit 1 }
+          if (-not (Test-Path build/windows/steam-test.bat)) { Write-Output "::error::steam-test.bat is missing from the Windows build"; exit 1 }
 
   # The butler pin (version and checksum) is checked on pull requests too, so a
   # bad pin fails here rather than on main. No secrets in this job.

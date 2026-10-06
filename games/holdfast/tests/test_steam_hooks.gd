@@ -26,3 +26,24 @@ func test_only_a_won_run_unlocks_the_level_achievement() -> void:
 	expect_false(hooks.clears_level({"keep_fell": true, "result": {"outcome": HoldfastRules.OUTCOME_LOST}}), "lost")
 	expect_false(hooks.clears_level({"keep_fell": false, "result": {"outcome": HoldfastRules.OUTCOME_INVALID}}), "invalid run, keep never fell")
 	expect_false(hooks.clears_level({"keep_fell": false}), "no result")
+
+
+func test_reset_flag_only_works_for_the_test_app() -> void:
+	var hooks := preload("res://scripts/steam_hooks.gd")
+	var flag := PackedStringArray(["--autoplay", hooks.RESET_FLAG])
+	expect_true(hooks.resets_test_achievement(480, flag), "test app with the flag")
+	expect_false(hooks.resets_test_achievement(480, PackedStringArray(["--autoplay"])), "never by default")
+	expect_false(hooks.resets_test_achievement(3141590, flag), "ignored for any other app")
+	expect_false(hooks.resets_test_achievement(0, flag), "ignored without an app")
+
+
+func test_reset_flag_without_steam_is_a_safe_no_op() -> void:
+	var main := Main.instantiate()
+	main.get_node("RunSource").auto_step = false
+	tree.root.add_child(main)
+	var hooks: Node = main.get_node("SteamHooks")
+	hooks.start_reset(PackedStringArray(["--autoplay", hooks.RESET_FLAG]))
+	hooks._process(0.1)
+	expect_false(hooks._reset_pending, "nothing pending without Steam")
+	expect_eq(hooks.steam.log_lines.size(), 1, "only the unavailable line")
+	main.free()

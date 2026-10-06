@@ -68,6 +68,19 @@ func unlock_achievement(achievement: String) -> bool:
 	return set_ok and stored
 
 
+## Clears an achievement and stores it (test setups only; games never call this in
+## normal play). Returns true when Steam accepted both; callers may retry, so a
+## refusal is not logged.
+func clear_achievement(achievement: String) -> bool:
+	if not _initialised:
+		return false
+	var clear_ok: bool = _steam.call("clearAchievement", achievement)
+	var stored := clear_ok and store_stats()
+	if stored:
+		_log("achievement %s: cleared" % achievement)
+	return stored
+
+
 ## Sends stats and achievements to Steam. Returns true when Steam accepted.
 func store_stats() -> bool:
 	if not _initialised:

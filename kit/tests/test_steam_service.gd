@@ -38,3 +38,10 @@ func test_unavailable_message_says_whether_godotsteam_is_loaded() -> void:
 	steam.init(480)
 	expect_false(SteamService.has_godotsteam(), "no GodotSteam in the test host")
 	expect_true(steam.log_lines[0].contains("GodotSteam loaded: no"), steam.log_lines[0])
+
+
+func test_clear_achievement_is_a_no_op_without_steam() -> void:
+	var steam := SteamService.new()
+	steam.init(480)
+	expect_false(steam.clear_achievement("ACH_WIN_ONE_GAME"), "nothing to clear without Steam")
+	expect_eq(steam.log_lines.size(), 1, "only the unavailable line")
