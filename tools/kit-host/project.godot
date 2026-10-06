@@ -1,0 +1,13 @@
+; Minimal Godot project that hosts the Studio Kit for its own tests, with no game in it.
+; tools/link_kit.py links kit/ in as addons/gamelab_kit.
+
+config_version=5
+
+[application]
+
+config/name="GameLab Kit Host"
+config/features=PackedStringArray("4.6")
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gamelab_kit/plugin.cfg")
