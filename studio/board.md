@@ -31,7 +31,7 @@
   - [ ] `games/holdfast/addons/gamelab_kit/` resolves to `kit/` (link or a scripted sync step), on Linux CI and on a Windows checkout, and the method is written in `README.md`.
   - [ ] `godot --headless --path games/holdfast --quit` opens the project with the kit addon enabled and no errors in CI.
   - [ ] Holdfast code calls a kit class, covered by a test.
-  - [ ] The Godot version is pinned in one place (4.6-stable, the version HF-M1-04 was tested on) and used by every CI job.
+  - [ ] The Godot version is pinned in one place (4.7.2-stable since #10, F-009 decision; was 4.6-stable) and used by every CI job.
   - [ ] `games/holdfast/project.godot` is owned by this item from now on and keeps the display, renderer and theme settings HF-M1-04 added.
 
 ### KIT-02 Shared simulation engine: timestep, seed and bot runner
@@ -56,7 +56,7 @@
 
 ### KIT-04 Steam service with a safe fallback
 - **Owner:** Gameplay Engineer
-- **Status:** In QA (merged in #7). Line 1's version pin lands with the Godot 4.7.2 bump (F-009)
+- **Status:** In QA (merged in #7; GodotSteam template pinned in #10)
 - **QA:** full
 - **Depends on:** KIT-01
 - **Done when:**
@@ -125,12 +125,12 @@
 
 ### HF-M1-05 Test Steam achievement fires
 - **Owner:** Gameplay Engineer
-- **Status:** Blocked (code and the no-op path merged in #7; needs the Godot 4.7.2 bump with F-009 and F-011, then the CEO's Windows PC with Steam via the Setup Desk)
+- **Status:** In QA (code in #7, GodotSteam in the Windows build in #10). Lines 1 and 2 need the Steam check on the CEO's Windows PC via the Setup Desk, after F-015
 - **QA:** full
 - **Depends on:** KIT-04, HF-M1-03
 - **Done when:**
   - [ ] Clearing the level in the Windows build unlocks one achievement on Valve's test app (480) through the kit Steam service.
-  - [ ] Evidence on the item: the log line and a screenshot of the Steam overlay notification, from a Windows PC with Steam running.
+  - [ ] Evidence on the item, from a Windows PC with Steam running: the log line `[steam] achievement ACH_WIN_ONE_GAME: unlocked` and a screenshot of the Steam overlay notification (or, if the overlay doesn't show for a game started outside Steam, of Spacewar's achievements page with the unlock time).
   - [ ] The web build and CI runs are unaffected (no-op path, tests green).
 
 ### HF-M1-06 macOS export cost check
@@ -180,13 +180,16 @@
 | F-006 | HF-M1-01 | `HoldfastRules.setup` uses `assert` for bad config, which release exports strip; use `push_error` and return early | Minor | Gameplay Engineer | Fixed (#7) |
 | F-007 | KIT-01 | `kit/README.md` lists `services/`, which doesn't exist yet | Minor | Gameplay Engineer | Fixed (#7) |
 | F-008 | KIT-02, KIT-05 | Only `repo-checks` is required on `main`, so red kit or Holdfast jobs don't block merge; add `kit-tests`, `holdfast` and `kit-link-windows` as required checks | Major | Setup Desk (CEO's hands) | Open: in the Gate 1 checklist; the Head of Engineering checks them before every merge until then |
-| F-009 | KIT-04, HF-M1-05 | GodotSteam publishes no build for Godot 4.6 (only module templates for 4.5.2 and 4.7.x), so the Windows build can't fire a Steam achievement on the current pin | Major (Gate 1) | Gameplay Engineer | Open: decision 2026-10-06, bump to 4.7.2 in its own qa:full PR (next Gameplay Engineer PR) |
+| F-009 | KIT-04, HF-M1-05 | GodotSteam publishes no build for Godot 4.6 (only module templates for 4.5.2 and 4.7.x), so the Windows build can't fire a Steam achievement on the current pin | Major (Gate 1) | Gameplay Engineer | Fixed (#10) |
 | F-004 | KIT-05 | No CI upload of the web build to the itch.io Draft page yet, and `tools/release/README.md` does not list `BUTLER_API_KEY` | Major (Gate 1) | Gameplay Engineer | Fixed (#7): first upload from `main` succeeded on 2026-10-06 after F-014 |
-| F-010 | KIT-05 | `itch-draft` downloads butler from `LATEST` and hands it `BUTLER_API_KEY`, so an unpinned binary sees a secret. Pin a butler version and check its SHA-256, as for the GodotSteam template | Major | Gameplay Engineer | Open: fold into the 4.7.2 bump PR |
-| F-011 | HF-M1-05 | `steam_hooks.gd` unlocks the "level cleared" achievement whenever the keep didn't fall, so an `OUTCOME_INVALID` run would unlock it. Check for `OUTCOME_WON`, and have `HoldfastRunSource` refuse to start a run when `setup_error` is set; add a test | Minor | Gameplay Engineer | Open: fix in the 4.7.2 bump PR, before the achievement can fire |
-| F-012 | KIT-05 | `smoke-web` waits a fixed `sleep 1` for `http.server` before loading the page, which can fail on a slow runner. Poll the URL until it responds | Minor | Gameplay Engineer | Open: fix in the 4.7.2 bump PR |
+| F-010 | KIT-05 | `itch-draft` downloads butler from `LATEST` and hands it `BUTLER_API_KEY`, so an unpinned binary sees a secret. Pin a butler version and check its SHA-256, as for the GodotSteam template | Major | Gameplay Engineer | Fixed (#10) |
+| F-011 | HF-M1-05 | `steam_hooks.gd` unlocks the "level cleared" achievement whenever the keep didn't fall, so an `OUTCOME_INVALID` run would unlock it. Check for `OUTCOME_WON`, and have `HoldfastRunSource` refuse to start a run when `setup_error` is set; add a test | Minor | Gameplay Engineer | Fixed (#10) |
+| F-012 | KIT-05 | `smoke-web` waits a fixed `sleep 1` for `http.server` before loading the page, which can fail on a slow runner. Poll the URL until it responds | Minor | Gameplay Engineer | Fixed (#10) |
 | F-013 | HF-M1-03 | `smoke-windows` runs `--headless`, so CI never exercises the Windows renderer (the web smoke run does render, through SwiftShader) | Minor | Head of QA and Validation | Open: play the Windows build in HF-M1-07; the CEO's Steam check also covers it |
 | F-014 | KIT-05 | First `itch-draft` run on `main` (after #7): butler logged in with `BUTLER_API_KEY`, but itch.io refused the build with "Please verify your account's email address before uploading a build". `itch-draft` stays red on every push to `main` until this is done | Major (Gate 1) | Setup Desk (CEO's hands: verify the itch.io account email) | Fixed 2026-10-06: email verified, `itch-draft` re-run on `main` passed |
+| F-015 | HF-M1-05 | `smoke-windows` proves the GodotSteam template ran but not that the `Steam` singleton loads, because `SteamService.init` returns at the headless check first. Log `Engine.has_singleton("Steam")` in the unavailable message and have `smoke-windows` assert it, so the CEO's Steam session isn't the first test | Major (Gate 1) | Gameplay Engineer | Open: small PR before the Setup Desk hands HF-M1-05 to the CEO |
+| F-016 | KIT-05 | `tools/release/README.md` says every downloaded tool is pinned, but the Godot editor and export templates are pinned by version only, not SHA-256 like GodotSteam and butler. Add the two checksums or reword the README | Minor | Gameplay Engineer | Open |
+| F-017 | HF-M1-05 | Spacewar's `ACH_WIN_ONE_GAME` may already be unlocked on the CEO's Steam account, so the unlock would not show. Add an opt-in `--steam-reset-test-achievement` flag (app 480 only, never on by default) that clears it at startup, and a `steam-test.bat` in the Windows CI artifact that runs `Holdfast.console.exe --autoplay --steam-reset-test-achievement`, so the CEO's check is one double-click | Minor | Gameplay Engineer | Open: same PR as F-015 |
 
 ## Test changes
 
@@ -210,4 +213,5 @@
 - 2026-10-06: Godot pin moves from 4.6-stable to 4.7.2, because GodotSteam ships Windows export templates for 4.7.x but nothing for 4.6. The Windows export uses GodotSteam's template (pinned by file name and SHA-256); the web export stays on stock templates. Rejected: 4.5.2 (older engine, downgrade) and building GodotSteam ourselves (slow and fragile). Head of Engineering (F-009).
 - Open (M3 or replays): floating-point results may differ between Linux CI and Windows players; harmless for M1, matters if saves or replays must match exactly across machines.
 - 2026-10-06: No macOS build at Gate 1; Mac players use the itch.io web build, and the unsigned macOS export stays in CI as an early warning. Head of Engineering (HF-M1-06).
+- 2026-10-06: HF-M1-05 line 2 also accepts Spacewar's achievements page with the unlock time, in case the overlay doesn't show for a game started outside Steam (Head of Engineering, Setup Desk question).
 - Open (CEO, in the Gate 1 brief): ship macOS at Steam launch or Windows and Steam Deck only. Needs a paid Apple Developer sign-up and a Mac for QA (HF-M1-06 note).

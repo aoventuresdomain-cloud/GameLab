@@ -10,11 +10,10 @@ Last refreshed: 2026-10-06.
 
 | Item | Owner | Est. finish | Confidence | Main risk |
 |---|---|---|---|---|
-| Godot 4.7.2 bump (F-009, with F-010 to F-012) | Gameplay Engineer | 2026-10-09 | Medium | GodotSteam Windows template in CI; uid churn on the version change |
-| HF-M1-05 Test Steam achievement | Gameplay Engineer | 2026-10-13 | Low | Waits on the 4.7.2 bump, then the CEO's Windows PC with Steam (Setup Desk) |
+| HF-M1-05 Test Steam achievement | Gameplay Engineer | 2026-10-09 | Low | Needs the CEO's Windows PC with Steam (Setup Desk); GodotSteam is in the Windows build since #10 |
 | HF-M1-07 Gate 1 full QA round | Head of QA and Validation | 2026-10-14 | Low | Fix rounds; never shortened to hit this date |
 | HF-M1-08 Gate 1 brief | Head of Engineering | 2026-10-15 | Low | Follows the QA round |
 
-Merged and waiting on the Gate 1 full round (finish with HF-M1-07): KIT-01, KIT-02, KIT-03, KIT-04, KIT-05, HF-M1-01, HF-M1-02, HF-M1-03, HF-M1-04, HF-M1-06. KIT-04 line 1 and KIT-01's version line also need the 4.7.2 bump.
+Merged and waiting on the Gate 1 full round (finish with HF-M1-07): KIT-01, KIT-02, KIT-03, KIT-04, KIT-05, HF-M1-01, HF-M1-02, HF-M1-03, HF-M1-04, HF-M1-06.
 
 **Gate 1 ready for the CEO:** 2026-10-15, low confidence. The two things most likely to move it are the Steam achievement check on the CEO's PC and the number of QA fix rounds.
