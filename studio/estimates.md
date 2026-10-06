@@ -29,3 +29,18 @@ Weeks are counted from that approval. Revised 2026-10-06 after the CEO's playtes
 | Slice content (biome, 5 levels, 4 heroes with led movesets, upgrade tree, blessings), home and keep screens, feel, simulator gating | Gameplay Engineer, UI Engineer | +5 to 6 weeks | Low | Pacing rework rounds |
 | Tester sessions and report (5-10 outside testers) | Player Researcher | +6 to 7 weeks | Low | Recruiting; starts at approval so it overlaps the build |
 | Gate 2 QA round and brief | Head of QA and Validation, Head of Engineering | +7 to 8 weeks | Low | Fix rounds |
+
+## Holdfast M2 to M7: rough build time (asked by the CEO, 2026-10-06)
+
+Build time only, in weeks of team work. These leave out tester and playtest windows, Valve review, and time waiting on people. Each milestone starts when the one before it passes its gate. Confidence is low throughout: nothing past M2 has a board item yet. This section is replaced with item-level lines once each milestone is planned.
+
+| Milestone | Build time | Confidence | Main risk |
+|---|---|---|---|
+| M2 Fun slice | 5 to 6 weeks | Low | Pacing rework rounds |
+| M3 Designer pipeline | 3 to 4 weeks | Low | The design agent producing packs that pass the simulator first time |
+| M4 Steam page and demo | 3 to 4 weeks, alongside M3 | Low | Store art and trailer quality |
+| M5 Full game | 10 to 14 weeks | Low | Content volume: 3 more biomes, about 15 levels, 4 more heroes |
+| M6 Launch prep | 2 to 3 weeks | Medium | Fix rounds from the release QA round |
+| M7 Steam launch | About 1 week | Medium | Release build and store checks |
+
+**Total build:** about 24 to 30 weeks (roughly 6 to 7 months). This is not a calendar date. The plan's own waits come on top, chiefly the Gate 3 demo test before M5.
