@@ -81,11 +81,17 @@ func poll() -> void:
 		_steam.call("run_callbacks")
 
 
+## True when GodotSteam is in this build, whether or not Steam can run here.
+## Logged with the unavailable reason so CI can prove a desktop build carries it.
+static func has_godotsteam() -> bool:
+	return Engine.has_singleton(SINGLETON)
+
+
 func _unavailable(reason: String) -> bool:
 	_reason = reason
 	if not _logged:
 		_logged = true
-		_log("unavailable (%s); Steam features are off" % reason)
+		_log("unavailable (%s; GodotSteam loaded: %s); Steam features are off" % [reason, "yes" if has_godotsteam() else "no"])
 	return false
 
 

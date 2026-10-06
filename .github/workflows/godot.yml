@@ -168,6 +168,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { Write-Output "::error::Holdfast exited with $LASTEXITCODE"; exit 1 }
           if ($log -notmatch 'AUTOPLAY DONE') { Write-Output "::error::no finished run in the log"; exit 1 }
           if ($log -match '(?m)^(SCRIPT )?ERROR:') { Write-Output "::error::errors in the log"; exit 1 }
+          # F-015: the build must carry GodotSteam (the run is headless, so Steam itself stays off).
+          if ($log -notmatch 'GodotSteam loaded: yes') { Write-Output "::error::GodotSteam is not loaded in the Windows build"; exit 1 }
 
   # The butler pin (version and checksum) is checked on pull requests too, so a
   # bad pin fails here rather than on main. No secrets in this job.

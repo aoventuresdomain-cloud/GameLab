@@ -31,3 +31,10 @@ func test_no_credentials_in_the_service() -> void:
 	var source := FileAccess.get_file_as_string("res://addons/gamelab_kit/services/steam/steam_service.gd")
 	for banned in ["password", "steam_api_key", "STEAM_CONFIG", "webapi"]:
 		expect_false(source.to_lower().contains(banned.to_lower()), "mentions " + banned)
+
+
+func test_unavailable_message_says_whether_godotsteam_is_loaded() -> void:
+	var steam := SteamService.new()
+	steam.init(480)
+	expect_false(SteamService.has_godotsteam(), "no GodotSteam in the test host")
+	expect_true(steam.log_lines[0].contains("GodotSteam loaded: no"), steam.log_lines[0])
