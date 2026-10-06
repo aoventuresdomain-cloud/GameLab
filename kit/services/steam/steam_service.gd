@@ -1,9 +1,9 @@
 class_name SteamService
 extends RefCounted
-## Small wrapper over the GodotSteam extension: init, unlock achievement, store
+## Small wrapper over GodotSteam: init, unlock achievement, store
 ## stats, and the per-frame callback pump.
 ##
-## Safe everywhere: when Steam cannot be used (no GodotSteam extension, a web or
+## Safe everywhere: when Steam cannot be used (no GodotSteam in the build, a web or
 ## headless build, Steam not running, init refused) every call is a no-op that
 ## returns false, and the reason is logged once. The game never needs to check.
 ##
@@ -35,7 +35,7 @@ func init(p_app_id: int) -> bool:
 	if DisplayServer.get_name() == "headless":
 		return _unavailable("headless run")
 	if not Engine.has_singleton(SINGLETON):
-		return _unavailable("GodotSteam extension not loaded")
+		return _unavailable("GodotSteam not in this build")
 	_steam = Engine.get_singleton(SINGLETON)
 	# Steam reads the app ID from the environment when no steam_appid.txt is present.
 	OS.set_environment("SteamAppId", str(p_app_id))
