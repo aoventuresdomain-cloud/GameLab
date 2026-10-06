@@ -12,13 +12,13 @@ Done: Gate 1 passed on 2026-10-06, about 4 hours after the repository was create
 
 ## Holdfast M2 (fun slice) → Gate 2: approved, starts when the CEO says go
 
-**Recalibrated 2026-10-06.** The earlier figures were in weeks, as if for a human team. M1 went from an empty repository to Gate 1 in about 4 hours of studio time, review and QA rounds included. These figures are scaled to that. They count active build time: building, review, CI and QA rounds, and simulator-driven tuning. They leave out time waiting on people: outside testers, the CEO's playtests and approvals, and Valve review. Low confidence, because M1 is the only calibration point so far. One hero you control, plus recruits (CEO, 2026-10-06).
+**Recalibrated 2026-10-06.** The earlier figures were in weeks, as if for a human team. M1 went from an empty repository to Gate 1 in about 4 hours of studio time, review and QA rounds included. These figures are scaled to that. They count active build time: building, review, CI and QA rounds, and simulator-driven tuning. They leave out time waiting on people: outside testers, the CEO's playtests and approvals, and Valve review. Low confidence, because M1 is the only calibration point so far. One Hero you control, plus Recruits (CEO, 2026-10-06).
 
 | Stage | Owner | Est. finish (build time from go) | Confidence | Main risk |
 |---|---|---|---|---|
 | Windows determinism and screenshots, Mac build and live Steam check, pacing bands, pack v1, save service, style guide | Gameplay Engineer, Balance Analyst, Product Designer | +1 day | Medium | Windows hash drift; the unsigned Mac build with GodotSteam; the Steam check waits on the CEO's Mac |
-| Core of a run: your hero, enemies fight back, parity holds | Gameplay Engineer | +2 days | Medium | Keeping player input deterministic for the simulator |
-| Slice content (biome, 5 levels, recruits, upgrade tree, blessings), home and keep screens, feel, simulator gating | Gameplay Engineer, UI Engineer | +3 to 4 days | Low | Pacing rework rounds |
+| Core of a run: your Hero, enemies fight back, parity holds | Gameplay Engineer | +2 days | Medium | Keeping player input deterministic for the simulator |
+| Slice content (biome, 5 levels, Hero paths, Recruits and traits, upgrade tree, blessings), home and keep screens, feel, simulator gating | Gameplay Engineer, UI Engineer | +3 to 4 days | Low | Pacing rework rounds |
 | Gate 2 QA round, then the brief once the tester report is in | Head of QA and Validation, Head of Engineering | +4 to 5 days, plus the tester sessions | Low | Fix rounds; tester recruiting starts at go so it overlaps the build |
 
 ## Holdfast M2 to M7: rough build time (asked by the CEO, 2026-10-06)

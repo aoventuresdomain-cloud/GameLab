@@ -4,7 +4,7 @@
 
 | # | Game | Status | Current milestone | Next decision | Plan |
 |---|---|---|---|---|---|
-| 1 | **Holdfast** (working title): incremental tower defence with recruitable heroes, Steam first | Active | M2 vertical slice (approved, waiting for CEO go) | Gate 2: go or stop on the tester report | `games/holdfast/plan.md` |
+| 1 | **Holdfast** (working title): incremental tower defence with a Hero you control and hired Recruits, Steam first | Active | M2 vertical slice (approved, waiting for CEO go) | Gate 2: go or stop on the tester report | `games/holdfast/plan.md` |
 | 2 | Not chosen yet | Idea stage | None | Small playable test only after Holdfast Gate 3; full build only after Holdfast launches on Steam (Gate 4), unless Holdfast is stopped first | None |
 
 ## History

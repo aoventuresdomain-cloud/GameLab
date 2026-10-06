@@ -212,6 +212,7 @@
 | 2026-10-06 | M2 plan | First review of the M2 draft: 4 heroes with 2 slots to start, extra pacing bands checked by a weaker bot, reward moments, an open survey question | Accepted: all 5 points folded into the M2 plan |
 | 2026-10-06 | M2 plan | On the CEO's playtest: agree it plays like Incrempire; the player leads one hero (picked before each run) in place of the mouse aura, enemies fight back, add a home screen and hero and tower upgrades; heroes must be impossible to miss; rename "staff" to "heroes"; difficulty levels wait for M5 | Accepted by the Head of Engineering; the CEO approved the plan, difficulty in M5 and the name "heroes" |
 | 2026-10-06 | M2 plan | The hero you lead gets back up at the keep when knocked down, with a longer wait after each knock-down in a run and their unbanked XP dropped where they fell; the run ends only when the keep falls | Accepted: in the M2 plan (HF-M2-14) |
+| 2026-10-06 | M2 plan | On the CEO's one Hero, many Recruits: one player-named Hero with 3 skill paths (Guardian, Marksman, Warlord) and free or cheap respec; Recruits hired with gold, each with a generated name, class and trait, levelling but with no skill trees; 2 deploy slots to start; the bot picks a path and a squad, measured per path | Accepted: in the M2 plan (HF-M2-14, HF-M2-03), with 4 Recruit classes |
 
 ## Decisions and open questions
 
@@ -228,3 +229,4 @@
 - 2026-10-06: **M2 plan approved** (CEO), with its defaults: the player leads one hero, picked before each run, in place of the mouse aura; enemies attack towers and heroes; a home screen; hero and tower upgrades; 4 heroes; an unsigned Mac test build; unpaid testers through a private itch.io page with download keys (the CEO sees the recruitment post first). M2 does not start until the CEO says so.
 - 2026-10-06: Difficulty levels wait for M5 (Hard mode and endless modifiers), so tester results in M2 stay comparable (CEO, on the Advisor's advice).
 - 2026-10-06: The recruitable characters are called **heroes** in the game, the store page and plans from M2 on (CEO). M1 code and this board's M1 items keep "staff".
+- 2026-10-06: **One Hero, many Recruits** (CEO, replacing the "heroes" naming and the pre-run hero pick above). There is exactly one Hero, the character you control: player-named, with 3 skill paths. Everyone you hire is a **Recruit**: hired with gold, with a generated name, a class and a trait, and no skill tree. M1 code and this board's M1 items keep "staff".
