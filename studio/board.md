@@ -151,7 +151,7 @@
 
 ### HF-M1-07 Gate 1 full QA round
 - **Owner:** Head of QA and Validation (per job)
-- **Status:** Building: round started 2026-10-06 on fixed commit `cad3bc8`; merges frozen to blocker and major fixes (docs-only allowed)
+- **Status:** In progress: round 1 on fixed commit `cad3bc8` done for everything testable without Windows, no blockers or majors (results in the GameLab project files, `holdfast/hf-m1-07/`). Waiting on the CEO's Windows session (HF-M1-05 and the Windows halves of HF-M1-03/04, F-001, F-013). Merges frozen to blocker and major fixes (docs-only allowed)
 - **QA:** full
 - **Done when:**
   - [ ] One fixed build (commit recorded) is tested end to end against every M1 Done when line on this board.
@@ -160,7 +160,7 @@
 
 ### HF-M1-08 Gate 1 brief for the CEO
 - **Owner:** Head of Engineering
-- **Status:** Blocked (waits on HF-M1-07)
+- **Status:** In review: brief with the M2 plan sent to the Chief of Staff on 2026-10-06; the CEO approves Gate 1 and the M2 plan together, after their Windows session
 - **QA:** sanity
 - **Done when:**
   - [ ] One page: a link to play the web build, the Windows build, simulator timing and determinism results, achievement evidence, the macOS note and open risks.
@@ -192,6 +192,9 @@
 | F-017 | HF-M1-05 | Spacewar's `ACH_WIN_ONE_GAME` may already be unlocked on the CEO's Steam account, so the unlock would not show. Add an opt-in `--steam-reset-test-achievement` flag (app 480 only, never on by default) that clears it at startup, and a `steam-test.bat` in the Windows CI artifact that runs `Holdfast.console.exe --autoplay --steam-reset-test-achievement`, so the CEO's check is one double-click | Minor | Gameplay Engineer | Fixed (#12): `steam-test.bat` is in the Windows artifact |
 | F-018 | HF-M1-03, HF-M1-04 | The HUD bar covers the top ~120 px of the play area at 720p, so enemies arriving from the top and the aura pass underneath it (UI Engineer's F-001 screenshots). Fit the drawn world into the area below the HUD | Minor (fix before Gate 1) | UI Engineer (may change `world_view.gd` placement and scale only; drawing, input and rules stay as they are) | Fixed (#14): keep centred below the HUD, view scale 0.85-1, new layout test at 720p and 1080p |
 | F-019 | HF-M1-03, HF-M1-04 | `games/holdfast/README.md` still says the `RunSource` node is `stub_run_source.gd` and that wiring the real rules is future work, but `main.tscn` uses `HoldfastRunSource` since #7 (Head of QA, preparing HF-M1-07) | Minor (docs) | Gameplay Engineer | Fixed (#16) |
+| F-020 | KIT-02 | `kit/sim/sim_engine.gd` checks its arguments (null rules, tick rate <= 0) with `assert`, which release exports strip, the same pattern F-006 fixed in Holdfast. No current caller passes bad values (Head of QA, HF-M1-07) | Minor | Gameplay Engineer | Open: after Gate 1 |
+| F-021 | KIT-03 | One invalid enemy entry drops the whole enemies file, so the loader adds about 11 follow-on "no enemies entry with id" errors, valid enemies included; the first error is correct. The version error also prints "must be one of [0.0]" (Head of QA, HF-M1-07) | Minor | Gameplay Engineer | Open: after Gate 1 |
+| F-022 | HF-M1-02 | The progression report prints "budget 0 s" for a fractional budget (Head of QA, HF-M1-07) | Minor | Gameplay Engineer | Open: after Gate 1 |
 
 ## Test changes
 
