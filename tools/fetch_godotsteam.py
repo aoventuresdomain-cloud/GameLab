@@ -55,6 +55,7 @@ def main():
         for release in get_json(releases_url + "?per_page=10"):
             print("  " + release["tag_name"])
         return 1
+    print(f"GodotSteam {pin['tag']} assets: {', '.join(a['name'] for a in release['assets'])}")
     assets = [a for a in release["assets"] if pin["asset_contains"] in a["name"] and a["name"].endswith(".zip")]
     if len(assets) != 1:
         print(f"expected one asset containing {pin['asset_contains']!r} in {pin['tag']}, found: {[a['name'] for a in release['assets']]}")

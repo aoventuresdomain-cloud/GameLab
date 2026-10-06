@@ -1,6 +1,6 @@
 {
   "comment": "GodotSteam GDExtension pinned for every game. tools/fetch_godotsteam.py installs it into a game's addons/godotsteam (not committed). Bump only with Head of Engineering review and a full QA round.",
   "repository": "GodotSteam/GodotSteam",
-  "tag": "v4.17-gde",
+  "tag": "v4.23",
   "asset_contains": "gdextension"
 }
