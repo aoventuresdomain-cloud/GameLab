@@ -65,3 +65,20 @@ func test_tower_and_staff_attack_on_their_own_and_the_run_ends() -> void:
 	expect_true(rules.gold > 0, "kills dropped gold")
 	expect_true(rules.outcome in [HoldfastRules.OUTCOME_WON, HoldfastRules.OUTCOME_LOST], "won or lost")
 	main.free()
+
+
+func test_a_run_with_a_bad_setup_is_refused() -> void:
+	var source := HoldfastRunSource.new()
+	source.auto_step = false
+	source.report_errors = false
+	source.level_id = "no_such_level"
+	var started := [false]
+	source.run_started.connect(func() -> void: started[0] = true)
+	tree.root.add_child(source)
+	source.start_run()
+	expect_false(source.is_running(), "nothing runs")
+	expect_false(started[0], "no run_started signal")
+	expect_true(source.get_rules() == null, "no rules left to draw")
+	source.step(1.0)
+	expect_false(source.is_running(), "stepping a refused run does nothing")
+	source.free()

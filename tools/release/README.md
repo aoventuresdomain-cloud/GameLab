@@ -15,6 +15,18 @@ Butler only uploads files. It cannot make the page public; that stays a manual
 step on itch.io and needs the owner's go-ahead, like any public release. Pull
 request runs never see the secret.
 
+## Pinned downloads
+
+Every tool CI downloads for a build is pinned, never "latest":
+
+- Godot and its export templates: by version in `/.godot-version`, from Godot's
+  official GitHub releases.
+- GodotSteam's Windows template: by release, file name and SHA-256 in
+  `tools/ci/fetch_godotsteam.sh`. The Windows build is exported with it, and
+  `steam_api64.dll` ships beside `Holdfast.exe`.
+- butler: by version and SHA-256 in `tools/ci/install_butler.sh`, also checked
+  on pull requests by the `butler-pin` job.
+
 ## What M4 (Steam upload) will add
 
 Added only when M4 starts, as GitHub Actions secrets set by the Setup Desk. Never

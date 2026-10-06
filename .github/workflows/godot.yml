@@ -91,13 +91,15 @@ jobs:
           name: holdfast-progression-${{ github.sha }}
           path: reports
           if-no-files-found: ignore
+      - name: Install the pinned GodotSteam Windows template
+        run: tools/ci/fetch_godotsteam.sh
       - name: Export web (single-threaded) and Windows
         run: |
           mkdir -p build/web build/windows
+          # Web uses Godot's stock templates; Windows uses GodotSteam's (preset custom template).
           tools/ci/godot.sh --headless --path games/holdfast --export-release "Web" ../../build/web/index.html
-          # GodotSteam is not in the build yet: its releases have no build for Godot 4.6
-          # (HF-M1-05 is blocked on that choice). Without it the Steam service is a no-op.
           tools/ci/godot.sh --headless --path games/holdfast --export-release "Windows Desktop" ../../build/windows/Holdfast.exe
+          cp build/godotsteam/steam_api64.dll build/windows/
           ls -la build/web build/windows
       # HF-M1-06: what an unsigned macOS export costs. Recorded, never blocking.
       - name: Try an unsigned macOS export
@@ -141,7 +143,12 @@ jobs:
         run: |
           npm install --no-save --no-package-lock playwright-core@1
           python3 -m http.server 8060 --directory build/web &
-          sleep 1
+          # Wait until the server answers (up to 15 s) rather than guessing.
+          for _ in $(seq 1 75); do
+            curl -fsS -o /dev/null http://localhost:8060/index.html && break
+            sleep 0.2
+          done
+          curl -fsS -o /dev/null http://localhost:8060/index.html || { echo "::error::web server did not start"; exit 1; }
           node tools/ci/web_smoke.mjs "http://localhost:8060/index.html?autoplay=1&seed=1" 240
 
   smoke-windows:
@@ -162,27 +169,37 @@ jobs:
           if ($log -notmatch 'AUTOPLAY DONE') { Write-Output "::error::no finished run in the log"; exit 1 }
           if ($log -match '(?m)^(SCRIPT )?ERROR:') { Write-Output "::error::errors in the log"; exit 1 }
 
+  # The butler pin (version and checksum) is checked on pull requests too, so a
+  # bad pin fails here rather than on main. No secrets in this job.
+  butler-pin:
+    needs: changes
+    if: needs.changes.outputs.holdfast == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned butler
+        run: tools/ci/install_butler.sh
+
   # Every push to main uploads the web build to the owner's private itch.io
   # draft page for Gate 1. Butler only uploads files; it cannot change the
   # page's visibility, so the page stays a draft.
   itch-draft:
-    needs: [holdfast, smoke-web]
+    needs: [holdfast, smoke-web, butler-pin]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
       ITCH_TARGET: aoventuresdomain-cloud/holdfast-tech-proof:html5
     steps:
+      # Checkout first: it cleans the workspace, which would remove the build.
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: holdfast-web-${{ github.sha }}
           path: build/web
-      - name: Install butler
-        run: |
-          curl -fsSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
-          unzip -q butler.zip -d butler
-          chmod +x butler/butler
-          butler/butler -V
+      - name: Install the pinned butler
+        run: tools/ci/install_butler.sh
       - name: Upload the web build to the itch.io draft page
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
