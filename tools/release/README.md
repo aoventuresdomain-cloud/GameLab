@@ -2,9 +2,20 @@
 
 CI (`.github/workflows/godot.yml`) exports Holdfast for the web (single-threaded,
 so it needs no special server headers) and Windows on every push to `main`, and
-keeps them as downloadable artifacts. It uses **no secrets** today.
+keeps them as downloadable artifacts. Each build plays one full run with the bot
+aura before anything is uploaded.
 
-## What M4 (Steam upload) will need
+## Secrets in use
+
+| Secret | Used by | What it does |
+|---|---|---|
+| `BUTLER_API_KEY` | `itch-draft` job, pushes to `main` only | Uploads the web build with butler to the owner's private itch.io draft page `aoventuresdomain-cloud/holdfast-tech-proof` (channel `html5`), the Gate 1 play link. Created by the owner through the Setup Desk. |
+
+Butler only uploads files. It cannot make the page public; that stays a manual
+step on itch.io and needs the owner's go-ahead, like any public release. Pull
+request runs never see the secret.
+
+## What M4 (Steam upload) will add
 
 Added only when M4 starts, as GitHub Actions secrets set by the Setup Desk. Never
 in the repository, never pasted in chat.

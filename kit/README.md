@@ -7,7 +7,7 @@ A Godot 4 addon shared by every GameLab game. Each game links it in as `addons/g
 | `sim/` | Deterministic simulation engine: fixed timestep, seeded RNG, bot runner. No rendering dependency, so it runs headless. Games plug their own rules into it |
 | `packs/` | Pack loader and schema validation |
 | `schema/` | Versioned base JSON schemas; games extend them |
-| `services/` | Save, Steam, telemetry |
+| `services/` | Platform services. Today: `steam/` (KIT-04). Save and telemetry come when a game needs them |
 | `tests/` | Kit tests, run in CI for every game |
 | `testing/` | The headless test runner and `KitTestCase` every game's tests use |
 
@@ -24,3 +24,7 @@ A game writes its rules as a `SimRules` (setup, step, is_finished, snapshot, res
 A pack is a folder with `pack.json` (manifest) and the JSON files it lists. `schema/pack.v0.schema.json` is the versioned base for levels, enemies, towers, staff and upgrade nodes; a game extends it with `"$extends"`. `PackLoader.load_pack(dir, schema)` validates every file, checks `x-ref` ids, and refuses anything that is not data (non-JSON files, res:// or user:// paths, scripts, scenes, resources). Errors name the file and the field, e.g. `enemies.json: $.enemies[0].health: expected number, got string`.
 
 Nothing game-specific belongs here: no game names, no game rules, no game content. `tools/studio/check_repo.py` fails CI if `kit/` names a game.
+
+## Steam service (`services/steam/`)
+
+`SteamService` wraps the GodotSteam extension: `init(app_id)`, `unlock_achievement(name)`, `store_stats()`, `poll()` once per frame. Wherever Steam can't be used (no extension, web or headless build, Steam not running) every call is a no-op that returns false and logs the reason once. The `Steam` singleton comes from GodotSteam's prebuilt Windows export template, which the CI pins by exact file name and checksum in `tools/ci/` (not wired up yet; it needs the Godot version GodotSteam builds for). The game passes its own app ID; no credentials live in the kit.

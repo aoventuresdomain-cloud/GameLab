@@ -4,6 +4,11 @@ extends SceneTree
 ## Exits 1 if any check fails.
 
 const Main = preload("res://scenes/main.tscn")
+## The UI is tested on the stub run source, so these checks cover the UI and not
+## the level's balance (Head of Engineering OK, board Test changes, 2026-10-06).
+## The real rules are covered by tests/test_playable_level.gd and the exported
+## builds' autoplay smoke tests.
+const StubRunSource = preload("res://scripts/stub_run_source.gd")
 const BASE_SIZE := Vector2i(1280, 720)
 const MIN_FONT_PX := 20 # on-screen pixels
 
@@ -21,6 +26,7 @@ func _run() -> void:
 	root.size = BASE_SIZE # headless windows start at 64x64
 	_main = Main.instantiate()
 	_source = _main.get_node("RunSource")
+	_source.set_script(StubRunSource)
 	_source.auto_step = false
 	root.add_child(_main)
 	await process_frame

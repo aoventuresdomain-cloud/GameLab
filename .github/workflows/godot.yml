@@ -4,7 +4,8 @@ name: godot
 # games/holdfast/ or the pipeline change, and on every push to main (which
 # also keeps the Windows and web builds as downloadable artifacts).
 # Any red job blocks merge (branch protection: require these checks).
-# No secrets are used until M4 (Steam upload); see tools/release/README.md.
+# One secret: BUTLER_API_KEY, used only by the main-only itch.io draft upload
+# (set up by the owner through the Setup Desk). See tools/release/README.md.
 
 on:
   pull_request:
@@ -94,8 +95,22 @@ jobs:
         run: |
           mkdir -p build/web build/windows
           tools/ci/godot.sh --headless --path games/holdfast --export-release "Web" ../../build/web/index.html
+          # GodotSteam is not in the build yet: its releases have no build for Godot 4.6
+          # (HF-M1-05 is blocked on that choice). Without it the Steam service is a no-op.
           tools/ci/godot.sh --headless --path games/holdfast --export-release "Windows Desktop" ../../build/windows/Holdfast.exe
           ls -la build/web build/windows
+      # HF-M1-06: what an unsigned macOS export costs. Recorded, never blocking.
+      - name: Try an unsigned macOS export
+        id: macos
+        continue-on-error: true
+        run: |
+          mkdir -p build/macos
+          tools/ci/godot.sh --headless --path games/holdfast --export-release "macOS" ../../build/macos/Holdfast.zip
+          ls -la build/macos
+      - name: Record the macOS result
+        if: always()
+        run: |
+          echo "macOS unsigned export: ${{ steps.macos.outcome }}" | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: holdfast-web-${{ github.sha }}
@@ -106,3 +121,73 @@ jobs:
           name: holdfast-windows-${{ github.sha }}
           path: build/windows
           retention-days: ${{ github.event_name == 'push' && 30 || 7 }}
+
+  # HF-M1-03: each exported build plays one full run with the bot aura, and any
+  # error in its log fails the job.
+  smoke-web:
+    needs: holdfast
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: holdfast-web-${{ github.sha }}
+          path: build/web
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Play one run in headless Chrome
+        run: |
+          npm install --no-save --no-package-lock playwright-core@1
+          python3 -m http.server 8060 --directory build/web &
+          sleep 1
+          node tools/ci/web_smoke.mjs "http://localhost:8060/index.html?autoplay=1&seed=1" 240
+
+  smoke-windows:
+    needs: holdfast
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: holdfast-windows-${{ github.sha }}
+          path: build/windows
+      - name: Play one run in the Windows build
+        shell: pwsh
+        run: |
+          $log = & build/windows/Holdfast.console.exe --headless -- --autoplay --seed=1 2>&1 | Out-String
+          Write-Output $log
+          if ($LASTEXITCODE -ne 0) { Write-Output "::error::Holdfast exited with $LASTEXITCODE"; exit 1 }
+          if ($log -notmatch 'AUTOPLAY DONE') { Write-Output "::error::no finished run in the log"; exit 1 }
+          if ($log -match '(?m)^(SCRIPT )?ERROR:') { Write-Output "::error::errors in the log"; exit 1 }
+
+  # Every push to main uploads the web build to the owner's private itch.io
+  # draft page for Gate 1. Butler only uploads files; it cannot change the
+  # page's visibility, so the page stays a draft.
+  itch-draft:
+    needs: [holdfast, smoke-web]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ITCH_TARGET: aoventuresdomain-cloud/holdfast-tech-proof:html5
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: holdfast-web-${{ github.sha }}
+          path: build/web
+      - name: Install butler
+        run: |
+          curl -fsSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler
+          chmod +x butler/butler
+          butler/butler -V
+      - name: Upload the web build to the itch.io draft page
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          if [ -z "$BUTLER_API_KEY" ]; then
+            echo "::error::BUTLER_API_KEY is not set (Setup Desk)"; exit 1
+          fi
+          butler/butler push build/web "$ITCH_TARGET" --userversion "${GITHUB_SHA::12}"

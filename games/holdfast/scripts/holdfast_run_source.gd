@@ -25,9 +25,14 @@ var _runs := 0
 var _last := {}
 
 
+## Longest frame time fed to the engine at once; a longer hitch slows the game
+## down rather than letting it jump ahead.
+const MAX_FRAME_SECONDS := 0.25
+
+
 func _process(delta: float) -> void:
 	if auto_step:
-		step(delta)
+		step(minf(delta, MAX_FRAME_SECONDS))
 
 
 ## Starts a run. With a fixed rng_seed, play-again runs use rng_seed + run number.
@@ -47,11 +52,16 @@ func start_run() -> void:
 	_emit_changes()
 
 
-## Feeds `delta` seconds of frame time to the engine.
+## Feeds `delta` seconds of frame time to the engine. Any length works (tools
+## and tests pass whole seconds); it is fed in slices the engine never caps.
 func step(delta: float) -> void:
 	if not _running:
 		return
-	_engine.advance(delta)
+	var left := delta
+	while left > 0.0 and not _rules.is_finished():
+		var slice := minf(left, MAX_FRAME_SECONDS)
+		_engine.advance(slice)
+		left -= slice
 	_emit_changes()
 	if _rules.is_finished():
 		_running = false

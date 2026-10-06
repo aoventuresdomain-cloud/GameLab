@@ -51,6 +51,8 @@ func _summary(report: Dictionary, wall: float, budget: float, deterministic: boo
 	var lines: PackedStringArray = []
 	lines.append("# Holdfast progression: %s simulated hours" % report["sim_hours"])
 	lines.append("")
+	lines.append("> **Placeholder balance.** M1 content numbers are placeholders (board finding F-002), so this report checks the simulator's speed and determinism, not pacing.")
+	lines.append("")
 	lines.append("- Wall-clock time: **%.2f s** (budget %.0f s)" % [wall, budget])
 	lines.append("- Determinism (second run, same seed): **%s** (`%s`)" % ["pass" if deterministic else "FAIL", str(report["hash"]).left(16)])
 	lines.append("- Runs played: %d (%s)" % [report["runs_played"], JSON.stringify(report["outcomes"])])
@@ -68,7 +70,10 @@ func _summary(report: Dictionary, wall: float, budget: float, deterministic: boo
 
 
 func _write(dir: String, file: String, text: String) -> void:
-	var abs_dir := dir if dir.begins_with("user://") or dir.begins_with("res://") else ProjectSettings.globalize_path("res://").path_join(dir).simplify_path()
+	var abs_dir := dir
+	if dir.is_relative_path() and not dir.contains("://"):
+		# Relative paths are relative to the project folder, as on the command line.
+		abs_dir = ProjectSettings.globalize_path("res://").path_join(dir).simplify_path()
 	DirAccess.make_dir_recursive_absolute(abs_dir)
 	var handle := FileAccess.open(abs_dir.path_join(file), FileAccess.WRITE)
 	if handle == null:
