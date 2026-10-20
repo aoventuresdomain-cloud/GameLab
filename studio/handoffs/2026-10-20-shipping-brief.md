@@ -2,7 +2,7 @@
 
 *Head of Engineering, 20 Oct 2026. Paste the section for the role into its brief, with a link to `studio/playbook/shipping.md`. M2 hasn't started; nobody starts work from this note alone.*
 
-**Everyone.** Read `studio/playbook/shipping.md` first. Never end a turn "waiting" unless a step is finished. Don't ask the CEO engineering questions; the Head of Engineering decides. New threads default to Sonnet (CEO, 20 Oct 2026).
+**Everyone.** Read `studio/playbook/shipping.md` first. Never end a turn "waiting" unless a step is finished. Sonnet only, never Opus. Follow the Lean builds section of the shipping rules: minimum code that meets the Done when lines, short replies, small batched asks, no re-reading large inputs. Don't ask the CEO engineering questions; the Head of Engineering decides. New threads default to Sonnet (CEO, 20 Oct 2026).
 
 **Engineers (Gameplay, UI).**
 - You own your item and nothing else. If you can see a fix in someone else's item, log a finding and leave it.

@@ -46,6 +46,19 @@
 - **Leads propose savings unprompted**, each with the hours saved and an owner, and never by cutting quality. For example, merge QA rounds that overlap.
 - **Times come from the system clock** or from file times, never from memory or hand-typing.
 
+## Lean builds
+
+Ponytail's rules (v5.3.2, MIT), in our words. They never override the rules above or an item's Done when lines. The aim is the least time and tokens that still meets the item.
+
+- **Take the first option that works:** skip the unrequested feature and name it in one line; reuse existing code and helpers; use the standard library or a Godot built-in; use a dependency already installed (never a new one for a few lines); write a readable one-liner; otherwise write the minimum code that works.
+- **No unrequested abstractions, options or "for later" code.**
+- **Before editing, read the code and list the callers, tests and config the change reaches.** A bug fix finds the root cause once.
+- **Never cut** validation, error handling, security or accessibility.
+- **New logic gets one small test.**
+- **Mark a shortcut** as `shortcut: <limit>, <upgrade when>`.
+- **Replies are short** and end with one or two lines on what was skipped and any risk. Keep asks small and batched, and don't re-read large inputs.
+- **Models:** Sonnet only, nothing on Opus (CEO, 20 Oct 2026).
+
 ## Environment
 
 - Rebuild environments from the repository with pinned tooling.
