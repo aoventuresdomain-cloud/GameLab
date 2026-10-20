@@ -1,6 +1,6 @@
 # GameLab work board
 
-*Owned by the Head of Engineering. One section per game plus the Kit. Every item has one owner and 2-5 checkable Done when lines before anyone works on it; review and QA go against those lines. Only the Head of Engineering changes an item's status and merges (once CI is green); engineers never merge their own work. Every finding goes in **Findings** below with an owner before anyone fixes it. Dates come only from `studio/estimates.md`.*
+*Owned by the Head of Engineering. One section per game plus the Kit. Every item has one owner and 2-5 checkable Done when lines before anyone works on it; review and QA go against those lines. Only the Head of Engineering changes an item's status and merges (once CI is green); engineers never merge their own work. Every finding goes in **Findings** below with an owner before anyone fixes it, graded MUST FIX (blocks merge) or FOLLOW-UP (logged, doesn't block), as in `studio/playbook/shipping.md`. Dates come only from `studio/estimates.md`.*
 
 **Statuses:** Ready · In progress · In review · In QA · Done · Blocked
 **QA depth:** `full` (core logic: kit, save and offline earnings, Steam, release pipeline) · `screens` (interface only: sanity plus a walk of changed screens) · `sanity`. Unlabelled means full.
@@ -169,7 +169,7 @@
 
 ## Findings
 
-*Every finding from review, QA, CI or the Advisor goes here with an owner before anyone fixes it. Closed findings stay, marked Fixed with the PR.*
+*Every finding from review, QA, CI or the Advisor goes here with an owner before anyone fixes it. Closed findings stay, marked Fixed with the PR. Grading (from 20 Oct 2026): Blocker and Major findings are MUST FIX and block the merge; Minor ones are FOLLOW-UP and don't, unless the row says otherwise. New findings put MUST FIX or FOLLOW-UP in the Severity cell. A finding counts only if it reproduces without test-only helpers.*
 
 | ID | Item | Finding | Severity | Owner | Status |
 |---|---|---|---|---|---|
@@ -231,3 +231,4 @@
 - 2026-10-06: The recruitable characters are called **heroes** in the game, the store page and plans from M2 on (CEO). M1 code and this board's M1 items keep "staff".
 - 2026-10-06: **One Hero, many Recruits** (CEO, replacing the "heroes" naming and the pre-run hero pick above). There is exactly one Hero, the character you control: player-named, with 3 skill paths. Everyone you hire is a **Recruit**: hired with gold, with a generated name, a class and a trait, and no skill tree. M1 code and this board's M1 items keep "staff".
 - 2026-10-06: **Theme: The Last Lighthouse** (CEO, from the Advisor's three options). A lighthouse on a coast swallowed by a living fog. Fog creatures attack, the Hero is the Keeper with a lantern, Recruits are rescued survivors, and keep upgrades widen the beam to push the fog back. "Holdfast" stays the working title until the M2 name check, which also covers lighthouse names. The Weird West and The Hive are kept for possible later versions.
+- 2026-10-20: **Shipping rules adopted** (CEO's shipping playbook): `studio/playbook/shipping.md`, linked from `CLAUDE.md`. QA results name a commit hash; release candidates get a production-shaped run and the full suite in CI's order; findings are graded MUST FIX or FOLLOW-UP; expected-failure tests come first for high-risk items; overlap is checked before every merge. Docs-only board, estimate, slate and plan PRs may be opened and merged by the Head of Engineering once CI is green; everything else is opened by its owner and merged by the Head of Engineering. M2 stays paused until the CEO says go.
