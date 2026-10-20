@@ -46,11 +46,11 @@ Active build time on the same basis as above, recalibrated against M1. Each mile
 
 | Milestone | Build time | Confidence | Main risk |
 |---|---|---|---|
-| M2 Fun slice | 4 to 5 days | Low | Pacing rework rounds |
+| M2 Fun slice | 6 to 7 days (see lanes above) | Medium | Pacing rework rounds |
 | M3 Designer pipeline | 1 to 2 days | Low | The design agent producing packs that pass the simulator first time |
 | M4 Steam page and demo | 1 to 2 days, alongside M3 | Low | Store art and trailer quality |
 | M5 Full game | 1 to 2 weeks | Low | Content volume and the CEO approving packs |
 | M6 Launch prep | 2 to 3 days | Medium | Fix rounds from the release QA round |
 | M7 Steam launch | About 1 day | Medium | Release build and store checks |
 
-**Total build:** about 3 to 4 weeks. This is not a calendar date. The calendar is set by waits on people and outside services: tester sessions, the CEO's playtests and pack approvals, Valve review, and the plan's Gate 3 demo test and Steam Next Fest dates.
+**Total build:** about 3 to 4 weeks (M2 at 6 to 7 days sits at the upper end). This is not a calendar date. The calendar is set by waits on people and outside services: tester sessions, the CEO's playtests and pack approvals, Valve review, and the plan's Gate 3 demo test and Steam Next Fest dates.
