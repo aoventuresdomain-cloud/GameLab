@@ -20,8 +20,8 @@ The CEO asked for a very lean M2: small changes shipped fast, quick fixes, and t
 
 | Iteration | What the CEO can play | Items | Ready by | Confidence |
 |---|---|---|---|---|
-| 1 | Move the Keeper with WASD, lantern burns fog creatures, press Space for the path ability, keep falls = run over | HF-M2-14 first slice | Day 1 (22 Oct) | Medium |
-| 2 | Enemies fight back, light posts, knock-down and respawn, a minimal home screen | HF-M2-15, KIT-08 (CI only) | Day 2 to 3 | Medium |
+| 1 | Move the Keeper with WASD, auto-fire fire arrows at the nearest fog creature, press Space for a fire volley, keep falls = run over | HF-M2-14 first slice (fire archer) | Day 1 (22 Oct) | Medium |
+| 2 | The mage and swordsman pillars, enemies fight back, light posts, knock-down and respawn, a minimal home screen | HF-M2-14 pillars, HF-M2-15, KIT-08 (CI only) | Day 2 to 3 | Medium |
 | 3 | Gold and upgrades that save, the recruitment board and a 2-slot squad, Mac build | KIT-06, KIT-07, HF-M2-02, HF-M2-03, HF-M2-00 | Day 4 to 5 | Low |
 | 4 | Hero skill paths (10 nodes each), Recruit skill trees, blessings | HF-M2-14 rest, HF-M2-03 trees, HF-M2-04 | Day 6 to 7 | Low |
 | 5 | Hero gear, the level-2 or 3 elite drop, the level-5 mini-boss, feel and sound, home and keep polish | HF-M2-16, HF-M2-06, HF-M2-07 | Day 7 to 8 | Low |
