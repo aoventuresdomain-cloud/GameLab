@@ -321,22 +321,21 @@
   - [ ] A freelancer brief for the human-made portraits is drafted in project files (no commission; CEO decision before M4).
   - [ ] The CEO approves the style (via the Setup Desk at Gate 2).
 
-### HF-M2-09 Playtest build and session log
+### HF-M2-09 Playable builds for the CEO, after each slice
 - **Owner:** Gameplay Engineer
 - **Status:** Ready
-- **QA:** full
+- **QA:** sanity
 - **Done when:**
-  - [ ] An opt-in, local-only session log that the tester can find and send, with no network calls (tested). It records start and end times, runs, unlocks, and Hero path and squad picks.
-  - [ ] The tester build reaches testers by the route the CEO approved (see below), never publicly.
-  - [ ] One production-shaped run on the tester build as a tester would do it: a fresh install on the Mac build, the game's own default names, a new game to quit, then sending the log; and the full suite in CI's order on the same commit.
-  - [ ] A one-page tester guide covers installing, playing, sending the log and a short survey link. The survey opens with "What made you want to keep playing, or stop?" before any question about the Hero or Recruits, so it doesn't lead testers.
+  - [ ] After each slice is merged, CI publishes a build the CEO plays on the Mac with no extra steps (the private itch.io draft web build in the browser; the Mac build from HF-M2-00 once it exists), with the commit shown on the title screen.
+  - [ ] Before each CEO build: one production-shaped run (real build, the game's own default names, new game to quit) and the full suite in CI's order, both on that commit.
+  - [ ] Each build goes with a two-line note: what changed and what to try. The CEO's feedback goes on the board's Findings table with an owner before anyone fixes it.
 
 ### HF-M2-10 Tester sessions
 - **Owner:** Player Researcher
-- **Status:** Ready
+- **Status:** Blocked: moved to a later stage (CEO, 2026-10-21). Outside testers are not part of M2; the local session log and tester guide go with them
 - **QA:** none (research)
 - **Done when:**
-  - [ ] 5-10 outside testers recruited by the approved route.
+  - [ ] 5-10 outside testers recruited by an approved route.
   - [ ] Report: median first-session length from the logs, how many want to keep playing, and how many name the Hero or Recruits as a reason, with quotes.
   - [ ] Findings logged on the board with owners.
 
@@ -362,7 +361,7 @@
 - **Status:** Ready
 - **QA:** none (document)
 - **Done when:**
-  - [ ] The CEO has one brief with the tester results, pacing report, style for approval, QA result and a go / rework / stop recommendation.
+  - [ ] The CEO has one brief with their own playtest notes, the pacing report, style for approval, the QA result and a go / rework / stop recommendation.
   - [ ] The brief states the commit each QA result was run on.
 
 ## Findings
@@ -431,4 +430,5 @@
 - 2026-10-06: **One Hero, many Recruits** (CEO, replacing the "heroes" naming and the pre-run hero pick above). There is exactly one Hero, the character you control: player-named, with 3 skill paths. Everyone you hire is a **Recruit**: hired with gold, with a generated name, a class and a trait, and no skill tree. M1 code and this board's M1 items keep "staff".
 - 2026-10-06: **Theme: The Last Lighthouse** (CEO, from the Advisor's three options). A lighthouse on a coast swallowed by a living fog. Fog creatures attack, the Hero is the Keeper with a lantern, Recruits are rescued survivors, and keep upgrades widen the beam to push the fog back. "Holdfast" stays the working title until the M2 name check, which also covers lighthouse names. The Weird West and The Hive are kept for possible later versions.
 - 2026-10-20: **Shipping rules adopted** (CEO's shipping playbook): `studio/playbook/shipping.md`, linked from `CLAUDE.md`. QA results name a commit hash; release candidates get a production-shaped run and the full suite in CI's order; findings are graded MUST FIX or FOLLOW-UP; expected-failure tests come first for high-risk items; overlap is checked before every merge. Docs-only board, estimate, slate and plan PRs may be opened and merged by the Head of Engineering once CI is green; everything else is opened by its owner and merged by the Head of Engineering. M2 stays paused until the CEO says go.
+- 2026-10-21: **M2 runs as short iterations** (CEO: keep it very lean, test iteratively, give feedback as it develops). A playable build for the CEO after each slice; outside testers and Recruit trait boss drops are out of M2; Gate 2 is decided from the CEO's own playtests. Sanity checks per slice, one full QA round at the end (HF-M2-12). Plan and dates in `studio/estimates.md`. Head of Engineering, from the CEO's message.
 - 2026-10-21: **Go on M2** (CEO). Scope changes folded in before work: the Hero gets more skills (10 a path), Recruits get small skill trees (reverses 'no skill trees'), gear is for the Hero only, and a mini-boss ends level 5 (coordinator default; further boss placement is M5 planning). New item HF-M2-16. Head of Engineering, from the CEO's message and the Advisor's view.

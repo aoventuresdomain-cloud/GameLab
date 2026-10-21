@@ -14,31 +14,31 @@ Done: Gate 1 passed on 2026-10-06, about 4 hours after the repository was create
 
 Refreshed 2026-10-21, after the CEO's go and scope changes (10 Hero skills a path, Recruit skill trees, Hero-only gear, a level-5 mini-boss). Build time is active studio time from the CEO's go: building, review, CI and QA rounds. It counts one Gameplay Engineer, one UI Engineer and the part-time roles, with one open PR per builder. Calibrated on M1 (empty repository to Gate 1 in about 4 hours), so confidence is low to medium. Waits on people and outside services are listed separately and are not build time.
 
-### Build time, in order (lanes run in parallel)
+### Iterations (replanned 2026-10-21: lean, the CEO plays after each slice)
 
-| Lane | Items | Owner | Done by (build) | Confidence | Main risk |
-|---|---|---|---|---|---|
-| Foundations | KIT-08, KIT-06, KIT-07, HF-M2-00 | Gameplay Engineer | +1 day | Medium | Windows hash drift; the unsigned Mac build with GodotSteam |
-| Rules | HF-M2-14 Your Hero, HF-M2-15 Enemies fight back (QA's expected-failure tests first), HF-M2-16 gear and the first boss | Gameplay Engineer | +3 to 4 days | Medium | Keeping the Hero's inputs deterministic for the simulator |
-| Content | HF-M2-02 progression, HF-M2-03 Recruits, HF-M2-04 blessings, HF-M2-05 simulator (with Recruit skill trees) | Gameplay Engineer | +5 to 6 days | Low | Pacing rework rounds |
-| Screens | HF-M2-06 home and keep screens, HF-M2-07 feel (start on stub data) | UI Engineer | +4 days | Medium | Reworks when Hero and Recruit rules settle |
-| Bands and style | HF-M2-01 pacing bands, HF-M2-08 style guide | Balance Analyst, Product Designer | +1 to 2 days | Medium | Bands need real numbers from HF-M2-02 to settle |
-| Research | HF-M2-11 name check | Researcher | +1 day | High | None |
-| Hand-over | HF-M2-09 playtest build, HF-M2-12 Gate 2 QA round | Gameplay Engineer, Head of QA | +8 to 10 days | Low | Fix rounds from the QA round |
+The CEO asked for a very lean M2: small changes shipped fast, quick fixes, and their own playtests with feedback as it develops. Outside testers are a later stage. Each slice ends in a build the CEO plays in the browser on the Mac (private itch.io draft, no steps). Per slice: sanity checks, the full suite in CI's order and one production-shaped run on that commit. One full QA round, at the end only. Days are from the go (day 0 = 2026-10-21).
 
-**Build total: about 8 to 10 days** to a tested playtest build, up from 6 to 7 for the scope changes (about 2 to 3 days: more Hero skills, Recruit trees, gear and the boss). The work is sequential on one Gameplay Engineer, and the shipping rules add a QA round and a production-shaped run.
-
-### Waits (not build time; the calendar)
-
-| Wait | Who | Starts | Typical length | Confidence |
+| Iteration | What the CEO can play | Items | Ready by | Confidence |
 |---|---|---|---|---|
-| Mac steps for HF-M2-00 (right-click Open, run the Steam check) | CEO, via the Setup Desk | Day 1 | Same day | Medium |
-| Approve the tester recruitment post | CEO | Day 0 | Same day | Medium |
-| Recruit 5-10 outside testers, then sessions and the report (HF-M2-10) | Player Researcher, testers | Day 0, overlapping the build | 1 to 2 weeks | Low |
-| Play the M2 build on the Mac | CEO | After HF-M2-12 | Their choice | n/a |
-| Approve the style, then decide Gate 2 | CEO | After the tester report | Their choice | n/a |
+| 1 | Move the Keeper with WASD, lantern burns fog creatures, press Space for the path ability, keep falls = run over | HF-M2-14 first slice | Day 1 (22 Oct) | Medium |
+| 2 | Enemies fight back, light posts, knock-down and respawn, a minimal home screen | HF-M2-15, KIT-08 (CI only) | Day 2 to 3 | Medium |
+| 3 | Gold and upgrades that save, the recruitment board and a 2-slot squad, Mac build | KIT-06, KIT-07, HF-M2-02, HF-M2-03, HF-M2-00 | Day 4 to 5 | Low |
+| 4 | Hero skill paths (10 nodes each), Recruit skill trees, blessings | HF-M2-14 rest, HF-M2-03 trees, HF-M2-04 | Day 6 to 7 | Low |
+| 5 | Hero gear, the level-2 or 3 elite drop, the level-5 mini-boss, feel and sound, home and keep polish | HF-M2-16, HF-M2-06, HF-M2-07 | Day 7 to 8 | Low |
+| 6 | Pacing bands pass in the simulator, style guide for approval, name check | HF-M2-01, HF-M2-05, HF-M2-08, HF-M2-11 | Day 8 | Medium |
+| End | Full QA round on one fixed commit, then the Gate 2 brief | HF-M2-12, HF-M2-13 | Day 8 to 9 | Low |
 
-**Critical path: the testers, not the build.** The Gate 2 brief (HF-M2-13) follows the tester report, so expect it about 1 to 2 weeks after the build is done, or 2.5 to 3.5 weeks from go (low confidence).
+**Build total: about 7 to 9 days** to Gate 2, down from 8 to 10 now that the tester prep and per-slice QA rounds are out. The builder is one Gameplay Engineer, so slices are sequential; the UI Engineer joins at iteration 3 and the Balance Analyst, Product Designer and Researcher at iteration 6. HF-M2-10 and the session log wait for the later testing stage. Fixes from the CEO's feedback are small PRs merged fast, inside the day where they are blocker or major.
+
+### Waits (the calendar, not build time)
+
+| Wait | Who | Typical length | Confidence |
+|---|---|---|---|
+| About 10 minutes on the Mac for HF-M2-00 (right-click Open, run the Steam check), at iteration 3 | CEO, via the Setup Desk | Same day | Medium |
+| Play each build and send feedback | CEO | Their choice; feedback after each slice keeps the next slice on track | n/a |
+| Approve the style, then decide Gate 2 | CEO | Their choice | n/a |
+
+**Critical path: the build itself, plus the CEO's feedback loop.** The outside-tester wait is gone from M2. Gate 2 can be decided about 1 day after the final build, subject to the CEO's own playtest time.
 
 ## Holdfast M2 to M7: rough build time (asked by the CEO, 2026-10-06)
 
@@ -46,11 +46,11 @@ Active build time on the same basis as above, recalibrated against M1. Each mile
 
 | Milestone | Build time | Confidence | Main risk |
 |---|---|---|---|
-| M2 Fun slice | 8 to 10 days (see lanes above) | Medium | Pacing rework rounds |
+| M2 Fun slice | 7 to 9 days (see iterations above) | Medium | Pacing rework rounds |
 | M3 Designer pipeline | 1 to 2 days | Low | The design agent producing packs that pass the simulator first time |
 | M4 Steam page and demo | 1 to 2 days, alongside M3 | Low | Store art and trailer quality |
 | M5 Full game | 1 to 2 weeks | Low | Content volume and the CEO approving packs |
 | M6 Launch prep | 2 to 3 days | Medium | Fix rounds from the release QA round |
 | M7 Steam launch | About 1 day | Medium | Release build and store checks |
 
-**Total build:** about 3 to 4 weeks (M2 at 8 to 10 days pushes it to the upper end). This is not a calendar date. The calendar is set by waits on people and outside services: tester sessions, the CEO's playtests and pack approvals, Valve review, and the plan's Gate 3 demo test and Steam Next Fest dates.
+**Total build:** about 3 to 4 weeks (M2 at 7 to 9 days sits in the middle). This is not a calendar date. The calendar is set by waits on people and outside services: tester sessions, the CEO's playtests and pack approvals, Valve review, and the plan's Gate 3 demo test and Steam Next Fest dates.
