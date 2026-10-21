@@ -16,12 +16,12 @@ Refreshed 2026-10-21, after the CEO's go and scope changes (10 Hero skills a pat
 
 ### Iterations (replanned 2026-10-21: lean, the CEO plays after each slice)
 
-The CEO asked for a very lean M2: small changes shipped fast, quick fixes, and their own playtests with feedback as it develops. Outside testers are a later stage. Each slice ends in a build the CEO plays in the browser on the Mac (private itch.io draft, no steps). Per slice: sanity checks, the full suite in CI's order and one production-shaped run on that commit. One full QA round, at the end only. Days are from the go (day 0 = 2026-10-21).
+The CEO asked for a very lean M2: small changes shipped fast, quick fixes, and their own playtests with feedback as it develops. Outside testers are a later stage. Each slice ends in a build the CEO plays in the browser on the Mac (private itch.io draft, no steps), and the team then stops until the CEO has tested it and replied (CEO rule, 21 Oct). The days below are build days only; the CEO's testing time between slices is added by the calendar. Per slice: sanity checks, the full suite in CI's order and one production-shaped run on that commit. One full QA round, at the end only. Days are from the go (day 0 = 2026-10-21).
 
 | Iteration | What the CEO can play | Items | Ready by | Confidence |
 |---|---|---|---|---|
-| 1 | Move the Keeper with WASD, auto-fire fire arrows at the nearest fog creature, press Space for a fire volley, keep falls = run over | HF-M2-14 first slice (fire archer) | Day 1 (22 Oct) | Medium |
-| 2 | The mage and swordsman pillars, enemies fight back, light posts, knock-down and respawn, a minimal home screen | HF-M2-14 pillars, HF-M2-15, KIT-08 (CI only) | Day 2 to 3 | Medium |
+| 1 | Move the Keeper with WASD, auto-fire flares at the nearest fog creature, press Space for Flare Barrage, keep falls = run over | HF-M2-14 first slice (Flare Archer) | Day 1 (22 Oct) | Medium |
+| 2 | The Dusk Mage and Tideblade pillars, enemies fight back, light posts, knock-down and respawn, a minimal home screen | HF-M2-14 pillars, HF-M2-15, KIT-08 (CI only) | Day 2 to 3 | Medium |
 | 3 | Gold and upgrades that save, the recruitment board and a 2-slot squad, Mac build | KIT-06, KIT-07, HF-M2-02, HF-M2-03, HF-M2-00 | Day 4 to 5 | Low |
 | 4 | Hero skill paths (10 nodes each), Recruit skill trees, blessings | HF-M2-14 rest, HF-M2-03 trees, HF-M2-04 | Day 6 to 7 | Low |
 | 5 | Hero gear, the level-2 or 3 elite drop, the level-5 mini-boss, feel and sound, home and keep polish | HF-M2-16, HF-M2-06, HF-M2-07 | Day 7 to 8 | Low |

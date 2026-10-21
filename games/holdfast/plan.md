@@ -6,7 +6,7 @@
 
 ## 3. The game
 
-**Theme: The Last Lighthouse** (CEO, 6 Oct 2026). A lighthouse on a coast swallowed by a living fog. Fog creatures come out of the dark. Your Hero is the Keeper, whose lantern is their light: every attack, from fire arrows to magic to a lit blade, comes from it. Recruits are survivors you rescue from the sea, and upgrading the keep makes the beam reach further and push the fog back. "Holdfast" is the working title until the name check.
+**Theme: The Last Lighthouse** (CEO, 6 Oct 2026). A lighthouse on a coast swallowed by a living fog. Fog creatures come out of the dark. Your Hero is the Keeper, whose lantern is their light: every attack is light, fire or the shadow that light casts. Recruits are survivors you rescue from the sea, and upgrading the keep makes the beam reach further and push the fog back. "Holdfast" is the working title until the name check.
 
 **Run (3-8 minutes):**
 1. Pick a level, a squad of Recruits for your deploy slots (2 to start, up to 4), and 1 of 3 offered blessings (temporary boosts for this run).
@@ -17,7 +17,7 @@
 
 **Between runs:**
 - **Upgrade tree** (the Incrempire hook): 60-80 nodes bought with gold. Hero and tower upgrades, tower slots, gold gain, new enemy types and biomes. It visibly opens up.
-- **Your Hero** (the twist, part one): one player-named Hero with 3 pillars (fire archer, mage, swordsman), each of about 10 skills and unlocking a different active ability, plus 2 gear slots earned from bosses. Gear is for the Hero only. Paths can be mixed and respecced between runs.
+- **Your Hero** (the twist, part one): one player-named Hero with 3 pillars (Flare Archer, Dusk Mage, Tideblade), each of about 10 skills and unlocking a different active ability, plus 2 gear slots earned from bosses. Gear is for the Hero only. Paths can be mixed and respecced between runs.
 - **Recruits** (the twist, part two): hire as many as you like from a recruitment board with gold. Each has a generated name, a class (e.g. Warden, Lookout, Alchemist, Engineer) and a trait, levels up, has a small skill tree, and can be renamed. Deploy slots are limited, so choosing your squad is the strategy.
 - **Blessings:** about 20, unlocked through play, so runs feel different.
 - **Offline earnings:** your keep earns gold while the game is closed, **capped at 8 hours**, so playing always beats waiting.
@@ -68,7 +68,7 @@
 | # | Milestone | Done when | Owner's part |
 |---|---|---|---|
 | M1 | **Tech proof** | A Godot 4 build runs on Windows and in a browser (web export), produced by CI. One level is playable with the aura, 1 tower and 1 staff, using the kit as an addon linked from `GameLab/kit`. The headless simulator plays 10 hours of progression in under a minute in CI, with a determinism test. A Steam achievement fires using Valve's test app ID. **Go/no-go for Godot** | Play the web build in a browser |
-| M2 | **Fun slice** | 1 biome, 5 levels, one Hero with 3 pillars (fire archer, mage, swordsman), 4 Recruit classes with traits and small skill trees, Hero-only gear, a level-5 mini-boss, enemies that fight back, a home screen, about 30 upgrade nodes and 6 blessings, all hand-made. The CEO plays iterative builds and judges it fun; outside testers (median first session of 30+ minutes, most want to keep playing, at least half naming the Hero or Recruits) come at a later stage. Pacing bands set and passing. Art style locked. **Go/no-go for the concept** | Play each build, judge feel, approve style |
+| M2 | **Fun slice** | 1 biome, 5 levels, one Hero with 3 pillars (Flare Archer, Dusk Mage, Tideblade), 4 Recruit classes with traits and small skill trees, Hero-only gear, a level-5 mini-boss, enemies that fight back, a home screen, about 30 upgrade nodes and 6 blessings, all hand-made. The CEO plays iterative builds and judges it fun; outside testers (median first session of 30+ minutes, most want to keep playing, at least half naming the Hero or Recruits) come at a later stage. Pacing bands set and passing. Art style locked. **Go/no-go for the concept** | Play each build, judge feel, approve style |
 | M3 | **Designer pipeline** | Pack schema frozen. The design agent produces a level pack and a Recruit pack from one-line briefs; the simulator checks them in CI; the owner approves a pull request on their phone; the pack appears in the next build | Approve the first packs on the phone |
 | M4 | **Steam page and demo** | Steam store page live with capsule art, trailer, AI-content disclosure and wishlist button. Free demo (first biome, about 45-60 minutes) passes Valve review and is live on Steam, itch.io and galaxy.click. Wishlists and demo playtime appear in the weekly digest | Setup Desk Steam checklist; approve the page and demo; go-ahead to publish |
 | M5 | **Full game** | 4 biomes, about 20 levels, 8 Recruit classes, the full upgrade tree, about 20 blessings, endless mode, achievements, controller support, Steam Deck check and settings. Most content made through the designer pipeline, every pack passing the simulator | Play through, approve packs |
