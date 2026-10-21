@@ -1,2 +1,4 @@
 # Windows batch files need CRLF line endings to run reliably.
 *.bat text eol=crlf
+# CI runs the shell scripts on Windows runners too; CRLF would break them.
+*.sh text eol=lf

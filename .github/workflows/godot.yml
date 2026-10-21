@@ -174,6 +174,106 @@ jobs:
           if ($log -notmatch 'GodotSteam loaded: yes') { Write-Output "::error::GodotSteam is not loaded in the Windows build"; exit 1 }
           if (-not (Test-Path build/windows/steam-test.bat)) { Write-Output "::error::steam-test.bat is missing from the Windows build"; exit 1 }
 
+  # KIT-08: the same seed-1 progression run on Windows (the official Windows
+  # editor, same pinned version) and a check that its full report hash equals
+  # the Linux run's. Both logs print the whole hash.
+  determinism-windows:
+    needs: holdfast
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned Godot (Windows editor)
+        run: |
+          v="$(tr -d '[:space:]' < .godot-version)"
+          f="Godot_v${v}-stable_win64.exe.zip"
+          curl -fsSL --retry 3 -o godot.zip "https://github.com/godotengine/godot/releases/download/${v}-stable/$f"
+          tools/ci/verify_godot_download.sh "$f" godot.zip
+          tmp="$(cygpath -u "$RUNNER_TEMP")"
+          7z x -y "-o$(cygpath -w "$tmp/godot-zip")" godot.zip > /dev/null
+          mkdir -p "$tmp/godot-bin"
+          # The console build, so its log reaches the job log; "godot" on the path for tools/ci/godot.sh.
+          cp "$tmp/godot-zip/Godot_v${v}-stable_win64_console.exe" "$tmp/godot-bin/godot.exe"
+          cygpath -w "$tmp/godot-bin" >> "$GITHUB_PATH"
+      - name: Link the kit and import the project
+        run: |
+          python tools/link_kit.py
+          godot --version
+          tools/ci/godot.sh --headless --path games/holdfast --import
+      - name: Ten simulated hours of progression on Windows
+        run: tools/ci/godot.sh --headless --path games/holdfast -s res://tools/progression.gd -- --hours=10 --seed=1 --budget=60 --out=../../reports-windows
+      - uses: actions/download-artifact@v4
+        with:
+          name: holdfast-progression-${{ github.sha }}
+          path: reports-linux
+      - name: Same hash on Linux and Windows
+        run: python tools/ci/compare_progression.py reports-linux/progression.json reports-windows/progression.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: holdfast-progression-windows-${{ github.sha }}
+          path: reports-windows
+          if-no-files-found: ignore
+
+  # KIT-08: the Windows build plays a run on screen (not headless) at each size
+  # and saves screenshots, so Windows readability can be checked without a
+  # Windows PC. The runner has no GPU, so Mesa's software OpenGL sits beside the
+  # exe for this job only; it is not part of the release artifact.
+  screens-windows:
+    needs: holdfast
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: holdfast-windows-${{ github.sha }}
+          path: build/windows
+      - name: Install Mesa software OpenGL beside the build
+        shell: bash
+        run: tools/ci/fetch_mesa_windows.sh build/windows
+      - name: Play a run on screen at 1280x720 and 1920x1080
+        shell: pwsh
+        env:
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          $failed = $false
+          foreach ($size in '1280x720', '1920x1080') {
+            $w, $h = $size -split 'x'
+            & ./tools/ci/set_display_resolution.ps1 -Width $w -Height $h
+            if ($LASTEXITCODE -ne 0) { $failed = $true; continue }
+            $shots = Join-Path $PWD "screenshots/$size"
+            $out = "run-$size.log"
+            $err = "run-$size.err.log"
+            $game = @('--rendering-driver', 'opengl3', '--audio-driver', 'Dummy', '--resolution', $size,
+                      '--', '--autoplay', '--seed=1', "--screenshot-dir=$shots")
+            $p = Start-Process -FilePath build/windows/Holdfast.console.exe -ArgumentList $game `
+                   -RedirectStandardOutput $out -RedirectStandardError $err -PassThru -NoNewWindow
+            if (-not $p.WaitForExit(240000)) {
+              Write-Output "::error::the $size run did not finish in 4 minutes"
+              taskkill /PID $p.Id /T /F | Out-Null
+              $failed = $true
+            }
+            Get-Content $out, $err
+            $log = (Get-Content $out, $err | Out-String)
+            if ($log -notmatch 'AUTOPLAY DONE') { Write-Output "::error::no finished run at $size"; $failed = $true }
+            if ($log -match '(?m)^(SCRIPT )?ERROR:') { Write-Output "::error::errors in the $size log"; $failed = $true }
+            python tools/ci/check_screenshots.py $size "screenshots/$size"
+            if ($LASTEXITCODE -ne 0) { $failed = $true }
+          }
+          if ($failed) { exit 1 }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: holdfast-windows-screens-${{ github.sha }}
+          path: |
+            screenshots
+            run-*.log
+          if-no-files-found: ignore
+
   # The butler pin (version and checksum) is checked on pull requests too, so a
   # bad pin fails here rather than on main. No secrets in this job.
   butler-pin:

@@ -54,7 +54,9 @@ func _summary(report: Dictionary, wall: float, budget: float, deterministic: boo
 	lines.append("> **Placeholder balance.** M1 content numbers are placeholders (board finding F-002), so this report checks the simulator's speed and determinism, not pacing.")
 	lines.append("")
 	lines.append("- Wall-clock time: **%.2f s** (budget %.0f s)" % [wall, budget])
-	lines.append("- Determinism (second run, same seed): **%s** (`%s`)" % ["pass" if deterministic else "FAIL", str(report["hash"]).left(16)])
+	lines.append("- Determinism (second run, same seed): **%s**" % ("pass" if deterministic else "FAIL"))
+	# The whole hash, not a prefix: CI compares it between Linux and Windows (KIT-08).
+	lines.append("- Report hash: `%s`" % report["hash"])
 	lines.append("- Runs played: %d (%s)" % [report["runs_played"], JSON.stringify(report["outcomes"])])
 	lines.append("- Upgrades owned: %d of %d; gold in bank: %d" % [report["upgrades_owned"], report["upgrades_total"], report["bank"]])
 	var gold: Array = report["gold_per_run"]

@@ -27,6 +27,19 @@ Every tool CI downloads for a build is pinned, never "latest":
   `steam_api64.dll` ships beside `Holdfast.exe`.
 - butler: by version and SHA-256 in `tools/ci/install_butler.sh`, also checked
   on pull requests by the `butler-pin` job.
+- The official Windows editor zip, used by the `determinism-windows` job: the
+  same version, checked against its SHA-512 in `tools/ci/godot.sha512`.
+- Mesa's software OpenGL for Windows, used only by the `screens-windows` job to
+  render the Windows build on a runner with no GPU: by release, file name and
+  SHA-256 in `tools/ci/fetch_mesa_windows.sh`. It is never part of a release.
+
+## Windows evidence (KIT-08)
+
+Two jobs run after the Holdfast build. `determinism-windows` plays the seed-1
+progression run on Windows and fails unless its full report hash equals the
+Linux run's; both logs print the whole hash. `screens-windows` plays a run on
+screen at 1280×720 and 1920×1080 and uploads `1-start.png`, `2-run.png` and
+`3-summary.png` for each size in the `holdfast-windows-screens-<sha>` artifact.
 
 ## What M4 (Steam upload) will add
 
