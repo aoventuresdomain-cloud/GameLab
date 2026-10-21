@@ -3,15 +3,17 @@ extends "res://scripts/ui/run_state_source.gd"
 ## Drives a Holdfast run in the playable build: owns the kit SimEngine with
 ## Holdfast's rules and feeds it frame time. It never steps the rules itself;
 ## SimEngine.advance() runs whole fixed ticks only, so a seeded run with the bot
-## aura ends exactly as it does headless (tests/test_holdfast_rules.gd).
+## Hero ends exactly as it does headless (tests/test_holdfast_rules.gd).
 ##
 ## The UI reads it through run_state_source.gd's signals and get_* accessors; the
 ## world view reads get_rules() and get_engine() for drawing.
 
 @export var level_id := HoldfastContent.DEFAULT_LEVEL
 @export var rng_seed := 1
-## Let the bot drive the aura instead of the mouse (tests, attract mode).
+## Let the bot play the Hero instead of the keyboard (tests, attract mode).
 @export var use_bot := false
+## Replaces the keyboard and the bot, for tests and replays of recorded inputs.
+var controller_override: SimController = null
 ## When false, nothing moves until step() is called (used by tests).
 @export var auto_step := true
 ## When false, a refused run is not logged as an error (tests that cause one).
@@ -21,7 +23,7 @@ var upgrades: Array = []
 
 var _engine: SimEngine
 var _rules: HoldfastRules
-var _player := HoldfastPlayerAura.new()
+var _player := HoldfastPlayerHero.new()
 var _running := false
 var _runs := 0
 var _last := {}
@@ -32,8 +34,13 @@ var _last := {}
 const MAX_FRAME_SECONDS := 0.25
 
 
+func _ready() -> void:
+	HoldfastPlayerHero.ensure_actions()
+
+
 func _process(delta: float) -> void:
 	if auto_step:
+		_player.sample()
 		step(minf(delta, MAX_FRAME_SECONDS))
 
 
@@ -49,7 +56,9 @@ func start_run() -> void:
 	_runs += 1
 	var rules := HoldfastRules.new()
 	rules.report_errors = report_errors
-	var controller: SimController = HoldfastAuraBot.new() if use_bot else _player
+	var controller: SimController = controller_override
+	if controller == null:
+		controller = HoldfastHeroBot.new() if use_bot else _player
 	var engine := SimEngine.new(rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content), HoldfastRules.TICK_RATE)
 	if rules.setup_error != "":
 		if report_errors:
@@ -86,9 +95,11 @@ func step(delta: float) -> void:
 		})
 
 
-## Where the mouse is, in world coordinates (the keep is at the origin), or null.
-func set_cursor(world_position: Variant) -> void:
-	_player.cursor = world_position
+## What the keyboard says right now, for tests and replays: the Hero's move
+## direction and whether Space was pressed since the last tick.
+func set_hero_input(move: Vector2, ability_pressed: bool) -> void:
+	_player.move = move
+	_player.ability_pressed = _player.ability_pressed or ability_pressed
 
 
 func _emit_changes() -> void:

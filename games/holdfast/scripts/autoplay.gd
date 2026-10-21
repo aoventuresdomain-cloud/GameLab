@@ -1,5 +1,5 @@
 extends Node
-## Plays one full run with the bot aura and reports it, for CI smoke tests of the
+## Plays one full run with the bot Hero and reports it, for CI smoke tests of the
 ## exported builds. Off unless asked for:
 ##   desktop:  Holdfast.exe --headless -- --autoplay [--seed=N]
 ##   (windowed, the game waits a few seconds after the run before quitting)

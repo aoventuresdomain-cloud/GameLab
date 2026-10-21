@@ -1,0 +1,11 @@
+{
+  "hero_paths": [
+    {
+      "id": "flare_archer",
+      "name": "Flare Archer",
+      "move_speed": 170,
+      "attack": {"kind": "projectile", "damage": 6, "range": 210, "cooldown": 0.5, "speed": 480, "radius": 5},
+      "ability": {"name": "Flare Barrage", "kind": "projectile", "damage": 6, "range": 260, "cooldown": 8, "speed": 420, "radius": 6, "count": 9, "spread_degrees": 70}
+    }
+  ]
+}

@@ -8,6 +8,7 @@
       "spawn_radius": 420,
       "first_wave_delay": 2,
       "aura": {"radius": 70, "dps": 12, "cursor_speed": 1800},
+      "hero": {"path": "flare_archer", "x": 0, "y": 80},
       "tower": {"id": "archer_post", "x": -90, "y": 30},
       "staff": {"id": "bryn", "x": 80, "y": -40},
       "waves": [

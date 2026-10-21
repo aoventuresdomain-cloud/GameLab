@@ -1,5 +1,5 @@
 extends Node2D
-## Draws a Holdfast run and turns the mouse into the aura's position.
+## Draws a Holdfast run: the keep, tower, staff, Hero, arrows and enemies.
 ##
 ## Reads the run source's rules for drawing only; it never changes or steps them.
 ## Placeholder art: shapes drawn in code (see assets/CREDITS.md). The keep sits
@@ -13,8 +13,11 @@ extends Node2D
 const COLOUR_GROUND := Color("#1f2a1f")
 const COLOUR_KEEP := Color("#c9b88a")
 const COLOUR_KEEP_EDGE := Color("#3b3324")
-const COLOUR_AURA := Color(0.55, 0.85, 1.0, 0.22)
-const COLOUR_AURA_EDGE := Color(0.55, 0.85, 1.0, 0.8)
+const COLOUR_HERO := Color("#f2b13a")
+const COLOUR_HERO_EDGE := Color("#3b2a08")
+const COLOUR_ARROW := Color("#ff7a2e")
+const COLOUR_ABILITY_READY := Color("#ffe08a")
+const COLOUR_ABILITY_CHARGING := Color(1.0, 0.88, 0.54, 0.35)
 const COLOUR_TOWER := Color("#7f8fa6")
 const COLOUR_STAFF := Color("#e1a95f")
 const COLOUR_SHOT := Color(1.0, 0.95, 0.6, 0.9)
@@ -25,6 +28,7 @@ const HUD_CLEARANCE := 132.0
 const BOTTOM_MARGIN := 16.0
 ## Drawn beyond the spawn ring: the largest enemy's radius plus its health bar.
 const RING_EDGE := 32.0
+const HERO_RADIUS := 12.0
 ## Smallest view scale: below this, enemies and the aura get too small to read.
 const MIN_SCALE := 0.85
 ## Spawn ring radius used before a run has rules (start screen, the UI tests' stub).
@@ -35,28 +39,13 @@ const ENEMY_COLOURS := {
 	"brute": Color("#6a3d7a"),
 }
 
-## Any run_state_source.gd. Only a HoldfastRunSource has rules to draw and a
-## cursor to feed; with another source (the UI tests' stub) the field stays empty.
+## Any run_state_source.gd. Only a HoldfastRunSource has rules to draw; with
+## another source (the UI tests' stub) the field stays empty.
 @onready var source: Node = get_node(source_path)
-
-## Last mouse position in viewport coordinates, or null when the mouse has left.
-var _mouse: Variant = null
-
-
-func _input(event: InputEvent) -> void:
-	if event is InputEventMouse:
-		_mouse = (event as InputEventMouse).position
-
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_MOUSE_EXIT:
-		_mouse = null
 
 
 func _process(_delta: float) -> void:
 	_fit_below_hud()
-	if source is HoldfastRunSource and source.is_running():
-		source.set_cursor(screen_to_world(_mouse) if _mouse is Vector2 else null)
 	queue_redraw()
 
 
@@ -73,11 +62,6 @@ func _fit_below_hud() -> void:
 	var fit := clampf(minf(area.size.x / reach, area.size.y / reach), MIN_SCALE, 1.0)
 	position = area.get_center()
 	scale = Vector2(fit, fit)
-
-
-## Viewport position to world position (the keep is at the origin).
-func screen_to_world(at: Vector2) -> Vector2:
-	return get_global_transform_with_canvas().affine_inverse() * at
 
 
 func world_to_screen(at: Vector2) -> Vector2:
@@ -104,9 +88,7 @@ func _draw() -> void:
 			var at := enemy.position + Vector2(-enemy.radius, -enemy.radius - 8.0)
 			draw_rect(Rect2(at, Vector2(width, 4.0)), Color.BLACK)
 			draw_rect(Rect2(at, Vector2(width * maxf(enemy.health, 0.0) / enemy.max_health, 4.0)), COLOUR_HEALTH)
-	if rules.aura_active:
-		draw_circle(rules.aura_position, rules.aura_radius, COLOUR_AURA)
-		draw_arc(rules.aura_position, rules.aura_radius, 0.0, TAU, 48, COLOUR_AURA_EDGE, 2.0)
+	_draw_hero(rules)
 
 
 func _draw_attacker(rules: HoldfastRules, attacker: HoldfastRules.Attacker, colour: Color, square: bool) -> void:
@@ -121,3 +103,21 @@ func _draw_attacker(rules: HoldfastRules, attacker: HoldfastRules.Attacker, colo
 		if enemy.uid == attacker.last_target:
 			draw_line(attacker.position, enemy.position, COLOUR_SHOT, 3.0)
 			return
+
+
+## The Hero, their attack range, a ring that fills while the ability charges and
+## lights up when it is ready (Space), and the arrows in flight.
+func _draw_hero(rules: HoldfastRules) -> void:
+	for arrow in rules.projectiles:
+		var tail: Vector2 = arrow.position - arrow.velocity.normalized() * 14.0
+		draw_line(tail, arrow.position, COLOUR_ARROW, 3.0)
+		draw_circle(arrow.position, arrow.radius * 0.6, COLOUR_ARROW)
+	var at := rules.hero_position
+	draw_arc(at, float(rules.hero_attack["range"]), 0.0, TAU, 64, Color(COLOUR_HERO, 0.12), 1.0)
+	draw_circle(at, HERO_RADIUS, COLOUR_HERO)
+	draw_arc(at, HERO_RADIUS, 0.0, TAU, 24, COLOUR_HERO_EDGE, 2.0)
+	draw_line(at, at + rules.hero_facing * (HERO_RADIUS + 8.0), COLOUR_HERO_EDGE, 3.0)
+	var ready := rules.hero_ability_ready_in <= 0.0
+	var charged := 1.0 - rules.hero_ability_ready_in / float(rules.hero_ability["cooldown"])
+	draw_arc(at, HERO_RADIUS + 6.0, -PI / 2.0, -PI / 2.0 + TAU * clampf(charged, 0.0, 1.0), 32,
+			COLOUR_ABILITY_READY if ready else COLOUR_ABILITY_CHARGING, 3.0)

@@ -21,28 +21,40 @@ func test_main_scene_runs_the_real_rules() -> void:
 	main.free()
 
 
-func test_aura_follows_the_mouse_and_damages_enemies_under_it() -> void:
+## The CEO's design replaced the mouse aura: in the playable build WASD moves the
+## Hero and the Hero's own arrow does the damage (tower and staff switched off).
+func test_wasd_moves_the_hero_and_its_arrow_hits_an_enemy_in_the_playable_build() -> void:
 	var main := _start(2)
 	var source: HoldfastRunSource = main.get_node("RunSource")
-	var world: Node2D = main.get_node("World")
 	var rules := source.get_rules()
+	rules.tower.damage = 0.0
+	rules.staff.damage = 0.0
+	rules.staff_damage_per_level = 0.0
+	var start := rules.hero_position
+	source.set_hero_input(Vector2.RIGHT, false)
+	source.step(0.5)
+	expect_true(rules.hero_position.x > start.x + 50.0, "holding right moves the Hero right")
+	source.set_hero_input(Vector2.ZERO, false)
 	var guard := 0
-	while rules.enemies.is_empty() and guard < 200:
+	while rules.enemies.is_empty() and guard < 600:
 		source.step(0.1)
 		guard += 1
 	expect_false(rules.enemies.is_empty(), "enemies arrive in waves")
-	var enemy: HoldfastRules.Enemy = rules.enemies[0]
-	world._process(0.0) # place the world for this window size
-	var move := InputEventMouseMotion.new()
-	# Window pixels, as the OS reports them (they go through the UI scaling).
-	move.position = tree.root.get_final_transform() * world.world_to_screen(enemy.position)
-	tree.root.push_input(move)
-	world._process(0.0)
-	var before := enemy.health
-	source.step(0.1)
-	expect_true(rules.aura_active, "the aura is on while the mouse is over the field")
-	expect_true(rules.aura_position.distance_to(enemy.position) < enemy.speed * 0.2 + 1.0, "the aura is where the mouse is")
-	expect_true(enemy.health < before, "the enemy under the aura took damage")
+	var hit := false
+	var fired := false
+	guard = 0
+	while not hit and guard < 600 and source.is_running():
+		var before := {}
+		for enemy in rules.enemies:
+			before[enemy.uid] = enemy.health
+		source.step(0.1)
+		fired = fired or not rules.projectiles.is_empty()
+		for enemy in rules.enemies:
+			if before.has(enemy.uid) and enemy.health < before[enemy.uid]:
+				hit = true
+		guard += 1
+	expect_true(fired, "the Hero fired an arrow")
+	expect_true(hit, "an enemy took damage from it")
 	main.free()
 
 

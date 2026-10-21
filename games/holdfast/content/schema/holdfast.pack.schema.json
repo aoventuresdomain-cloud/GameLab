@@ -9,7 +9,8 @@
         "spawn_radius",
         "aura",
         "tower",
-        "staff"
+        "staff",
+        "hero"
       ],
       "additionalProperties": false,
       "properties": {
@@ -56,6 +57,9 @@
         },
         "staff": {
           "$ref": "#/$defs/staff_placement"
+        },
+        "hero": {
+          "$ref": "#/$defs/hero_placement"
         }
       }
     },
@@ -187,6 +191,118 @@
         },
         "y": {
           "type": "number"
+        }
+      }
+    },
+    "content": {
+      "properties": {
+        "hero_paths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/hero_path"
+          }
+        }
+      }
+    },
+    "hero_placement": {
+      "type": "object",
+      "required": [
+        "path",
+        "x",
+        "y"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "x-ref": "hero_paths"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "hero_path": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "move_speed",
+        "attack",
+        "ability"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "move_speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "attack": {
+          "$ref": "#/$defs/hero_action"
+        },
+        "ability": {
+          "$ref": "#/$defs/hero_action"
+        }
+      }
+    },
+    "hero_action": {
+      "type": "object",
+      "required": [
+        "kind",
+        "damage",
+        "range",
+        "cooldown",
+        "speed",
+        "radius"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "kind": {
+          "enum": [
+            "projectile"
+          ]
+        },
+        "damage": {
+          "type": "number",
+          "minimum": 0
+        },
+        "range": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "cooldown": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "spread_degrees": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 360
         }
       }
     }
