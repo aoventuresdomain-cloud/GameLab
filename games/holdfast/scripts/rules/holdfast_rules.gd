@@ -3,9 +3,10 @@ extends SimRules
 ## Holdfast combat rules for one run, on the Studio Kit's simulation engine.
 ##
 ## Enemies come in waves from the edge of the map and walk to the keep at the
-## origin. The aura (where the input says the cursor is), one tower and one
-## staff member damage them. Kills drop gold and sometimes staff XP. The run
-## ends when the keep falls or the last wave is cleared.
+## origin. The Hero (moved by the input, firing on their own at the nearest
+## enemy), one tower and one staff member damage them. Kills drop gold and
+## sometimes staff XP. The run ends when the keep falls or the last wave is
+## cleared.
 ##
 ## Pure data and maths: no nodes, rendering, input devices or clock, and every
 ## random number comes from the engine's SimRng. All numbers come from the
@@ -16,10 +17,14 @@ extends SimRules
 ##   level: level id,
 ##   upgrades: [upgrade node ids] (optional),
 ## }
-## input per tick: {aura: [x, y]} (optional; no aura that tick when missing)
+## input per tick, every key optional:
+##   move: [x, y]   Hero direction, each from -1 to 1 (longer than 1 is shortened)
+##   ability: true  press the Hero's ability; ignored while it is on cooldown
+##   aura: [x, y]   M1's mouse aura; nothing sends it now (see apply_aura)
 
 ## Ticks per simulated second, for the headless run and the playable build alike.
-const TICK_RATE := 10
+## 30 keeps the Hero's movement and arrows smooth on screen.
+const TICK_RATE := 30
 
 const OUTCOME_RUNNING := "running"
 const OUTCOME_WON := "won"
@@ -46,6 +51,16 @@ class Enemy:
 	var gold: int
 	var xp_chance: float
 	var xp_value: int
+
+
+## An arrow of the Hero's attack or ability, in flight until it hits or runs out of range.
+class Projectile:
+	extends RefCounted
+	var position: Vector2
+	var velocity: Vector2
+	var damage: float
+	var radius: float
+	var distance_left: float
 
 
 ## A tower or staff member: attacks the enemy nearest the keep within range.
@@ -85,6 +100,19 @@ var staff_xp_per_level := 1
 var staff_damage_per_level := 0.0
 var aura_position := Vector2.ZERO
 var aura_active := false
+var hero_path_id := ""
+var hero_position := Vector2.ZERO
+## Unit vector the Hero faces: at the nearest enemy when there is one, else the
+## way they last moved.
+var hero_facing := Vector2.UP
+var hero_speed := 0.0
+var hero_attack: Dictionary = {}
+var hero_ability: Dictionary = {}
+var hero_attack_ready_in := 0.0
+var hero_ability_ready_in := 0.0
+## The Hero stays inside the spawn ring.
+var hero_max_distance := 0.0
+var projectiles: Array[Projectile] = []
 var enemies: Array[Enemy] = []
 var tower: Attacker
 var staff: Attacker
@@ -135,6 +163,15 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	aura_dps = _apply(stats, "aura_dps", float(aura["dps"]))
 	cursor_speed = float(aura.get("cursor_speed", DEFAULT_CURSOR_SPEED))
 	gold_multiplier = _apply(stats, "gold_multiplier", 1.0)
+
+	var hero_at: Dictionary = level["hero"]
+	var hero_data: Dictionary = content["hero_paths"][hero_at["path"]]
+	hero_path_id = str(hero_at["path"])
+	hero_position = Vector2(float(hero_at["x"]), float(hero_at["y"]))
+	hero_speed = float(hero_data["move_speed"])
+	hero_attack = hero_data["attack"]
+	hero_ability = hero_data["ability"]
+	hero_max_distance = spawn_radius
 
 	var tower_at: Dictionary = level["tower"]
 	var tower_data: Dictionary = content["towers"][tower_at["id"]]
@@ -228,6 +265,8 @@ func step(dt: float, input: Dictionary) -> void:
 	if aura_active:
 		aura_position = Vector2(float(aura[0]), float(aura[1]))
 		apply_aura(aura_position, dt)
+	_step_hero(dt, input)
+	_move_projectiles(dt)
 	_attack(tower, tower.damage, dt)
 	_attack(staff, staff.damage + (staff_level - 1) * staff_damage_per_level, dt)
 	_collect_dead()
@@ -235,8 +274,108 @@ func step(dt: float, input: Dictionary) -> void:
 		_finish(OUTCOME_WON)
 
 
-## The aura's damage for one tick at `at`. The player's mouse and the bot both
-## reach it only through the tick input, so they share this one function.
+## The Hero for one tick: move, face the nearest enemy, fire the attack on its
+## cooldown when that enemy is in range, and fire the ability when asked. The
+## keyboard and the bot reach this only through the tick input.
+func _step_hero(dt: float, input: Dictionary) -> void:
+	hero_attack_ready_in = maxf(hero_attack_ready_in - dt, 0.0)
+	hero_ability_ready_in = maxf(hero_ability_ready_in - dt, 0.0)
+	var move := _input_vector(input.get("move"))
+	if move != Vector2.ZERO:
+		hero_position = (hero_position + move * hero_speed * dt).limit_length(hero_max_distance)
+	var target := _nearest_enemy(hero_position)
+	var to_target := Vector2.ZERO if target == null else target.position - hero_position
+	if to_target.length_squared() > 0.0001:
+		hero_facing = to_target.normalized()
+	elif target == null and move != Vector2.ZERO:
+		hero_facing = move.normalized()
+	if hero_attack_ready_in <= 0.0 and target != null and to_target.length() <= float(hero_attack["range"]) + target.radius:
+		_fire(hero_attack)
+		hero_attack_ready_in = float(hero_attack["cooldown"])
+	var ability: Variant = input.get("ability")
+	if ability is bool and ability and hero_ability_ready_in <= 0.0:
+		_fire(hero_ability)
+		hero_ability_ready_in = float(hero_ability["cooldown"])
+
+
+## A move input as a vector of at most length 1. Anything that is not a pair of
+## finite numbers is no movement.
+static func _input_vector(value: Variant) -> Vector2:
+	if not value is Array or value.size() != 2:
+		return Vector2.ZERO
+	for part in value:
+		if not (part is float or part is int) or not is_finite(part):
+			return Vector2.ZERO
+	return Vector2(clampf(float(value[0]), -1.0, 1.0), clampf(float(value[1]), -1.0, 1.0)).limit_length(1.0)
+
+
+## The living enemy nearest `from`; the first one in spawn order on a tie.
+func _nearest_enemy(from: Vector2) -> Enemy:
+	var best: Enemy = null
+	var best_dist := INF
+	for enemy in enemies:
+		if enemy.health <= 0.0:
+			continue
+		var dist := enemy.position.distance_squared_to(from)
+		if dist < best_dist:
+			best = enemy
+			best_dist = dist
+	return best
+
+
+## Launches the arrows of an attack or ability from the Hero along their facing:
+## `count` of them (default 1), spread evenly across `spread_degrees`.
+func _fire(action: Dictionary) -> void:
+	var count := int(action.get("count", 1))
+	var spread := deg_to_rad(float(action.get("spread_degrees", 0.0)))
+	for i in count:
+		var offset := 0.0 if count == 1 else (float(i) / (count - 1) - 0.5) * spread
+		var arrow := Projectile.new()
+		arrow.position = hero_position
+		arrow.velocity = hero_facing.rotated(offset) * float(action["speed"])
+		arrow.damage = float(action["damage"])
+		arrow.radius = float(action["radius"])
+		arrow.distance_left = float(action["range"])
+		projectiles.append(arrow)
+
+
+## Flies every arrow for one tick. An arrow stops at the first living enemy its
+## path touches (checked along the whole step, so a fast arrow can't skip one).
+func _move_projectiles(dt: float) -> void:
+	var flying: Array[Projectile] = []
+	for arrow in projectiles:
+		var travel := minf(arrow.velocity.length() * dt, arrow.distance_left)
+		var from := arrow.position
+		var to := from + arrow.velocity.normalized() * travel
+		var hit := _first_enemy_on_path(from, to, arrow.radius)
+		if hit != null:
+			hit.health -= arrow.damage
+			continue
+		arrow.position = to
+		arrow.distance_left -= travel
+		if arrow.distance_left > 0.0:
+			flying.append(arrow)
+	projectiles = flying
+
+
+func _first_enemy_on_path(from: Vector2, to: Vector2, radius: float) -> Enemy:
+	var best: Enemy = null
+	var best_along := INF
+	for enemy in enemies:
+		if enemy.health <= 0.0:
+			continue
+		var closest := Geometry2D.get_closest_point_to_segment(enemy.position, from, to)
+		if closest.distance_to(enemy.position) > enemy.radius + radius:
+			continue
+		var along := from.distance_squared_to(closest)
+		if along < best_along:
+			best = enemy
+			best_along = along
+	return best
+
+
+## M1's aura damage for one tick at `at`. Nothing sends an aura input now that
+## the Hero replaces the mouse (HF-M2-14); kept until the tests that pin it go.
 func apply_aura(at: Vector2, dt: float) -> void:
 	var reach := aura_radius
 	for enemy in enemies:
@@ -372,6 +511,8 @@ func snapshot() -> Dictionary:
 		"result": result(),
 		"staff_xp": staff_xp,
 		"aura": [aura_active, aura_position.x, aura_position.y],
+		"hero": [hero_position.x, hero_position.y, hero_facing.x, hero_facing.y, hero_attack_ready_in, hero_ability_ready_in],
+		"projectiles": _projectile_states(),
 		"tower": _attacker_state(tower),
 		"staff": _attacker_state(staff),
 		"next_spawn": _next_spawn,
@@ -380,6 +521,13 @@ func snapshot() -> Dictionary:
 		"wave_leaked": Array(_wave_leaked),
 		"enemies": list,
 	}
+
+
+func _projectile_states() -> Array:
+	var list := []
+	for p in projectiles:
+		list.append([p.position.x, p.position.y, p.velocity.x, p.velocity.y, p.damage, p.distance_left])
+	return list
 
 
 static func _attacker_state(a: Attacker) -> Array:
