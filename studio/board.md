@@ -228,7 +228,7 @@
 
 ### HF-M2-14 Your Hero
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** In progress: slice 1 (Flare Archer moves and fights) merged in #32 on 2026-10-21, waiting on the CEO's playtest
 - **QA:** full
 - **Done when:**
   - [ ] There is one player-named Hero, the Keeper. They move with WASD and auto-aim at the nearest enemy. The attack comes from their path, and the ability from their path fires with Space on a cooldown. The lantern is the Keeper's light, not their attack: it pushes the fog edge back and gives a damage bonus to anything the Hero hits inside lit areas. Every attack is light, fire or the shadow that light casts. The mouse-cursor aura is gone.
@@ -400,6 +400,7 @@
 | Date | Test | Change | Why | OK'd by |
 |---|---|---|---|---|
 | 2026-10-06 | `games/holdfast/tests/run_ui_tests.gd` | Pin the stub run source instead of the real rules | Its "wave advances" check encoded the stub's pacing; once the real rules are wired in, it would test level balance rather than the UI. The real rules keep their own end-to-end coverage (parity test, exported-build autoplay smoke test) | Head of Engineering |
+| 2026-10-21 | `games/holdfast/tests/test_playable_level.gd` | Replaced `test_aura_follows_the_mouse_and_damages_enemies_under_it` with `test_wasd_moves_the_hero_and_its_arrow_hits_an_enemy_in_the_playable_build`; the progression hash is re-pinned once (TICK_RATE 10 to 30, bot Hero replaces the bot aura) | The CEO's design removed the mouse aura, so the old pin is obsolete, not wrong code. The new test goes red with the input wiring broken. The re-pin has the parity test (headless equals playable) and the 60 second budget as its safeguards; old and new hashes are in PR #32 | Head of Engineering |
 
 ## Advisor views
 
