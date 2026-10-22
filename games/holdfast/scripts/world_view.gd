@@ -101,7 +101,8 @@ func _draw() -> void:
 	draw_arc(Vector2.ZERO, rules.keep_radius, 0.0, TAU, 48, COLOUR_KEEP_EDGE, 4.0)
 	for post in rules.posts:
 		draw_colored_polygon(PackedVector2Array([post.position + Vector2(0, -9), post.position + Vector2(7, 0), post.position + Vector2(0, 9), post.position + Vector2(-7, 0)]), COLOUR_LIGHT)
-	_draw_attacker(rules, rules.tower, COLOUR_TOWER, true)
+	for built in rules.towers:
+		_draw_attacker(rules, built, COLOUR_TOWER, true)
 	for recruit in rules.recruits:
 		_draw_attacker(rules, recruit, RECRUIT_COLOURS.get(str(recruit.role.get("class", "")), COLOUR_STAFF), false)
 	for token in rules.xp_tokens:

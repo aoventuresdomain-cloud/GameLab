@@ -17,6 +17,13 @@
       ],
       "hero": {"path": "flare_archer", "x": 0, "y": 80},
       "tower": {"id": "archer_post", "x": -90, "y": 30},
+      "max_posts": 1,
+      "sites": [
+        {"id": "west_gate", "x": -90, "y": 30},
+        {"id": "east_gate", "x": 100, "y": 20},
+        {"id": "north_gate", "x": -20, "y": -100}
+      ],
+      "spawn_arcs": [{"centre": 200, "width": 80}, {"centre": 20, "width": 80}],
       "staff": {"id": "bryn", "x": 112, "y": -48},
       "recruits": [{"id": "wren", "x": -118, "y": 58, "post": "west_post"}],
       "waves": [
@@ -44,15 +51,23 @@
       ],
       "hero": {"path": "flare_archer", "x": 0, "y": 80},
       "tower": {"id": "archer_post", "x": -95, "y": -20},
+      "max_posts": 2,
+      "sites": [
+        {"id": "west_gate", "x": -95, "y": -20},
+        {"id": "east_gate", "x": 100, "y": -10},
+        {"id": "north_gate", "x": 0, "y": -115},
+        {"id": "south_gate", "x": 10, "y": 115}
+      ],
+      "spawn_arcs": [{"centre": 180, "width": 80}, {"centre": 0, "width": 80}],
       "staff": {"id": "bryn", "x": 105, "y": -50},
       "recruits": [{"id": "wren", "x": 120, "y": 96, "post": "south_post"}],
       "waves": [
         {"health_scale": 1, "damage_scale": 0.7, "spawns": [{"enemy": "grunt", "count": 8, "interval": 0.9}]},
         {"delay": 4, "health_scale": 1, "damage_scale": 0.77, "spawns": [{"enemy": "grunt", "count": 9, "interval": 0.8}, {"enemy": "runner", "count": 4, "interval": 1.2}]},
         {"delay": 4, "health_scale": 1, "damage_scale": 0.84, "spawns": [{"enemy": "grunt", "count": 10, "interval": 0.7}, {"enemy": "runner", "count": 6, "interval": 1.0}]},
-        {"delay": 5, "health_scale": 1.05, "damage_scale": 1.19, "spawns": [{"enemy": "grunt", "count": 9, "interval": 0.6}, {"enemy": "runner", "count": 6, "interval": 0.9}, {"enemy": "brute", "count": 1, "interval": 2}]},
-        {"delay": 5, "health_scale": 1.1, "damage_scale": 1.54, "spawns": [{"enemy": "grunt", "count": 10, "interval": 0.55}, {"enemy": "runner", "count": 7, "interval": 0.8}, {"enemy": "brute", "count": 2, "interval": 3}]},
-        {"delay": 5, "health_scale": 1.15, "damage_scale": 1.95, "spawns": [{"enemy": "grunt", "count": 12, "interval": 0.5}, {"enemy": "runner", "count": 7, "interval": 0.7}, {"enemy": "brute", "count": 2, "interval": 3}]}
+        {"delay": 5, "health_scale": 1.3, "damage_scale": 1.19, "spawns": [{"enemy": "grunt", "count": 9, "interval": 0.6}, {"enemy": "runner", "count": 6, "interval": 0.9}, {"enemy": "brute", "count": 1, "interval": 2}]},
+        {"delay": 5, "health_scale": 1.5, "damage_scale": 1.54, "spawns": [{"enemy": "grunt", "count": 10, "interval": 0.55}, {"enemy": "runner", "count": 7, "interval": 0.8}, {"enemy": "brute", "count": 2, "interval": 3}]},
+        {"delay": 5, "health_scale": 1.75, "damage_scale": 1.95, "spawns": [{"enemy": "grunt", "count": 12, "interval": 0.5}, {"enemy": "runner", "count": 7, "interval": 0.7}, {"enemy": "brute", "count": 2, "interval": 3}]}
       ]
     },
     {

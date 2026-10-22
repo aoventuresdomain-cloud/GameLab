@@ -22,6 +22,8 @@ var controller_override: SimController = null
 var report_errors := true
 
 var upgrades: Array = []
+## The Archer Post sites to build on (null: the level's default layout).
+var layout: Variant = null
 
 var _engine: SimEngine
 var _rules: HoldfastRules
@@ -61,7 +63,7 @@ func start_run() -> void:
 	var controller: SimController = controller_override
 	if controller == null:
 		controller = HoldfastHeroBot.new() if use_bot else _player
-	var engine := SimEngine.new(rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content, hero_path), HoldfastRules.TICK_RATE)
+	var engine := SimEngine.new(rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content, hero_path, layout), HoldfastRules.TICK_RATE)
 	if rules.setup_error != "":
 		if report_errors:
 			push_error("Holdfast: cannot start a run: " + rules.setup_error)
@@ -142,6 +144,16 @@ func get_total_waves() -> int:
 
 func get_wave_banner() -> String:
 	return _rules.wave_banner() if _rules else ""
+
+
+## Where the Archer Posts stand, until the first wave starts ("" on a level with no sites).
+func get_posts_note() -> String:
+	if _rules == null or _rules.wave > 0 or _rules.layout_ids.is_empty():
+		return ""
+	var names: PackedStringArray = []
+	for id in _rules.layout_ids:
+		names.append(str(id).replace("_", " ").capitalize())
+	return "Posts: " + ", ".join(names)
 
 
 ## Read-only use: drawing and tests. Never step or change it.

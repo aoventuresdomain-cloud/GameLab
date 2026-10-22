@@ -167,6 +167,22 @@ class Attacker:
 	var ready_in := 0.0
 	## Last target, for drawing shots; -1 when none.
 	var last_target := -1
+	## A tower's upgrade-driven extras (all zero for a plain tower): extra targets
+	## shot each attack, the bonus on a lone target, enemies pierced behind the
+	## target, a heavier shot every `burst_every` attacks, a volley on everything in
+	## range every `storm_every` seconds, and repairs between waves.
+	var tower_id := ""
+	var extra_targets := 0
+	var lone_bonus := 0.0
+	var pierce := 0
+	var burst_every := 0
+	var burst_extra := 0.0
+	var storm_every := 0.0
+	var storm_share := 0.0
+	var repair := 0.0
+	var shots := 0
+	var storm_in := 0.0
+	var pierce_width := 0.0
 
 
 # Level, after upgrades.
@@ -174,12 +190,13 @@ var level_id := ""
 var keep_health_max := 0
 var keep_radius := 0.0
 var spawn_radius := 0.0
+## Where enemies come from: [centre, width] in degrees; empty means all round.
+var spawn_arcs: Array = []
 var aura_radius := 0.0
 var aura_dps := 0.0
 var cursor_speed := DEFAULT_CURSOR_SPEED
 var gold_multiplier := 1.0
 ## Tower health restored per second while no enemy is on the field (between waves).
-var tower_repair := 0.0
 var total_waves := 0
 
 # State.
@@ -237,6 +254,10 @@ var arena_half := DEFAULT_ARENA * 0.5
 var projectiles: Array[Projectile] = []
 var enemies: Array[Enemy] = []
 var tower: Attacker
+## Every Archer Post of the run (`tower` is the first); the level's layout picks them.
+var towers: Array[Attacker] = []
+## The site ids the towers stand on (empty on a level without sites).
+var layout_ids: Array = []
 ## The first Recruit (M1's staff member); `recruits` holds all of them.
 var staff: Attacker
 var recruits: Array[Attacker] = []
@@ -334,7 +355,6 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	keep_radius = float(level["keep_radius"])
 	# The fog edge is where the keep's beam reaches, and enemies spawn at it.
 	spawn_radius = _apply(stats, "beam_reach", float(level["spawn_radius"]))
-	tower_repair = _add(stats, "tower_repair")
 	var aura: Dictionary = level["aura"]
 	aura_radius = _apply(stats, "aura_radius", float(aura["radius"]))
 	aura_dps = _apply(stats, "aura_dps", float(aura["dps"]))
@@ -356,23 +376,38 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	hero_path_id = hero_path
 	hero_start = Vector2(float(hero_at["x"]), float(hero_at["y"]))
 	hero_position = hero_start
-	hero_speed = float(hero_data["move_speed"])
+	var hero_key := "hero.%s." % hero_path
+	hero_speed = _apply(stats, hero_key + "move_speed", float(hero_data["move_speed"]))
 	hero_radius = float(hero_data["radius"])
 	hero_colour = str(hero_data.get("colour", hero_colour))
 	hero_pickup_radius = float(hero_data["pickup_radius"])
-	hero_attack = hero_data["attack"]
-	hero_ability = hero_data["ability"]
+	hero_attack = _tuned(hero_data["attack"], hero_key + "attack.", stats)
+	hero_ability = _tuned(hero_data["ability"], hero_key + "ability.", stats)
 	hero_delays = hero_data["knockdown_delays"]
 	hero_untouchable_seconds = float(hero_data.get("untouchable_seconds", DEFAULT_UNTOUCHABLE_SECONDS))
-	hero_state = HeroKnockdown.new_state(float(hero_data["health"]))
+	hero_state = HeroKnockdown.new_state(_apply(stats, hero_key + "health", float(hero_data["health"])))
 	var arena: Dictionary = level.get("arena", {})
 	arena_half = Vector2(float(arena.get("width", DEFAULT_ARENA.x)), float(arena.get("height", DEFAULT_ARENA.y))) * 0.5
 	hero_position = _in_arena(hero_position)
 	_tie_order.append("hero")
 
-	var tower_at: Dictionary = level["tower"]
-	var tower_data: Dictionary = content["towers"][tower_at["id"]]
-	tower = _attacker("tower", tower_at, tower_data, _apply(stats, "tower_damage", float(tower_data["damage"])), _add(stats, "tower_health"))
+	spawn_arcs = level.get("spawn_arcs", [])
+	var chosen := _chosen_sites(level, config.get("layout", null))
+	if chosen.is_empty():
+		_fail("layout %s is not a valid set of sites for %s" % [config.get("layout"), level_id])
+		return
+	for i in chosen.size():
+		var at: Dictionary = chosen[i].duplicate()
+		var tower_id := str(at.get("tower", level["tower"]["id"]))
+		# The first post keeps the tower's own id as its key, the others add their site.
+		at["id"] = tower_id if i == 0 else "%s@%s" % [tower_id, at["id"]]
+		var built := _build_tower(at, tower_id, content["towers"][tower_id], stats)
+		towers.append(built)
+		_defenders.append(built)
+	tower = towers[0]
+	if level.has("sites"):
+		for at in chosen:
+			layout_ids.append(str(at["id"]))
 	for at in placements:
 		var data: Dictionary = content["staff"][at["id"]]
 		var recruit := _attacker("recruit", at, data, _apply(stats, "staff_damage", float(data["damage"])))
@@ -393,11 +428,11 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		recruits.append(recruit)
 	staff = recruits[0]
 	staff_xp_per_level = int(content["staff"][staff.id]["xp_per_level"])
-	_defenders.append(tower)
 	_defenders.append_array(recruits)
 	for unit in recruits:
 		_tie_order.append(unit.key)
-	_tie_order.append(tower.key)
+	for built in towers:
+		_tie_order.append(built.key)
 
 	_build_schedule(level)
 
@@ -425,6 +460,90 @@ func _attacker(kind: String, at: Dictionary, data: Dictionary, damage: float, ex
 	a.attack_range = float(data["range"])
 	a.cooldown = float(data["cooldown"])
 	return a
+
+
+## The sites the run builds an Archer Post on: a level with `sites` takes the
+## layout (site ids, at most `max_posts`, no repeats; the first site when none is
+## given), a level without keeps its one placed tower. Empty when the layout is bad.
+func _chosen_sites(level: Dictionary, layout: Variant) -> Array:
+	if not level.has("sites"):
+		return [level["tower"]]
+	var by_id := {}
+	for site in level["sites"]:
+		by_id[str(site["id"])] = site
+	if layout != null and not layout is Array:
+		return []
+	var ids: Array = [str(level["sites"][0]["id"])] if layout == null else layout
+	if ids.is_empty() or ids.size() > int(level.get("max_posts", 1)):
+		return []
+	var chosen := []
+	var seen := {}
+	for id in ids:
+		if not by_id.has(str(id)) or seen.has(str(id)):
+			return []
+		seen[str(id)] = true
+		chosen.append(by_id[str(id)])
+	return chosen
+
+
+## The sites nearest where the enemies come from: each spawn arc in turn takes the
+## unchosen site closest in direction to its centre, until `max_posts` are chosen.
+## Ids only; [] for a level with no sites.
+static func best_layout(level: Dictionary) -> Array:
+	var sites: Array = level.get("sites", [])
+	var arcs: Array = level.get("spawn_arcs", [])
+	var wanted := mini(int(level.get("max_posts", 1)), sites.size())
+	var chosen := []
+	if arcs.is_empty():
+		for i in wanted:
+			chosen.append(str(sites[i]["id"]))
+		return chosen
+	var turn := 0
+	while chosen.size() < wanted:
+		var centre := deg_to_rad(float(arcs[turn % arcs.size()]["centre"]))
+		turn += 1
+		var best := ""
+		var best_gap := INF
+		for site in sites:
+			if str(site["id"]) in chosen:
+				continue
+			var gap := absf(angle_difference(centre, atan2(float(site["y"]), float(site["x"]))))
+			if gap < best_gap:
+				best = str(site["id"])
+				best_gap = gap
+		chosen.append(best)
+	return chosen
+
+
+## A tower with the upgrade stats `tower.<id>.<field>` applied.
+func _build_tower(at: Dictionary, tower_id: String, data: Dictionary, stats: Dictionary) -> Attacker:
+	var key := "tower.%s." % tower_id
+	var a := _attacker("tower", at, data, _apply(stats, key + "damage", float(data["damage"])), _add(stats, key + "health"))
+	a.tower_id = tower_id
+	a.pierce_width = float(data.get("pierce_width", 0.0))
+	a.attack_range = _apply(stats, key + "range", a.attack_range)
+	a.cooldown = _apply(stats, key + "cooldown", a.cooldown)
+	a.extra_targets = int(_add(stats, key + "extra_targets"))
+	a.lone_bonus = _add(stats, key + "lone_bonus")
+	a.pierce = int(_add(stats, key + "pierce"))
+	a.burst_every = int(_add(stats, key + "burst_every"))
+	a.burst_extra = _add(stats, key + "burst_extra")
+	a.storm_every = _add(stats, key + "storm_every")
+	a.storm_share = _add(stats, key + "storm_share")
+	a.storm_in = a.storm_every
+	a.repair = _add(stats, key + "repair")
+	return a
+
+
+## A copy of a Hero attack or ability with its upgraded fields: every stat
+## `<prefix><field>` changes that field of the action.
+static func _tuned(action: Dictionary, prefix: String, stats: Dictionary) -> Dictionary:
+	var tuned := action.duplicate()
+	for stat in stats:
+		if str(stat).begins_with(prefix):
+			var field := str(stat).substr(prefix.length())
+			tuned[field] = _apply(stats, str(stat), float(action.get(field, 0.0)))
+	return tuned
 
 
 ## Wave i starts `delay` seconds after wave i-1 has spawned its last enemy.
@@ -468,12 +587,23 @@ static func upgrade_stats(nodes: Dictionary, purchased: Array) -> Dictionary:
 			push_error("HoldfastRules: unknown upgrade %s, ignored" % id)
 			continue
 		for effect in node.get("effects", []):
-			var stat := str(effect["stat"])
+			var stat := _scoped_stat(node, str(effect["stat"]))
 			var entry: Dictionary = stats.get(stat, {"add": 0.0, "multiply": 1.0})
 			entry["add"] += float(effect.get("add", 0.0))
 			entry["multiply"] *= float(effect.get("multiply", 1.0))
 			stats[stat] = entry
 	return stats
+
+
+## A tower or Hero node's stat is scoped to what it belongs to: `tower.damage` on
+## an archer_post node is `tower.archer_post.damage`, `hero.attack.damage` on a
+## flare_archer node is `hero.flare_archer.attack.damage`.
+static func _scoped_stat(node: Dictionary, stat: String) -> String:
+	if node.has("tower") and stat.begins_with("tower."):
+		return "tower.%s.%s" % [node["tower"], stat.substr(6)]
+	if node.has("hero") and stat.begins_with("hero."):
+		return "hero.%s.%s" % [node["hero"], stat.substr(5)]
+	return stat
 
 
 static func _add(stats: Dictionary, stat: String) -> float:
@@ -507,9 +637,11 @@ func step(dt: float, input: Dictionary) -> void:
 	_step_hero(dt, input)
 	_move_projectiles(dt)
 	_step_recruits(dt)
-	_attack(tower, tower.damage, dt)
-	if tower_repair > 0.0 and enemies.is_empty():
-		tower.health = UnitHealth.repair(tower.health, tower_repair * dt)
+	for built in towers:
+		_storm(built, dt)
+		_attack(built, built.damage, dt)
+		if built.repair > 0.0 and enemies.is_empty():
+			built.health = UnitHealth.repair(built.health, built.repair * dt)
 	for recruit in recruits:
 		_attack(recruit, recruit.damage + (staff_level - 1) * recruit.damage_per_level, dt)
 	_collect_dead()
@@ -701,8 +833,10 @@ func _step_recruits(dt: float) -> void:
 			for enemy in enemies:
 				if enemy.health > 0.0 and enemy.position.distance_to(fx[0]) <= fx[1] + enemy.radius:
 					_hurt(enemy, fx[2] * dt, 0.0)
-		if fx[3] > 0.0 and tower.up and tower.position.distance_to(fx[0]) <= fx[1]:
-			tower.health = UnitHealth.repair(tower.health, fx[3] * dt)
+		if fx[3] > 0.0:
+			for built in towers:
+				if built.up and built.position.distance_to(fx[0]) <= fx[1]:
+					built.health = UnitHealth.repair(built.health, fx[3] * dt)
 
 
 ## One step of a Recruit's walk (RecruitLeash): out to an enemy within their leash
@@ -772,6 +906,7 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 			hero_rapid_left = float(hero_ability["rapid_seconds"])
 		elif float(hero_ability.get("dash_seconds", 0.0)) > 0.0:
 			hero_dash_left = float(hero_ability["dash_seconds"])
+			hero_grace_left = maxf(hero_grace_left, hero_dash_left)
 			_start_dash(target)
 		elif float(hero_ability.get("zone_seconds", 0.0)) > 0.0:
 			zone_left = float(hero_ability["zone_seconds"])
@@ -1063,7 +1198,7 @@ func _spawn_due() -> void:
 		_next_uid += 1
 		enemy.type = entry[2]
 		enemy.wave = w
-		var angle := _rng.next_float() * TAU
+		var angle := _spawn_angle()
 		enemy.position = _in_arena(Vector2(cos(angle), sin(angle)) * spawn_radius)
 		enemy.max_health = float(data["health"]) * _wave_health_scale[w]
 		enemy.health = enemy.max_health
@@ -1078,6 +1213,16 @@ func _spawn_due() -> void:
 		enemies.append(enemy)
 
 
+## Where the next enemy comes from: anywhere round the keep, or inside one of the
+## level's arcs (the second draw picks the point in the arc).
+func _spawn_angle() -> float:
+	var first := _rng.next_float()
+	if spawn_arcs.is_empty():
+		return first * TAU
+	var arc: Dictionary = spawn_arcs[mini(int(first * spawn_arcs.size()), spawn_arcs.size() - 1)]
+	return deg_to_rad(float(arc["centre"]) + (_rng.next_float() - 0.5) * float(arc["width"]))
+
+
 func _attack(attacker: Attacker, damage: float, dt: float) -> void:
 	attacker.ready_in = maxf(attacker.ready_in - dt, 0.0)
 	attacker.last_target = -1
@@ -1085,12 +1230,14 @@ func _attack(attacker: Attacker, damage: float, dt: float) -> void:
 		return
 	var best: Enemy = null
 	var best_dist := INF
+	var in_range := 0
 	for enemy in enemies:
 		if enemy.health <= 0.0:
 			continue
 		var reach := attacker.attack_range + enemy.radius
 		if enemy.position.distance_squared_to(attacker.position) > reach * reach:
 			continue
+		in_range += 1
 		var to_keep := enemy.position.length()
 		if to_keep < best_dist:
 			best = enemy
@@ -1098,9 +1245,72 @@ func _attack(attacker: Attacker, damage: float, dt: float) -> void:
 	if best == null:
 		attacker.ready_in = SCAN_SECONDS
 		return
-	_hurt(best, damage, 0.0)
+	var dealt := damage
+	if in_range == 1:
+		dealt *= 1.0 + attacker.lone_bonus
+	attacker.shots += 1
+	if attacker.burst_every > 0 and attacker.shots % attacker.burst_every == 0:
+		dealt *= 1.0 + attacker.burst_extra
+	_hurt(best, dealt, 0.0)
+	if attacker.extra_targets > 0 or attacker.pierce > 0:
+		_hit_more(attacker, best, dealt)
 	attacker.ready_in = attacker.cooldown
 	attacker.last_target = best.uid
+
+
+## A tower's twin and piercing shots: the next enemies nearest the keep within
+## range take the same hit, then the ones in line behind the target.
+func _hit_more(attacker: Attacker, first: Enemy, damage: float) -> void:
+	var others: Array[Enemy] = []
+	for enemy in enemies:
+		var reach := attacker.attack_range + enemy.radius
+		if enemy != first and enemy.health > 0.0 and enemy.position.distance_squared_to(attacker.position) <= reach * reach:
+			others.append(enemy)
+	others.sort_custom(func(a: Enemy, b: Enemy) -> bool:
+		var da := a.position.length_squared()
+		var db := b.position.length_squared()
+		return da < db or (da == db and a.uid < b.uid))
+	var twins := others.slice(0, attacker.extra_targets)
+	for enemy in twins:
+		_hurt(enemy, damage, 0.0)
+	if attacker.pierce <= 0:
+		return
+	var line := first.position - attacker.position
+	if line.length_squared() < 0.0001:
+		return
+	line = line.normalized()
+	var first_along := (first.position - attacker.position).dot(line)
+	var behind: Array[Enemy] = []
+	for enemy in others:
+		var rel := enemy.position - attacker.position
+		if twins.has(enemy) or rel.dot(line) <= first_along:
+			continue
+		if absf(rel.cross(line)) <= enemy.radius + attacker.pierce_width:
+			behind.append(enemy)
+	behind.sort_custom(func(a: Enemy, b: Enemy) -> bool:
+		var da := (a.position - attacker.position).dot(line)
+		var db := (b.position - attacker.position).dot(line)
+		return da < db or (da == db and a.uid < b.uid))
+	for enemy in behind.slice(0, attacker.pierce):
+		_hurt(enemy, damage, 0.0)
+
+
+## A storm post: every `storm_every` seconds, once something is in range, it
+## hits everything in range for `storm_share` of its damage.
+func _storm(attacker: Attacker, dt: float) -> void:
+	if attacker.storm_every <= 0.0 or not attacker.up:
+		return
+	attacker.storm_in = maxf(attacker.storm_in - dt, 0.0)
+	if attacker.storm_in > TIME_EPSILON:
+		return
+	var hit := false
+	for enemy in enemies:
+		var reach := attacker.attack_range + enemy.radius
+		if enemy.health > 0.0 and enemy.position.distance_squared_to(attacker.position) <= reach * reach:
+			_hurt(enemy, attacker.damage * attacker.storm_share, 0.0)
+			hit = true
+	if hit:
+		attacker.storm_in = attacker.storm_every
 
 
 func _collect_dead() -> void:
@@ -1203,6 +1413,7 @@ func snapshot() -> Dictionary:
 		"recruits": _recruit_states(),
 		"projectiles": _projectile_states(),
 		"tower": _attacker_state(tower),
+		"towers": _tower_states(),
 		"staff": _attacker_state(staff),
 		"next_spawn": _next_spawn,
 		"next_uid": _next_uid,
@@ -1230,6 +1441,13 @@ func _projectile_states() -> Array:
 	var list := []
 	for p in projectiles:
 		list.append([p.position.x, p.position.y, p.velocity.x, p.velocity.y, p.damage, p.distance_left])
+	return list
+
+
+func _tower_states() -> Array:
+	var list := []
+	for built in towers:
+		list.append([built.ready_in, built.last_target, built.damage, built.health["health"], built.up, built.shots, built.storm_in])
 	return list
 
 

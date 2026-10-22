@@ -20,7 +20,9 @@ static func base() -> Dictionary:
 
 
 ## Rules config for one run. `hero` is the Hero path to play ("" for the level's own).
-static func run_config(level: String = DEFAULT_LEVEL, upgrades: Array = [], content: Dictionary = {}, hero: String = "") -> Dictionary:
+## `layout` is the Archer Post sites to build on, for a level that has them (null: the
+## sites nearest where the enemies come from, as a bot or an untouched profile plays it).
+static func run_config(level: String = DEFAULT_LEVEL, upgrades: Array = [], content: Dictionary = {}, hero: String = "", layout: Variant = null) -> Dictionary:
 	var config := {
 		"content": content if not content.is_empty() else base(),
 		"level": level,
@@ -28,4 +30,9 @@ static func run_config(level: String = DEFAULT_LEVEL, upgrades: Array = [], cont
 	}
 	if hero != "":
 		config["hero"] = hero
+	var level_data: Dictionary = config["content"].get("levels", {}).get(level, {})
+	if layout != null:
+		config["layout"] = layout
+	elif level_data.has("sites"):
+		config["layout"] = HoldfastRules.best_layout(level_data)
 	return config

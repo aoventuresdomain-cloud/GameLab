@@ -52,6 +52,11 @@ func get_wave_banner() -> String:
 	return ""
 
 
+## Where the Archer Posts stand, shown until the first wave starts; "" when there is nothing to say.
+func get_posts_note() -> String:
+	return ""
+
+
 ## The Hero's health now and at most.
 func get_hero_health() -> int:
 	return 0

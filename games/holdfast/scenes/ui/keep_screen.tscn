@@ -74,6 +74,13 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 12
 
+[node name="NextUnlocks" type="Label" parent="Margin/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 2
+
 [node name="Footer" type="HBoxContainer" parent="Margin/Column"]
 layout_mode = 2
 theme_override_constants/separation = 12
@@ -86,6 +93,12 @@ size_flags_horizontal = 3
 size_flags_vertical = 1
 theme_override_font_sizes/font_size = 20
 autowrap_mode = 2
+
+[node name="RespecButton" type="Button" parent="Margin/Column/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Respec (free)"
 
 [node name="BackButton" type="Button" parent="Margin/Column/Footer"]
 unique_name_in_owner = true

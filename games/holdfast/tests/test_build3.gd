@@ -78,14 +78,16 @@ func _save_path(name: String) -> String:
 
 # ------------------------------------------------------------------ the tree in the pack
 
-func test_the_tree_has_about_twenty_six_nodes_in_the_three_branches() -> void:
+func test_the_tree_has_sections_with_real_depth() -> void:
 	var nodes := _nodes()
-	expect_true(nodes.size() >= 24 and nodes.size() <= 28, "about 26 nodes, got %d" % nodes.size())
+	var sections: Dictionary = HoldfastContent.base()["upgrade_sections"]
+	expect_true(nodes.size() >= 30 and nodes.size() <= 40, "about 35 nodes, got %d" % nodes.size())
 	var by_branch := {}
 	for id in nodes:
+		expect_true(sections.has(nodes[id]["branch"]), id + " sits in a section the pack lists")
 		by_branch[nodes[id]["branch"]] = int(by_branch.get(nodes[id]["branch"], 0)) + 1
-	expect_eq(by_branch.keys().size(), 3, "towers, keep, gold: " + str(by_branch))
-	for branch in ["towers", "keep", "gold"]:
+	expect_eq(by_branch.keys().size(), 4, "flare_archer, archer_post, keep, gold: " + str(by_branch))
+	for branch in ["flare_archer", "archer_post", "keep", "gold"]:
 		expect_true(int(by_branch.get(branch, 0)) >= 4, branch + " has real depth")
 
 
@@ -98,8 +100,10 @@ func test_the_branches_cover_what_the_board_names() -> void:
 			if not effect["stat"] in list:
 				list.append(effect["stat"])
 			stats_by_branch[node["branch"]] = list
-	for stat in ["tower_damage", "tower_health", "tower_repair"]:
-		expect_true(stat in stats_by_branch["towers"], "towers: " + stat)
+	for stat in ["tower.damage", "tower.health", "tower.repair", "tower.range", "tower.cooldown"]:
+		expect_true(stat in stats_by_branch["archer_post"], "archer_post: " + stat)
+	for stat in ["hero.move_speed", "hero.health", "hero.attack.damage"]:
+		expect_true(stat in stats_by_branch["flare_archer"], "flare_archer: " + stat)
 	for stat in ["keep_health", "beam_reach"]:
 		expect_true(stat in stats_by_branch["keep"], "keep: " + stat)
 	expect_true("gold_multiplier" in stats_by_branch["gold"], "gold gain")
@@ -135,7 +139,7 @@ func test_the_pack_schema_refuses_a_node_that_sells_a_level() -> void:
 
 func test_a_new_profile_starts_empty_on_the_first_level_and_pillar() -> void:
 	var profile := HoldfastMeta.new_profile(_meta_content())
-	expect_eq(profile, {"gold": 0, "upgrades": [], "levels_won": [], "unlocked": [], "level": "outpost", "pillar": "flare_archer", "runs": 0})
+	expect_eq(profile, {"gold": 0, "upgrades": [], "levels_won": [], "unlocked": [], "level": "outpost", "pillar": "flare_archer", "runs": 0, "layouts": {}})
 
 
 func test_buying_pays_the_cost_and_records_the_upgrade_without_changing_the_old_profile() -> void:
@@ -155,8 +159,8 @@ func test_buying_is_refused_with_a_reason_and_changes_nothing() -> void:
 	var profile := HoldfastMeta.new_profile(content)
 	profile["gold"] = 109
 	var cases := {
-		"tower_drills_1": "Not enough gold",   # costs 110, one short
-		"tower_drills_2": "Needs Archer drills I first",
+		"post_drills": "Not enough gold",   # costs 110, one short
+		"post_mend": "Needs Post timbers first",
 		"no_such_node": "No such upgrade",
 	}
 	for id in cases:
@@ -165,11 +169,11 @@ func test_buying_is_refused_with_a_reason_and_changes_nothing() -> void:
 		expect_eq(refused["reason"], cases[id], id)
 		expect_eq(refused["profile"], profile, id + ": nothing changed")
 	profile["gold"] = 110
-	expect_true(HoldfastMeta.buy(content, profile, "tower_drills_1")["ok"], "exactly enough gold buys it")
+	expect_true(HoldfastMeta.buy(content, profile, "post_drills")["ok"], "exactly enough gold buys it")
 	profile["gold"] = 5000
-	var bought: Dictionary = HoldfastMeta.buy(content, profile, "tower_drills_1")["profile"]
-	expect_eq(HoldfastMeta.buy(content, bought, "tower_drills_1")["reason"], "Already bought")
-	expect_true(HoldfastMeta.buy(content, bought, "tower_drills_2")["ok"], "the requirement is met now")
+	var bought: Dictionary = HoldfastMeta.buy(content, profile, "post_drills")["profile"]
+	expect_eq(HoldfastMeta.buy(content, bought, "post_drills")["reason"], "Already bought")
+	expect_true(HoldfastMeta.buy(content, bought, "post_twin")["ok"], "the requirement is met now")
 
 
 func test_levels_unlock_by_winning_the_previous_one_and_a_locked_level_cannot_be_picked() -> void:
@@ -350,8 +354,8 @@ func test_a_build_3_save_keeps_its_levels_and_gets_the_level_nodes_gold_back() -
 	tree.root.add_child(profile)
 	expect_eq(profile.load_status, "migrated")
 	expect_eq(profile.get_unlocked_levels(), ["outpost", "shingle_beach", "tidewrack_cove"], "both bought levels stay open, won or not")
-	expect_eq(profile.get_upgrades(), ["keep_walls_1", "tower_drills_1"], "the level nodes are gone from the upgrades")
-	expect_eq(profile.get_gold(), 50 + 120 + 500, "their cost comes back")
+	expect_eq(profile.get_upgrades(), ["keep_walls_1"], "the level nodes are gone from the upgrades, and the Archer drills the tree no longer has")
+	expect_eq(profile.get_gold(), 50 + 120 + 500 + 110, "their cost comes back, and the drills' 110")
 	expect_eq(profile.get_level(), "tidewrack_cove", "the level it was on is kept")
 	expect_eq(profile.get_pillar(), "tideblade")
 	expect_eq(profile.data["runs"], 7)
@@ -416,7 +420,7 @@ func test_a_damaged_build_3_save_recovers_and_migrates_and_a_newer_one_is_still_
 	tree.root.add_child(profile)
 	expect_eq(profile.load_status, "recovered")
 	expect_eq(profile.get_unlocked_levels(), ["outpost", "shingle_beach", "tidewrack_cove"], "the earlier save is migrated too")
-	expect_eq(profile.get_gold(), 10 + 120 + 500)
+	expect_eq(profile.get_gold(), 10 + 120 + 500 + 110, "and the removed Archer drills are refunded")
 	profile.free()
 	var newer := _save_path("v1_newer")
 	SaveService.new(newer, HoldfastMeta.SAVE_VERSION + 1).save({"gold": 1, "unlocked": ["gull_rock"]})
@@ -508,27 +512,27 @@ func test_a_wider_beam_lengthens_the_walk_in_by_the_extra_distance() -> void:
 
 func test_tower_upgrades_raise_damage_and_health_by_the_pack_amounts() -> void:
 	var base := _quiet()
-	var upgraded := _quiet(Callable(), ["tower_drills_1", "tower_drills_2", "tower_stone_1", "tower_stone_2"])
-	expect_eq(upgraded.tower.health["max_health"], base.tower.health["max_health"] + 50.0, "+20 and +30 health")
+	var upgraded := _quiet(Callable(), ["post_drills", "post_timbers"])
+	expect_eq(upgraded.tower.health["max_health"], base.tower.health["max_health"] + 30.0, "+30 health")
 	expect_eq(upgraded.tower.health["health"], upgraded.tower.health["max_health"], "built at full health")
 	expect_eq(float(HoldfastContent.base()["towers"]["archer_post"]["damage"]), 4.0)
 	var damaging := HoldfastRules.new()
-	damaging.setup(HoldfastContent.run_config("outpost", ["tower_drills_1", "tower_drills_2"]), SimRng.new(1))
-	expect_eq(damaging.tower.damage, 4.0 + 2.0 + 4.0)
+	damaging.setup(HoldfastContent.run_config("outpost", ["post_drills"]), SimRng.new(1))
+	expect_eq(damaging.tower.damage, 4.0 + 2.0)
 
 
 func test_the_tower_repairs_between_waves_only_and_up_to_its_maximum() -> void:
-	var rules := _quiet(Callable(), ["tower_mend_1"])  # 2 health a second
+	var rules := _quiet(Callable(), ["post_mend"])  # 3 health a second
 	rules.tower.health = UnitHealth.damage(rules.tower.health, 30.0)
 	_run(rules, 30)
-	expect_near(rules.tower.health["health"], 32.0, 0.001, "30 + 2 in a second with the field clear")
+	expect_near(rules.tower.health["health"], 33.0, 0.001, "30 + 3 in a second with the field clear")
 	var bystander := _enemy(rules, Vector2(400, 0))
 	_run(rules, 60)
-	expect_near(rules.tower.health["health"], 32.0, 0.001, "no repair while an enemy is on the field")
+	expect_near(rules.tower.health["health"], 33.0, 0.001, "no repair while an enemy is on the field")
 	rules.enemies.erase(bystander)
 	_run(rules, 30 * 30)
 	expect_eq(rules.tower.health["health"], 60.0, "stops at the maximum")
-	var wrecked := _quiet(Callable(), ["tower_mend_1"])
+	var wrecked := _quiet(Callable(), ["post_mend"])
 	wrecked.tower.health = UnitHealth.damage(wrecked.tower.health, 60.0)
 	wrecked.tower.up = false
 	_run(wrecked, 90)
@@ -540,12 +544,16 @@ func test_the_tower_repairs_between_waves_only_and_up_to_its_maximum() -> void:
 
 
 func test_every_upgrade_in_the_pack_is_understood_by_the_rules() -> void:
-	var known := ["aura_dps", "aura_radius", "keep_health", "gold_multiplier", "tower_damage", "tower_health", "tower_repair", "beam_reach", "staff_damage"]
+	var known := ["aura_dps", "aura_radius", "keep_health", "gold_multiplier", "beam_reach", "staff_damage"]
+	var known_tower := ["damage", "health", "range", "cooldown", "repair", "extra_targets", "lone_bonus", "pierce", "burst_every", "burst_extra", "storm_every", "storm_share"]
+	var known_hero := ["move_speed", "health", "attack.damage", "attack.cooldown", "attack.count", "attack.spread_degrees", "ability.rapid_seconds", "ability.pierce", "ability.burn_dps", "ability.burn_seconds", "ability.cooldown"]
 	var all := []
 	for id in _nodes():
 		all.append(id)
 		for effect in _nodes()[id].get("effects", []):
-			expect_true(effect["stat"] in known, id + " uses " + effect["stat"])
+			var stat := str(effect["stat"])
+			var understood: bool = stat in known or (stat.begins_with("tower.") and stat.substr(6) in known_tower) or (stat.begins_with("hero.") and stat.substr(5) in known_hero)
+			expect_true(understood, id + " uses " + stat)
 	var rules := HoldfastRules.new()
 	rules.setup(HoldfastContent.run_config("outpost", all), SimRng.new(1))
 	expect_eq(rules.setup_error, "")
@@ -553,7 +561,7 @@ func test_every_upgrade_in_the_pack_is_understood_by_the_rules() -> void:
 	expect_eq(rules.keep_health_max, 500)
 	expect_eq(rules.spawn_radius, 520.0)
 	expect_near(rules.gold_multiplier, 1.25 * 1.3 * 1.2 * 1.15 * 1.1 * 1.1, 0.0001)
-	expect_eq(rules.tower_repair, 10.0)
+	expect_eq(rules.tower.repair, 3.0)
 
 
 func test_each_level_is_winnable_with_its_kit_by_every_pillar_bot() -> void:
@@ -696,7 +704,7 @@ func test_headless_and_playable_build_match_on_a_later_level_with_upgrades_and_f
 		inputs.append({"move": heading, "ability": dice.randf() < 0.02})
 	var frames := RandomNumberGenerator.new()
 	frames.seed = 8
-	var upgrades := ["keep_beam_1", "tower_drills_1", "tower_mend_1", "tower_stone_1", "keep_walls_1", "tithe_1"]
+	var upgrades := ["keep_beam_1", "post_drills", "post_mend", "post_timbers", "keep_walls_1", "tithe_1"]
 	for level in ["outpost", "gull_rock"]:
 		for id in ["flare_archer", "dusk_mage", "tideblade"]:
 			var replay := Replay.new()
@@ -782,21 +790,21 @@ func test_the_keep_screen_buys_through_the_flow_and_the_profile_saves() -> void:
 	profile.bank_run({"gold": 200, "outcome": "lost", "level": "outpost"})
 	var keep: Control = main.keep_screen
 	keep.visible = true
-	var drills: Button = keep._node_buttons["tower_drills_1"]
+	var drills: Button = keep._node_buttons["post_drills"]
 	var walls: Button = keep._node_buttons["keep_walls_1"]
 	expect_true(drills.disabled == false and walls.disabled == false, "both affordable (110, 60)")
-	expect_true(keep._node_buttons["tower_drills_2"].disabled, "needs the first drill")
+	expect_true(keep._node_buttons["post_twin"].disabled, "needs the first drill")
 	walls.pressed.emit()
 	expect_eq(profile.get_gold(), 140)
 	expect_true(walls.disabled and walls.text.contains("bought"))
 	expect_eq(keep.get_node("%GoldValue").text, "140")
 	drills.pressed.emit()
 	expect_eq(profile.get_gold(), 30)
-	expect_true(keep._node_buttons["tower_drills_2"].disabled, "450 is out of reach")
+	expect_true(keep._node_buttons["post_twin"].disabled, "600 is out of reach")
 	main.free()
 	var reloaded: Dictionary = SaveService.new(path, HoldfastMeta.SAVE_VERSION).load_save()["data"]
 	expect_eq(reloaded["gold"], 30)
-	expect_eq(reloaded["upgrades"], ["keep_walls_1", "tower_drills_1"])
+	expect_eq(reloaded["upgrades"], ["keep_walls_1", "post_drills"])
 
 
 func test_level_and_pillar_picks_start_the_next_run_with_the_bought_upgrades() -> void:
@@ -809,7 +817,7 @@ func test_level_and_pillar_picks_start_the_next_run_with_the_bought_upgrades() -
 	expect_true(keep._level_text("shingle_beach").contains("Win the previous level"), "and it says why")
 	profile.bank_run({"gold": 0, "outcome": "won", "level": "outpost"})
 	keep._node_buttons["keep_beam_1"].pressed.emit()             # 200
-	keep._node_buttons["tower_stone_1"].pressed.emit()           # 70
+	keep._node_buttons["post_timbers"].pressed.emit()            # 70
 	expect_false(keep._level_buttons["shingle_beach"].disabled, "open now")
 	keep._level_buttons["shingle_beach"].pressed.emit()
 	keep.select_pillar("dusk_mage")
@@ -817,12 +825,13 @@ func test_level_and_pillar_picks_start_the_next_run_with_the_bought_upgrades() -
 	expect_eq(keep.selected_pillar, "dusk_mage", "an unknown pillar changes nothing")
 	expect_eq(keep.selected_level, "shingle_beach")
 	keep.get_node("%PlayButton").pressed.emit()
+	main.planning.get_node("%StartButton").pressed.emit()
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	var rules := source.get_rules()
 	expect_eq(rules.level_id, "shingle_beach")
 	expect_eq(rules.hero_path_id, "dusk_mage")
 	expect_eq(rules.spawn_radius, 440.0 + 30.0, "the beam node applies")
-	expect_eq(rules.tower.health["max_health"], 80.0, "and the tower timbers")
+	expect_eq(rules.tower.health["max_health"], 90.0, "and the tower timbers")
 	main.free()
 
 

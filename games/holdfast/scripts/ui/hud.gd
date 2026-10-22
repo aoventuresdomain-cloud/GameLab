@@ -10,6 +10,7 @@ extends Control
 @onready var _ability_value: Label = %AbilityValue
 @onready var _lost_value: Label = %LostValue
 @onready var _wave_banner: Label = %WaveBanner
+@onready var _posts_note: Label = %PostsNote
 
 var _source: Node
 
@@ -49,6 +50,9 @@ func _refresh_hero() -> void:
 	var banner: String = _source.get_wave_banner()
 	_wave_banner.text = banner
 	_wave_banner.visible = banner != ""
+	var posts: String = _source.get_posts_note()
+	_posts_note.text = posts
+	_posts_note.visible = posts != ""
 
 
 ## Pulls the current values, for when the HUD is shown mid-run.
