@@ -427,6 +427,7 @@
 | F-024 | HF-M2-17 | The monsters are too weak: the CEO could not die in the slice 2 build; the fix is stronger monsters, not a weaker Hero (CEO playtest, 2026-10-22) | Major | Gameplay Engineer | Fixed in #40, waiting on the CEO's playtest |
 | F-025 | HF-M2-17 | Recruits do not move; the CEO expects them to move and fight, not stand like towers (CEO playtest, 2026-10-22) | Major | Gameplay Engineer | Fixed in #40, waiting on the CEO's playtest |
 | F-026 | HF-M2-02 | FOLLOW-UP from QA on the save service: in the web build a save is lost whole if the tab closes in the same instant it is written (nothing half-written, the previous save loads). The game must autosave at end of run and after spends and upgrades, not rely on a save-on-quit hook (QA, commit 804ecd3a) | Minor | Gameplay Engineer | Open, handled in the Build 3 game PR |
+| 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
 
