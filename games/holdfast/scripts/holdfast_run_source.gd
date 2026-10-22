@@ -140,6 +140,10 @@ func get_total_waves() -> int:
 	return _rules.total_waves if _rules else 0
 
 
+func get_wave_banner() -> String:
+	return _rules.wave_banner() if _rules else ""
+
+
 ## Read-only use: drawing and tests. Never step or change it.
 func get_rules() -> HoldfastRules:
 	return _rules

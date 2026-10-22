@@ -9,6 +9,7 @@ extends Control
 @onready var _hero_value: Label = %HeroValue
 @onready var _ability_value: Label = %AbilityValue
 @onready var _lost_value: Label = %LostValue
+@onready var _wave_banner: Label = %WaveBanner
 
 var _source: Node
 
@@ -45,6 +46,9 @@ func _refresh_hero() -> void:
 	var wait: float = _source.get_ability_wait()
 	_ability_value.text = "Ready" if wait <= 0.0 else "%.1f s" % wait
 	_lost_value.text = "%d / %d" % [_source.get_towers_lost(), _source.get_recruits_lost()]
+	var banner: String = _source.get_wave_banner()
+	_wave_banner.text = banner
+	_wave_banner.visible = banner != ""
 
 
 ## Pulls the current values, for when the HUD is shown mid-run.

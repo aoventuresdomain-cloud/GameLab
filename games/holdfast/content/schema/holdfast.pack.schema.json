@@ -50,6 +50,10 @@
           "type": "number",
           "minimum": 0
         },
+        "wave_pause": {
+          "type": "number",
+          "minimum": 0
+        },
         "aura": {
           "type": "object",
           "required": [

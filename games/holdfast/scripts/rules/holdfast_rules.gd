@@ -38,6 +38,8 @@ const OUTCOME_INVALID := "invalid"
 
 const DEFAULT_WAVE_DELAY := 5.0
 const DEFAULT_INTERVAL := 1.0
+## The pause between one wave being gone and the next starting, when the level does not say.
+const DEFAULT_WAVE_PAUSE := 1.0
 const DEFAULT_CURSOR_SPEED := 1800.0
 ## An enemy looks for a new target this often (and at once when its target falls).
 const RETARGET_TICKS := 10
@@ -231,6 +233,15 @@ var wave := 0
 ## Waves whose every enemy was killed. A wave with an enemy that reached the
 ## keep is never cleared.
 var waves_cleared := 0
+## The pause between waves (level `wave_pause`). While it runs nothing spawns; a
+## level with 0 has no pause, and then no wave waits for the one before it.
+var wave_pause := DEFAULT_WAVE_PAUSE
+## Seconds of the pause left; 0 when none is running.
+var wave_pause_left := 0.0
+## While a pause runs: the number of the wave that starts after it, and whether the
+## wave before was cleared (no enemy reached the keep), for the banner.
+var pause_next_wave := 0
+var pause_cleared := false
 
 ## Why setup failed, or "" when it did not.
 var setup_error := ""
@@ -262,6 +273,8 @@ var _enemy_types: Dictionary = {}
 ## Spawn schedule, sorted by time: [time, wave index, enemy id].
 var _schedule: Array = []
 var _next_spawn := 0
+## Seconds every spawn still to come has been held back, waiting for a pause to end.
+var _hold := 0.0
 var _wave_starts: PackedFloat64Array = []
 var _wave_health_scale: PackedFloat64Array = []
 var _wave_damage_scale: PackedFloat64Array = []
@@ -406,6 +419,7 @@ func _build_schedule(level: Dictionary) -> void:
 	var waves: Array = level["waves"]
 	total_waves = waves.size()
 	var start := float(level.get("first_wave_delay", DEFAULT_WAVE_DELAY))
+	wave_pause = float(level.get("wave_pause", DEFAULT_WAVE_PAUSE))
 	for w in waves.size():
 		var data: Dictionary = waves[w]
 		if w > 0:
@@ -462,7 +476,11 @@ func step(dt: float, input: Dictionary) -> void:
 		return
 	ticks += 1
 	time = ticks * dt
-	_spawn_due()
+	if wave_pause_left > 0.0:
+		wave_pause_left = maxf(wave_pause_left - dt, 0.0)
+		if wave_pause_left < TIME_EPSILON:
+			wave_pause_left = 0.0
+	_spawn_due(dt)
 	hero_grace_left = HeroGetUp.tick_grace(hero_grace_left, dt)
 	if hero_grace_left < TIME_EPSILON:
 		hero_grace_left = 0.0
@@ -925,11 +943,14 @@ func apply_aura(at: Vector2, dt: float) -> void:
 			_any_dead = _any_dead or enemy.health <= 0.0
 
 
-func _spawn_due() -> void:
-	while _next_spawn < _schedule.size() and _schedule[_next_spawn][0] <= time + 0.000001:
+func _spawn_due(dt: float) -> void:
+	while _next_spawn < _schedule.size() and _schedule[_next_spawn][0] + _hold <= time + 0.000001:
 		var entry: Array = _schedule[_next_spawn]
-		_next_spawn += 1
 		var w: int = entry[1]
+		if w + 1 > wave and not _wave_may_start(w):
+			_hold = time - entry[0] + dt   # try again next tick
+			break
+		_next_spawn += 1
 		if w + 1 > wave:
 			_bank_xp()
 		wave = maxi(wave, w + 1)
@@ -1013,12 +1034,34 @@ func _gain_xp(amount: int) -> void:
 		staff_level += 1
 
 
+## A wave after the first starts once the one before is gone (killed or leaked) and
+## its pause has run; with no pause it starts on schedule.
+func _wave_may_start(w: int) -> bool:
+	if wave_pause <= 0.0 or w == 0:
+		return true
+	return _wave_remaining[w - 1] == 0 and wave_pause_left <= 0.0
+
+
 func _wave_gone(w: int, killed: bool) -> void:
 	_wave_remaining[w] -= 1
 	if not killed:
 		_wave_leaked[w] = 1
 	if _wave_remaining[w] == 0 and _wave_leaked[w] == 0:
 		waves_cleared += 1
+	if _wave_remaining[w] == 0 and w + 1 < total_waves and wave_pause > 0.0:
+		wave_pause_left = wave_pause
+		pause_next_wave = w + 2
+		pause_cleared = _wave_leaked[w] == 0
+
+
+## What the banner says: "Wave cleared" for the first half of a pause after a wave
+## no enemy leaked from, then "Wave N" for the next wave; "" outside a pause.
+func wave_banner() -> String:
+	if wave_pause_left <= 0.0:
+		return ""
+	if pause_cleared and wave_pause_left > wave_pause * 0.5 + TIME_EPSILON:
+		return "Wave cleared"
+	return "Wave %d" % pause_next_wave
 
 
 func _finish(result_outcome: String) -> void:
@@ -1070,6 +1113,8 @@ func snapshot() -> Dictionary:
 		"tower": _attacker_state(tower),
 		"staff": _attacker_state(staff),
 		"next_spawn": _next_spawn,
+		"wave_pause_left": wave_pause_left,
+		"spawn_hold": _hold,
 		"next_uid": _next_uid,
 		"wave_remaining": Array(_wave_remaining),
 		"wave_leaked": Array(_wave_leaked),
