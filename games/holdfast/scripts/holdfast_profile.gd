@@ -41,7 +41,7 @@ func load_profile() -> void:
 		_service = null
 		changed.emit()
 		return
-	_service = SaveService.new(save_path, HoldfastMeta.SAVE_VERSION, {1: HoldfastMeta.migrate_v1})
+	_service = SaveService.new(save_path, HoldfastMeta.SAVE_VERSION, {1: HoldfastMeta.migrate_v1.bind(_content)})
 	var loaded := _service.load_save()
 	load_status = str(loaded["status"])
 	load_message = str(loaded["message"])

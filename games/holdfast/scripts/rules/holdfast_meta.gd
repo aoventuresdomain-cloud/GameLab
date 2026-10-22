@@ -78,24 +78,36 @@ static func unlocked_levels(content: Dictionary, profile: Dictionary) -> Array:
 	return out
 
 
-## A version 1 save as version 2. Each bought level node opens its level and is
-## removed from the upgrades, its gold refunded: the levels are kept, nothing
-## is paid for twice.
-static func migrate_v1(data: Dictionary) -> Dictionary:
+## A version 1 save as version 2. Each bought level node opens its level (once,
+## however many times it is listed) and is removed from the upgrades, its gold
+## refunded: the levels are kept, nothing is paid for twice. Each level the save
+## has won also opens the next, as winning now does.
+static func migrate_v1(data: Dictionary, content: Dictionary) -> Dictionary:
 	var out := data.duplicate(true)
 	var unlocked := []
 	var upgrades := []
 	var gold := maxi(int(out.get("gold", 0)), 0)
 	for id in out.get("upgrades", []):
-		if V1_LEVEL_NODES.has(id):
+		if not V1_LEVEL_NODES.has(id):
+			upgrades.append(id)
+		elif not V1_LEVEL_NODES[id][0] in unlocked:
 			unlocked.append(V1_LEVEL_NODES[id][0])
 			gold += int(V1_LEVEL_NODES[id][1])
-		else:
-			upgrades.append(id)
+	for won in out.get("levels_won", []):
+		var next := next_level(content, str(won))
+		if next != "" and not next in unlocked:
+			unlocked.append(next)
 	out["upgrades"] = upgrades
 	out["unlocked"] = unlocked
 	out["gold"] = gold
 	return out
+
+
+## The level after `id` in pack order, or "" for the last level or an unknown one.
+static func next_level(content: Dictionary, id: String) -> String:
+	var ids: Array = content.get("levels", {}).keys()
+	var at := ids.find(id)
+	return str(ids[at + 1]) if at >= 0 and at + 1 < ids.size() else ""
 
 
 ## "" when `id` can be bought now, else why not.
@@ -152,9 +164,7 @@ static func bank_run(content: Dictionary, profile: Dictionary, result: Dictionar
 	var level := str(result.get("level", ""))
 	if result.get("outcome") == HoldfastRules.OUTCOME_WON and level != "" and not level in out["levels_won"]:
 		out["levels_won"].append(level)
-	if result.get("outcome") == HoldfastRules.OUTCOME_WON:
-		var ids: Array = content.get("levels", {}).keys()
-		var at := ids.find(level)
-		if at >= 0 and at + 1 < ids.size() and not ids[at + 1] in out["unlocked"]:
-			out["unlocked"].append(ids[at + 1])
+	var next := next_level(content, level) if result.get("outcome") == HoldfastRules.OUTCOME_WON else ""
+	if next != "" and not next in out["unlocked"]:
+		out["unlocked"].append(next)
 	return out

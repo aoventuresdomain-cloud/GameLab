@@ -369,9 +369,38 @@ func test_a_build_3_save_keeps_its_levels_and_gets_the_level_nodes_gold_back() -
 
 func test_migrating_a_save_without_level_nodes_changes_only_its_shape() -> void:
 	var old := {"gold": 9, "upgrades": ["keep_walls_1"], "levels_won": []}
-	var migrated := HoldfastMeta.migrate_v1(old)
+	var migrated := HoldfastMeta.migrate_v1(old, HoldfastContent.base())
 	expect_eq(migrated, {"gold": 9, "upgrades": ["keep_walls_1"], "levels_won": [], "unlocked": []})
 	expect_eq(old, {"gold": 9, "upgrades": ["keep_walls_1"], "levels_won": []}, "the save given is untouched")
+
+
+func test_a_build_3_save_that_won_levels_without_buying_their_nodes_opens_the_next_ones() -> void:
+	var content := _meta_content()
+	var won := HoldfastMeta.migrate_v1({"gold": 5, "upgrades": ["keep_walls_1"], "levels_won": ["outpost", "shingle_beach"]}, content)
+	expect_eq(won["unlocked"], ["shingle_beach", "tidewrack_cove"], "winning a level opens the next, as it does now")
+	expect_eq(won["gold"], 5, "no node bought, nothing refunded")
+	var profile := HoldfastMeta.from_save(content, won)
+	expect_eq(HoldfastMeta.unlocked_levels(content, profile), ["outpost", "shingle_beach", "tidewrack_cove"])
+	var last := HoldfastMeta.migrate_v1({"levels_won": ["gull_rock", "gone_level"]}, content)
+	expect_eq(last["unlocked"], [], "the last level has no next, an unknown one opens nothing")
+	var both := HoldfastMeta.migrate_v1({"upgrades": ["unlock_shingle_beach"], "levels_won": ["outpost"]}, content)
+	expect_eq(both["unlocked"], ["shingle_beach"], "a level opened both ways is listed once")
+
+
+func test_a_level_node_listed_twice_in_a_save_is_refunded_once() -> void:
+	var migrated := HoldfastMeta.migrate_v1({"gold": 0, "upgrades": ["unlock_shingle_beach", "unlock_shingle_beach"]}, _meta_content())
+	expect_eq(migrated["gold"], 120)
+	expect_eq(migrated["unlocked"], ["shingle_beach"])
+	expect_eq(migrated["upgrades"], [])
+
+
+func test_winning_a_level_already_won_still_opens_the_next_one() -> void:
+	var content := _meta_content()
+	var profile := HoldfastMeta.new_profile(content)
+	profile["levels_won"] = ["outpost"]   # won before the next level could be opened by it
+	var again := HoldfastMeta.bank_run(content, profile, {"gold": 0, "outcome": "won", "level": "outpost"})
+	expect_eq(again["unlocked"], ["shingle_beach"])
+	expect_eq(again["levels_won"], ["outpost"], "still listed once")
 
 
 func test_a_damaged_build_3_save_recovers_and_migrates_and_a_newer_one_is_still_left_alone() -> void:
