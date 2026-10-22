@@ -301,13 +301,8 @@
           "enum": [
             "towers",
             "keep",
-            "gold",
-            "unlocks"
+            "gold"
           ]
-        },
-        "unlocks": {
-          "type": "string",
-          "x-ref": "levels"
         }
       }
     },
