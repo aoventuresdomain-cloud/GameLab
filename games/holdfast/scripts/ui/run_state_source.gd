@@ -47,7 +47,7 @@ func get_total_waves() -> int:
 	return 0
 
 
-## What the between-waves banner says ("Wave cleared", then "Wave N"); "" outside a pause.
+## What the between-waves banner says ("Wave N" just before it starts); "" otherwise.
 func get_wave_banner() -> String:
 	return ""
 
