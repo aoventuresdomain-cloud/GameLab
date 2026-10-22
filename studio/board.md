@@ -376,7 +376,7 @@
 
 ### HF-M2-26 Flare Archer and Archer Post tree, with site planning
 - **Owner:** Gameplay Engineer
-- **Status:** Go (CEO 2026-10-22 19:35), Build 5 of 8, second in the run 4b + 5 + 6 (CEO direction 2026-10-22 19:15, plan signed off 19:19: do the Archer and the Archer Post properly first, then other towers, characters and synergies one at a time; Advisor's first-slice shape accepted). No new tower types; the Mage Post and the rest are later slices and need the CEO's go
+- **Status:** Go (CEO 2026-10-22 19:35), Build 5 of 8, second in the run 4b + 5 + 6 (CEO direction 2026-10-22 19:15, plan signed off 19:19: do the Archer and the Archer Post properly first, then other towers, characters and synergies one at a time; Advisor's first-slice shape accepted). No new tower types; the Mage Post and the rest are later slices and need the CEO's go Merged in #77 (QA clear on `150f3cd`, no MUST FIX).
 - **QA:** full (upgrade and save data, core rules)
 - **Depends on:** HF-M2-14, HF-M2-22
 - **Done when:**
@@ -388,7 +388,7 @@
 
 ### HF-M2-27 Stronger specials and a post-win screen (slice 4b)
 - **Owner:** Gameplay Engineer
-- **Status:** Go (CEO 2026-10-22 19:35): slice 4b, built first in the run 4b + Build 5 + Build 6. The Dusk Mage's and Tideblade's specials follow the Advisor's view, asked for at the start of the run
+- **Status:** Go (CEO 2026-10-22 19:35): slice 4b, built first in the run 4b + Build 5 + Build 6. The Dusk Mage's and Tideblade's specials follow the Advisor's view, asked for at the start of the run Merged: part 1 in #74, part 2 in #76 (QA clear on `9883a17`).
 - **QA:** full (core rules for the special), screens for the post-win screen
 - **Depends on:** HF-M2-14
 - **Done when:**
@@ -529,6 +529,15 @@
 | F-038 | HF-M2-27 | FOLLOW-UP from QA (#74): no test counts arrows per burst, so a double-fire mutant passes all 308 tests | Minor | Gameplay Engineer | Open, a test added in the next Gameplay PR |
 | F-039 | HF-M2-27 | FOLLOW-UP from QA (#74): an enemy killed by burn in `_step_enemies` still acts that tick (a burning enemy at 0.05 hp hit the keep for 9, with no kill or gold) | Minor | Gameplay Engineer | Open |
 | F-040 | HF-M2-27 | FOLLOW-UP from QA (#74): the Shingle Beach retune hardens it for the Dusk Mage (73% to 53%) and Tideblade (98% to 88%); the Flare first-time lift is about +20 on average and +42 poor | Minor | Gameplay Engineer | Open, per-pillar bands in Build 6 pacing (as F-037) |
+| F-041 | HF-M2-26 | FOLLOW-UP from QA (#76): Dash is hittable on the tick after the cast (Hero 80 to 70 reproduced) | Minor | Gameplay Engineer | Fixed in #77 (grace set on the cast tick, test and mutant) |
+| F-042 | HF-M2-27 | FOLLOW-UP from QA (#76): the burst test counted `projectiles.back()` once per tick, so a double `_fire` mutant passed (F-038 half closed) | Minor | Gameplay Engineer | Fixed in #77 (counts every arrow spawned) |
+| F-043 | HF-M2-27 | FOLLOW-UP from QA (#76): Old Pier first-time with no upgrades is much harder (Flare avg 14 to 5 of 30, poor 6 to 0); no band for levels 3-5 | Minor | Gameplay Engineer | Open, Build 7 pacing (with F-028, F-031) |
+| F-044 | HF-M2-26 | FOLLOW-UP from QA (#77): Volley beats Sniper (Old Pier 8000 gold: Dusk 13 vs 34 of 40, Tideblade 32 vs 39; Gull Rock Dusk 28 vs 40); CI needs only 1 in 12 | Minor | Gameplay Engineer | Open, Build 7 pacing |
+| F-045 | HF-M2-26 | FOLLOW-UP from QA (#77): the fork test reaches no fork node at 500 and 2500 gold | Minor | Gameplay Engineer | Open, Build 7 if cheap |
+| F-046 | HF-M2-26 | FOLLOW-UP from QA (#77): null upgrades or gold in a v2 save file gives a script error and gold silently 0 | Minor | Gameplay Engineer | Open, Build 6 if tiny (data-integrity) |
+| F-047 | HF-M2-26 | FOLLOW-UP from QA (#77): `buy()` in the rules accepts another pillar's Hero node (the UI hides it) | Minor | Gameplay Engineer | Open, Build 6 if tiny |
+| F-048 | HF-M2-26 | FOLLOW-UP from QA (#77): only the first post's repair is tested (mutant survived) | Minor | Gameplay Engineer | Open, Build 6 if tiny |
+| F-049 | HF-M2-26 | FOLLOW-UP from QA (#77): Shingle Beach after the retune is hard for the Dusk Mage (53% to 37%) and one post only is a trap (Dusk 1 of 20) | Minor | Gameplay Engineer | Open, Build 7 pacing |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -560,6 +569,10 @@
 | 2026-10-22 | Progression hash | Re-pinned in #62: `c90d0a9e...b199` to `d9b81e5c...cf7d` (HF-M2-23 pause between waves; no existing test changed) | A 1 s pause moves every run's timing | Head of Engineering |
 | 2026-10-22 | Progression hash | Re-pinned in #65: `d9b81e5c...cf7d` to `aa369750...6b4a` (HF-M2-22 easing of the last waves of levels 1 and 2; `outpost` min_hard_runs 1 to 0 in the pack; no existing test changed) | Easier runs end differently | Head of Engineering |
 | 2026-10-22 | Progression hash | Re-pinned in #74: `aa369750...6b4a` to `1842fa9a...2190` (HF-M2-27 Flare Barrage burst and the Shingle Beach retune: last-wave damage 1.75 to 1.95, grunts 11 to 12, runners 6 to 7; wall 5.9 s) | Stronger Flare changes run outcomes | Head of Engineering |
+| 2026-10-22 | Progression hash | Re-pinned in #76: `1842fa9a...2190` to `3346f51d...048ec` (HF-M2-27 Eclipse and Dash-Strike; old_pier waves 6 and 7 retuned) | Stronger specials change run outcomes | Head of Engineering |
+| 2026-10-22 | `games/holdfast/tests/test_slice2.gd` (four Eclipse and Dash-Strike tests) | Setup-only in #76: each builds with the old Eclipse or Dash fixture; no assertion changed | Fixture set-up only | Head of Engineering |
+| 2026-10-22 | Progression hash | Re-pinned in #77: `3346f51d...048ec` to `bda28bd4...09fa7` (HF-M2-26 Archer Post tree, planning screen and the shingle_beach retune) | Tower stats and layouts change run outcomes | Head of Engineering |
+| 2026-10-22 | `test_build3.gd` items 1-12 and `test_holdfast_rules.gd` item 13, plus planning Start-click insertions in `run_ui_tests.gd`, `test_build3.gd` and `test_build4b.gd` | Approved by the Head of Engineering for #77: the three Archer Post chains are replaced by the 11-node section, tower stats are keyed by tower, the v1 migration refunds removed nodes and Play opens the planning screen. Old and new for each are in the #77 body; no assertion was loosened | Intended design change | Head of Engineering |
 | 2026-10-22 | `games/holdfast/tests/test_hero.gd` (four `_fan` fixture setups) | Setup-only change in #74 so the fixtures fit the burst fire rate; no assertion changed | Fixture set-up only | Head of Engineering |
 
 ## Advisor views
@@ -611,3 +624,5 @@
 - 2026-10-22 19:15: CEO (with the Advisor): the tree should be Incrempire-like, with sections per tower, but start with the Flare Archer and the Archer Post only, then other towers, characters and synergies one at a time. Tree work becomes its own slice, HF-M2-26, as Build 5 of 8 (the build total goes from 7 to 8: Build 4 is the wave pause and easing, 5 the tree slice, 6 monsters and boss, 7 pacing, 8 Recruits, parked). HF-M2-25 is superseded. The Advisor's wider ideas (Mage and Mender posts, bridges between sections, Recruits at posts, mid-run placing) are not in scope until the CEO says go.
 - 2026-10-22 19:31: CEO: waves keep stacking on the timer (no change to the wave overlap). Backlog, idea only: call the next wave early for a bonus, a next-wave countdown, and a wait-for-clear option. Slice 4b (HF-M2-27) is the stronger specials and the post-win screen, held until the CEO's go.
 - 2026-10-22 19:35: CEO GO: build 4b (HF-M2-27), Build 5 (HF-M2-26) and Build 6 (HF-M2-16) together as one run, then stop for the CEO's decision. The plan stays at 8 builds; no Look and feel build now. Feel, look and animation (HF-M2-07, HF-M2-08) are agreed after Build 8, with Designer sketches in a separate thread. Waves keep stacking. One combined handoff, labelled 4b / 5 of 8 / 6 of 8. Merge order: 4b, 5, 6.
+
+- 2026-10-22 22:41: CEO GO: add Build 7 of 8 (pacing: HF-M2-01, HF-M2-05, name check HF-M2-11) to the run, so the run is 4b + 5 + 6 + 7 with one combined handoff and then a stop. The style guide, look and art stay out (decided after Build 8). Build 8 (Recruits) stays parked. Merge order 5, 6, 7.
