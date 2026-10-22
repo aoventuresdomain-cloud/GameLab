@@ -362,9 +362,9 @@
   - [ ] The keep falling still ends the run, a fallen tower is not targeted by monsters, and a revived tower is targeted again (tested).
   - [ ] The simulator's bots use it and the pillar bots' win rates stay inside the bands from HF-M2-22; parity and the 60 second budget pass, the progression hash is re-pinned once.
 
-### HF-M2-25 Hero skills and upgrade tree rework
+### HF-M2-25 Hero skills and upgrade tree rework (SUPERSEDED by HF-M2-26)
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 4 of 7 (CEO direction 2026-10-22 17:19, Advisor's recommended direction). The tree details get discussed after the CEO sees it, so everything is pack data
+- **Status:** Superseded (CEO, 2026-10-22 19:15): the CEO wants an Incrempire-like tree with sections per tower, starting with the Flare Archer and the Archer Post only. A 17-node version was built locally and held, never pushed. The reusable parts (save migration v2 to v3, respec, either-or and requires fields, next-unlock display) move to HF-M2-26
 - **QA:** full (upgrade and save data)
 - **Depends on:** HF-M2-14, HF-M2-04
 - **Done when:**
@@ -372,6 +372,18 @@
   - [ ] The two next unlocks are visible on screen with their cost and effect; locked deeper nodes show as locked. The Hero's skills (HF-M2-14) sit in the same screen flow without a new menu.
   - [ ] A blessing pick (1 of 3, HF-M2-04) is offered before each run; each blessing's effect has a rules test.
   - [ ] Saves from the 26-node tree migrate without losing gold or levels (refund of nodes that no longer exist, tested); parity and the 60 second budget pass, the progression hash is re-pinned once with old and new in the PR, and any existing-test change has my OK first.
+
+### HF-M2-26 Flare Archer and Archer Post tree, with site planning
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, Build 5 of 8 (CEO direction 2026-10-22 19:15: do the Archer and the Archer Post properly first, then other towers, characters and synergies one at a time; Advisor's first-slice shape accepted). No new tower types; the Mage Post and the rest are later slices and need the CEO's go
+- **QA:** full (upgrade and save data, core rules)
+- **Depends on:** HF-M2-14, HF-M2-22
+- **Done when:**
+  - [ ] The upgrade screen is a tree with sections, built so a further tower section (for example a Mage Post) plugs in from packs without reworking the screen. This slice has two sections: the Flare Archer Hero and the Archer Post. Dimmed distant nodes, the next unlocks shown with cost and effect, a cheap or free respec.
+  - [ ] The Archer Post section has about 10 to 12 nodes from packs with a fork between two styles (Sniper or Volley) that closes the other; most nodes change behaviour rather than add a percentage. The Flare Archer Hero's path (HF-M2-14, 10 nodes on the shared skeleton) sits in its own section. Each new effect has a rules test and the tower upgrades are keyed by tower type so later towers reuse them.
+  - [ ] Before a run on levels 1 and 2 a planning screen lets the player choose which sites get an Archer Post (the number of posts is limited by a pack value); enemies come from more than one direction on those levels so the choice matters; the chosen layout is used by the run, saved with the profile and shown on the run start. The choice is made before the first wave (no mid-run placing in this slice).
+  - [ ] The simulator's bots use the planning choice and the fork; the first-time bands from HF-M2-22 still hold and each fork has a win rate inside the pillar bands (checked in CI order); parity and the 60 second budget pass; the progression hash is re-pinned once with old and new in the PR; any existing-test change has my OK first and is logged.
+  - [ ] Saves from the current tree migrate without losing gold or levels (refund of nodes that no longer exist at their old cost, tested); the web build is checked in Chromium.
 
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
@@ -578,3 +590,5 @@
 - 2026-10-21: **M2 runs as short iterations** (CEO: keep it very lean, test iteratively, give feedback as it develops). A playable build for the CEO after each slice; outside testers and Recruit trait boss drops are out of M2; Gate 2 is decided from the CEO's own playtests. Sanity checks per slice, one full QA round at the end (HF-M2-12). Plan and dates in `studio/estimates.md`. Head of Engineering, from the CEO's message.
 - 2026-10-21: **Go on M2** (CEO). Scope changes folded in before work: the Hero gets more skills (10 a path), Recruits get small skill trees (reverses 'no skill trees'), gear is for the Hero only, and a mini-boss ends level 5 (coordinator default; further boss placement is M5 planning). New item HF-M2-16. Head of Engineering, from the CEO's message and the Advisor's view.
 - 2026-10-22 17:18: CEO: towers must not be resurrectable (HF-M2-24 dropped), and Build 3d and Build 4 ship together as "Build 4 of 7", evaluated together. Tree built in the Advisor's direction as HF-M2-25 (about 15 to 20 branching, behaviour-changing nodes, gold chain 2 to 3, next unlocks visible, blessing before each run, no new tower types); details to be discussed after the CEO sees it.
+
+- 2026-10-22 19:15: CEO (with the Advisor): the tree should be Incrempire-like, with sections per tower, but start with the Flare Archer and the Archer Post only, then other towers, characters and synergies one at a time. Tree work becomes its own slice, HF-M2-26, as Build 5 of 8 (the build total goes from 7 to 8: Build 4 is the wave pause and easing, 5 the tree slice, 6 monsters and boss, 7 pacing, 8 Recruits, parked). HF-M2-25 is superseded. The Advisor's wider ideas (Mage and Mender posts, bridges between sections, Recruits at posts, mid-run placing) are not in scope until the CEO says go.
