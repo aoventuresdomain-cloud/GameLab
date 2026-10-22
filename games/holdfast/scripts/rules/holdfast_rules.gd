@@ -90,6 +90,15 @@ class Enemy:
 	## Burning from a fire arrow: damage a second, and seconds left.
 	var burn_dps := 0.0
 	var burn_left := 0.0
+	## "normal", "elite" or "boss" (pack: tier). An elite or boss kill may drop gear.
+	var tier := "normal"
+	## A boss's shroud: every hit is turned away unless the Hero cast its ability within
+	## `exposed_seconds` (pack: required_ability, exposed_seconds). "" is no shroud.
+	var required_ability := ""
+	var exposed_seconds := 0.0
+	var exposed_left := 0.0
+	## Stays at the keep and keeps hitting it, instead of spending itself on one blow (pack: besieges).
+	var besieges := false
 
 
 ## An arrow of the Hero's attack or ability, in flight until it hits or runs out of range.
@@ -270,6 +279,8 @@ var towers_lost := 0
 var recruits_downed := 0
 var recruits_revived := 0
 var outcome := OUTCOME_RUNNING
+## Gear dropped this run by an elite or the boss: item ids, none twice.
+var gear_found: Array = []
 ## 1-based number of the latest wave that has started; 0 before the first.
 var wave := 0
 ## Waves whose every enemy was killed. A wave with an enemy that reached the
@@ -307,6 +318,10 @@ var _hero_targetable := true
 ## Set when something may have been killed, so _collect_dead looks only then.
 var _any_dead := false
 var _enemy_types: Dictionary = {}
+var _gear_items: Dictionary = {}
+var _gear_rules: Dictionary = {}
+var _gear_owned: Array = []
+var _level_number := 0
 ## Spawn schedule, sorted by time: [time, wave index, enemy id].
 var _schedule: Array = []
 var _next_spawn := 0
@@ -349,7 +364,30 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		return
 	_enemy_types = content.get("enemies", {})
 
-	var stats := HoldfastRules.upgrade_stats(content.get("upgrade_nodes", {}), config.get("upgrades", []))
+	_gear_items = content.get("gear_items", {})
+	for rules in content.get("gear_rules", {}).values():
+		_gear_rules = rules
+		break
+	_gear_owned = config.get("gear_owned", [])
+	_level_number = int(level.get("number", 0))
+	for enemy_data in _enemy_types.values():
+		if str(enemy_data.get("tier", "normal")) == "boss":
+			problems.append_array(BossRules.validate(float(enemy_data["health"]), enemy_data.get("required_ability")))
+			if not float(enemy_data.get("exposed_seconds", 0.0)) > 0.0:
+				problems.append("a boss needs exposed_seconds above zero")
+	if not problems.is_empty():
+		_fail(", ".join(problems))
+		return
+	var nodes: Dictionary = content.get("upgrade_nodes", {}).duplicate()
+	var purchased: Array = config.get("upgrades", []).duplicate()
+	var equipped: Dictionary = config.get("gear", {})
+	for slot in equipped:
+		var item: Dictionary = _gear_items.get(equipped[slot], {})
+		# Gear is the Hero's: its stats apply to the Hero path being played.
+		if not item.is_empty() and str(item["slot"]) == str(slot):
+			nodes["gear:" + str(equipped[slot])] = {"hero": hero_path, "effects": item["effects"]}
+			purchased.append("gear:" + str(equipped[slot]))
+	var stats := HoldfastRules.upgrade_stats(nodes, purchased)
 	keep_health_max = int(level["keep_health"]) + int(_add(stats, "keep_health"))
 	keep_health = keep_health_max
 	keep_radius = float(level["keep_radius"])
@@ -658,7 +696,18 @@ func _hurt(enemy: Enemy, base: float, unlit_bonus: float) -> void:
 	var amount := LitArea.damage_for(base, enemy.position, _post_points, light_radius, light_bonus)
 	if unlit_bonus > 0.0 and not LitArea.is_lit(enemy.position, _post_points, light_radius):
 		amount *= 1.0 + unlit_bonus
-	enemy.health -= amount * (1.0 + enemy.mark_bonus)
+	_wound(enemy, amount * (1.0 + enemy.mark_bonus))
+
+
+## Takes `amount` off an enemy's health. A boss's shroud turns it away unless the Hero has
+## cast its ability lately (BossRules), so every kind of damage goes through here.
+func _wound(enemy: Enemy, amount: float) -> void:
+	if enemy.required_ability == "":
+		enemy.health -= amount
+	else:
+		var abilities := [enemy.required_ability] if enemy.exposed_left > 0.0 else []
+		var boss := {"max_health": enemy.max_health, "health": enemy.health, "required_ability": enemy.required_ability, "defeated": enemy.health <= 0.0}
+		enemy.health = float(BossRules.take_hit(boss, amount, abilities)["health"])
 	if enemy.health <= 0.0:
 		_any_dead = true
 
@@ -714,13 +763,14 @@ func _step_enemies(dt: float) -> void:
 		var slow := enemy.zone_slow
 		if enemy.burn_left > 0.0 and enemy.health > 0.0:
 			enemy.burn_left = maxf(enemy.burn_left - dt, 0.0)
-			enemy.health -= enemy.burn_dps * dt
+			_wound(enemy, enemy.burn_dps * dt)
 			if enemy.health <= 0.0:
 				# Burnt down: it neither moves nor hits this tick, and is collected after it.
 				_any_dead = true
 				enemies[kept] = enemy
 				kept += 1
 				continue
+		enemy.exposed_left = maxf(enemy.exposed_left - dt, 0.0)
 		if enemy.slowed_for > 0.0:
 			enemy.slowed_for = maxf(enemy.slowed_for - dt, 0.0)
 			slow = maxf(slow, enemy.slow_amount)
@@ -740,7 +790,7 @@ func _step_enemies(dt: float) -> void:
 		var dist := to_goal.length()
 		var travel := enemy.speed * (1.0 - slow) * dt
 		if dist - travel <= contact:
-			if enemy.target == "":
+			if enemy.target == "" and not enemy.besieges:
 				keep_health = maxi(keep_health - enemy.damage, 0)
 				_wave_gone(enemy.wave, false)
 				continue
@@ -749,7 +799,10 @@ func _step_enemies(dt: float) -> void:
 			enemy.hit_in -= dt
 			if enemy.hit_in <= 0.0:
 				enemy.hit_in = enemy.hit_interval
-				_hit_unit(unit, enemy.damage)
+				if enemy.target == "":
+					keep_health = maxi(keep_health - enemy.damage, 0)
+				else:
+					_hit_unit(unit, enemy.damage)
 		else:
 			enemy.position += to_goal / dist * travel
 		enemies[kept] = enemy
@@ -902,6 +955,7 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 	var ability: Variant = input.get("ability")
 	if ability is bool and ability and hero_ability_ready_in <= 0.0:
 		hero_ability_ready_in = float(hero_ability["cooldown"])
+		_expose_bosses()
 		if float(hero_ability.get("rapid_seconds", 0.0)) > 0.0:
 			hero_rapid_left = float(hero_ability["rapid_seconds"])
 		elif float(hero_ability.get("dash_seconds", 0.0)) > 0.0:
@@ -916,6 +970,13 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 	if hero_rapid_left > 0.0 and hero_rapid_ready_in <= 0.0:
 		hero_rapid_ready_in = float(hero_ability.get("rapid_interval", hero_attack["cooldown"]))
 		_fire(hero_ability)
+
+
+## The Hero's ability lifts every boss's shroud for the seconds its pack names.
+func _expose_bosses() -> void:
+	for enemy in enemies:
+		if enemy.required_ability != "":
+			enemy.exposed_left = enemy.exposed_seconds
 
 
 ## Starts the next dash of a chain, aimed at the nearest enemy (or along the facing when none is left).
@@ -1180,7 +1241,7 @@ func apply_aura(at: Vector2, dt: float) -> void:
 	var reach := aura_radius
 	for enemy in enemies:
 		if enemy.health > 0.0 and enemy.position.distance_to(at) <= reach + enemy.radius:
-			enemy.health -= aura_dps * dt
+			_wound(enemy, aura_dps * dt)
 			_any_dead = _any_dead or enemy.health <= 0.0
 
 
@@ -1210,6 +1271,10 @@ func _spawn_due() -> void:
 		enemy.xp_chance = float(data.get("xp_chance", 0.0))
 		enemy.xp_value = int(data.get("xp_value", 0))
 		enemy.hit_interval = float(data.get("hit_interval", 1.0))
+		enemy.tier = str(data.get("tier", "normal"))
+		enemy.required_ability = str(data.get("required_ability", ""))
+		enemy.exposed_seconds = float(data.get("exposed_seconds", 0.0))
+		enemy.besieges = bool(data.get("besieges", false))
 		enemies.append(enemy)
 
 
@@ -1327,8 +1392,26 @@ func _collect_dead() -> void:
 		# Drawn for every kill, in a fixed order, so the sequence stays deterministic.
 		if _rng.chance(enemy.xp_chance) and enemy.xp_value > 0:
 			carried_xp += enemy.xp_value
+		if enemy.tier != "normal":
+			_drop_gear(enemy)
 		_wave_gone(enemy.wave, true)
 	enemies = alive
+
+
+## An elite or boss kill may drop a Hero item the player does not own yet (HeroGear). Both
+## rolls are drawn for every such kill, so the sequence stays deterministic.
+func _drop_gear(enemy: Enemy) -> void:
+	var roll := _rng.next_float()
+	var pick := _rng.next_float()
+	if _gear_rules.is_empty() or not HeroGear.drops_gear(_level_number, enemy.tier, roll, _gear_rules):
+		return
+	var pool := []
+	for id in _gear_items:
+		if not id in _gear_owned and not id in gear_found:
+			pool.append(id)
+	var item := HeroGear.pick_item(pool, pick)
+	if item != "":
+		gear_found.append(item)
 
 
 ## The Hero's carried XP counts (and levels the Recruits) once banked: when the
@@ -1394,13 +1477,14 @@ func result() -> Dictionary:
 		"recruits_downed": recruits_downed,
 		"recruits_revived": recruits_revived,
 		"hero_knockdowns": int(hero_state["knockdowns"]) if not hero_state.is_empty() else 0,
+		"gear_found": gear_found.duplicate(),
 	}
 
 
 func snapshot() -> Dictionary:
 	var list := []
 	for e in enemies:
-		list.append([e.uid, e.type, e.wave, e.position.x, e.position.y, e.health, e.target, e.retarget_in, e.hit_in, e.slowed_for, e.mark_bonus, e.burn_left])
+		list.append([e.uid, e.type, e.wave, e.position.x, e.position.y, e.health, e.target, e.retarget_in, e.hit_in, e.slowed_for, e.mark_bonus, e.burn_left, e.exposed_left])
 	return {
 		"result": result(),
 		"staff_xp": staff_xp,

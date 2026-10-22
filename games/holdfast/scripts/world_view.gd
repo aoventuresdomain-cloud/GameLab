@@ -51,7 +51,14 @@ const ENEMY_COLOURS := {
 	"grunt": Color("#9c5b5b"),
 	"runner": Color("#c47e3a"),
 	"brute": Color("#6a3d7a"),
+	"sprinter": Color("#e0b040"),
+	"bulwark": Color("#4a5a6a"),
+	"tide_captain": Color("#2f7f8f"),
+	"fog_warden": Color("#7a8a9a"),
 }
+const COLOUR_ELITE := Color("#f2d27a")
+const COLOUR_SHROUD := Color(0.75, 0.8, 0.85, 0.35)
+const COLOUR_EXPOSED := Color("#ffd86b")
 
 ## Any run_state_source.gd. Only a HoldfastRunSource has rules to draw; with
 ## another source (the UI tests' stub) the field stays empty.
@@ -111,7 +118,13 @@ func _draw() -> void:
 		var colour: Color = ENEMY_COLOURS.get(enemy.type, Color.WHITE)
 		draw_circle(enemy.position, enemy.radius, colour)
 		draw_arc(enemy.position, enemy.radius, 0.0, TAU, 20, Color.BLACK, 2.0)
-		if enemy.health < enemy.max_health:
+		if enemy.tier == "elite":
+			draw_arc(enemy.position, enemy.radius + 4.0, 0.0, TAU, 24, COLOUR_ELITE, 3.0)
+		if enemy.required_ability != "":
+			# The shroud: a pale halo that burns gold while the Hero's ability holds it open.
+			var open := enemy.exposed_left > 0.0
+			draw_arc(enemy.position, enemy.radius + 8.0, 0.0, TAU, 32, COLOUR_EXPOSED if open else COLOUR_SHROUD, 5.0)
+		if enemy.health < enemy.max_health or enemy.tier == "boss":
 			var width := enemy.radius * 2.0
 			var at := enemy.position + Vector2(-enemy.radius, -enemy.radius - 8.0)
 			draw_rect(Rect2(at, Vector2(width, 4.0)), Color.BLACK)

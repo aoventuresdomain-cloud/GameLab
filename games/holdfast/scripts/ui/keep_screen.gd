@@ -9,6 +9,7 @@ signal buy_requested(id: String)
 signal level_requested(id: String)
 signal pillar_requested(id: String)
 signal respec_requested
+signal gear_requested(id: String)
 
 const Hud = preload("res://scripts/ui/hud.gd")
 const FONT_PX := 20
@@ -36,6 +37,7 @@ const STAT_TEXT := {
 	"move_speed": "move speed",
 	"attack.damage": "arrow damage",
 	"attack.cooldown": "time between arrows",
+	"attack.range": "arrow range",
 	"attack.count": "arrows a shot",
 	"attack.spread_degrees": "spread (degrees)",
 	"ability.rapid_seconds": "barrage seconds",
@@ -54,6 +56,7 @@ var selected_level := ""
 @onready var _pillar_row: HBoxContainer = %PillarRow
 @onready var _tree_row: HBoxContainer = %TreeRow
 @onready var _info: Label = %Info
+@onready var _gear_row: HBoxContainer = %GearRow
 @onready var _next: Label = %NextUnlocks
 @onready var _respec: Button = %RespecButton
 @onready var _back: Button = %BackButton
@@ -131,10 +134,33 @@ func refresh() -> void:
 	for section in _section_columns:
 		_section_columns[section].visible = not _content["hero_paths"].has(section) or section == selected_pillar
 	_respec.disabled = owned.is_empty()
+	_refresh_gear()
 	var next_parts: PackedStringArray = []
 	for id in _profile.get_next_unlocks():
 		next_parts.append("%s (%d): %s" % [_content["upgrade_nodes"][id]["name"], int(_content["upgrade_nodes"][id]["cost"]), _effect_text(id)])
 	_next.text = "Next: " + ("  |  ".join(next_parts) if not next_parts.is_empty() else "nothing left to buy here")
+
+
+## One toggle per gear item the player owns (lit when worn), or a hint that there is none yet.
+func _refresh_gear() -> void:
+	for child in _gear_row.get_children():
+		_gear_row.remove_child(child)
+		child.queue_free()
+	var caption := Label.new()
+	caption.add_theme_font_size_override("font_size", FONT_PX)
+	var owned: Array = _profile.get_gear_owned()
+	caption.text = "Gear:" if not owned.is_empty() else "Gear: none yet. An elite on levels 2 and 3 drops the first piece."
+	_gear_row.add_child(caption)
+	var worn: Dictionary = _profile.get_gear_worn()
+	for id in owned:
+		var item: Dictionary = _content["gear_items"][id]
+		var button := _button(str(item["name"]), FONT_PX, 1)
+		button.toggle_mode = true
+		button.set_pressed_no_signal(worn.get(item["slot"], "") == id)
+		button.pressed.connect(func() -> void: gear_requested.emit(id))
+		button.mouse_entered.connect(func() -> void: show_info(_gear_text(id, worn.get(item["slot"], "") == id)))
+		button.mouse_exited.connect(_show_default)
+		_gear_row.add_child(button)
 
 
 func _build_levels() -> void:
@@ -228,9 +254,17 @@ func _level_text(id: String) -> String:
 
 
 func _effect_text(id: String) -> String:
-	var node: Dictionary = _content["upgrade_nodes"][id]
+	return _effects_text(_content["upgrade_nodes"][id].get("effects", []))
+
+
+func _gear_text(id: String, worn: bool) -> String:
+	var item: Dictionary = _content["gear_items"][id]
+	return "%s (%s): %s. %s." % [item["name"], item["slot"], _effects_text(item["effects"]), "Worn, press to take off" if worn else "Not worn, press to wear"]
+
+
+func _effects_text(effects: Array) -> String:
 	var parts: PackedStringArray = []
-	for effect in node.get("effects", []):
+	for effect in effects:
 		var what := _stat_text(str(effect["stat"]))
 		if effect.has("add"):
 			parts.append("%s%s %s" % ["+" if float(effect["add"]) >= 0.0 else "", _trim(float(effect["add"])), what])

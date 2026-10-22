@@ -73,6 +73,13 @@ theme_type_variation = &"HudValue"
 text = "0 / 0"
 horizontal_alignment = 2
 
+[node name="GearFound" type="Label" parent="Centre/Panel/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+
 [node name="NextLevelButton" type="Button" parent="Centre/Panel/Column"]
 unique_name_in_owner = true
 visible = false

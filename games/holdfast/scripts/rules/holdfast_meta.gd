@@ -14,6 +14,7 @@ extends RefCounted
 ##   pillar: id,           the Hero path the next run plays
 ##   runs: int,            runs banked
 ##   layouts: {level: [site ids]}   the Archer Post sites the player chose per level
+##   gear: {owned: [item ids], equipped: {slot: item id or ""}}   the Hero's gear (the Hero only)
 ## }
 ## The save format version is SAVE_VERSION; bump it with a migration when the shape changes.
 ## Version 2: levels open by winning the previous one (`unlocked`), no longer by buying a
@@ -53,7 +54,17 @@ static func new_profile(content: Dictionary) -> Dictionary:
 		"pillar": paths[0] if not paths.is_empty() else "",
 		"runs": 0,
 		"layouts": {},
+		"gear": {"owned": [], "equipped": HeroGear.new_unit("hero", gear_slots(content))["slots"]},
 	}
+
+
+## A saved value that should be a list or a whole number, or an empty one when it is neither (a damaged file).
+static func _list(value: Variant) -> Array:
+	return value if value is Array else []
+
+
+static func _whole(value: Variant) -> int:
+	return int(value) if value is int or value is float else 0
 
 
 ## A profile read from a save, made safe to use: missing fields get their
@@ -62,9 +73,9 @@ static func new_profile(content: Dictionary) -> Dictionary:
 static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 	var profile := new_profile(content)
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
-	profile["gold"] = maxi(int(data.get("gold", 0)), 0)
-	profile["runs"] = maxi(int(data.get("runs", 0)), 0)
-	for id in data.get("upgrades", []):
+	profile["gold"] = maxi(_whole(data.get("gold")), 0)
+	profile["runs"] = maxi(_whole(data.get("runs")), 0)
+	for id in _list(data.get("upgrades")):
 		if nodes.has(id) and not id in profile["upgrades"] and _closed_by(nodes, profile["upgrades"], id) == "":
 			profile["upgrades"].append(id)
 	for id in data.get("levels_won", []):
@@ -78,12 +89,55 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 		for level in saved_layouts:
 			if content.get("levels", {}).has(level) and is_valid_layout(content["levels"][level], saved_layouts[level]):
 				profile["layouts"][level] = saved_layouts[level].duplicate()
+	var saved_gear: Variant = data.get("gear", {})
+	if saved_gear is Dictionary:
+		var items: Dictionary = content.get("gear_items", {})
+		for id in saved_gear.get("owned", []):
+			if items.has(id) and not id in profile["gear"]["owned"]:
+				profile["gear"]["owned"].append(id)
+		var worn: Variant = saved_gear.get("equipped", {})
+		if worn is Dictionary:
+			for slot in profile["gear"]["equipped"]:
+				var id: Variant = worn.get(slot, "")
+				if id in profile["gear"]["owned"] and str(items[id]["slot"]) == slot:
+					profile["gear"]["equipped"][slot] = id
 	var unlocked := unlocked_levels(content, profile)
 	if str(data.get("level", "")) in unlocked:
 		profile["level"] = str(data["level"])
 	if content.get("hero_paths", {}).has(str(data.get("pillar", ""))):
 		profile["pillar"] = str(data["pillar"])
 	return profile
+
+
+## The gear slots the pack gives the Hero ([] when it has no gear).
+static func gear_slots(content: Dictionary) -> Array:
+	for rules in content.get("gear_rules", {}).values():
+		return rules["slots"]
+	return []
+
+
+## The gear to wear in a run: {slot: item id}, empty slots left out.
+static func worn_gear(profile: Dictionary) -> Dictionary:
+	var out := {}
+	for slot in profile["gear"]["equipped"]:
+		if profile["gear"]["equipped"][slot] != "":
+			out[slot] = profile["gear"]["equipped"][slot]
+	return out
+
+
+## Wears an owned item in its slot (the item it replaces stays owned), or takes it off when
+## it is already worn. An item the profile does not own changes nothing.
+static func toggle_gear(content: Dictionary, profile: Dictionary, id: String) -> Dictionary:
+	var item: Dictionary = content.get("gear_items", {}).get(id, {})
+	if item.is_empty() or not id in profile["gear"]["owned"] or not profile["gear"]["equipped"].has(item["slot"]):
+		return profile
+	var out := profile.duplicate(true)
+	if profile["gear"]["equipped"][item["slot"]] == id:
+		out["gear"]["equipped"][item["slot"]] = ""
+		return out
+	var unit := {"kind": "hero", "slots": profile["gear"]["equipped"]}
+	out["gear"]["equipped"] = HeroGear.equip(unit, str(item["slot"]), id)["unit"]["slots"]
+	return out
 
 
 ## Level ids the player can play, in pack order: the first level, and each level
@@ -126,10 +180,10 @@ static func migrate_v1(data: Dictionary, content: Dictionary) -> Dictionary:
 ## every other upgrade is kept, so nobody loses gold or progress to the new tree.
 static func migrate_v2(data: Dictionary, _content: Dictionary) -> Dictionary:
 	var out := data.duplicate(true)
-	var gold := maxi(int(out.get("gold", 0)), 0)
+	var gold := maxi(_whole(out.get("gold")), 0)
 	var kept := []
 	var refunded := []
-	for id in out.get("upgrades", []):
+	for id in _list(out.get("upgrades")):
 		if not V2_TOWER_COSTS.has(id):
 			kept.append(id)
 		elif not id in refunded:
@@ -190,6 +244,8 @@ static func why_not_buy(content: Dictionary, profile: Dictionary, id: String) ->
 		return "No such upgrade"
 	if id in profile["upgrades"]:
 		return "Already bought"
+	if nodes[id].has("hero") and str(nodes[id]["hero"]) != str(profile["pillar"]):
+		return "Belongs to another Hero"
 	for required in nodes[id].get("requires", []):
 		if not required in profile["upgrades"]:
 			return "Needs %s first" % str(nodes.get(required, {}).get("name", required))
@@ -290,6 +346,14 @@ static func bank_run(content: Dictionary, profile: Dictionary, result: Dictionar
 	var level := str(result.get("level", ""))
 	if result.get("outcome") == HoldfastRules.OUTCOME_WON and level != "" and not level in out["levels_won"]:
 		out["levels_won"].append(level)
+	# Gear a run found is kept whatever its outcome, and worn at once when its slot is free.
+	for id in result.get("gear_found", []):
+		var item: Dictionary = content.get("gear_items", {}).get(id, {})
+		if item.is_empty() or id in out["gear"]["owned"]:
+			continue
+		out["gear"]["owned"].append(id)
+		if out["gear"]["equipped"].get(item["slot"], "x") == "":
+			out["gear"]["equipped"] = HeroGear.equip({"kind": "hero", "slots": out["gear"]["equipped"]}, str(item["slot"]), id)["unit"]["slots"]
 	var next := next_level(content, level) if result.get("outcome") == HoldfastRules.OUTCOME_WON else ""
 	if next != "" and not next in out["unlocked"]:
 		out["unlocked"].append(next)

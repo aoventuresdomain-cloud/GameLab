@@ -37,6 +37,7 @@ func _ready() -> void:
 	keep_screen.level_requested.connect(profile.select_level)
 	keep_screen.pillar_requested.connect(profile.select_pillar)
 	keep_screen.respec_requested.connect(profile.respec)
+	keep_screen.gear_requested.connect(profile.toggle_gear)
 	summary.play_again_requested.connect(_plan_run)
 	planning.start_requested.connect(_planned)
 	planning.back_requested.connect(_show.bind(Screen.KEEP))
@@ -78,6 +79,8 @@ func _start_run() -> void:
 		source.level_id = profile.get_level()
 		source.upgrades = profile.get_upgrades().duplicate()
 		source.layout = profile.get_layout(profile.get_level())
+		source.gear = profile.get_gear_worn()
+		source.gear_owned = profile.get_gear_owned().duplicate()
 	_show(Screen.RUN)
 	source.start_run()
 

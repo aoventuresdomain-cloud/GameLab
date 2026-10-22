@@ -192,6 +192,10 @@
           "items": {
             "$ref": "#/$defs/spawn_arc"
           }
+        },
+        "number": {
+          "type": "integer",
+          "minimum": 1
         }
       }
     },
@@ -248,6 +252,24 @@
         "hit_interval": {
           "type": "number",
           "exclusiveMinimum": 0
+        },
+        "tier": {
+          "enum": [
+            "normal",
+            "elite",
+            "boss"
+          ]
+        },
+        "required_ability": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "exposed_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "besieges": {
+          "type": "boolean"
         }
       }
     },
@@ -469,6 +491,18 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/upgrade_section"
+          }
+        },
+        "gear_rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gear_rule"
+          }
+        },
+        "gear_items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gear_item"
           }
         }
       }
@@ -820,6 +854,95 @@
         "order": {
           "type": "integer",
           "minimum": 0
+        }
+      }
+    },
+    "gear_rule": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "slots",
+        "elite_levels",
+        "boss_level",
+        "elite_chance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "slots": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "elite_levels": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "boss_level": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "elite_chance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "gear_item": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "slot",
+        "effects"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "slot": {
+          "$ref": "#/$defs/id"
+        },
+        "effects": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "stat"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "stat": {
+                "type": "string",
+                "pattern": "^hero\\.[a-z_]+(\\.[a-z_]+)?$"
+              },
+              "add": {
+                "type": "number"
+              },
+              "multiply": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          }
         }
       }
     }

@@ -132,6 +132,8 @@ func _test_readable_layout() -> void:
 		hud.get_node("%PostsNote").visible = true
 		for screen in [_main.home, _main.keep_screen, hud, _main.summary, _main.planning]:
 			await _check_layout(screen, window, scale, view)
+		hud.get_node("%PostsNote").text = "Fog Warden shrouded: use your special"
+		await _check_layout(hud, window, scale, view)
 		hud.get_node("%PostsNote").visible = false
 		# The summary after a win, with Next level and the Upgrade screen as well.
 		_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": false}, "shingle_beach")

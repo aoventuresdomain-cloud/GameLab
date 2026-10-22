@@ -682,3 +682,13 @@ func test_each_side_of_the_fork_wins_inside_the_levels_kit_band() -> void:
 					var result: Dictionary = HoldfastSim.run_headless(run_seed, HoldfastContent.run_config(level, kit, {}, pillar))["result"]
 					won += 1 if result["outcome"] == HoldfastRules.OUTCOME_WON else 0
 				expect_true(won >= int(check["min_won_runs"]), "%s %s on the %s side with %d gold won %d of %d" % [level, pillar, fork, check["kit_gold"], won, mini(int(check["seeds"]), 12)])
+
+
+func test_every_post_repairs_between_waves_not_only_the_first() -> void:
+	var rules := _world(["post_mend"], ["west_gate", "east_gate"], "shingle_beach")
+	for built in rules.towers:
+		built.health = UnitHealth.damage(built.health, 30.0)
+	var before: Array = rules.towers.map(func(built): return built.health["health"])
+	_run(rules, 30)
+	for i in rules.towers.size():
+		expect_near(rules.towers[i].health["health"], before[i] + 3.0, 0.001, "post %d mends 3 in a second" % i)
