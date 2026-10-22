@@ -1,0 +1,8 @@
+{
+  "role_effects": [
+    {"id": "warden", "taunt_radius": 150},
+    {"id": "lookout", "effect_radius": 130, "slow": 0.3, "mark_bonus": 0.25},
+    {"id": "alchemist", "effect_radius": 120, "field_dps": 4},
+    {"id": "engineer", "effect_radius": 140, "repair_per_second": 4}
+  ]
+}

@@ -28,6 +28,8 @@ func _ready() -> void:
 func _start_run() -> void:
 	if source.is_running():
 		return
+	if "hero_path" in source:
+		source.hero_path = start_screen.selected_pillar
 	_show(Screen.RUN)
 	source.start_run()
 

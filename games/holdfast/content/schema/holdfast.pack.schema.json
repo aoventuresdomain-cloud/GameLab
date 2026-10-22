@@ -10,7 +10,9 @@
         "aura",
         "tower",
         "staff",
-        "hero"
+        "hero",
+        "light",
+        "posts"
       ],
       "additionalProperties": false,
       "properties": {
@@ -60,6 +62,36 @@
         },
         "hero": {
           "$ref": "#/$defs/hero_placement"
+        },
+        "light": {
+          "type": "object",
+          "required": [
+            "radius",
+            "bonus"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0
+            },
+            "bonus": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "posts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/post"
+          }
+        },
+        "recruits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/staff_placement"
+          }
         }
       }
     },
@@ -97,11 +129,29 @@
         "xp_value": {
           "type": "integer",
           "minimum": 0
+        },
+        "hit_interval": {
+          "type": "number",
+          "exclusiveMinimum": 0
         }
       }
     },
     "tower": {
-      "additionalProperties": false
+      "additionalProperties": false,
+      "required": [
+        "health",
+        "radius"
+      ],
+      "properties": {
+        "health": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
     },
     "staff": {
       "required": [
@@ -109,7 +159,12 @@
         "range",
         "cooldown",
         "xp_per_level",
-        "damage_per_level"
+        "damage_per_level",
+        "health",
+        "radius",
+        "class",
+        "revive_seconds",
+        "revive_health"
       ],
       "additionalProperties": false,
       "properties": {
@@ -132,6 +187,31 @@
         "damage_per_level": {
           "type": "number",
           "minimum": 0
+        },
+        "class": {
+          "enum": [
+            "warden",
+            "lookout",
+            "alchemist",
+            "engineer"
+          ]
+        },
+        "health": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "revive_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "revive_health": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
         }
       }
     },
@@ -191,6 +271,9 @@
         },
         "y": {
           "type": "number"
+        },
+        "post": {
+          "type": "string"
         }
       }
     },
@@ -200,6 +283,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/hero_path"
+          }
+        },
+        "role_effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/role_effect"
           }
         }
       }
@@ -232,7 +321,11 @@
         "name",
         "move_speed",
         "attack",
-        "ability"
+        "ability",
+        "health",
+        "radius",
+        "pickup_radius",
+        "knockdown_delays"
       ],
       "additionalProperties": false,
       "properties": {
@@ -251,6 +344,34 @@
         },
         "ability": {
           "$ref": "#/$defs/hero_action"
+        },
+        "health": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "pickup_radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "knockdown_delays": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "blurb": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "colour": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
         }
       }
     },
@@ -260,9 +381,7 @@
         "kind",
         "damage",
         "range",
-        "cooldown",
-        "speed",
-        "radius"
+        "cooldown"
       ],
       "additionalProperties": false,
       "properties": {
@@ -271,7 +390,9 @@
         },
         "kind": {
           "enum": [
-            "projectile"
+            "projectile",
+            "area",
+            "arc"
           ]
         },
         "damage": {
@@ -303,6 +424,99 @@
           "type": "number",
           "minimum": 0,
           "maximum": 360
+        },
+        "centre": {
+          "enum": [
+            "enemy",
+            "hero"
+          ]
+        },
+        "unlit_bonus": {
+          "type": "number",
+          "minimum": 0
+        },
+        "arc_degrees": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 360
+        },
+        "dash_distance": {
+          "type": "number",
+          "minimum": 0
+        },
+        "refund_on_kill": {
+          "type": "boolean"
+        },
+        "slow": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "slow_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "post": {
+      "type": "object",
+      "required": [
+        "id",
+        "x",
+        "y"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "role_effect": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "enum": [
+            "warden",
+            "lookout",
+            "alchemist",
+            "engineer"
+          ]
+        },
+        "effect_radius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "taunt_radius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "slow": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "mark_bonus": {
+          "type": "number",
+          "minimum": 0
+        },
+        "field_dps": {
+          "type": "number",
+          "minimum": 0
+        },
+        "repair_per_second": {
+          "type": "number",
+          "minimum": 0
         }
       }
     }

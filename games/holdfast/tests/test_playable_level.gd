@@ -28,8 +28,9 @@ func test_wasd_moves_the_hero_and_its_arrow_hits_an_enemy_in_the_playable_build(
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	var rules := source.get_rules()
 	rules.tower.damage = 0.0
-	rules.staff.damage = 0.0
-	rules.staff_damage_per_level = 0.0
+	for recruit in rules.recruits:
+		recruit.damage = 0.0
+		recruit.damage_per_level = 0.0
 	var start := rules.hero_position
 	source.set_hero_input(Vector2.RIGHT, false)
 	source.step(0.5)

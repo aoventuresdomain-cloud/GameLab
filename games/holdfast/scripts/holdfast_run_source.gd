@@ -10,6 +10,8 @@ extends "res://scripts/ui/run_state_source.gd"
 
 @export var level_id := HoldfastContent.DEFAULT_LEVEL
 @export var rng_seed := 1
+## The Hero path to play ("" for the level's own).
+@export var hero_path := ""
 ## Let the bot play the Hero instead of the keyboard (tests, attract mode).
 @export var use_bot := false
 ## Replaces the keyboard and the bot, for tests and replays of recorded inputs.
@@ -59,7 +61,7 @@ func start_run() -> void:
 	var controller: SimController = controller_override
 	if controller == null:
 		controller = HoldfastHeroBot.new() if use_bot else _player
-	var engine := SimEngine.new(rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content), HoldfastRules.TICK_RATE)
+	var engine := SimEngine.new(rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content, hero_path), HoldfastRules.TICK_RATE)
 	if rules.setup_error != "":
 		if report_errors:
 			push_error("Holdfast: cannot start a run: " + rules.setup_error)

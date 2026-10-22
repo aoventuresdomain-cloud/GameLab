@@ -155,8 +155,15 @@ func _quiet_content(speed: float) -> Dictionary:
 
 ## F-005: a wave counts as cleared only when every enemy in it was killed.
 func test_a_wave_with_an_enemy_that_reached_the_keep_is_not_cleared() -> void:
-	var config := HoldfastContent.run_config("outpost", [], _quiet_content(400.0))
-	# No controller, so no aura: both grunts reach the keep.
+	var content := _quiet_content(400.0)
+	# Nothing can hurt the grunts (the Hero's arrows do nothing), and they go for
+	# the nearest tower, Recruit or Hero first: they wear those down (the Hero
+	# stays down) and both reach the keep.
+	content["hero_paths"]["flare_archer"]["attack"]["damage"] = 0.0
+	content["staff"]["wren"]["damage"] = 0.0
+	content["staff"]["wren"]["damage_per_level"] = 0.0
+	content["hero_paths"]["flare_archer"]["knockdown_delays"] = [100000]
+	var config := HoldfastContent.run_config("outpost", [], content)
 	var engine := SimEngine.new(HoldfastRules.new(), null, 1, config, HoldfastRules.TICK_RATE)
 	engine.run_to_end(10000)
 	var result: Dictionary = engine.rules.result()
