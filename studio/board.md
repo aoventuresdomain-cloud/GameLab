@@ -392,6 +392,7 @@
 | F-020 | KIT-02 | `kit/sim/sim_engine.gd` checks its arguments (null rules, tick rate <= 0) with `assert`, which release exports strip, the same pattern F-006 fixed in Holdfast. No current caller passes bad values (Head of QA, HF-M1-07) | Minor | Gameplay Engineer | Open: after Gate 1 |
 | F-021 | KIT-03 | One invalid enemy entry drops the whole enemies file, so the loader adds about 11 follow-on "no enemies entry with id" errors, valid enemies included; the first error is correct. The version error also prints "must be one of [0.0]" (Head of QA, HF-M1-07) | Minor | Gameplay Engineer | Open: after Gate 1 |
 | F-022 | HF-M1-02 | The progression report prints "budget 0 s" for a fractional budget (Head of QA, HF-M1-07) | Minor | Gameplay Engineer | Open: after Gate 1 |
+| F-023 | HF-M2-14 | `test_playable_hero.gd::test_the_player_controller_reads_actions_and_keeps_a_press_until_a_tick_takes_it` failed once in CI on a PR that touched no code ("expected false, got true"), then passed on re-run of the same commit (HoE, #35) | Minor | Gameplay Engineer | Fixed in `player_hero.gd` in #36 with the test unchanged |
 
 ## Test changes
 
