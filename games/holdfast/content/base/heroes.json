@@ -17,11 +17,13 @@
         "kind": "projectile",
         "damage": 6,
         "range": 260,
-        "cooldown": 8,
-        "speed": 420,
+        "cooldown": 10,
+        "speed": 480,
         "radius": 6,
-        "count": 9,
-        "spread_degrees": 70
+        "count": 1,
+        "spread_degrees": 0,
+        "rapid_seconds": 3,
+        "rapid_interval": 0.15
       },
       "health": 60,
       "radius": 12,
@@ -31,7 +33,7 @@
         6,
         10
       ],
-      "blurb": "Fire arrows from a distance. Space: Flare Barrage, a fan of nine arrows.",
+      "blurb": "Fire arrows from a distance. Space: Flare Barrage, three seconds of rapid fire.",
       "colour": "#f2b13a"
     },
     {

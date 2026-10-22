@@ -582,6 +582,16 @@
         "refund_on_kill": {
           "type": "boolean"
         },
+        "rapid_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30
+        },
+        "rapid_interval": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 5
+        },
         "slow": {
           "type": "number",
           "minimum": 0,

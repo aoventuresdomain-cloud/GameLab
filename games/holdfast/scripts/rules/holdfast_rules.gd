@@ -209,6 +209,9 @@ var hero_attack: Dictionary = {}
 var hero_ability: Dictionary = {}
 var hero_attack_ready_in := 0.0
 var hero_ability_ready_in := 0.0
+## Seconds left of a rapid-fire ability, and the wait until its next arrow.
+var hero_rapid_left := 0.0
+var hero_rapid_ready_in := 0.0
 ## The Hero stays inside the spawn ring.
 ## Half the arena's width and height: the keep is at its centre, and nothing
 ## (the Hero, a spawn) is outside it.
@@ -706,7 +709,10 @@ func _revive(recruit: Attacker, dt: float) -> void:
 func _step_hero(dt: float, input: Dictionary) -> void:
 	hero_attack_ready_in = maxf(hero_attack_ready_in - dt, 0.0)
 	hero_ability_ready_in = maxf(hero_ability_ready_in - dt, 0.0)
+	hero_rapid_left = maxf(hero_rapid_left - dt, 0.0)
+	hero_rapid_ready_in = maxf(hero_rapid_ready_in - dt, 0.0)
 	if hero_state["downed"]:
+		hero_rapid_left = 0.0
 		hero_state = HeroKnockdown.tick(hero_state, dt)
 		if not hero_state["downed"]:
 			# The square round the keep (with the Hero's own width) is ground they cannot stand on.
@@ -731,7 +737,14 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 	var ability: Variant = input.get("ability")
 	if ability is bool and ability and hero_ability_ready_in <= 0.0:
 		hero_ability_ready_in = float(hero_ability["cooldown"])
-		_use(hero_ability, target)
+		if float(hero_ability.get("rapid_seconds", 0.0)) > 0.0:
+			hero_rapid_left = float(hero_ability["rapid_seconds"])
+			hero_rapid_ready_in = 0.0
+		else:
+			_use(hero_ability, target)
+	if hero_rapid_left > 0.0 and hero_rapid_ready_in <= 0.0:
+		hero_rapid_ready_in = float(hero_ability.get("rapid_interval", hero_attack["cooldown"]))
+		_fire(hero_ability)
 
 
 ## `at` held inside the arena, edges included.
@@ -1078,7 +1091,7 @@ func snapshot() -> Dictionary:
 		"result": result(),
 		"staff_xp": staff_xp,
 		"aura": [aura_active, aura_position.x, aura_position.y],
-		"hero": [hero_position.x, hero_position.y, hero_facing.x, hero_facing.y, hero_attack_ready_in, hero_ability_ready_in],
+		"hero": [hero_position.x, hero_position.y, hero_facing.x, hero_facing.y, hero_attack_ready_in, hero_ability_ready_in, hero_rapid_left, hero_rapid_ready_in],
 		"hero_state": hero_state,
 		"hero_grace_left": hero_grace_left,
 		"carried_xp": carried_xp,

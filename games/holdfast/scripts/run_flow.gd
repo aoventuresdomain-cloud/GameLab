@@ -35,6 +35,7 @@ func _ready() -> void:
 	keep_screen.level_requested.connect(profile.select_level)
 	keep_screen.pillar_requested.connect(profile.select_pillar)
 	summary.play_again_requested.connect(_start_run)
+	summary.next_level_requested.connect(_next_level)
 	summary.keep_requested.connect(_show.bind(Screen.KEEP))
 	source.run_ended.connect(_on_run_ended)
 	_show(Screen.HOME)
@@ -57,10 +58,20 @@ func _start_run() -> void:
 	source.start_run()
 
 
+## Plays the level the summary offered after a win.
+func _next_level(id: String) -> void:
+	profile.select_level(id)
+	_start_run()
+
+
+## The run is banked (gold, wins, unlocks, saved) before the summary shows.
 func _on_run_ended(result: Dictionary) -> void:
+	var next := ""
 	if result.has("result"):
 		profile.bank_run(result["result"])
-	summary.show_summary(result)
+		if result["result"].get("outcome") == HoldfastRules.OUTCOME_WON:
+			next = profile.get_next_level(str(result["result"].get("level", "")))
+	summary.show_summary(result, next)
 	_show(Screen.SUMMARY)
 
 
