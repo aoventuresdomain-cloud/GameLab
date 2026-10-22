@@ -22,9 +22,12 @@ Every tool CI downloads for a build is pinned, never "latest":
 - Godot and its export templates: by version in `/.godot-version`, from Godot's
   official GitHub releases, each checked against the SHA-512 in
   `tools/ci/godot.sha512` (copied from the release's own `SHA512-SUMS.txt`).
-- GodotSteam's Windows template: by release, file name and SHA-256 in
-  `tools/ci/fetch_godotsteam.sh`. The Windows build is exported with it, and
-  `steam_api64.dll` ships beside `Holdfast.exe`.
+- GodotSteam's Windows and macOS templates: by release, file name and SHA-256 in
+  `tools/ci/fetch_godotsteam.sh` (the macOS template inside the archive has its own
+  SHA-256 too). The Windows build is exported with the first, and `steam_api64.dll`
+  ships beside `Holdfast.exe`. The macOS build is exported with the second, which
+  carries `libsteam_api.dylib`; it is ad-hoc signed (no Apple account) and packed
+  with `steam-test.command` by `tools/ci/package_macos.sh`.
 - butler: by version and SHA-256 in `tools/ci/install_butler.sh`, also checked
   on pull requests by the `butler-pin` job.
 

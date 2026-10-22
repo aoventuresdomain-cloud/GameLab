@@ -103,18 +103,21 @@ jobs:
           # One double-click for the manual Steam check (HF-M1-05, F-017).
           cp games/holdfast/tools/steam-test.bat build/windows/
           ls -la build/web build/windows
-      # HF-M1-06: what an unsigned macOS export costs. Recorded, never blocking.
-      - name: Try an unsigned macOS export
+      # HF-M2-00: an unsigned (ad-hoc signed) macOS build with GodotSteam, packed with
+      # a one-click steam-test.command for the CEO's Mac. It cannot be run here, so
+      # this step only proves the export and the package are well formed. Recorded,
+      # never blocking, until the Mac check has passed once on a real Mac.
+      - name: Export the macOS build with GodotSteam and pack it
         id: macos
         continue-on-error: true
         run: |
           mkdir -p build/macos
           tools/ci/godot.sh --headless --path games/holdfast --export-release "macOS" ../../build/macos/Holdfast.zip
-          ls -la build/macos
+          tools/ci/package_macos.sh
       - name: Record the macOS result
         if: always()
         run: |
-          echo "macOS unsigned export: ${{ steps.macos.outcome }}" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "macOS build with GodotSteam: ${{ steps.macos.outcome }}" | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: holdfast-web-${{ github.sha }}
@@ -124,6 +127,12 @@ jobs:
         with:
           name: holdfast-windows-${{ github.sha }}
           path: build/windows
+          retention-days: ${{ github.event_name == 'push' && 30 || 7 }}
+      - uses: actions/upload-artifact@v4
+        if: steps.macos.outcome == 'success'
+        with:
+          name: holdfast-macos-${{ github.sha }}
+          path: build/macos/Holdfast-mac-test.tar.gz
           retention-days: ${{ github.event_name == 'push' && 30 || 7 }}
 
   # HF-M1-03: each exported build plays one full run with the bot aura, and any
