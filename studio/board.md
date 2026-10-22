@@ -498,6 +498,8 @@
 | F-031 | HF-M2-21 | FOLLOW-UP from QA: with monsters going for the tower, bot win rates fall (336 to 282 wins of 540 across pillars, levels and upgrade tiers; Dusk Mage and Tideblade harder, Flare Archer level; fresh-profile Gull Rock 0 of 36). No pack value weakens the Hero or strengthens monsters beyond the targeting rule. Not retuned in Build 3c | Minor | Gameplay Engineer | Open, handled with the pacing bands in Build 6 unless the CEO's playtest says otherwise |
 | F-032 | HF-M2-20 | FOLLOW-UP from QA: the save migration crashes on wrong-typed fields in a hash-valid, hand-edited save (null upgrades, non-numeric gold), and a hand-edited unlocked list can open a later level alone. Not reachable in normal play | Minor | Gameplay Engineer | Open, low priority |
 | F-033 | HF-M2-03 | Known issue from the CEO's playtest: only Bryn moves, the other Recruit stays put (CEO, 2026-10-22). Recruits are parked | Minor | Gameplay Engineer | Open, for Build 7 (Recruits); only worked on earlier if trivial |
+| F-034 | HF-M2-23 | FOLLOW-UP from QA (#62): the wave banner can sit over the Hero when it stands in the top-centre strip about 60 units inside the north edge, for that 1 s; the test only checks the start position | Minor | Gameplay Engineer | Open, rides the next PR that touches the banner |
+| F-035 | HF-M2-23 | FOLLOW-UP from QA (#62, test gap): nothing pins that `wave_banner()` returns an empty string once the last wave has started | Minor | Gameplay Engineer | Open, a test added in the next Gameplay PR |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -526,6 +528,7 @@
 | 2026-10-22 | Progression hash | Re-pinned in #57: `d0bae866...2829` to `143e03de...5115` (44 runs, 10.1 s) | The 26-node tree and unlock-by-win change every run. Parity passes | Head of Engineering |
 | 2026-10-22 | `games/holdfast/tests/test_hero.gd` `_quiet()` setup (#58) | One setup line pins the Flare Archer's attack damage at 6.0; four tests' assertions unchanged (the hero fires and the arrow hits; keeps firing on the cooldown; a fast arrow cannot skip a thin enemy; an arrow stops at the first enemy) | The Archer's pack damage went from 6 to 7 (a Hero buff), and these tests are hand-worked from 6. Same pattern as test_slice2 | Head of Engineering |
 | 2026-10-22 | Progression hash | Re-pinned in #58: `143e03de...5115` to `c90d0a9e...b199` (40 runs, 9.4 s) | Monsters go for the tower, so every run changes. Parity passes | Head of Engineering |
+| 2026-10-22 | Progression hash | Re-pinned in #62: `c90d0a9e...b199` to `d9b81e5c...cf7d` (HF-M2-23 pause between waves; no existing test changed) | A 1 s pause moves every run's timing | Head of Engineering |
 
 ## Advisor views
 
