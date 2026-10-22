@@ -198,7 +198,7 @@
 
 ### HF-M2-00 Mac test build and live Steam achievement
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 3 of 7
+- **Status:** Built and merged in #52 (CI makes the Mac package), Build 3 of 7. One line stays open: the three Steam lines on the CEO's Mac, a ten-minute Setup Desk check, not needed to play in the browser
 - **QA:** full
 - **Done when:**
   - [ ] CI builds an unsigned macOS build with GodotSteam (template pinned by name and SHA-256, as for Windows) and a one-click `steam-test.command`.
