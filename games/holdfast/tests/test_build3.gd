@@ -784,3 +784,26 @@ func test_the_hud_fits_at_both_sizes_with_the_worst_numbers() -> void:
 			expect_true(node.size.x + 0.5 >= node.get_minimum_size().x, "%s: %s is not clipped" % [window, label])
 	tree.root.size = window_before
 	main.free()
+
+
+# ------------------------------------------------------------------ the progression stop
+
+func test_the_ten_hour_progression_stops_right_after_the_run_that_buys_the_last_upgrade() -> void:
+	var report := HoldfastProgression.play(1, 10.0)
+	expect_eq(report["upgrades_owned"], report["upgrades_total"], "every upgrade is bought")
+	var unlocks: Array = report["unlocks"]
+	expect_eq(unlocks.size(), report["upgrades_total"])
+	expect_eq(unlocks[-1]["after_run"], report["runs_played"], "the last run played is the one that bought the last upgrade")
+	expect_true(unlocks[-1]["at_seconds"] <= report["sim_seconds"], "and it stops there, not later")
+	expect_true(report["sim_seconds"] < 10.0 * 3600.0, "well inside the ten hours")
+	var before_last := 0
+	for unlock in unlocks:
+		if int(unlock["after_run"]) < int(report["runs_played"]):
+			before_last += 1
+	expect_true(before_last < int(report["upgrades_total"]), "some upgrade was still unbought before the last run")
+
+
+func test_a_progression_with_upgrades_left_plays_on_to_the_end_of_its_time() -> void:
+	var report := HoldfastProgression.play(7, 0.25)
+	expect_true(report["upgrades_owned"] < report["upgrades_total"], "a quarter hour does not buy the whole tree")
+	expect_true(report["sim_seconds"] >= 0.25 * 3600.0, "so it keeps playing until the time is up")
