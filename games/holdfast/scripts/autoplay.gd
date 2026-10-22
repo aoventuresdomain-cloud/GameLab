@@ -1,9 +1,9 @@
 extends Node
 ## Plays one full run with the bot Hero and reports it, for CI smoke tests of the
 ## exported builds. Off unless asked for:
-##   desktop:  Holdfast.exe --headless -- --autoplay [--seed=N]
+##   desktop:  Holdfast.exe --headless -- --autoplay [--seed=N] [--hero=<path id>]
 ##   (windowed, the game waits a few seconds after the run before quitting)
-##   web:      index.html?autoplay=1[&seed=N]
+##   web:      index.html?autoplay=1[&seed=N][&hero=<path id>]
 ## Prints "AUTOPLAY DONE {result json}" when the run ends; the desktop build then quits.
 
 const SPEED := 8.0
@@ -25,8 +25,16 @@ func _ready() -> void:
 	source.run_ended.connect(_on_run_ended)
 	Engine.time_scale = SPEED
 	print("AUTOPLAY START seed=%d" % source.rng_seed)
-	# Start through the run flow, as the Play button does.
-	get_node(flow_path).call_deferred("_start_run")
+	# Start through the run flow, as the Play button does. Deferred, so the start
+	# screen has built its pillar buttons before one is picked.
+	call_deferred("_begin", str(options.get("hero", "")))
+
+
+func _begin(hero: String) -> void:
+	var flow := get_node(flow_path)
+	if hero != "":
+		flow.start_screen.select_pillar(hero)
+	flow._start_run()
 
 
 func _on_run_ended(summary: Dictionary) -> void:

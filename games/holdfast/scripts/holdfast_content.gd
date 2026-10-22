@@ -19,10 +19,13 @@ static func base() -> Dictionary:
 	return _base.content
 
 
-## Rules config for one run.
-static func run_config(level: String = DEFAULT_LEVEL, upgrades: Array = [], content: Dictionary = {}) -> Dictionary:
-	return {
+## Rules config for one run. `hero` is the Hero path to play ("" for the level's own).
+static func run_config(level: String = DEFAULT_LEVEL, upgrades: Array = [], content: Dictionary = {}, hero: String = "") -> Dictionary:
+	var config := {
 		"content": content if not content.is_empty() else base(),
 		"level": level,
 		"upgrades": upgrades,
 	}
+	if hero != "":
+		config["hero"] = hero
+	return config

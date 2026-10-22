@@ -1,5 +1,6 @@
 {
   "staff": [
-    {"id": "bryn", "name": "Bryn", "class": "warden", "damage": 3, "range": 130, "cooldown": 0.8, "xp_per_level": 5, "damage_per_level": 1}
+    {"id": "bryn", "name": "Bryn", "class": "warden", "damage": 3, "range": 130, "cooldown": 0.8, "xp_per_level": 5, "damage_per_level": 1, "health": 40, "radius": 13, "revive_seconds": 3, "revive_health": 0.5},
+    {"id": "wren", "name": "Wren", "class": "lookout", "damage": 2, "range": 150, "cooldown": 0.9, "xp_per_level": 5, "damage_per_level": 1, "health": 35, "radius": 13, "revive_seconds": 3, "revive_health": 0.5}
   ]
 }

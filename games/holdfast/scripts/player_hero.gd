@@ -13,6 +13,7 @@ const ACTION_ABILITY := "hero_ability"
 var move := Vector2.ZERO
 var ability_pressed := false
 var _ability_was_down := false
+var _last_sample_frame := -1
 
 
 ## Adds the Hero's input actions when they are missing. Keys are physical
@@ -37,11 +38,14 @@ static func ensure_actions() -> void:
 
 func sample() -> void:
 	move = Input.get_vector(ACTION_LEFT, ACTION_RIGHT, ACTION_UP, ACTION_DOWN)
-	# just_pressed catches a tap shorter than a frame; the held-state edge covers
-	# a press that arrived outside the frame loop.
+	# just_pressed catches a tap shorter than a frame, and holds for the whole frame,
+	# so it counts once per frame; the held-state edge covers a press that arrived
+	# outside the frame loop.
 	var down := Input.is_action_pressed(ACTION_ABILITY)
-	if Input.is_action_just_pressed(ACTION_ABILITY) or (down and not _ability_was_down):
+	var frame := Engine.get_process_frames()
+	if (Input.is_action_just_pressed(ACTION_ABILITY) and frame != _last_sample_frame) or (down and not _ability_was_down):
 		ability_pressed = true
+	_last_sample_frame = frame
 	_ability_was_down = down
 
 

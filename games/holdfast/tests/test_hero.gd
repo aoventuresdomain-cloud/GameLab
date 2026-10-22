@@ -248,13 +248,18 @@ func test_pack_values_one_past_the_limit_are_rejected() -> void:
 
 
 func test_the_keep_falling_ends_the_run_with_the_hero_idle() -> void:
-	# A grunt walks in for 5 damage; the keep has 5 health. The idle Hero's arrows
-	# can't stop it because it starts inside the keep's reach.
+	# One grunt nothing can kill walks in for 5 damage; the keep has 5 health.
+	# Enemies go for the nearest tower, Recruit or Hero before the keep, so the
+	# grunt kills each of those first (the Hero stays down for the whole test),
+	# and only then reaches the keep.
 	var content: Dictionary = HoldfastContent.base().duplicate(true)
 	var level: Dictionary = content["levels"]["outpost"]
 	level["keep_health"] = 5
 	level["waves"] = [{"spawns": [{"enemy": "grunt", "count": 1}]}]
 	content["enemies"]["grunt"]["speed"] = 100000.0
+	content["enemies"]["grunt"]["health"] = 1000000.0
+	content["enemies"]["grunt"]["damage"] = 1000
+	content["hero_paths"]["flare_archer"]["knockdown_delays"] = [100000]
 	content["towers"]["archer_post"]["damage"] = 0.0
 	content["staff"]["bryn"]["damage"] = 0.0
 	var rules := HoldfastRules.new()
