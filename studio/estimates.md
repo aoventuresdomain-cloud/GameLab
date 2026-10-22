@@ -28,6 +28,8 @@ The CEO asked for a very lean M2: small changes shipped fast, quick fixes, and t
 | 6 | Pacing bands pass in the simulator, style guide for approval, name check | HF-M2-01, HF-M2-05, HF-M2-08, HF-M2-11 | Day 8 | Medium |
 | End | Full QA round on one fixed commit, then the Gate 2 brief | HF-M2-12, HF-M2-13 | Day 8 to 9 | Low |
 
+**Build numbering (CEO request, 2026-10-22): the CEO gets 6 playable builds, one per iteration above, so a handoff reads "Build N of 6". A quick fix after a playtest counts inside its slice with a letter (Build 2b of 6), not as a new number. The final full QA round and the Gate 2 brief are not numbered builds. If feedback adds a slice, the new total is stated before it starts.**
+
 **Build total: about 7 to 9 days** to Gate 2, down from 8 to 10 now that the tester prep and per-slice QA rounds are out. The builder is one Gameplay Engineer, so slices are sequential; the UI Engineer joins at iteration 3 and the Balance Analyst, Product Designer and Researcher at iteration 6. HF-M2-10 and the session log wait for the later testing stage. Fixes from the CEO's feedback are small PRs merged fast, inside the day where they are blocker or major.
 
 ### Waits (the calendar, not build time)

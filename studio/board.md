@@ -280,7 +280,7 @@
 
 ### HF-M2-17 Slice 2b: monsters that can beat the Hero, and Recruits that move
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** Merged in #40 on 2026-10-22 (Build 2b of 6), waiting on the CEO's playtest. Bot results on 12 seeds: Flare Archer 2 won, Dusk Mage 5, Tideblade 9; a no-input run loses on every pillar
 - **QA:** sanity plus the simulator check below (a quick fix to slice 2, from the CEO's first playtest on 2026-10-22; findings F-024 and F-025)
 - **Depends on:** HF-M2-14, HF-M2-15
 - **Done when:**
@@ -404,8 +404,8 @@
 | F-021 | KIT-03 | One invalid enemy entry drops the whole enemies file, so the loader adds about 11 follow-on "no enemies entry with id" errors, valid enemies included; the first error is correct. The version error also prints "must be one of [0.0]" (Head of QA, HF-M1-07) | Minor | Gameplay Engineer | Open: after Gate 1 |
 | F-022 | HF-M1-02 | The progression report prints "budget 0 s" for a fractional budget (Head of QA, HF-M1-07) | Minor | Gameplay Engineer | Open: after Gate 1 |
 | F-023 | HF-M2-14 | `test_playable_hero.gd::test_the_player_controller_reads_actions_and_keeps_a_press_until_a_tick_takes_it` failed once in CI on a PR that touched no code ("expected false, got true"), then passed on re-run of the same commit (HoE, #35) | Minor | Gameplay Engineer | Fixed in `player_hero.gd` in #36 with the test unchanged |
-| F-024 | HF-M2-17 | The monsters are too weak: the CEO could not die in the slice 2 build; the fix is stronger monsters, not a weaker Hero (CEO playtest, 2026-10-22) | Major | Gameplay Engineer | Open: MUST FIX in slice 2b |
-| F-025 | HF-M2-17 | Recruits do not move; the CEO expects them to move and fight, not stand like towers (CEO playtest, 2026-10-22) | Major | Gameplay Engineer | Open: MUST FIX in slice 2b |
+| F-024 | HF-M2-17 | The monsters are too weak: the CEO could not die in the slice 2 build; the fix is stronger monsters, not a weaker Hero (CEO playtest, 2026-10-22) | Major | Gameplay Engineer | Fixed in #40, waiting on the CEO's playtest |
+| F-025 | HF-M2-17 | Recruits do not move; the CEO expects them to move and fight, not stand like towers (CEO playtest, 2026-10-22) | Major | Gameplay Engineer | Fixed in #40, waiting on the CEO's playtest |
 
 ## Test changes
 
@@ -419,6 +419,8 @@
 | 2026-10-22 | `games/holdfast/tests/test_holdfast_rules.gd::test_a_wave_with_an_enemy_that_reached_the_keep_is_not_cleared` (F-005) | Setup zeroes the Hero's attack damage and lets grunts wipe the defenders before reaching the keep; assertions unchanged (kills 0, waves cleared 0) | The Hero now auto-fires, so the old setup cleared the wave. Intent kept | Head of Engineering |
 | 2026-10-22 | `games/holdfast/tests/test_playable_level.gd::test_wasd_moves_the_hero_and_its_arrow_hits_an_enemy_in_the_playable_build` | Setup zeroes every Recruit's damage instead of the per-level staff damage setting; assertions unchanged | Staff damage becomes per Recruit | Head of Engineering |
 | 2026-10-22 | Progression hash | Re-pinned once: `61b99537...4558` to `05a32bb8...b07f` | Enemies fighting back changes every run; the parity test and the 60 second budget (29.9 s for two passes) are the safeguards. Full hashes in PR #36 | Head of Engineering |
+| 2026-10-22 | `games/holdfast/tests/test_slice2.gd::test_a_staffed_warden_pulls_enemies_within_reach_off_what_is_nearer` | Setup adds the east post to Bryn; assertions unchanged | The Warden now roams unless staffing a post, so the old default no longer had him staffed. Intent kept | Head of Engineering |
+| 2026-10-22 | Progression hash | Re-pinned once more in #40: `05a32bb8...b07f` to `a1a752ee...a6b9` | Stronger monsters and roaming Recruits change every run. Parity test passes; ten-hour run 45.1 s of the 60 s budget (was 29.9 s) | Head of Engineering |
 
 ## Advisor views
 
