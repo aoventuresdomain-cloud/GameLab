@@ -159,6 +159,7 @@
     "enemy": {
       "required": [
         "damage",
+        "engage_distance",
         "gold",
         "radius"
       ],
@@ -175,6 +176,10 @@
         "radius": {
           "type": "number",
           "exclusiveMinimum": 0
+        },
+        "engage_distance": {
+          "type": "number",
+          "minimum": 0
         },
         "xp_chance": {
           "type": "number",

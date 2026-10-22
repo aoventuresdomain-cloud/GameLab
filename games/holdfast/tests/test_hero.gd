@@ -15,6 +15,8 @@ func _quiet(edit: Callable = Callable()) -> HoldfastRules:
 	content["towers"]["archer_post"]["damage"] = 0.0
 	content["staff"]["bryn"]["damage"] = 0.0
 	content["staff"]["bryn"]["damage_per_level"] = 0.0
+	# These tests are worked by hand from an attack damage of 6.
+	content["hero_paths"]["flare_archer"]["attack"]["damage"] = 6.0
 	if edit.is_valid():
 		edit.call(content)
 	var rules := HoldfastRules.new()

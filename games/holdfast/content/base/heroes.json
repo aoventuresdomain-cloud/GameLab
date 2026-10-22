@@ -6,7 +6,7 @@
       "move_speed": 170,
       "attack": {
         "kind": "projectile",
-        "damage": 6,
+        "damage": 7,
         "range": 210,
         "cooldown": 0.5,
         "speed": 480,
