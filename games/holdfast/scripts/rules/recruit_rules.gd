@@ -23,6 +23,16 @@ static func damage(recruit: Dictionary, amount: float) -> Dictionary:
 	return out
 
 
+## Resting heals a Recruit who is up, never above their maximum; a downed
+## Recruit, and zero, negative or NaN amounts, change nothing.
+static func rest(recruit: Dictionary, amount: float) -> Dictionary:
+	var out := recruit.duplicate()
+	if out["downed"] or not (amount > 0.0):
+		return out
+	out["health"] = minf(float(out["health"]) + amount, float(out["max_health"]))
+	return out
+
+
 ## The Hero is standing on a Recruit within `radius`, edge included.
 static func standing(hero_pos: Vector2, recruit_pos: Vector2, radius: float) -> bool:
 	return hero_pos.distance_squared_to(recruit_pos) <= radius * radius

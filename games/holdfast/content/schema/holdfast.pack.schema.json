@@ -92,11 +92,44 @@
           "items": {
             "$ref": "#/$defs/staff_placement"
           }
+        },
+        "balance_check": {
+          "type": "object",
+          "required": [
+            "seeds",
+            "min_won_runs",
+            "min_hard_runs"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "seeds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "min_won_runs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "min_hard_runs": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
         }
       }
     },
     "wave": {
-      "additionalProperties": false
+      "additionalProperties": false,
+      "properties": {
+        "health_scale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "damage_scale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
     },
     "spawn": {
       "additionalProperties": false
@@ -164,7 +197,11 @@
         "radius",
         "class",
         "revive_seconds",
-        "revive_health"
+        "revive_health",
+        "leash",
+        "move_speed",
+        "retreat_below",
+        "rest_heal"
       ],
       "additionalProperties": false,
       "properties": {
@@ -212,6 +249,23 @@
           "type": "number",
           "exclusiveMinimum": 0,
           "maximum": 1
+        },
+        "leash": {
+          "type": "number",
+          "minimum": 0
+        },
+        "move_speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "retreat_below": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rest_heal": {
+          "type": "number",
+          "minimum": 0
         }
       }
     },

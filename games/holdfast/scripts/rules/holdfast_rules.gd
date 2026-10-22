@@ -129,6 +129,13 @@ class Attacker:
 	var up := true
 	var radius := 14.0
 	var damage_per_level := 0.0
+	## Recruits: where they were placed, how far from there they may roam, how
+	## fast they walk and how much they heal at home; `walker` is their RecruitLeash
+	## input, with the fields that change every tick filled in before each step.
+	var home := Vector2.ZERO
+	var leash := 0.0
+	var rest_heal := 0.0
+	var walker: Dictionary = {}
 	## Recruits: their pack entry (revive numbers) and the post they staff ("" for none).
 	var role: Dictionary = {}
 	var post := ""
@@ -238,6 +245,8 @@ var _enemy_types: Dictionary = {}
 var _schedule: Array = []
 var _next_spawn := 0
 var _wave_starts: PackedFloat64Array = []
+var _wave_health_scale: PackedFloat64Array = []
+var _wave_damage_scale: PackedFloat64Array = []
 var _wave_remaining: PackedInt32Array = []
 var _wave_leaked: PackedByteArray = []
 var _next_uid := 1
@@ -265,6 +274,7 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		var data: Dictionary = content["staff"][at["id"]]
 		roles.append(str(data["class"]))
 		problems.append_array(RecruitRules.validate_revive_time(data["revive_seconds"]))
+		problems.append_array(RecruitLeash.validate(data["leash"], data["move_speed"], data["range"], data["retreat_below"]))
 	_role_effects = content.get("role_effects", {})
 	problems.append_array(RecruitRules.validate_effects(_role_effects, roles))
 	if not problems.is_empty():
@@ -316,8 +326,16 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		var data: Dictionary = content["staff"][at["id"]]
 		var recruit := _attacker("recruit", at, data, _apply(stats, "staff_damage", float(data["damage"])))
 		recruit.damage_per_level = float(data["damage_per_level"])
+		recruit.home = recruit.position
+		recruit.leash = float(data["leash"])
+		recruit.rest_heal = float(data["rest_heal"])
 		recruit.role = data
 		recruit.post = str(at.get("post", ""))
+		recruit.walker = {
+			"role": str(data["class"]), "home": recruit.home, "pos": recruit.position, "leash": recruit.leash,
+			"speed": float(data["move_speed"]), "range": recruit.attack_range, "health": 0.0, "max_health": 0.0,
+			"retreat_below": float(data["retreat_below"]), "downed": false, "staffing": recruit.post != "",
+		}
 		if recruit.post != "" and not _post_at.has(recruit.post):
 			_fail("recruit %s staffs unknown post %s" % [recruit.id, recruit.post])
 			return
@@ -378,6 +396,8 @@ func _build_schedule(level: Dictionary) -> void:
 				_schedule.append([at, w, str(spawn["enemy"])])
 				last = maxf(last, at)
 				count_in_wave += 1
+		_wave_health_scale.append(float(data.get("health_scale", 1.0)))
+		_wave_damage_scale.append(float(data.get("damage_scale", 1.0)))
 		_wave_remaining.append(count_in_wave)
 		_wave_leaked.append(0)
 		start = last
@@ -583,9 +603,23 @@ func _hit_unit(unit: Attacker, amount: float) -> void:
 # --- Recruits: revive, and the effect of staffing a post -------------------
 
 func _step_recruits(dt: float) -> void:
+	var enemy_points: Array = []
+	var points_built := false
 	for recruit in recruits:
 		if not recruit.up:
 			_revive(recruit, dt)
+			continue
+		var at_home := recruit.position == recruit.home
+		if not (at_home and (recruit.post != "" or recruit.leash <= 0.0)):
+			if not points_built:
+				points_built = true
+				for enemy in enemies:
+					if enemy.health > 0.0:
+						enemy_points.append(enemy.position)
+			_walk(recruit, enemy_points, dt)
+			at_home = recruit.position == recruit.home
+		if at_home and recruit.rest_heal > 0.0:
+			recruit.health = RecruitRules.rest(recruit.health, recruit.rest_heal * dt)
 	for fx in _ticking:
 		if fx[2] > 0.0:
 			for enemy in enemies:
@@ -593,6 +627,17 @@ func _step_recruits(dt: float) -> void:
 					_hurt(enemy, fx[2] * dt, 0.0)
 		if fx[3] > 0.0 and tower.up and tower.position.distance_to(fx[0]) <= fx[1]:
 			tower.health = UnitHealth.repair(tower.health, fx[3] * dt)
+
+
+## One step of a Recruit's walk (RecruitLeash): out to an enemy within their leash
+## of home, back home when hurt or when none is in reach, and to their post if they
+## staff one.
+func _walk(recruit: Attacker, enemy_points: Array, dt: float) -> void:
+	recruit.walker["pos"] = recruit.position
+	recruit.walker["health"] = recruit.health["health"]
+	recruit.walker["max_health"] = recruit.health["max_health"]
+	recruit.position = RecruitLeash.step(recruit.walker, enemy_points, dt)["pos"]
+	recruit.candidate["pos"] = recruit.position
 
 
 ## A downed Recruit gets back up once the Hero has stood on them for their
@@ -839,11 +884,11 @@ func _spawn_due() -> void:
 		enemy.wave = w
 		var angle := _rng.next_float() * TAU
 		enemy.position = Vector2(cos(angle), sin(angle)) * spawn_radius
-		enemy.max_health = float(data["health"])
+		enemy.max_health = float(data["health"]) * _wave_health_scale[w]
 		enemy.health = enemy.max_health
 		enemy.speed = float(data["speed"])
 		enemy.radius = float(data["radius"])
-		enemy.damage = int(data["damage"])
+		enemy.damage = roundi(float(data["damage"]) * _wave_damage_scale[w])
 		enemy.gold = int(data["gold"])
 		enemy.xp_chance = float(data.get("xp_chance", 0.0))
 		enemy.xp_value = int(data.get("xp_value", 0))
@@ -983,7 +1028,7 @@ func _token_states() -> Array:
 func _recruit_states() -> Array:
 	var list := []
 	for unit in _defenders:
-		list.append([unit.key, unit.health["health"], unit.up, unit.health.get("revive_progress", 0.0)])
+		list.append([unit.key, unit.health["health"], unit.up, unit.health.get("revive_progress", 0.0), unit.position.x, unit.position.y])
 	return list
 
 

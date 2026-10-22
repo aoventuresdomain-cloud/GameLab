@@ -251,7 +251,7 @@ func test_an_enemy_goes_for_the_nearest_tower_recruit_or_hero() -> void:
 func test_a_staffed_warden_pulls_enemies_within_reach_off_what_is_nearer() -> void:
 	# (-20,-20): the tower is 86 away, Bryn 135, so the tower is nearer. Staffing the east post
 	# makes Bryn's taunt (150) reach this enemy, so it goes for Bryn.
-	var staffed := _quiet()
+	var staffed := _quiet("flare_archer", func(c: Dictionary) -> void: c["levels"]["outpost"]["staff"]["post"] = "east_post")
 	var pulled := _enemy(staffed, Vector2(-20, -20))
 	_run(staffed, 1)
 	expect_eq(pulled.target, "recruit:bryn", "taunted")
