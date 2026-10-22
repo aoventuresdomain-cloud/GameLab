@@ -385,6 +385,17 @@
   - [ ] The simulator's bots use the planning choice and the fork; the first-time bands from HF-M2-22 still hold and each fork has a win rate inside the pillar bands (checked in CI order); parity and the 60 second budget pass; the progression hash is re-pinned once with old and new in the PR; any existing-test change has my OK first and is logged.
   - [ ] Saves from the current tree migrate without losing gold or levels (refund of nodes that no longer exist at their old cost, tested); the web build is checked in Chromium.
 
+### HF-M2-27 Stronger specials and a post-win screen (slice 4b)
+- **Owner:** Gameplay Engineer
+- **Status:** Held until the CEO's go (CEO feedback after Build 4, 2026-10-22 19:27 and 19:31). The other pillars' specials wait on the Advisor's view
+- **QA:** full (core rules for the special), screens for the post-win screen
+- **Depends on:** HF-M2-14
+- **Done when:**
+  - [ ] The Flare Archer's Space special becomes a short burst of rapid fire for a few seconds (duration, rate and cooldown from packs), clearly stronger than the old barrage in play; the simulator's Flare bot uses it and the first-time bands from HF-M2-22 still hold (retune in packs only, written in the PR).
+  - [ ] The Dusk Mage's and Tideblade's specials are reviewed with the Advisor's view and strengthened only as that view says (numbers from packs, tested at the boundary: zero cooldown, zero duration).
+  - [ ] After a win, a screen offers Next level and Upgrade screen (Next level is not offered after the last unlocked level or a loss; a loss keeps its current screen); readable at 1280x720 and 1920x1080; saved gold and unlocks are written before the screen shows.
+  - [ ] Parity and the 60 second budget pass, the progression hash is re-pinned once with old and new in the PR, and any existing-test change has my OK first.
+
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
 - **Status:** Ready
@@ -592,3 +603,4 @@
 - 2026-10-22 17:18: CEO: towers must not be resurrectable (HF-M2-24 dropped), and Build 3d and Build 4 ship together as "Build 4 of 7", evaluated together. Tree built in the Advisor's direction as HF-M2-25 (about 15 to 20 branching, behaviour-changing nodes, gold chain 2 to 3, next unlocks visible, blessing before each run, no new tower types); details to be discussed after the CEO sees it.
 
 - 2026-10-22 19:15: CEO (with the Advisor): the tree should be Incrempire-like, with sections per tower, but start with the Flare Archer and the Archer Post only, then other towers, characters and synergies one at a time. Tree work becomes its own slice, HF-M2-26, as Build 5 of 8 (the build total goes from 7 to 8: Build 4 is the wave pause and easing, 5 the tree slice, 6 monsters and boss, 7 pacing, 8 Recruits, parked). HF-M2-25 is superseded. The Advisor's wider ideas (Mage and Mender posts, bridges between sections, Recruits at posts, mid-run placing) are not in scope until the CEO says go.
+- 2026-10-22 19:31: CEO: waves keep stacking on the timer (no change to the wave overlap). Backlog, idea only: call the next wave early for a bonus, a next-wave countdown, and a wait-for-clear option. Slice 4b (HF-M2-27) is the stronger specials and the post-win screen, held until the CEO's go.
