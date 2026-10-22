@@ -228,7 +228,7 @@
 
 ### HF-M2-14 Your Hero
 - **Owner:** Gameplay Engineer
-- **Status:** In progress: slice 1 (Flare Archer moves and fights) merged in #32 on 2026-10-21, waiting on the CEO's playtest
+- **Status:** In progress: slice 1 (Flare Archer) merged in #32 on 2026-10-21; slice 2 (Dusk Mage and Tideblade, pillar pick on the start screen) merged in #36 on 2026-10-22, waiting on the CEO's playtest. Not yet built: capstones and nodes (iteration 4), Hero pull in Eclipse
 - **QA:** full
 - **Done when:**
   - [ ] There is one player-named Hero, the Keeper. They move with WASD and auto-aim at the nearest enemy. The attack comes from their path, and the ability from their path fires with Space on a cooldown. The lantern is the Keeper's light, not their attack: it pushes the fog edge back and gives a damage bonus to anything the Hero hits inside lit areas. Every attack is light, fire or the shadow that light casts. The mouse-cursor aura is gone.
@@ -239,7 +239,7 @@
 
 ### HF-M2-15 Enemies fight back
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** In progress: slice 2 rules (targeting, taunt, downed and revive, lit areas, staffed posts) merged in #36 on 2026-10-22, waiting on the CEO's playtest. Not yet built: the home screen, run summary lists if missing
 - **QA:** full
 - **Done when:**
   - [ ] Enemies target the nearest tower, Recruit or the Hero, else the keep (rule from packs, tested); a Warden's taunt pulls enemies to it.
@@ -392,6 +392,7 @@
 | F-020 | KIT-02 | `kit/sim/sim_engine.gd` checks its arguments (null rules, tick rate <= 0) with `assert`, which release exports strip, the same pattern F-006 fixed in Holdfast. No current caller passes bad values (Head of QA, HF-M1-07) | Minor | Gameplay Engineer | Open: after Gate 1 |
 | F-021 | KIT-03 | One invalid enemy entry drops the whole enemies file, so the loader adds about 11 follow-on "no enemies entry with id" errors, valid enemies included; the first error is correct. The version error also prints "must be one of [0.0]" (Head of QA, HF-M1-07) | Minor | Gameplay Engineer | Open: after Gate 1 |
 | F-022 | HF-M1-02 | The progression report prints "budget 0 s" for a fractional budget (Head of QA, HF-M1-07) | Minor | Gameplay Engineer | Open: after Gate 1 |
+| F-023 | HF-M2-14 | `test_playable_hero.gd::test_the_player_controller_reads_actions_and_keeps_a_press_until_a_tick_takes_it` failed once in CI on a PR that touched no code ("expected false, got true"), then passed on re-run of the same commit (HoE, #35) | Minor | Gameplay Engineer | Fixed in `player_hero.gd` in #36 with the test unchanged |
 
 ## Test changes
 
@@ -401,6 +402,10 @@
 |---|---|---|---|---|
 | 2026-10-06 | `games/holdfast/tests/run_ui_tests.gd` | Pin the stub run source instead of the real rules | Its "wave advances" check encoded the stub's pacing; once the real rules are wired in, it would test level balance rather than the UI. The real rules keep their own end-to-end coverage (parity test, exported-build autoplay smoke test) | Head of Engineering |
 | 2026-10-21 | `games/holdfast/tests/test_playable_level.gd` | Replaced `test_aura_follows_the_mouse_and_damages_enemies_under_it` with `test_wasd_moves_the_hero_and_its_arrow_hits_an_enemy_in_the_playable_build`; the progression hash is re-pinned once (TICK_RATE 10 to 30, bot Hero replaces the bot aura) | The CEO's design removed the mouse aura, so the old pin is obsolete, not wrong code. The new test goes red with the input wiring broken. The re-pin has the parity test (headless equals playable) and the 60 second budget as its safeguards; old and new hashes are in PR #32 | Head of Engineering |
+| 2026-10-22 | `games/holdfast/tests/test_hero.gd::test_the_keep_falling_ends_the_run_with_the_hero_idle` | Setup changed to an unkillable grunt that kills a unit in one hit; assertions unchanged (run lost, keep 0) | The CEO's rule sends enemies to the nearest tower, Recruit or Hero before the keep, so the old single grunt no longer reaches the keep first. Intent kept | Head of Engineering |
+| 2026-10-22 | `games/holdfast/tests/test_holdfast_rules.gd::test_a_wave_with_an_enemy_that_reached_the_keep_is_not_cleared` (F-005) | Setup zeroes the Hero's attack damage and lets grunts wipe the defenders before reaching the keep; assertions unchanged (kills 0, waves cleared 0) | The Hero now auto-fires, so the old setup cleared the wave. Intent kept | Head of Engineering |
+| 2026-10-22 | `games/holdfast/tests/test_playable_level.gd::test_wasd_moves_the_hero_and_its_arrow_hits_an_enemy_in_the_playable_build` | Setup zeroes every Recruit's damage instead of the per-level staff damage setting; assertions unchanged | Staff damage becomes per Recruit | Head of Engineering |
+| 2026-10-22 | Progression hash | Re-pinned once: `61b99537...4558` to `05a32bb8...b07f` | Enemies fighting back changes every run; the parity test and the 60 second budget (29.9 s for two passes) are the safeguards. Full hashes in PR #36 | Head of Engineering |
 
 ## Advisor views
 
