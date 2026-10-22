@@ -208,7 +208,7 @@
 
 ### HF-M2-01 Pacing bands
 - **Owner:** Gameplay Engineer (the Balance Analyst role is not woken; amended 2026-10-22 for Build 7 of 8)
-- **Status:** Go (CEO 2026-10-22 22:41), Build 7 of 8
+- **Status:** Ready, Build 7 of 8, parked until the CEO confirms after testing Build 6 (CEO 2026-10-22 23:02)
 - **QA:** full (pack retune changes outcomes)
 - **Done when:**
   - [ ] `games/holdfast/content/pacing-bands.json` holds first-time win-rate bands per pillar and per bot (average and poor) for levels 1-5, with a per-pillar first-time floor, from the Advisor's targets. Hero stats are not nerfed.
@@ -399,7 +399,7 @@
 
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
-- **Status:** Go (CEO 2026-10-22 22:41), Build 7 of 8; amended for the parked Recruits
+- **Status:** Ready, Build 7 of 8, parked until the CEO confirms after testing Build 6; amended for the parked Recruits
 - **QA:** full
 - **Depends on:** HF-M2-01
 - **Done when:**
@@ -460,7 +460,7 @@
 
 ### HF-M2-11 Name check
 - **Owner:** Researcher (per job)
-- **Status:** Go (CEO 2026-10-22 22:41), Build 7 of 8 run; needs a Researcher thread from the Chief of Staff (the Gameplay Engineer does not do trademark searches)
+- **Status:** Ready, parked with Build 7 until the CEO confirms after Build 6; needs a Researcher thread from the Chief of Staff (the Gameplay Engineer does not do trademark searches)
 - **QA:** none (research)
 - **Done when:**
   - [ ] Steam and UK/EU/US trademark search for "Holdfast" and for "The Last Lighthouse", with any clash noted in the plan.
@@ -625,4 +625,5 @@
 - 2026-10-22 19:31: CEO: waves keep stacking on the timer (no change to the wave overlap). Backlog, idea only: call the next wave early for a bonus, a next-wave countdown, and a wait-for-clear option. Slice 4b (HF-M2-27) is the stronger specials and the post-win screen, held until the CEO's go.
 - 2026-10-22 19:35: CEO GO: build 4b (HF-M2-27), Build 5 (HF-M2-26) and Build 6 (HF-M2-16) together as one run, then stop for the CEO's decision. The plan stays at 8 builds; no Look and feel build now. Feel, look and animation (HF-M2-07, HF-M2-08) are agreed after Build 8, with Designer sketches in a separate thread. Waves keep stacking. One combined handoff, labelled 4b / 5 of 8 / 6 of 8. Merge order: 4b, 5, 6.
 
-- 2026-10-22 22:41: CEO GO: add Build 7 of 8 (pacing: HF-M2-01, HF-M2-05, name check HF-M2-11) to the run, so the run is 4b + 5 + 6 + 7 with one combined handoff and then a stop. The style guide, look and art stay out (decided after Build 8). Build 8 (Recruits) stays parked. Merge order 5, 6, 7.
+- 2026-10-22 22:41: CEO GO to add Build 7 of 8 to the run. Reversed at 23:02 (below).
+- 2026-10-22 23:02: CEO: reverse the Build 7 add. The run is 4b + 5 + 6 again. The team stops after Build 6 and waits for the CEO to test and confirm before Build 7 (pacing) starts. The Build 7 board items stay amended and parked. Hero buffs vs pack-only tuning is an open question for the Advisor, asked at 23:01, to be answered when Build 7 starts.
