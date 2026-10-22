@@ -348,8 +348,8 @@
 - **QA:** screens
 - **Depends on:** HF-M2-14
 - **Done when:**
-  - [ ] Between waves there is a pause of a pack-set time (default 1 second) in which no new monster spawns, and the next wave starts after it (rule in the rules engine, tested: zero allowed, the last wave has no pause after it, headless and playable agree).
-  - [ ] A clear banner shows "Wave cleared" and then "Wave N" for the pause, readable at 1280x720 and 1920x1080, and does not cover the Hero or the tower.
+  - [ ] Between waves there is a pause of a pack-set time (default 1 second) in which no new monster spawns, and the next wave starts after it (rule in the rules engine, tested: zero allowed, the last wave has no pause after it, headless and playable agree); waves still stack.
+  - [ ] A clear banner shows "Wave N" during the pause before each wave (waves still stack; no "Wave cleared" text, HoE call 2026-10-22), readable at 1280x720 and 1920x1080, and does not cover the Hero or the tower.
   - [ ] The ten-hour progression run, parity and the 60 second budget still pass (progression hash re-pinned once if the pause moves it).
 
 ### HF-M2-24 Towers can be brought back after they fall (DROPPED)
