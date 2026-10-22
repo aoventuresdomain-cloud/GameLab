@@ -247,19 +247,19 @@ func test_the_ability_can_be_a_burst_of_rapid_fire_for_the_pack_seconds() -> voi
 
 
 func test_a_burst_that_runs_out_stays_out_until_the_cooldown_is_done() -> void:
-	# Space held down every tick. Pack cooldown 10 s = 300 ticks from the press on tick 1: the
-	# first burst is ticks 1 to 31, nothing between ticks 32 and 298, a second burst by tick 305.
+	# Space held down every tick. Pack cooldown 14 s = 420 ticks from the press on tick 1: the
+	# first burst is ticks 1 to 31, nothing between ticks 40 and 418, a second burst by tick 425.
 	var rules := _burst(1.05, 0.19)
 	var shots := []
 	var seen := []
-	for tick in range(1, 306):
+	for tick in range(1, 426):
 		_run(rules, 1, {"ability": true})
 		if not rules.projectiles.is_empty() and not rules.projectiles.back() in seen:
 			seen.append(rules.projectiles.back())
 			shots.append(tick)
 	expect_eq(shots.filter(func(t: int) -> bool: return t < 40), [1, 7, 13, 19, 25, 31])
-	expect_eq(shots.filter(func(t: int) -> bool: return t >= 40 and t <= 298), [], "charging")
-	expect_true(shots.any(func(t: int) -> bool: return t > 298), "the second burst starts once it is ready")
+	expect_eq(shots.filter(func(t: int) -> bool: return t >= 40 and t <= 418), [], "charging")
+	expect_true(shots.any(func(t: int) -> bool: return t > 418), "the second burst starts once it is ready")
 
 
 func test_a_burst_of_zero_seconds_is_the_plain_one_off_use() -> void:
@@ -287,6 +287,109 @@ func test_a_knocked_down_hero_stops_the_burst() -> void:
 	var arrows := rules.projectiles.size()
 	_run(rules, 20)
 	expect_true(rules.projectiles.size() <= arrows, "no new arrows while they are down")
+
+
+## Rules whose Flare ability is one plain arrow (no burst, pierce, burn or tint) with `extra` merged
+## into the ability, no light bonus and a Hero attack that does nothing, so only that arrow hurts.
+func _arrow(extra: Dictionary) -> HoldfastRules:
+	return _quiet(func(c: Dictionary) -> void:
+		c["levels"]["outpost"]["light"]["bonus"] = 0.0
+		c["hero_paths"]["flare_archer"]["attack"]["damage"] = 0.0
+		var ability: Dictionary = c["hero_paths"]["flare_archer"]["ability"]
+		for key in ["pierce", "burn_dps", "burn_seconds", "colour"]:
+			ability.erase(key)
+		ability.merge({"count": 1, "spread_degrees": 0, "rapid_seconds": 0, "damage": 7.0, "radius": 6.0}, true)
+		ability.merge(extra, true))
+
+
+func test_a_piercing_arrow_hurts_that_many_enemies_in_a_line_once_each() -> void:
+	# Pierce 3, damage 7: the first three enemies along the line lose 7 each (not 14), the fourth none.
+	var rules := _arrow({"pierce": 3})
+	var line := []
+	for x in [60.0, 100.0, 140.0, 180.0]:
+		line.append(_enemy(rules, Vector2(x, 80)))
+	_run(rules, 1, {"ability": true})
+	_run(rules, 40)
+	expect_near(line[0].health, 93.0, 0.001, "first")
+	expect_near(line[1].health, 93.0, 0.001, "second")
+	expect_near(line[2].health, 93.0, 0.001, "third")
+	expect_near(line[3].health, 100.0, 0.001, "the arrow was spent on three")
+
+
+func test_an_arrow_with_no_pierce_in_the_pack_stops_at_the_first_enemy() -> void:
+	var rules := _arrow({})
+	var line := []
+	for x in [60.0, 100.0]:
+		line.append(_enemy(rules, Vector2(x, 80)))
+	_run(rules, 1, {"ability": true})
+	_run(rules, 40)
+	expect_near(line[0].health, 93.0, 0.001)
+	expect_near(line[1].health, 100.0, 0.001)
+
+
+func test_a_fire_arrow_leaves_a_burn_for_the_pack_seconds() -> void:
+	# 7 on the hit, then 3 a second for 3 s = 9 more, in whole ticks (a tick is 0.1 of a second's damage).
+	var rules := _arrow({"burn_dps": 3.0, "burn_seconds": 3.0})
+	var enemy := _enemy(rules, Vector2(80, 80))
+	_run(rules, 1, {"ability": true})
+	_run(rules, 12)
+	expect_true(enemy.burn_left > 2.0, "burning after the hit")
+	_run(rules, 150)
+	expect_near(enemy.health, 100.0 - 7.0 - 9.0, 0.11)
+	expect_near(enemy.burn_left, 0.0, 0.0001, "the burn is out")
+	var after := enemy.health
+	_run(rules, 30)
+	expect_eq(enemy.health, after, "and does no more")
+
+
+func test_a_second_hit_renews_the_burn_instead_of_adding_to_it() -> void:
+	var rules := _arrow({"burn_dps": 3.0, "burn_seconds": 3.0, "cooldown": 0.5})
+	var enemy := _enemy(rules, Vector2(80, 80), 10.0, 1000.0)
+	_run(rules, 1, {"ability": true})
+	_run(rules, 60)
+	expect_true(enemy.burn_left < 1.2, "a second of burn left: %s" % enemy.burn_left)
+	_run(rules, 1, {"ability": true})
+	_run(rules, 8)
+	expect_true(enemy.burn_left > 2.5 and enemy.burn_left <= 3.0, "back to the full burn: %s" % enemy.burn_left)
+	expect_eq(enemy.burn_dps, 3.0, "at the same rate, not doubled")
+
+
+func test_a_burn_can_finish_an_enemy() -> void:
+	# 8 health: the 7 from the arrow leaves 1, and the burn takes it within half a second.
+	var rules := _arrow({"burn_dps": 3.0, "burn_seconds": 3.0})
+	_enemy(rules, Vector2(80, 80), 10.0, 8.0)
+	_run(rules, 1, {"ability": true})
+	_run(rules, 40)
+	expect_true(rules.enemies.is_empty(), "burnt down and gone")
+
+
+func test_the_shipped_flare_barrage_is_the_advisors_burst() -> void:
+	# Advisor: 5 s, fire rate x3 the normal attack, pierce 3, about 3 damage a second for 3 s, cooldown 14 s, bigger tinted arrows.
+	var path: Dictionary = HoldfastContent.base()["hero_paths"]["flare_archer"]
+	var ability: Dictionary = path["ability"]
+	expect_eq(float(ability["rapid_seconds"]), 5.0)
+	expect_true(float(path["attack"]["cooldown"]) / float(ability["rapid_interval"]) >= 3.0, "at least three times the rate")
+	expect_eq(int(ability["pierce"]), 3)
+	expect_eq(float(ability["burn_dps"]) * float(ability["burn_seconds"]), 9.0)
+	expect_eq(float(ability["cooldown"]), 14.0)
+	expect_true(float(ability["radius"]) > float(path["attack"]["radius"]), "bigger arrows")
+	expect_true(str(ability["colour"]) != "", "tinted")
+	var rules := _quiet()
+	_run(rules, 1, {"ability": true})
+	expect_eq(rules.projectiles[0].colour, str(ability["colour"]), "the arrow carries the tint")
+
+
+func test_pierce_burn_and_tint_values_outside_the_limits_are_rejected() -> void:
+	var schema := PackSchema.load_file(SCHEMA)
+	var good: Dictionary = HoldfastContent.base()["hero_paths"]["flare_archer"].duplicate(true)
+	var cases := {"pierce 0": ["pierce", 0], "pierce 11": ["pierce", 11], "burn seconds 0": ["burn_seconds", 0.0], "burn dps negative": ["burn_dps", -1.0],
+			"colour not hex": ["colour", "orange"], "rapid interval under a tick": ["rapid_interval", 0.04], "rapid seconds negative": ["rapid_seconds", -1.0]}
+	for label in cases:
+		var bad: Dictionary = good.duplicate(true)
+		bad["ability"][cases[label][0]] = cases[label][1]
+		var errors := PackedStringArray()
+		schema.validate_def(bad, "hero_path", label, errors, [])
+		expect_false(errors.is_empty(), "rejected: " + label)
 
 
 func test_arrow_counts_at_the_limits() -> void:

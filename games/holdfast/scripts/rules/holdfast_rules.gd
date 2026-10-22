@@ -87,6 +87,9 @@ class Enemy:
 	## Extra damage taken while a staffed Lookout has the enemy marked (0 = unmarked);
 	## set when the enemy picks its target.
 	var mark_bonus := 0.0
+	## Burning from a fire arrow: damage a second, and seconds left.
+	var burn_dps := 0.0
+	var burn_left := 0.0
 
 
 ## An arrow of the Hero's attack or ability, in flight until it hits or runs out of range.
@@ -97,6 +100,13 @@ class Projectile:
 	var damage: float
 	var radius: float
 	var distance_left: float
+	## Enemies it can still hurt before it is spent (1 = stops at the first), the ones it has
+	## hurt already, the burn it leaves on each, and the colour it is drawn in ("" = the default).
+	var pierce_left := 1
+	var hit: Array = []
+	var burn_dps := 0.0
+	var burn_seconds := 0.0
+	var colour := ""
 
 
 ## A light post: lights a small area, and a Recruit can staff it.
@@ -561,6 +571,10 @@ func _step_enemies(dt: float) -> void:
 	var kept := 0
 	for enemy in enemies:
 		var slow := enemy.zone_slow
+		if enemy.burn_left > 0.0 and enemy.health > 0.0:
+			enemy.burn_left = maxf(enemy.burn_left - dt, 0.0)
+			enemy.health -= enemy.burn_dps * dt
+			_any_dead = _any_dead or enemy.health <= 0.0
 		if enemy.slowed_for > 0.0:
 			enemy.slowed_for = maxf(enemy.slowed_for - dt, 0.0)
 			slow = maxf(slow, enemy.slow_amount)
@@ -739,7 +753,6 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 		hero_ability_ready_in = float(hero_ability["cooldown"])
 		if float(hero_ability.get("rapid_seconds", 0.0)) > 0.0:
 			hero_rapid_left = float(hero_ability["rapid_seconds"])
-			hero_rapid_ready_in = 0.0
 		else:
 			_use(hero_ability, target)
 	if hero_rapid_left > 0.0 and hero_rapid_ready_in <= 0.0:
@@ -813,6 +826,10 @@ func _fire(action: Dictionary) -> void:
 		arrow.damage = float(action["damage"])
 		arrow.radius = float(action["radius"])
 		arrow.distance_left = float(action["range"])
+		arrow.pierce_left = int(action.get("pierce", 1))
+		arrow.burn_dps = float(action.get("burn_dps", 0.0))
+		arrow.burn_seconds = float(action.get("burn_seconds", 0.0))
+		arrow.colour = str(action.get("colour", ""))
 		projectiles.append(arrow)
 
 
@@ -895,18 +912,25 @@ func _pick_up_tokens() -> void:
 	xp_tokens = left
 
 
-## Flies every arrow for one tick. An arrow stops at the first living enemy its
-## path touches (checked along the whole step, so a fast arrow can't skip one).
+## Flies every arrow for one tick. An arrow hits the first living enemy its path
+## touches that it has not hit yet (checked along the whole step, so a fast arrow
+## can't skip one), and is spent once it has hit `pierce` of them. A hit may leave a burn.
 func _move_projectiles(dt: float) -> void:
 	var flying: Array[Projectile] = []
 	for arrow in projectiles:
 		var travel := minf(arrow.velocity.length() * dt, arrow.distance_left)
 		var from := arrow.position
 		var to := from + arrow.velocity.normalized() * travel
-		var hit := _first_enemy_on_path(from, to, arrow.radius)
+		var hit := _first_enemy_on_path(from, to, arrow.radius, arrow.hit)
 		if hit != null:
 			_hurt(hit, arrow.damage, 0.0)
-			continue
+			if arrow.burn_seconds > 0.0:
+				hit.burn_dps = maxf(hit.burn_dps, arrow.burn_dps)
+				hit.burn_left = arrow.burn_seconds
+			arrow.hit.append(hit)
+			arrow.pierce_left -= 1
+			if arrow.pierce_left <= 0:
+				continue
 		arrow.position = to
 		arrow.distance_left -= travel
 		if arrow.distance_left > 0.0:
@@ -914,13 +938,13 @@ func _move_projectiles(dt: float) -> void:
 	projectiles = flying
 
 
-func _first_enemy_on_path(from: Vector2, to: Vector2, radius: float) -> Enemy:
+func _first_enemy_on_path(from: Vector2, to: Vector2, radius: float, skip: Array = []) -> Enemy:
 	var best: Enemy = null
 	var best_along := INF
 	var mid := (from + to) / 2.0
 	var half := from.distance_to(to) / 2.0 + radius
 	for enemy in enemies:
-		if enemy.health <= 0.0:
+		if enemy.health <= 0.0 or enemy in skip:
 			continue
 		var near := half + enemy.radius
 		if enemy.position.distance_squared_to(mid) > near * near:
@@ -1086,7 +1110,7 @@ func result() -> Dictionary:
 func snapshot() -> Dictionary:
 	var list := []
 	for e in enemies:
-		list.append([e.uid, e.type, e.wave, e.position.x, e.position.y, e.health, e.target, e.retarget_in, e.hit_in, e.slowed_for, e.mark_bonus])
+		list.append([e.uid, e.type, e.wave, e.position.x, e.position.y, e.health, e.target, e.retarget_in, e.hit_in, e.slowed_for, e.mark_bonus, e.burn_left])
 	return {
 		"result": result(),
 		"staff_xp": staff_xp,

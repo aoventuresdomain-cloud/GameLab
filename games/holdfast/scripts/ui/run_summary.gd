@@ -28,7 +28,7 @@ func _ready() -> void:
 ## summary is the run_ended payload of a RunStateSource. `next_level` is the level
 ## to offer after a win ("" offers none: a loss, or the last level).
 func show_summary(summary: Dictionary, next_level: String = "") -> void:
-	_next_level = "" if summary.get("keep_fell", false) else next_level
+	_next_level = next_level
 	_next_level_button.visible = _next_level != ""
 	_keep_button.text = "Back to the keep" if summary.get("keep_fell", false) else "Upgrade screen"
 	_title.text = "The keep has fallen" if summary.get("keep_fell", false) else "Holdfast holds!"

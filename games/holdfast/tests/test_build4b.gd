@@ -64,6 +64,15 @@ func test_a_loss_keeps_its_screen_with_no_next_level() -> void:
 	main.free()
 
 
+func test_a_loss_on_a_level_already_won_still_offers_no_next_level() -> void:
+	# Level 2 is open from an earlier win, but a lost replay of level 1 offers nothing.
+	var main := _main()
+	main.get_node("Profile").bank_run({"gold": 0, "outcome": HoldfastRules.OUTCOME_WON, "level": "outpost"})
+	main.call("_on_run_ended", _ended("outpost", HoldfastRules.OUTCOME_LOST, 5))
+	expect_false(main.summary.get_node("%NextLevelButton").visible)
+	main.free()
+
+
 func test_the_last_level_has_no_next_level() -> void:
 	var main := _main()
 	var levels: Array = HoldfastContent.base()["levels"].keys()

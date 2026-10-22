@@ -15,15 +15,19 @@
       "ability": {
         "name": "Flare Barrage",
         "kind": "projectile",
-        "damage": 6,
+        "damage": 7,
         "range": 260,
-        "cooldown": 10,
+        "cooldown": 14,
         "speed": 480,
-        "radius": 6,
+        "radius": 9,
         "count": 1,
         "spread_degrees": 0,
-        "rapid_seconds": 3,
-        "rapid_interval": 0.15
+        "rapid_seconds": 5,
+        "rapid_interval": 0.16,
+        "pierce": 3,
+        "burn_dps": 3,
+        "burn_seconds": 3,
+        "colour": "#ff5a1f"
       },
       "health": 60,
       "radius": 12,
@@ -33,7 +37,7 @@
         6,
         10
       ],
-      "blurb": "Fire arrows from a distance. Space: Flare Barrage, three seconds of rapid fire.",
+      "blurb": "Fire arrows from a distance. Space: Flare Barrage, five seconds of rapid fire that pierces and burns.",
       "colour": "#f2b13a"
     },
     {
