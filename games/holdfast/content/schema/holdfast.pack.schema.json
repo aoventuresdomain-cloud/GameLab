@@ -139,6 +139,37 @@
             "kit_gold": {
               "type": "integer",
               "minimum": 0
+            },
+            "first_time": {
+              "type": "object",
+              "required": [
+                "seeds",
+                "min_win_rate",
+                "max_win_rate",
+                "poor_min_win_rate"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "seeds": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "min_win_rate": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "max_win_rate": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "poor_min_win_rate": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
             }
           }
         }

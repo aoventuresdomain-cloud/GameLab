@@ -8,7 +8,7 @@
       "spawn_radius": 420,
       "arena": {"width": 1920, "height": 858},
       "first_wave_delay": 2,
-      "balance_check": {"seeds": 12, "min_won_runs": 1, "min_hard_runs": 1},
+      "balance_check": {"seeds": 12, "min_won_runs": 1, "min_hard_runs": 0, "first_time": {"seeds": 40, "min_win_rate": 0.7, "max_win_rate": 1.0, "poor_min_win_rate": 0.4}},
       "aura": {"radius": 70, "dps": 12, "cursor_speed": 1800},
       "light": {"radius": 90, "bonus": 0.5},
       "posts": [
@@ -23,8 +23,8 @@
         {"health_scale": 1, "damage_scale": 1, "spawns": [{"enemy": "grunt", "count": 9, "interval": 1}]},
         {"delay": 4, "health_scale": 1, "damage_scale": 1.1, "spawns": [{"enemy": "grunt", "count": 12, "interval": 0.8}, {"enemy": "runner", "count": 5, "interval": 1.33}]},
         {"delay": 4, "health_scale": 1, "damage_scale": 1.1, "spawns": [{"enemy": "grunt", "count": 15, "interval": 0.67}, {"enemy": "runner", "count": 8, "interval": 1.07}]},
-        {"delay": 5, "health_scale": 1.05, "damage_scale": 1.7, "spawns": [{"enemy": "grunt", "count": 15, "interval": 0.6}, {"enemy": "runner", "count": 9, "interval": 0.93}, {"enemy": "brute", "count": 2, "interval": 0}]},
-        {"delay": 5, "health_scale": 1.1, "damage_scale": 2.2, "spawns": [{"enemy": "grunt", "count": 21, "interval": 0.53}, {"enemy": "runner", "count": 12, "interval": 0.8}, {"enemy": "brute", "count": 3, "interval": 4}]}
+        {"delay": 5, "health_scale": 1.05, "damage_scale": 1.5, "spawns": [{"enemy": "grunt", "count": 11, "interval": 0.6}, {"enemy": "runner", "count": 7, "interval": 0.93}, {"enemy": "brute", "count": 2, "interval": 0}]},
+        {"delay": 5, "health_scale": 1.1, "damage_scale": 1.9, "spawns": [{"enemy": "grunt", "count": 14, "interval": 0.53}, {"enemy": "runner", "count": 8, "interval": 0.8}, {"enemy": "brute", "count": 3, "interval": 4}]}
       ]
     },
     {
@@ -35,7 +35,7 @@
       "spawn_radius": 440,
       "arena": {"width": 1920, "height": 920},
       "first_wave_delay": 2,
-      "balance_check": {"seeds": 12, "min_won_runs": 1, "min_hard_runs": 0, "kit_gold": 500},
+      "balance_check": {"seeds": 12, "min_won_runs": 1, "min_hard_runs": 0, "kit_gold": 500, "first_time": {"seeds": 40, "min_win_rate": 0.65, "max_win_rate": 0.85, "poor_min_win_rate": 0.4}},
       "aura": {"radius": 70, "dps": 12, "cursor_speed": 1800},
       "light": {"radius": 90, "bonus": 0.5},
       "posts": [
@@ -50,9 +50,9 @@
         {"health_scale": 1, "damage_scale": 0.7, "spawns": [{"enemy": "grunt", "count": 8, "interval": 0.9}]},
         {"delay": 4, "health_scale": 1, "damage_scale": 0.77, "spawns": [{"enemy": "grunt", "count": 9, "interval": 0.8}, {"enemy": "runner", "count": 4, "interval": 1.2}]},
         {"delay": 4, "health_scale": 1, "damage_scale": 0.84, "spawns": [{"enemy": "grunt", "count": 10, "interval": 0.7}, {"enemy": "runner", "count": 6, "interval": 1.0}]},
-        {"delay": 5, "health_scale": 1.05, "damage_scale": 1.19, "spawns": [{"enemy": "grunt", "count": 11, "interval": 0.6}, {"enemy": "runner", "count": 7, "interval": 0.9}, {"enemy": "brute", "count": 1, "interval": 2}]},
-        {"delay": 5, "health_scale": 1.1, "damage_scale": 1.54, "spawns": [{"enemy": "grunt", "count": 14, "interval": 0.55}, {"enemy": "runner", "count": 9, "interval": 0.8}, {"enemy": "brute", "count": 2, "interval": 3}]},
-        {"delay": 5, "health_scale": 1.15, "damage_scale": 1.75, "spawns": [{"enemy": "grunt", "count": 17, "interval": 0.5}, {"enemy": "runner", "count": 10, "interval": 0.7}, {"enemy": "brute", "count": 3, "interval": 3}]}
+        {"delay": 5, "health_scale": 1.05, "damage_scale": 1.19, "spawns": [{"enemy": "grunt", "count": 9, "interval": 0.6}, {"enemy": "runner", "count": 6, "interval": 0.9}, {"enemy": "brute", "count": 1, "interval": 2}]},
+        {"delay": 5, "health_scale": 1.1, "damage_scale": 1.54, "spawns": [{"enemy": "grunt", "count": 10, "interval": 0.55}, {"enemy": "runner", "count": 7, "interval": 0.8}, {"enemy": "brute", "count": 2, "interval": 3}]},
+        {"delay": 5, "health_scale": 1.15, "damage_scale": 1.75, "spawns": [{"enemy": "grunt", "count": 11, "interval": 0.5}, {"enemy": "runner", "count": 6, "interval": 0.7}, {"enemy": "brute", "count": 2, "interval": 3}]}
       ]
     },
     {
