@@ -38,6 +38,8 @@ const OUTCOME_INVALID := "invalid"
 
 const DEFAULT_WAVE_DELAY := 5.0
 const DEFAULT_INTERVAL := 1.0
+## The pause added before every wave after the first, when the level does not say.
+const DEFAULT_WAVE_PAUSE := 1.0
 const DEFAULT_CURSOR_SPEED := 1800.0
 ## An enemy looks for a new target this often (and at once when its target falls).
 const RETARGET_TICKS := 10
@@ -231,6 +233,10 @@ var wave := 0
 ## Waves whose every enemy was killed. A wave with an enemy that reached the
 ## keep is never cleared.
 var waves_cleared := 0
+## Seconds (level `wave_pause`) added before every wave after the first, on top of its
+## `delay`; waves still start on the clock, whether or not the one before is gone. A
+## level with 0 has the old timing exactly.
+var wave_pause := DEFAULT_WAVE_PAUSE
 
 ## Why setup failed, or "" when it did not.
 var setup_error := ""
@@ -406,10 +412,11 @@ func _build_schedule(level: Dictionary) -> void:
 	var waves: Array = level["waves"]
 	total_waves = waves.size()
 	var start := float(level.get("first_wave_delay", DEFAULT_WAVE_DELAY))
+	wave_pause = float(level.get("wave_pause", DEFAULT_WAVE_PAUSE))
 	for w in waves.size():
 		var data: Dictionary = waves[w]
 		if w > 0:
-			start += float(data.get("delay", DEFAULT_WAVE_DELAY))
+			start += float(data.get("delay", DEFAULT_WAVE_DELAY)) + wave_pause
 		_wave_starts.append(start)
 		var last := start
 		var count_in_wave := 0
@@ -1019,6 +1026,17 @@ func _wave_gone(w: int, killed: bool) -> void:
 		_wave_leaked[w] = 1
 	if _wave_remaining[w] == 0 and _wave_leaked[w] == 0:
 		waves_cleared += 1
+
+
+## What the banner says: "Wave N" for the last `wave_pause` seconds before wave N starts
+## (so it is up as the wave arrives); "" at any other time, and always with no pause.
+func wave_banner() -> String:
+	if wave_pause <= 0.0 or wave >= total_waves:
+		return ""
+	var until := _wave_starts[wave] - time
+	if until > TIME_EPSILON and until <= wave_pause + TIME_EPSILON:
+		return "Wave %d" % (wave + 1)
+	return ""
 
 
 func _finish(result_outcome: String) -> void:

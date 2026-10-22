@@ -47,6 +47,11 @@ func get_total_waves() -> int:
 	return 0
 
 
+## What the between-waves banner says ("Wave N" just before it starts); "" otherwise.
+func get_wave_banner() -> String:
+	return ""
+
+
 ## The Hero's health now and at most.
 func get_hero_health() -> int:
 	return 0
