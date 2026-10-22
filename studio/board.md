@@ -331,6 +331,37 @@
   - [ ] The Hero is not weaker and monsters are not weaker: the pillar bots still lose some runs and win some, checked with the simulator by pillar (numbers from packs, any retune written in the PR).
   - [ ] Parity test and the 60 second budget pass, the progression hash is re-pinned once with old and new in the PR, and the web build is checked in Chromium.
 
+### HF-M2-22 Early levels are winnable
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, Build 3d of 7 (CEO playtest of Build 3c, 2026-10-22: could not beat the levels)
+- **QA:** full (balance change in packs)
+- **Depends on:** HF-M2-21
+- **Done when:**
+  - [ ] The Hero is not nerfed (no pack value that lowers a Hero's damage, health, speed or ability) and monsters still get stronger wave by wave (health, damage or numbers rise from one wave to the next, tested from packs); the easing comes from the early waves of the early levels in packs only.
+  - [ ] A first-time player with no upgrades wins levels 1 and 2 clearly more often than not: the simulator's bot for each pillar, using a weak (not perfect) play model, wins at least the win rate the Game Design Advisor sets for those levels, and later levels still have wins and losses somewhere in the grid (bands as pack values, checked in CI order).
+  - [ ] A run played with no input still loses, and the pillar bots still lose some runs on the later levels (the tower can fall).
+  - [ ] Parity and the 60 second budget pass, the progression hash is re-pinned once with old and new in the PR, and any existing-test change has my OK first.
+
+### HF-M2-23 A short pause and a banner between waves
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, Build 3d of 7 (CEO playtest of Build 3c, 2026-10-22)
+- **QA:** screens
+- **Depends on:** HF-M2-14
+- **Done when:**
+  - [ ] Between waves there is a pause of a pack-set time (default 1 second) in which no new monster spawns, and the next wave starts after it (rule in the rules engine, tested: zero allowed, the last wave has no pause after it, headless and playable agree).
+  - [ ] A clear banner shows "Wave cleared" and then "Wave N" for the pause, readable at 1280x720 and 1920x1080, and does not cover the Hero or the tower.
+  - [ ] The ten-hour progression run, parity and the 60 second budget still pass (progression hash re-pinned once if the pause moves it).
+
+### HF-M2-24 Towers can be brought back after they fall
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, Build 3d of 7 (CEO playtest of Build 3c, 2026-10-22). Mechanic picked by HoE: the Hero stands on a fallen tower for a pack-set time (default 3 seconds, the same as reviving a Recruit) and it comes back at a pack-set share of its health; no gold cost
+- **QA:** full (core rules)
+- **Depends on:** HF-M2-15
+- **Done when:**
+  - [ ] A fallen tower shows as fallen on the map and comes back when the Hero stands on it for the pack-set time (default 3 s), with a pack-set share of its health, once per fall; the Hero leaving, falling or the wave ending resets the timer (tested at the boundary: exactly at the time, one tick short, zero time, Hero knocked down mid-way).
+  - [ ] The keep falling still ends the run, a fallen tower is not targeted by monsters, and a revived tower is targeted again (tested).
+  - [ ] The simulator's bots use it and the pillar bots' win rates stay inside the bands from HF-M2-22; parity and the 60 second budget pass, the progression hash is re-pinned once.
+
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
 - **Status:** Ready
@@ -455,6 +486,7 @@
 | F-030 | HF-M2-19 | FOLLOW-UP from QA's screens walk: with the Hero at the top edge, its aura arc and health bar draw faintly over the HUD panel's lower edge | Minor | Gameplay Engineer | Open, a small fix in a later build |
 | F-031 | HF-M2-21 | FOLLOW-UP from QA: with monsters going for the tower, bot win rates fall (336 to 282 wins of 540 across pillars, levels and upgrade tiers; Dusk Mage and Tideblade harder, Flare Archer level; fresh-profile Gull Rock 0 of 36). No pack value weakens the Hero or strengthens monsters beyond the targeting rule. Not retuned in Build 3c | Minor | Gameplay Engineer | Open, handled with the pacing bands in Build 6 unless the CEO's playtest says otherwise |
 | F-032 | HF-M2-20 | FOLLOW-UP from QA: the save migration crashes on wrong-typed fields in a hash-valid, hand-edited save (null upgrades, non-numeric gold), and a hand-edited unlocked list can open a later level alone. Not reachable in normal play | Minor | Gameplay Engineer | Open, low priority |
+| F-033 | HF-M2-03 | Known issue from the CEO's playtest: only Bryn moves, the other Recruit stays put (CEO, 2026-10-22). Recruits are parked | Minor | Gameplay Engineer | Open, for Build 7 (Recruits); only worked on earlier if trivial |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -504,6 +536,7 @@
 - 2026-10-22: CEO after Build 2b: pillar difficulty feels good enough (no retune); the Hero gets back up where they fell, not at the keep (HF-M2-18, in Build 3). Defaults picked by HoE: a short untouchable time after getting up, because the Hero can now fall in the middle of a fight; the wait, XP drop and Recruit rules are unchanged.
 - 2026-10-22: CEO after Build 3 start: the map felt small and the Hero could not reach the edge (HF-M2-19). Defaults picked by HoE: a quick fix with the Build 3 letter (3b) that rides after Build 3 and changes only arena size; the estimate stays the same.
 - 2026-10-22: CEO after Builds 3 and 3b: the map size is fine; levels must unlock by winning the previous level, not by buying in the tree (HF-M2-20); monsters go for the tower and only fight the Hero up close, no chasing across the map (HF-M2-21); the skill tree needs big changes, not yet specified. Defaults picked by HoE: a quick fix called Build 3c of 7 with HF-M2-20 and HF-M2-21 only; the tree changes fold into Build 4, after the Game Design Advisor reviews the tree and the CEO says what they dislike.
+- 2026-10-22: CEO after Build 3c: could not beat the levels (too hard after the monster change), wants a pause of about 1 second between waves with a banner, towers that can be brought back, and noted only Bryn moves (F-033, parked); the skill tree needs a different approach, details later. Defaults picked by HoE: a quick fix called Build 3d of 7 with HF-M2-22, HF-M2-23 and HF-M2-24; the Hero is not nerfed and the easing is in the early waves of levels 1 and 2 in packs; towers come back when the Hero stands on them for 3 s; Build 4 is held until the CEO sends the tree direction, and nothing in 3d depends on the tree.
 - 2026-10-22: CEO's first playtest of slice 2: the Hero is too strong to die, and Recruits must move. Slice 2b (HF-M2-17) is a quick fix before slice 3; the team stops again after its build. The CEO's follow-up: make monsters stronger, do not nerf the Hero. Defaults picked by HoE: Recruits leash to a home post, engage the nearest enemy in range and retreat when hurt; balance is pack data only.
 - 2026-10-06: The repository stays public for now (CEO decision), to go private once the idea matures. Until then `games/holdfast/plan.md` is a build excerpt and nothing commercially sensitive is committed (`CLAUDE.md`).
 - 2026-10-06: Gate 1 web build is played from a password-protected itch.io draft page (not a public release), uploaded by CI with butler. Agreed with the Setup Desk.
