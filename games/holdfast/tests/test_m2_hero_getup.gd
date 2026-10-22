@@ -120,7 +120,7 @@ func test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area() -> 
 	if hg == null:
 		return
 	var a := Rect2(20, 20, 20, 20)  # x 20 to 40, y 20 to 40
-	var b := Rect2(35, 10, 25, 40)  # x 35 to 60, y 10 to 50: covers a's right, top and bottom edges near (38,30)
+	var b := Rect2(20, 10, 40, 40)  # x 20 to 60, y 10 to 50: covers a's right, top and bottom edges; a's left edge is also b's, so open
 	_at(_rise(hg, Vector2(38, 30), [a, b]), Vector2(20, 30), "left edge of the first area, 18 away")
 	_at(_rise(hg, Vector2(38, 30), [b, a]), Vector2(20, 30), "and the same whichever order the areas are listed in")
 
