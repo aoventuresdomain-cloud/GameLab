@@ -51,6 +51,7 @@ func test_next_level_starts_a_run_on_the_next_level() -> void:
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	main.call("_on_run_ended", _ended("outpost", HoldfastRules.OUTCOME_WON, 50))
 	main.summary.get_node("%NextLevelButton").pressed.emit()
+	main.planning.get_node("%StartButton").pressed.emit()
 	expect_eq(profile.get_level(), "shingle_beach")
 	expect_true(source.is_running())
 	expect_true(main.hud.visible and not main.summary.visible, "the run is on screen")

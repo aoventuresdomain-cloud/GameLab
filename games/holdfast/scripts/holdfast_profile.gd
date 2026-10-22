@@ -41,7 +41,7 @@ func load_profile() -> void:
 		_service = null
 		changed.emit()
 		return
-	_service = SaveService.new(save_path, HoldfastMeta.SAVE_VERSION, {1: HoldfastMeta.migrate_v1.bind(_content)})
+	_service = SaveService.new(save_path, HoldfastMeta.SAVE_VERSION, {1: HoldfastMeta.migrate_v1.bind(_content), 2: HoldfastMeta.migrate_v2.bind(_content)})
 	var loaded := _service.load_save()
 	load_status = str(loaded["status"])
 	load_message = str(loaded["message"])
@@ -78,6 +78,16 @@ func buy(id: String) -> bool:
 		_save()
 		changed.emit()
 	return result["ok"]
+
+
+## Gives back every bought upgrade's gold and empties the tree.
+func respec() -> void:
+	_apply(HoldfastMeta.respec(_content, data))
+
+
+## Sets the Archer Post sites for a level (ignored when they are not valid for it).
+func set_layout(level: String, layout: Array) -> void:
+	_apply(HoldfastMeta.set_layout(_content, data, level, layout))
 
 
 func select_level(id: String) -> void:
@@ -121,6 +131,11 @@ func get_level() -> String:
 	return str(data["level"])
 
 
+## The Archer Post sites a run on `level` builds on ([] when the level has none).
+func get_layout(level: String) -> Array:
+	return HoldfastMeta.layout_for(_content, data, level)
+
+
 func get_pillar() -> String:
 	return str(data["pillar"])
 
@@ -137,6 +152,15 @@ func get_next_level(id: String) -> String:
 
 func is_level_won(id: String) -> bool:
 	return id in data["levels_won"]
+
+
+func is_near(id: String) -> bool:
+	return HoldfastMeta.is_near(_content, data, id)
+
+
+## Up to two nodes one buy away, cheapest first.
+func get_next_unlocks() -> Array:
+	return HoldfastMeta.next_unlocks(_content, data, 2)
 
 
 func why_not_buy(id: String) -> String:

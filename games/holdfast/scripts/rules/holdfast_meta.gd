@@ -13,12 +13,24 @@ extends RefCounted
 ##   level: id,            the level the next run plays
 ##   pillar: id,           the Hero path the next run plays
 ##   runs: int,            runs banked
+##   layouts: {level: [site ids]}   the Archer Post sites the player chose per level
 ## }
 ## The save format version is SAVE_VERSION; bump it with a migration when the shape changes.
 ## Version 2: levels open by winning the previous one (`unlocked`), no longer by buying a
 ## node; migrate_v1 turns a version 1 save's bought level nodes into `unlocked`.
 
-const SAVE_VERSION := 2
+## Version 3: the tree is split into sections (Flare Archer, Archer Post, Keep, Tithe) and
+## the three Archer Post chains (drills, timbers, patch-up) became different nodes;
+## migrate_v2 refunds the old ones at their price and keeps everything else.
+
+const SAVE_VERSION := 3
+
+## The Archer Post nodes version 2 sold, which no longer exist: node id -> what it cost.
+const V2_TOWER_COSTS := {
+	"tower_drills_1": 110, "tower_drills_2": 450, "tower_drills_3": 900, "tower_drills_4": 1600, "tower_drills_5": 2600,
+	"tower_stone_1": 70, "tower_stone_2": 260, "tower_stone_3": 700, "tower_stone_4": 1400,
+	"tower_mend_1": 150, "tower_mend_2": 520, "tower_mend_3": 1200,
+}
 
 ## The level-unlock nodes version 1 sold: node id -> [level it opened, what it cost].
 const V1_LEVEL_NODES := {
@@ -40,6 +52,7 @@ static func new_profile(content: Dictionary) -> Dictionary:
 		"level": levels[0] if not levels.is_empty() else "",
 		"pillar": paths[0] if not paths.is_empty() else "",
 		"runs": 0,
+		"layouts": {},
 	}
 
 
@@ -52,7 +65,7 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 	profile["gold"] = maxi(int(data.get("gold", 0)), 0)
 	profile["runs"] = maxi(int(data.get("runs", 0)), 0)
 	for id in data.get("upgrades", []):
-		if nodes.has(id) and not id in profile["upgrades"]:
+		if nodes.has(id) and not id in profile["upgrades"] and _closed_by(nodes, profile["upgrades"], id) == "":
 			profile["upgrades"].append(id)
 	for id in data.get("levels_won", []):
 		if content.get("levels", {}).has(id) and not id in profile["levels_won"]:
@@ -60,6 +73,11 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 	for id in data.get("unlocked", []):
 		if content.get("levels", {}).has(id) and not id in profile["unlocked"]:
 			profile["unlocked"].append(id)
+	var saved_layouts: Variant = data.get("layouts", {})
+	if saved_layouts is Dictionary:
+		for level in saved_layouts:
+			if content.get("levels", {}).has(level) and is_valid_layout(content["levels"][level], saved_layouts[level]):
+				profile["layouts"][level] = saved_layouts[level].duplicate()
 	var unlocked := unlocked_levels(content, profile)
 	if str(data.get("level", "")) in unlocked:
 		profile["level"] = str(data["level"])
@@ -103,6 +121,61 @@ static func migrate_v1(data: Dictionary, content: Dictionary) -> Dictionary:
 	return out
 
 
+## A version 2 save as version 3: each upgrade it bought that the tree no longer has
+## (once, whatever the list says) leaves the list and its price goes back to the gold;
+## every other upgrade is kept, so nobody loses gold or progress to the new tree.
+static func migrate_v2(data: Dictionary, _content: Dictionary) -> Dictionary:
+	var out := data.duplicate(true)
+	var gold := maxi(int(out.get("gold", 0)), 0)
+	var kept := []
+	var refunded := []
+	for id in out.get("upgrades", []):
+		if not V2_TOWER_COSTS.has(id):
+			kept.append(id)
+		elif not id in refunded:
+			refunded.append(id)
+			gold += int(V2_TOWER_COSTS[id])
+	out["upgrades"] = kept
+	out["gold"] = gold
+	return out
+
+
+## The Archer Post sites a level's player layout may use: site ids from the level, no
+## repeats, at least one and at most the level's `max_posts`. A level with no `sites` has
+## no layout to choose.
+static func is_valid_layout(level: Dictionary, layout: Variant) -> bool:
+	if not level.has("sites") or not layout is Array or layout.is_empty() or layout.size() > int(level.get("max_posts", 1)):
+		return false
+	var known := []
+	for site in level["sites"]:
+		known.append(str(site["id"]))
+	var seen := []
+	for id in layout:
+		if not str(id) in known or str(id) in seen:
+			return false
+		seen.append(str(id))
+	return true
+
+
+## The sites a run on `level` builds on: the player's saved choice, else the sites
+## nearest where the enemies come from. An empty array for a level with no sites.
+static func layout_for(content: Dictionary, profile: Dictionary, level: String) -> Array:
+	var data: Dictionary = content.get("levels", {}).get(level, {})
+	if not data.has("sites"):
+		return []
+	var saved: Variant = profile.get("layouts", {}).get(level)
+	return saved.duplicate() if saved != null and is_valid_layout(data, saved) else HoldfastRules.best_layout(data)
+
+
+## The profile with `level`'s layout set; an invalid layout changes nothing.
+static func set_layout(content: Dictionary, profile: Dictionary, level: String, layout: Array) -> Dictionary:
+	if not content.get("levels", {}).has(level) or not is_valid_layout(content["levels"][level], layout):
+		return profile
+	var out := profile.duplicate(true)
+	out["layouts"][level] = layout.duplicate()
+	return out
+
+
 ## The level after `id` in pack order, or "" for the last level or an unknown one.
 static func next_level(content: Dictionary, id: String) -> String:
 	var ids: Array = content.get("levels", {}).keys()
@@ -120,9 +193,62 @@ static func why_not_buy(content: Dictionary, profile: Dictionary, id: String) ->
 	for required in nodes[id].get("requires", []):
 		if not required in profile["upgrades"]:
 			return "Needs %s first" % str(nodes.get(required, {}).get("name", required))
+	var closed := _closed_by(nodes, profile["upgrades"], id)
+	if closed != "":
+		return "Closed by %s" % str(nodes.get(closed, {}).get("name", closed))
 	if int(profile["gold"]) < int(nodes[id]["cost"]):
 		return "Not enough gold"
 	return ""
+
+
+## True when every node `id` requires is bought and nothing bought closes it: one buy
+## away, whether or not the gold is there. A node belonging to a Hero other than the
+## one the profile plays is never near.
+static func is_near(content: Dictionary, profile: Dictionary, id: String) -> bool:
+	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	if not nodes.has(id) or id in profile["upgrades"] or _closed_by(nodes, profile["upgrades"], id) != "":
+		return false
+	if nodes[id].has("hero") and str(nodes[id]["hero"]) != str(profile["pillar"]):
+		return false
+	for required in nodes[id].get("requires", []):
+		if not required in profile["upgrades"]:
+			return false
+	return true
+
+
+## The next upgrades to show: up to `limit` near nodes, cheapest first (ties by id).
+static func next_unlocks(content: Dictionary, profile: Dictionary, limit := 2) -> Array:
+	var near := []
+	for id in content.get("upgrade_nodes", {}):
+		if is_near(content, profile, id):
+			near.append(id)
+	var nodes: Dictionary = content["upgrade_nodes"] if content.has("upgrade_nodes") else {}
+	near.sort_custom(func(a: String, b: String) -> bool:
+		var ca := int(nodes[a]["cost"])
+		var cb := int(nodes[b]["cost"])
+		return ca < cb or (ca == cb and a < b))
+	return near.slice(0, limit)
+
+
+## The bought node that rules `id` out (either lists the other in `excludes`), or "".
+static func _closed_by(nodes: Dictionary, bought: Array, id: String) -> String:
+	for other in bought:
+		if other in nodes.get(id, {}).get("excludes", []) or id in nodes.get(other, {}).get("excludes", []):
+			return str(other)
+	return ""
+
+
+## The profile with every upgrade refunded at its pack price and the tree empty, so the
+## choices can be made again. Free: the gold is only moved back.
+static func respec(content: Dictionary, profile: Dictionary) -> Dictionary:
+	if profile["upgrades"].is_empty():
+		return profile
+	var out := profile.duplicate(true)
+	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	for id in profile["upgrades"]:
+		out["gold"] = int(out["gold"]) + int(nodes.get(id, {}).get("cost", 0))
+	out["upgrades"] = []
+	return out
 
 
 ## {ok, profile, reason}: the profile with the upgrade bought and its cost paid,

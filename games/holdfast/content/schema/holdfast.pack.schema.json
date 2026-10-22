@@ -172,6 +172,26 @@
               }
             }
           }
+        },
+        "sites": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/tower_site"
+          }
+        },
+        "max_posts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "spawn_arcs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/spawn_arc"
+          }
         }
       }
     },
@@ -245,6 +265,20 @@
         "radius": {
           "type": "number",
           "exclusiveMinimum": 0
+        },
+        "pierce_width": {
+          "type": "number",
+          "minimum": 0
+        },
+        "recruit_bonus": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {}
+        },
+        "flare_bonus": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {}
         }
       }
     },
@@ -334,32 +368,41 @@
     "upgrade_node": {
       "additionalProperties": false,
       "required": [
-        "branch"
+        "branch",
+        "tier"
       ],
       "properties": {
         "branch": {
-          "enum": [
-            "towers",
-            "keep",
-            "gold"
-          ]
+          "type": "string",
+          "x-ref": "upgrade_sections"
+        },
+        "tier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9
+        },
+        "excludes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "x-ref": "upgrade_nodes"
+          }
+        },
+        "tower": {
+          "type": "string",
+          "x-ref": "towers"
+        },
+        "hero": {
+          "type": "string",
+          "x-ref": "hero_paths"
         }
       }
     },
     "effect": {
       "properties": {
         "stat": {
-          "enum": [
-            "aura_dps",
-            "aura_radius",
-            "keep_health",
-            "gold_multiplier",
-            "tower_damage",
-            "staff_damage",
-            "tower_health",
-            "tower_repair",
-            "beam_reach"
-          ]
+          "type": "string",
+          "pattern": "^(aura_dps|aura_radius|keep_health|gold_multiplier|staff_damage|beam_reach|tower\\.[a-z_]+|hero\\.[a-z_]+(\\.[a-z_]+)?)$"
         }
       }
     },
@@ -420,6 +463,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/role_effect"
+          }
+        },
+        "upgrade_sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/upgrade_section"
           }
         }
       }
@@ -702,6 +751,74 @@
         },
         "repair_per_second": {
           "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "tower_site": {
+      "type": "object",
+      "required": [
+        "id",
+        "x",
+        "y"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "tower": {
+          "type": "string",
+          "x-ref": "towers"
+        }
+      }
+    },
+    "spawn_arc": {
+      "type": "object",
+      "required": [
+        "centre",
+        "width"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "centre": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 360
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 360
+        }
+      }
+    },
+    "upgrade_section": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "order"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "order": {
+          "type": "integer",
           "minimum": 0
         }
       }

@@ -10,7 +10,8 @@
         "range": 210,
         "cooldown": 0.5,
         "speed": 480,
-        "radius": 5
+        "radius": 5,
+        "count": 1
       },
       "ability": {
         "name": "Flare Barrage",

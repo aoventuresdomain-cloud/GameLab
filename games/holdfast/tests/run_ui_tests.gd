@@ -55,6 +55,8 @@ func _test_flow_with_mouse() -> void:
 	_check(start.visible and not home.visible, "New game opens the keep screen")
 
 	await _click(start.get_node("%PlayButton"))
+	_check(_main.planning.visible and not start.visible, "Play opens the planning screen (the first level has Archer Post sites)")
+	await _click(_main.planning.get_node("%StartButton"))
 	_check(hud.visible and not start.visible, "Play shows the HUD")
 	_check(_source.is_running(), "Play starts a run")
 
@@ -80,6 +82,8 @@ func _test_flow_with_mouse() -> void:
 	root.size = Vector2i(1920, 1080) # the second run is clicked at 1080p
 	await process_frame
 	await _click(summary.get_node("%PlayAgainButton"))
+	_check(_main.planning.visible and not summary.visible, "Play again opens the planning screen")
+	await _click(_main.planning.get_node("%StartButton"))
 	_check(hud.visible and not summary.visible, "Play again shows the HUD")
 	_check(_source.is_running() and _source.get_gold() == 0, "Play again starts a fresh run")
 	_check(hud.get_node("%GoldValue").text == "0", "HUD resets for the new run")
@@ -123,8 +127,12 @@ func _test_readable_layout() -> void:
 		var scale := float(window.y) / BASE_SIZE.y
 		var view := root.get_visible_rect()
 		_check(Vector2i(view.size) == BASE_SIZE, "%dx%d window shows the whole 1280x720 layout" % [window.x, window.y])
-		for screen in [_main.home, _main.keep_screen, hud, _main.summary]:
+		_main.planning.open("shingle_beach", ["west_gate", "east_gate"])
+		hud.get_node("%PostsNote").text = "Posts: North Gate, South Gate"
+		hud.get_node("%PostsNote").visible = true
+		for screen in [_main.home, _main.keep_screen, hud, _main.summary, _main.planning]:
 			await _check_layout(screen, window, scale, view)
+		hud.get_node("%PostsNote").visible = false
 		# The summary after a win, with Next level and the Upgrade screen as well.
 		_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": false}, "shingle_beach")
 		await _check_layout(_main.summary, window, scale, view)
