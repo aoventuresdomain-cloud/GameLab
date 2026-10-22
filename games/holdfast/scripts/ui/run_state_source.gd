@@ -45,3 +45,30 @@ func get_wave() -> int:
 
 func get_total_waves() -> int:
 	return 0
+
+
+## The Hero's health now and at most.
+func get_hero_health() -> int:
+	return 0
+
+
+func get_hero_health_max() -> int:
+	return 0
+
+
+## Seconds until the Hero's ability is ready; 0 when it is.
+func get_ability_wait() -> float:
+	return 0.0
+
+
+## Seconds until a knocked-down Hero gets back up; 0 when they are up.
+func get_hero_down_seconds() -> float:
+	return 0.0
+
+
+func get_towers_lost() -> int:
+	return 0
+
+
+func get_recruits_lost() -> int:
+	return 0

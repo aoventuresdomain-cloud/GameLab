@@ -49,10 +49,12 @@ func _initialize() -> void:
 
 func _summary(report: Dictionary, wall: float, budget: float, deterministic: bool) -> String:
 	var lines: PackedStringArray = []
-	lines.append("# Holdfast progression: %s simulated hours" % report["sim_hours"])
+	lines.append("# Holdfast progression: up to %s simulated hours" % report["sim_hours"])
 	lines.append("")
 	lines.append("> **Placeholder balance.** M1 content numbers are placeholders (board finding F-002), so this report checks the simulator's speed and determinism, not pacing.")
 	lines.append("")
+	if report["upgrades_owned"] == report["upgrades_total"]:
+		lines.append("- Stopped at %.1f simulated hours: every upgrade was bought, so later runs would only repeat." % (float(report["sim_seconds"]) / 3600.0))
 	lines.append("- Wall-clock time: **%.2f s** (budget %.0f s)" % [wall, budget])
 	lines.append("- Determinism (second run, same seed): **%s** (`%s`)" % ["pass" if deterministic else "FAIL", str(report["hash"]).left(16)])
 	lines.append("- Runs played: %d (%s)" % [report["runs_played"], JSON.stringify(report["outcomes"])])

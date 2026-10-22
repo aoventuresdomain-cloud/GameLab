@@ -6,6 +6,9 @@ extends Control
 @onready var _wave_value: Label = %WaveValue
 @onready var _keep_value: Label = %KeepValue
 @onready var _keep_bar: ProgressBar = %KeepBar
+@onready var _hero_value: Label = %HeroValue
+@onready var _ability_value: Label = %AbilityValue
+@onready var _lost_value: Label = %LostValue
 
 var _source: Node
 
@@ -26,10 +29,29 @@ func bind(source: Node) -> void:
 	refresh()
 
 
+func _process(_delta: float) -> void:
+	if visible and _source:
+		_refresh_hero()
+
+
+## The Hero's health, ability wait and knock-down timer, and what has been lost
+## so far. Read every frame: the run changes them every tick.
+func _refresh_hero() -> void:
+	var down: float = _source.get_hero_down_seconds()
+	if down > 0.0:
+		_hero_value.text = "Down %d s" % ceili(down)
+	else:
+		_hero_value.text = "%d / %d" % [_source.get_hero_health(), _source.get_hero_health_max()]
+	var wait: float = _source.get_ability_wait()
+	_ability_value.text = "Ready" if wait <= 0.0 else "%.1f s" % wait
+	_lost_value.text = "%d / %d" % [_source.get_towers_lost(), _source.get_recruits_lost()]
+
+
 ## Pulls the current values, for when the HUD is shown mid-run.
 func refresh() -> void:
 	if not _source:
 		return
+	_refresh_hero()
 	_on_gold_changed(_source.get_gold())
 	_on_keep_health_changed(_source.get_keep_health(), _source.get_keep_health_max())
 	_on_wave_changed(_source.get_wave(), _source.get_total_waves())

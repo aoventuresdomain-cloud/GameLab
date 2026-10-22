@@ -113,6 +113,10 @@
             "min_hard_runs": {
               "type": "integer",
               "minimum": 0
+            },
+            "kit_gold": {
+              "type": "integer",
+              "minimum": 0
             }
           }
         }
@@ -270,7 +274,24 @@
       }
     },
     "upgrade_node": {
-      "additionalProperties": false
+      "additionalProperties": false,
+      "required": [
+        "branch"
+      ],
+      "properties": {
+        "branch": {
+          "enum": [
+            "towers",
+            "keep",
+            "gold",
+            "unlocks"
+          ]
+        },
+        "unlocks": {
+          "type": "string",
+          "x-ref": "levels"
+        }
+      }
     },
     "effect": {
       "properties": {
@@ -281,7 +302,10 @@
             "keep_health",
             "gold_multiplier",
             "tower_damage",
-            "staff_damage"
+            "staff_damage",
+            "tower_health",
+            "tower_repair",
+            "beam_reach"
           ]
         }
       }
@@ -426,6 +450,10 @@
         "colour": {
           "type": "string",
           "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "untouchable_seconds": {
+          "type": "number",
+          "minimum": 0
         }
       }
     },

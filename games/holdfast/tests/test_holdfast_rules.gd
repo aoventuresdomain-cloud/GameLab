@@ -46,8 +46,8 @@ func test_numbers_come_from_the_pack() -> void:
 
 func test_upgrades_apply_their_effects() -> void:
 	var base := _rules()
-	var upgraded := _rules(HoldfastContent.run_config("outpost", ["aura_focus_1", "keep_walls_1", "tithe_1"]))
-	expect_eq(upgraded.aura_dps, base.aura_dps + 3.0)
+	var upgraded := _rules(HoldfastContent.run_config("outpost", ["tower_drills_1", "keep_walls_1", "tithe_1"]))
+	expect_eq(upgraded.tower.damage, base.tower.damage + 2.0)
 	expect_eq(upgraded.keep_health_max, base.keep_health_max + 25)
 	expect_eq(upgraded.gold_multiplier, 1.25)
 

@@ -46,10 +46,13 @@ func _check(ok: bool, what: String) -> void:
 
 func _test_flow_with_mouse() -> void:
 	print("flow: start -> run -> summary -> play again, mouse only")
-	var start: Control = _main.start_screen
+	var home: Control = _main.home
+	var start: Control = _main.keep_screen
 	var hud: Control = _main.hud
 	var summary: Control = _main.summary
-	_check(start.visible and not hud.visible and not summary.visible, "opens on the start screen")
+	_check(home.visible and not start.visible and not hud.visible and not summary.visible, "opens on the home screen")
+	await _click(home.get_node("%NewGameButton"))
+	_check(start.visible and not home.visible, "New game opens the keep screen")
 
 	await _click(start.get_node("%PlayButton"))
 	_check(hud.visible and not start.visible, "Play shows the HUD")
@@ -120,7 +123,7 @@ func _test_readable_layout() -> void:
 		var scale := float(window.y) / BASE_SIZE.y
 		var view := root.get_visible_rect()
 		_check(Vector2i(view.size) == BASE_SIZE, "%dx%d window shows the whole 1280x720 layout" % [window.x, window.y])
-		for screen in [_main.start_screen, hud, _main.summary]:
+		for screen in [_main.home, _main.keep_screen, hud, _main.summary]:
 			screen.visible = true
 			await process_frame
 			for control in _texts(screen):

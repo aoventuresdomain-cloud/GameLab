@@ -32,8 +32,10 @@ func _ready() -> void:
 
 func _begin(hero: String) -> void:
 	var flow := get_node(flow_path)
+	# A smoke run never reads or writes the player's save.
+	flow.profile.use_memory_only()
 	if hero != "":
-		flow.start_screen.select_pillar(hero)
+		flow.profile.select_pillar(hero)
 	flow._start_run()
 
 

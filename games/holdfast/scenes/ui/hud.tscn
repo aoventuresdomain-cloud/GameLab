@@ -26,7 +26,7 @@ mouse_filter = 2
 [node name="Row" type="HBoxContainer" parent="TopBar"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 48
+theme_override_constants/separation = 28
 
 [node name="Gold" type="VBoxContainer" parent="TopBar/Row"]
 custom_minimum_size = Vector2(200, 0)
@@ -60,6 +60,60 @@ text = "Wave"
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudValue"
+text = "0 / 0"
+
+[node name="Hero" type="VBoxContainer" parent="TopBar/Row"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Caption" type="Label" parent="TopBar/Row/Hero"]
+layout_mode = 2
+theme_type_variation = &"HudCaption"
+text = "Hero"
+
+[node name="HeroValue" type="Label" parent="TopBar/Row/Hero"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudValue"
+theme_override_font_sizes/font_size = 28
+text = "0 / 0"
+
+[node name="Ability" type="VBoxContainer" parent="TopBar/Row"]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Caption" type="Label" parent="TopBar/Row/Ability"]
+layout_mode = 2
+theme_type_variation = &"HudCaption"
+text = "Space"
+
+[node name="AbilityValue" type="Label" parent="TopBar/Row/Ability"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudValue"
+theme_override_font_sizes/font_size = 28
+text = "Ready"
+
+[node name="Lost" type="VBoxContainer" parent="TopBar/Row"]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Caption" type="Label" parent="TopBar/Row/Lost"]
+layout_mode = 2
+theme_type_variation = &"HudCaption"
+text = "Towers / Recruits lost"
+
+[node name="LostValue" type="Label" parent="TopBar/Row/Lost"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudValue"
+theme_override_font_sizes/font_size = 28
 text = "0 / 0"
 
 [node name="Keep" type="VBoxContainer" parent="TopBar/Row"]

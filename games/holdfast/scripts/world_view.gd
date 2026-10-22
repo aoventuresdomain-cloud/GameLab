@@ -90,6 +90,8 @@ func _draw() -> void:
 	var rules: HoldfastRules = source.get_rules()
 	if rules == null:
 		return
+	# Where the keep's beam reaches: the fog edge, and where enemies come from.
+	draw_arc(Vector2.ZERO, rules.spawn_radius, 0.0, TAU, 96, Color(COLOUR_LIGHT, 0.18), 2.0)
 	for post in rules.posts:
 		draw_circle(post.position, rules.light_radius, Color(COLOUR_LIGHT, 0.10))
 		draw_arc(post.position, rules.light_radius, 0.0, TAU, 64, Color(COLOUR_LIGHT, 0.35), 1.5)

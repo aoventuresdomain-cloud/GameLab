@@ -79,3 +79,10 @@ custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Play again"
+
+[node name="KeepButton" type="Button" parent="Centre/Panel/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Back to the keep"
