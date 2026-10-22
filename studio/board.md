@@ -526,6 +526,9 @@
 | F-035 | HF-M2-23 | FOLLOW-UP from QA (#62, test gap): nothing pins that `wave_banner()` returns an empty string once the last wave has started | Minor | Gameplay Engineer | Open, a test added in the next Gameplay PR |
 | F-036 | HF-M2-22 | FOLLOW-UP from QA (#65): with no input, Outpost Flare Archer wins 3 of 40 seeds (the idle Hero auto-fires); every other level and pillar is 0 of 40 | Minor | Gameplay Engineer | Open, accepted at up to 10% on levels 1 and 2; test pin only if under about 5 s |
 | F-037 | HF-M2-22 | FOLLOW-UP from QA (#65): the first-time bands are pooled over pillars, so a first-time Dusk Mage on Outpost wins 53% (average bot) and the poor bot is under 50% for every pillar on at least one of the two levels | Minor | Gameplay Engineer | Open, per-pillar floor goes to Build 6 pacing |
+| F-038 | HF-M2-27 | FOLLOW-UP from QA (#74): no test counts arrows per burst, so a double-fire mutant passes all 308 tests | Minor | Gameplay Engineer | Open, a test added in the next Gameplay PR |
+| F-039 | HF-M2-27 | FOLLOW-UP from QA (#74): an enemy killed by burn in `_step_enemies` still acts that tick (a burning enemy at 0.05 hp hit the keep for 9, with no kill or gold) | Minor | Gameplay Engineer | Open |
+| F-040 | HF-M2-27 | FOLLOW-UP from QA (#74): the Shingle Beach retune hardens it for the Dusk Mage (73% to 53%) and Tideblade (98% to 88%); the Flare first-time lift is about +20 on average and +42 poor | Minor | Gameplay Engineer | Open, per-pillar bands in Build 6 pacing (as F-037) |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -556,6 +559,8 @@
 | 2026-10-22 | Progression hash | Re-pinned in #58: `143e03de...5115` to `c90d0a9e...b199` (40 runs, 9.4 s) | Monsters go for the tower, so every run changes. Parity passes | Head of Engineering |
 | 2026-10-22 | Progression hash | Re-pinned in #62: `c90d0a9e...b199` to `d9b81e5c...cf7d` (HF-M2-23 pause between waves; no existing test changed) | A 1 s pause moves every run's timing | Head of Engineering |
 | 2026-10-22 | Progression hash | Re-pinned in #65: `d9b81e5c...cf7d` to `aa369750...6b4a` (HF-M2-22 easing of the last waves of levels 1 and 2; `outpost` min_hard_runs 1 to 0 in the pack; no existing test changed) | Easier runs end differently | Head of Engineering |
+| 2026-10-22 | Progression hash | Re-pinned in #74: `aa369750...6b4a` to `1842fa9a...2190` (HF-M2-27 Flare Barrage burst and the Shingle Beach retune: last-wave damage 1.75 to 1.95, grunts 11 to 12, runners 6 to 7; wall 5.9 s) | Stronger Flare changes run outcomes | Head of Engineering |
+| 2026-10-22 | `games/holdfast/tests/test_hero.gd` (four `_fan` fixture setups) | Setup-only change in #74 so the fixtures fit the burst fire rate; no assertion changed | Fixture set-up only | Head of Engineering |
 
 ## Advisor views
 
