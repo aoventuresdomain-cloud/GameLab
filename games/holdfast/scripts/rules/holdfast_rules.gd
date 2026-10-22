@@ -66,6 +66,9 @@ class Enemy:
 	var damage: int
 	var gold: int
 	var xp_chance: float
+	## How close the Hero or a Recruit must be for this enemy to go for them (pack:
+	## engage_distance, set at spawn). An Enemy made by hand, without a pack, goes for anyone.
+	var engage_distance := INF
 	var xp_value: int
 	## "" is the keep; else "hero", "recruit:<id>" or "tower:<id>".
 	var target := ""
@@ -390,7 +393,7 @@ func _attacker(kind: String, at: Dictionary, data: Dictionary, damage: float, ex
 	a.health = UnitHealth.new_unit(float(data["health"]) + extra_health) if kind == "tower" else RecruitRules.new_recruit(str(data["class"]), float(data["health"]))
 	_by_key[a.key] = a
 	a.position = Vector2(float(at["x"]), float(at["y"]))
-	a.candidate = {"id": a.key, "pos": a.position, "taunt_radius": 0.0, "downed": false}
+	a.candidate = {"id": a.key, "pos": a.position, "taunt_radius": 0.0, "downed": false, "always": kind == "tower"}
 	a.damage = damage
 	a.attack_range = float(data["range"])
 	a.cooldown = float(data["cooldown"])
@@ -584,11 +587,13 @@ func _step_enemies(dt: float) -> void:
 	enemies.resize(kept)
 
 
-## Sets the enemy's target: the nearest tower, Recruit or Hero, with a staffed
-## Warden within reach of the enemy pulling it in ahead of the rest; the keep
-## ("") when there is none.
+## Sets the enemy's target: the tower, unless the Hero or a Recruit is within
+## the enemy's engage distance and nearer; a staffed Warden within its taunt radius
+## pulls the enemy in ahead of the rest. The keep ("") when the tower is down and
+## nobody is that close.
 func _pick_target(enemy: Enemy) -> void:
-	enemy.target = RecruitRules.pick_target(enemy.position, _candidates, _tie_order)
+	var open := EnemyTargeting.within_reach(enemy.position, _candidates, enemy.engage_distance)
+	enemy.target = RecruitRules.pick_target(enemy.position, open, _tie_order)
 	enemy.target_unit = _by_key.get(enemy.target)
 	enemy.retarget_in = RETARGET_TICKS
 	# A staffed Lookout's mark and slow are checked at the same pace.
@@ -942,6 +947,7 @@ func _spawn_due() -> void:
 		enemy.radius = float(data["radius"])
 		enemy.damage = roundi(float(data["damage"]) * _wave_damage_scale[w])
 		enemy.gold = int(data["gold"])
+		enemy.engage_distance = float(data["engage_distance"])
 		enemy.xp_chance = float(data.get("xp_chance", 0.0))
 		enemy.xp_value = int(data.get("xp_value", 0))
 		enemy.hit_interval = float(data.get("hit_interval", 1.0))
