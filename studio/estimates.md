@@ -22,12 +22,15 @@ The CEO asked for a very lean M2: small changes shipped fast, quick fixes, and t
 |---|---|---|---|---|
 | 1 (done) | Move the Keeper with WASD, auto-fire flares, Space for Flare Barrage, keep falls = run over | HF-M2-14 first slice | 22 Oct | Done |
 | 2 and 2b (done) | Three pillars, enemies fight back, light posts, knock-down, stronger monsters, Recruits that move and revive | HF-M2-14 pillars, HF-M2-15, HF-M2-17 | 22 Oct | Done |
-| 3 of 7 | Gold and upgrades that save, the 5-level biome, a plain home and keep screen, Hero gets up where it fell, Mac build | KIT-06, KIT-07, HF-M2-02, HF-M2-06 (part), HF-M2-18, HF-M2-00 | About 2 build days after go | Low |
+| 3 of 7 | Gold and upgrades that save, the 5-level biome, a plain home and keep screen, Hero gets up where it fell, Mac build | KIT-06, KIT-07, HF-M2-02, HF-M2-06 (part), HF-M2-18, HF-M2-00 | AI build time: about 3 to 5 hours from 22 Oct 10:50 (kit and QA tests already merged; game PR, fixes and CI left) | Low |
+| 3b of 7 | Bigger arena, Hero reaches every edge (CEO feedback) | HF-M2-19 | AI build time: about 1 hour after Build 3 | Medium |
 | 4 of 7 | Hero skill paths (10 nodes each) and blessings | HF-M2-14 rest, HF-M2-04 | About 2 build days | Low |
 | 5 of 7 | Monster variety, the elite drop, Hero gear, the level-5 mini-boss, hit feel and sound | HF-M2-16, HF-M2-07 | About 1.5 build days | Low |
 | 6 of 7 | Pacing bands passed in the simulator for every pillar, style guide for approval, name check (end of the core) | HF-M2-01, HF-M2-05, HF-M2-08, HF-M2-11 | About 1 build day | Medium |
 | 7 of 7 (parked) | Recruits: hiring, classes, movement, skill trees, recruitment board. Only if the CEO wants it after the core | HF-M2-03 | About 1.5 build days | Low |
 | End | Full QA round on one fixed commit, then the Gate 2 brief | HF-M2-12, HF-M2-13 | About 1 build day | Low |
+
+**Estimates on every handoff (CEO request, 2026-10-22):** each build handoff and each build start carries a rough AI build time for that build, with a confidence. AI build time is stated apart from the CEO's own test and feedback time, which is theirs to set and is not counted. Per-build figures are in the table above; build days convert at roughly 8 to 10 hours of AI build time.
 
 **Build numbering (CEO request, 2026-10-22): the CEO gets 7 playable builds (revised 2026-10-22, core gameplay first, Recruits last), so a handoff reads "Build N of 7". A quick fix after a playtest counts inside its slice with a letter (Build 2b), not as a new number. The final full QA round and the Gate 2 brief are not numbered builds. If feedback adds a slice, the new total is stated before it starts.**
 
