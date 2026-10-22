@@ -41,7 +41,7 @@ func load_profile() -> void:
 		_service = null
 		changed.emit()
 		return
-	_service = SaveService.new(save_path, HoldfastMeta.SAVE_VERSION)
+	_service = SaveService.new(save_path, HoldfastMeta.SAVE_VERSION, {1: HoldfastMeta.migrate_v1.bind(_content)})
 	var loaded := _service.load_save()
 	load_status = str(loaded["status"])
 	load_message = str(loaded["message"])
@@ -89,7 +89,7 @@ func select_pillar(id: String) -> void:
 
 
 func bank_run(result: Dictionary) -> void:
-	_apply(HoldfastMeta.bank_run(data, result))
+	_apply(HoldfastMeta.bank_run(_content, data, result))
 
 
 func _apply(next: Dictionary) -> void:

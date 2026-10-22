@@ -78,14 +78,14 @@ func _save_path(name: String) -> String:
 
 # ------------------------------------------------------------------ the tree in the pack
 
-func test_the_tree_has_about_thirty_nodes_in_the_four_branches() -> void:
+func test_the_tree_has_about_twenty_six_nodes_in_the_three_branches() -> void:
 	var nodes := _nodes()
-	expect_true(nodes.size() >= 28 and nodes.size() <= 32, "about 30 nodes, got %d" % nodes.size())
+	expect_true(nodes.size() >= 24 and nodes.size() <= 28, "about 26 nodes, got %d" % nodes.size())
 	var by_branch := {}
 	for id in nodes:
 		by_branch[nodes[id]["branch"]] = int(by_branch.get(nodes[id]["branch"], 0)) + 1
-	expect_eq(by_branch.keys().size(), 4, "towers, keep, gold, unlocks: " + str(by_branch))
-	for branch in ["towers", "keep", "gold", "unlocks"]:
+	expect_eq(by_branch.keys().size(), 3, "towers, keep, gold: " + str(by_branch))
+	for branch in ["towers", "keep", "gold"]:
 		expect_true(int(by_branch.get(branch, 0)) >= 4, branch + " has real depth")
 
 
@@ -103,7 +103,6 @@ func test_the_branches_cover_what_the_board_names() -> void:
 	for stat in ["keep_health", "beam_reach"]:
 		expect_true(stat in stats_by_branch["keep"], "keep: " + stat)
 	expect_true("gold_multiplier" in stats_by_branch["gold"], "gold gain")
-	expect_false(stats_by_branch.has("unlocks"), "unlock nodes carry no stat; they open levels")
 
 
 func test_requirements_only_point_at_nodes_listed_before_them() -> void:
@@ -114,41 +113,29 @@ func test_requirements_only_point_at_nodes_listed_before_them() -> void:
 		seen.append(id)
 
 
-func test_every_level_after_the_first_is_opened_by_exactly_one_node_in_order() -> void:
+func test_the_biome_has_five_levels_and_no_node_sells_one() -> void:
 	var levels: Array = HoldfastContent.base()["levels"].keys()
 	expect_eq(levels, ["outpost", "shingle_beach", "tidewrack_cove", "old_pier", "gull_rock"], "one coastal biome, five levels")
-	var openers := {}
 	for id in _nodes():
-		if _nodes()[id].has("unlocks"):
-			var level: String = _nodes()[id]["unlocks"]
-			openers[level] = int(openers.get(level, 0)) + 1
-	for i in range(1, levels.size()):
-		expect_eq(openers.get(levels[i], 0), 1, levels[i] + " has one unlock node")
-		var opener: String = "unlock_" + levels[i]
-		expect_true(_nodes().has(opener), opener + " exists")
-		if i > 1:
-			expect_eq(_nodes()[opener]["requires"], ["unlock_" + levels[i - 1]], "levels open in order")
-	expect_false(openers.has(levels[0]), "the first level is always open")
+		expect_ne(_nodes()[id]["branch"], "unlocks", id + " is not a level node")
+		expect_false(_nodes()[id].has("unlocks"), id + " opens no level")
 
 
-func test_a_dangling_unlock_is_refused_by_the_pack_loader_naming_the_field() -> void:
-	var pack := PackLoader.load_pack(HoldfastContent.BASE_PACK, HoldfastContent.SCHEMA)
-	expect_true(pack.ok)
-	# The same check on a broken copy: the schema's x-ref ties "unlocks" to the levels.
+func test_the_pack_schema_refuses_a_node_that_sells_a_level() -> void:
 	var schema := PackSchema.load_file(HoldfastContent.SCHEMA)
 	var errors: PackedStringArray = []
-	var refs := []
-	schema.validate_def({"upgrade_nodes": [{"id": "x", "name": "X", "branch": "unlocks", "cost": 5, "unlocks": "nowhere"}]}, "content", "upgrades.json: $", errors, refs)
-	expect_true(errors.is_empty(), str(errors))
-	expect_eq(refs[0][1], "levels", "unlocks refers to a level")
-	expect_eq(refs[0][2], "nowhere")
+	schema.validate_def({"upgrade_nodes": [{"id": "x", "name": "X", "branch": "gold", "cost": 5, "unlocks": "shingle_beach"}]}, "content", "upgrades.json: $", errors, [])
+	expect_false(errors.is_empty(), "an unlocks field is not part of a node")
+	errors.clear()
+	schema.validate_def({"upgrade_nodes": [{"id": "x", "name": "X", "branch": "unlocks", "cost": 5}]}, "content", "upgrades.json: $", errors, [])
+	expect_false(errors.is_empty(), "and neither is a levels branch")
 
 
 # ------------------------------------------------------------------ meta actions
 
 func test_a_new_profile_starts_empty_on_the_first_level_and_pillar() -> void:
 	var profile := HoldfastMeta.new_profile(_meta_content())
-	expect_eq(profile, {"gold": 0, "upgrades": [], "levels_won": [], "level": "outpost", "pillar": "flare_archer", "runs": 0})
+	expect_eq(profile, {"gold": 0, "upgrades": [], "levels_won": [], "unlocked": [], "level": "outpost", "pillar": "flare_archer", "runs": 0})
 
 
 func test_buying_pays_the_cost_and_records_the_upgrade_without_changing_the_old_profile() -> void:
@@ -185,17 +172,35 @@ func test_buying_is_refused_with_a_reason_and_changes_nothing() -> void:
 	expect_true(HoldfastMeta.buy(content, bought, "tower_drills_2")["ok"], "the requirement is met now")
 
 
-func test_levels_unlock_through_bought_nodes_and_a_locked_level_cannot_be_picked() -> void:
+func test_levels_unlock_by_winning_the_previous_one_and_a_locked_level_cannot_be_picked() -> void:
 	var content := _meta_content()
 	var profile := HoldfastMeta.new_profile(content)
-	profile["gold"] = 1000
+	profile["gold"] = 100000
 	expect_eq(HoldfastMeta.unlocked_levels(content, profile), ["outpost"])
 	expect_eq(HoldfastMeta.select_level(content, profile, "shingle_beach"), profile, "locked: nothing changes")
-	profile = HoldfastMeta.buy(content, profile, "unlock_shingle_beach")["profile"]  # 120
-	expect_eq(HoldfastMeta.unlocked_levels(content, profile), ["outpost", "shingle_beach"])
-	expect_eq(HoldfastMeta.select_level(content, profile, "shingle_beach")["level"], "shingle_beach")
-	expect_eq(HoldfastMeta.select_level(content, profile, "no_such_level"), profile)
-	expect_eq(HoldfastMeta.buy(content, profile, "unlock_old_pier")["reason"], "Needs Open Tidewrack Cove first")
+	for id in content["upgrade_nodes"]:
+		var bought: Dictionary = HoldfastMeta.buy(content, profile, id)
+		if bought["ok"]:
+			profile = bought["profile"]
+	expect_eq(HoldfastMeta.unlocked_levels(content, profile), ["outpost"], "no purchase opens a level")
+	var lost := HoldfastMeta.bank_run(content, profile, {"gold": 0, "outcome": "lost", "level": "outpost"})
+	expect_eq(HoldfastMeta.unlocked_levels(content, lost), ["outpost"], "losing opens nothing")
+	var won := HoldfastMeta.bank_run(content, profile, {"gold": 0, "outcome": "won", "level": "outpost"})
+	expect_eq(HoldfastMeta.unlocked_levels(content, won), ["outpost", "shingle_beach"])
+	expect_eq(HoldfastMeta.select_level(content, won, "shingle_beach")["level"], "shingle_beach")
+	expect_eq(HoldfastMeta.select_level(content, won, "tidewrack_cove"), won, "only the next one opens")
+	expect_eq(HoldfastMeta.select_level(content, won, "no_such_level"), won)
+
+
+func test_winning_each_level_in_order_opens_the_next_and_the_last_opens_nothing() -> void:
+	var content := _meta_content()
+	var profile := HoldfastMeta.new_profile(content)
+	var order := ["outpost", "shingle_beach", "tidewrack_cove", "old_pier", "gull_rock"]
+	for i in order.size():
+		profile = HoldfastMeta.bank_run(content, profile, {"gold": 0, "outcome": "won", "level": order[i]})
+		expect_eq(HoldfastMeta.unlocked_levels(content, profile), order.slice(0, mini(i + 2, order.size())), "after winning " + order[i])
+	expect_eq(profile["levels_won"], order)
+	expect_eq(HoldfastMeta.bank_run(content, profile, {"gold": 0, "outcome": "won", "level": "gull_rock"})["unlocked"].size(), 4, "winning again changes nothing")
 
 
 func test_picking_a_pillar_needs_a_real_one() -> void:
@@ -207,17 +212,18 @@ func test_picking_a_pillar_needs_a_real_one() -> void:
 
 
 func test_banking_a_run_adds_its_gold_and_marks_only_won_levels() -> void:
-	var profile := HoldfastMeta.new_profile(_meta_content())
+	var content := _meta_content()
+	var profile := HoldfastMeta.new_profile(content)
 	profile["gold"] = 10
-	var lost := HoldfastMeta.bank_run(profile, {"gold": 25, "outcome": "lost", "level": "outpost"})
+	var lost := HoldfastMeta.bank_run(content, profile, {"gold": 25, "outcome": "lost", "level": "outpost"})
 	expect_eq(lost["gold"], 35)
 	expect_eq(lost["runs"], 1)
 	expect_eq(lost["levels_won"], [])
-	var won := HoldfastMeta.bank_run(lost, {"gold": 5, "outcome": "won", "level": "outpost"})
+	var won := HoldfastMeta.bank_run(content, lost, {"gold": 5, "outcome": "won", "level": "outpost"})
 	expect_eq(won["gold"], 40)
 	expect_eq(won["levels_won"], ["outpost"])
-	expect_eq(HoldfastMeta.bank_run(won, {"gold": 1, "outcome": "won", "level": "outpost"})["levels_won"], ["outpost"], "no repeats")
-	expect_eq(HoldfastMeta.bank_run(profile, {"gold": -50, "outcome": "lost", "level": "outpost"})["gold"], 10, "a run never takes gold away")
+	expect_eq(HoldfastMeta.bank_run(content, won, {"gold": 1, "outcome": "won", "level": "outpost"})["levels_won"], ["outpost"], "no repeats")
+	expect_eq(HoldfastMeta.bank_run(content, profile, {"gold": -50, "outcome": "lost", "level": "outpost"})["gold"], 10, "a run never takes gold away")
 	expect_eq(profile["runs"], 0, "the profile given is untouched")
 
 
@@ -227,6 +233,7 @@ func test_a_loaded_profile_is_made_safe_before_use() -> void:
 		"gold": -5, "runs": 3,
 		"upgrades": ["keep_walls_1", "gone_node", "keep_walls_1"],
 		"levels_won": ["outpost", "gone_level"],
+		"unlocked": ["shingle_beach", "gone_level", "shingle_beach"],
 		"level": "gull_rock",   # locked: falls back
 		"pillar": "gone_pillar",
 	}
@@ -234,6 +241,7 @@ func test_a_loaded_profile_is_made_safe_before_use() -> void:
 	expect_eq(profile["gold"], 0)
 	expect_eq(profile["upgrades"], ["keep_walls_1"])
 	expect_eq(profile["levels_won"], ["outpost"])
+	expect_eq(profile["unlocked"], ["shingle_beach"])
 	expect_eq(profile["level"], "outpost")
 	expect_eq(profile["pillar"], "flare_archer")
 	expect_eq(profile["runs"], 3)
@@ -249,12 +257,12 @@ func test_the_profile_saves_after_each_change_and_reloads_exactly() -> void:
 	tree.root.add_child(profile)
 	expect_eq(profile.load_status, "missing", "no save yet")
 	profile.bank_run({"gold": 300, "outcome": "won", "level": "outpost"})
-	expect_true(profile.buy("unlock_shingle_beach"))  # 120
 	expect_true(profile.buy("keep_walls_1"))          # 60
 	profile.select_level("shingle_beach")
 	profile.select_pillar("tideblade")
 	var expected := profile.data.duplicate(true)
-	expect_eq(expected["gold"], 120)
+	expect_eq(expected["gold"], 240)
+	expect_eq(expected["unlocked"], ["shingle_beach"])
 	profile.free()
 
 	var again := HoldfastProfile.new()
@@ -322,6 +330,126 @@ func test_a_newer_save_is_left_alone_and_the_player_is_told_progress_will_not_sa
 	expect_true(notices.size() >= 2, "told on load and told the save failed: " + str(notices))
 	expect_eq(FileAccess.get_file_as_bytes(path), before, "the newer save is untouched")
 	profile.free()
+
+
+## A Build 3 save (version 1), as the game wrote it: level nodes bought, one level never won.
+func _v1_save(path: String, gold: int) -> void:
+	SaveService.new(path, 1).save({
+		"gold": gold, "runs": 7,
+		"upgrades": ["keep_walls_1", "unlock_shingle_beach", "unlock_tidewrack_cove", "tower_drills_1"],
+		"levels_won": ["outpost"],
+		"level": "tidewrack_cove", "pillar": "tideblade",
+	})
+
+
+func test_a_build_3_save_keeps_its_levels_and_gets_the_level_nodes_gold_back() -> void:
+	var path := _save_path("v1")
+	_v1_save(path, 50)
+	var profile := HoldfastProfile.new()
+	profile.save_path = path
+	tree.root.add_child(profile)
+	expect_eq(profile.load_status, "migrated")
+	expect_eq(profile.get_unlocked_levels(), ["outpost", "shingle_beach", "tidewrack_cove"], "both bought levels stay open, won or not")
+	expect_eq(profile.get_upgrades(), ["keep_walls_1", "tower_drills_1"], "the level nodes are gone from the upgrades")
+	expect_eq(profile.get_gold(), 50 + 120 + 500, "their cost comes back")
+	expect_eq(profile.get_level(), "tidewrack_cove", "the level it was on is kept")
+	expect_eq(profile.get_pillar(), "tideblade")
+	expect_eq(profile.data["runs"], 7)
+	expect_true(profile.is_level_won("outpost") and not profile.is_level_won("shingle_beach"), "wins are as they were")
+	profile.select_level("shingle_beach")
+	profile.free()
+	var again := HoldfastProfile.new()
+	again.save_path = path
+	tree.root.add_child(again)
+	expect_eq(again.load_status, "ok", "saved as the new version once it changed")
+	expect_eq(again.get_unlocked_levels(), ["outpost", "shingle_beach", "tidewrack_cove"])
+	expect_eq(again.get_level(), "shingle_beach")
+	again.free()
+
+
+func test_migrating_a_save_without_level_nodes_changes_only_its_shape() -> void:
+	var old := {"gold": 9, "upgrades": ["keep_walls_1"], "levels_won": []}
+	var migrated := HoldfastMeta.migrate_v1(old, HoldfastContent.base())
+	expect_eq(migrated, {"gold": 9, "upgrades": ["keep_walls_1"], "levels_won": [], "unlocked": []})
+	expect_eq(old, {"gold": 9, "upgrades": ["keep_walls_1"], "levels_won": []}, "the save given is untouched")
+
+
+func test_a_build_3_save_that_won_levels_without_buying_their_nodes_opens_the_next_ones() -> void:
+	var content := _meta_content()
+	var won := HoldfastMeta.migrate_v1({"gold": 5, "upgrades": ["keep_walls_1"], "levels_won": ["outpost", "shingle_beach"]}, content)
+	expect_eq(won["unlocked"], ["shingle_beach", "tidewrack_cove"], "winning a level opens the next, as it does now")
+	expect_eq(won["gold"], 5, "no node bought, nothing refunded")
+	var profile := HoldfastMeta.from_save(content, won)
+	expect_eq(HoldfastMeta.unlocked_levels(content, profile), ["outpost", "shingle_beach", "tidewrack_cove"])
+	var last := HoldfastMeta.migrate_v1({"levels_won": ["gull_rock", "gone_level"]}, content)
+	expect_eq(last["unlocked"], [], "the last level has no next, an unknown one opens nothing")
+	var both := HoldfastMeta.migrate_v1({"upgrades": ["unlock_shingle_beach"], "levels_won": ["outpost"]}, content)
+	expect_eq(both["unlocked"], ["shingle_beach"], "a level opened both ways is listed once")
+
+
+func test_a_level_node_listed_twice_in_a_save_is_refunded_once() -> void:
+	var migrated := HoldfastMeta.migrate_v1({"gold": 0, "upgrades": ["unlock_shingle_beach", "unlock_shingle_beach"]}, _meta_content())
+	expect_eq(migrated["gold"], 120)
+	expect_eq(migrated["unlocked"], ["shingle_beach"])
+	expect_eq(migrated["upgrades"], [])
+
+
+func test_winning_a_level_already_won_still_opens_the_next_one() -> void:
+	var content := _meta_content()
+	var profile := HoldfastMeta.new_profile(content)
+	profile["levels_won"] = ["outpost"]   # won before the next level could be opened by it
+	var again := HoldfastMeta.bank_run(content, profile, {"gold": 0, "outcome": "won", "level": "outpost"})
+	expect_eq(again["unlocked"], ["shingle_beach"])
+	expect_eq(again["levels_won"], ["outpost"], "still listed once")
+
+
+func test_a_damaged_build_3_save_recovers_and_migrates_and_a_newer_one_is_still_left_alone() -> void:
+	var path := _save_path("v1_damaged")
+	_v1_save(path, 10)
+	_v1_save(path, 20)
+	var bytes := FileAccess.get_file_as_bytes(path)
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_buffer(bytes.slice(0, bytes.size() / 2))
+	file.close()
+	var profile := HoldfastProfile.new()
+	profile.save_path = path
+	tree.root.add_child(profile)
+	expect_eq(profile.load_status, "recovered")
+	expect_eq(profile.get_unlocked_levels(), ["outpost", "shingle_beach", "tidewrack_cove"], "the earlier save is migrated too")
+	expect_eq(profile.get_gold(), 10 + 120 + 500)
+	profile.free()
+	var newer := _save_path("v1_newer")
+	SaveService.new(newer, HoldfastMeta.SAVE_VERSION + 1).save({"gold": 1, "unlocked": ["gull_rock"]})
+	var untouched := FileAccess.get_file_as_bytes(newer)
+	var other := HoldfastProfile.new()
+	other.save_path = newer
+	tree.root.add_child(other)
+	expect_eq(other.load_status, "newer")
+	expect_eq(other.get_unlocked_levels(), ["outpost"], "nothing is read from a newer save")
+	expect_eq(FileAccess.get_file_as_bytes(newer), untouched)
+	other.free()
+
+
+func test_winning_saves_the_unlock_at_once_and_losing_never_unlocks() -> void:
+	var path := _save_path("win_saves")
+	var profile := HoldfastProfile.new()
+	profile.save_path = path
+	tree.root.add_child(profile)
+	profile.bank_run({"gold": 5, "outcome": "lost", "level": "outpost"})
+	var after_loss := HoldfastProfile.new()
+	after_loss.save_path = path
+	tree.root.add_child(after_loss)
+	expect_eq(after_loss.get_unlocked_levels(), ["outpost"], "a loss opens nothing")
+	after_loss.free()
+	profile.bank_run({"gold": 5, "outcome": "won", "level": "outpost"})
+	profile.free()  # no quit hook: the win must already be on disk
+	var reloaded := HoldfastProfile.new()
+	reloaded.save_path = path
+	tree.root.add_child(reloaded)
+	expect_eq(reloaded.get_unlocked_levels(), ["outpost", "shingle_beach"], "win, reload, next level open")
+	reloaded.select_level("shingle_beach")
+	expect_eq(reloaded.get_level(), "shingle_beach")
+	reloaded.free()
 
 
 func test_headless_runs_keep_the_profile_in_memory() -> void:
@@ -568,7 +696,7 @@ func test_headless_and_playable_build_match_on_a_later_level_with_upgrades_and_f
 		inputs.append({"move": heading, "ability": dice.randf() < 0.02})
 	var frames := RandomNumberGenerator.new()
 	frames.seed = 8
-	var upgrades := ["keep_beam_1", "tower_drills_1", "tower_mend_1", "tower_stone_1", "keep_walls_1", "unlock_shingle_beach", "unlock_tidewrack_cove", "unlock_old_pier", "unlock_gull_rock"]
+	var upgrades := ["keep_beam_1", "tower_drills_1", "tower_mend_1", "tower_stone_1", "keep_walls_1", "tithe_1"]
 	for level in ["outpost", "gull_rock"]:
 		for id in ["flare_archer", "dusk_mage", "tideblade"]:
 			var replay := Replay.new()
@@ -677,8 +805,9 @@ func test_level_and_pillar_picks_start_the_next_run_with_the_bought_upgrades() -
 	profile.bank_run({"gold": 500, "outcome": "lost", "level": "outpost"})
 	var keep: Control = main.keep_screen
 	keep.visible = true
-	expect_true(keep._level_buttons["shingle_beach"].disabled, "locked until bought")
-	keep._node_buttons["unlock_shingle_beach"].pressed.emit()    # 120
+	expect_true(keep._level_buttons["shingle_beach"].disabled, "locked until the first level is won")
+	expect_true(keep._level_text("shingle_beach").contains("Win the previous level"), "and it says why")
+	profile.bank_run({"gold": 0, "outcome": "won", "level": "outpost"})
 	keep._node_buttons["keep_beam_1"].pressed.emit()             # 200
 	keep._node_buttons["tower_stone_1"].pressed.emit()           # 70
 	expect_false(keep._level_buttons["shingle_beach"].disabled, "open now")

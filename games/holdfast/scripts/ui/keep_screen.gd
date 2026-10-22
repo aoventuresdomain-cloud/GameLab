@@ -15,7 +15,6 @@ const BRANCHES := [
 	["towers", "Towers"],
 	["keep", "Keep"],
 	["gold", "Gold"],
-	["unlocks", "Levels"],
 ]
 const STAT_TEXT := {
 	"tower_damage": "tower damage",
@@ -183,7 +182,7 @@ func _level_text(id: String) -> String:
 	var level: Dictionary = _content["levels"][id]
 	var waves: Array = level["waves"]
 	var open: bool = _profile != null and id in _profile.get_unlocked_levels()
-	return "%s: %d waves. %s" % [level["name"], waves.size(), "" if open else "Locked: buy its unlock in the Levels column."]
+	return "%s: %d waves. %s" % [level["name"], waves.size(), "" if open else "Locked. Win the previous level."]
 
 
 func _node_text(id: String) -> String:
@@ -195,8 +194,6 @@ func _node_text(id: String) -> String:
 			parts.append("+%s %s" % [_trim(float(effect["add"])), what])
 		if effect.has("multiply"):
 			parts.append("x%s %s" % [_trim(float(effect["multiply"])), what])
-	if node.has("unlocks"):
-		parts.append("opens %s" % _content["levels"][node["unlocks"]]["name"])
 	var text := "%s: %s. Cost %d." % [node["name"], ", ".join(parts), int(node["cost"])]
 	if _profile == null:
 		return text

@@ -25,10 +25,6 @@
     {"id": "tithe_3", "name": "Tithe III", "branch": "gold", "cost": 1300, "requires": ["tithe_2"], "effects": [{"stat": "gold_multiplier", "multiply": 1.2}]},
     {"id": "tithe_4", "name": "Tithe IV", "branch": "gold", "cost": 2400, "requires": ["tithe_3"], "effects": [{"stat": "gold_multiplier", "multiply": 1.15}]},
     {"id": "tithe_5", "name": "Tithe V", "branch": "gold", "cost": 3800, "requires": ["tithe_4"], "effects": [{"stat": "gold_multiplier", "multiply": 1.1}]},
-    {"id": "tithe_6", "name": "Tithe VI", "branch": "gold", "cost": 5500, "requires": ["tithe_5"], "effects": [{"stat": "gold_multiplier", "multiply": 1.1}]},
-    {"id": "unlock_shingle_beach", "name": "Open Shingle Beach", "branch": "unlocks", "cost": 120, "unlocks": "shingle_beach"},
-    {"id": "unlock_tidewrack_cove", "name": "Open Tidewrack Cove", "branch": "unlocks", "cost": 500, "requires": ["unlock_shingle_beach"], "unlocks": "tidewrack_cove"},
-    {"id": "unlock_old_pier", "name": "Open The Old Pier", "branch": "unlocks", "cost": 1400, "requires": ["unlock_tidewrack_cove"], "unlocks": "old_pier"},
-    {"id": "unlock_gull_rock", "name": "Open Gull Rock", "branch": "unlocks", "cost": 3000, "requires": ["unlock_old_pier"], "unlocks": "gull_rock"}
+    {"id": "tithe_6", "name": "Tithe VI", "branch": "gold", "cost": 5500, "requires": ["tithe_5"], "effects": [{"stat": "gold_multiplier", "multiply": 1.1}]}
   ]
 }
