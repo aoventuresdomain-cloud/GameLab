@@ -63,6 +63,9 @@ static func load_pack(pack_dir: String, schema_path: String) -> Pack:
 	if manifest == null:
 		return _finish(pack)
 	_check_data_only(manifest, MANIFEST, "$", pack.errors)
+	_check_format_version(manifest, schema, pack.errors)
+	if not pack.errors.is_empty():
+		return _finish(pack)
 	schema.validate_def(manifest, "manifest", MANIFEST + ": $", pack.errors, refs)
 	if typeof(manifest) != TYPE_DICTIONARY or not pack.errors.is_empty():
 		return _finish(pack)
@@ -95,6 +98,20 @@ static func load_pack(pack_dir: String, schema_path: String) -> Pack:
 		if not pack.get_entries(target).has(ref[2]):
 			pack.errors.append("%s: no %s entry with id %s" % [where, target, JSON.stringify(ref[2])])
 	return _finish(pack)
+
+
+## A pack names the pack format it was written for; a major version this kit does
+## not read is refused before anything else is checked, so the player or author
+## gets "unknown version" and not a pile of field errors.
+static func _check_format_version(manifest: Variant, schema: PackSchema, errors: PackedStringArray) -> void:
+	if typeof(manifest) != TYPE_DICTIONARY or not manifest.has("format_version"):
+		return  # the schema reports a missing field
+	var version: Variant = manifest["format_version"]
+	var supported: Variant = schema.root.get("format_version")
+	if typeof(version) not in [TYPE_INT, TYPE_FLOAT] or version != floorf(version):
+		errors.append("%s: $.format_version: expected a whole number, got %s" % [MANIFEST, JSON.stringify(version)])
+	elif typeof(supported) in [TYPE_INT, TYPE_FLOAT] and int(version) != int(supported):
+		errors.append("%s: $.format_version: unknown major version %d (this kit reads pack format %d)" % [MANIFEST, int(version), int(supported)])
 
 
 static func _finish(pack: Pack) -> Pack:
