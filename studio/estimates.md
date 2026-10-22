@@ -18,19 +18,20 @@ Refreshed 2026-10-21, after the CEO's go and scope changes (10 Hero skills a pat
 
 The CEO asked for a very lean M2: small changes shipped fast, quick fixes, and their own playtests with feedback as it develops. Outside testers are a later stage. Each slice ends in a build the CEO plays in the browser on the Mac (private itch.io draft, no steps), and the team then stops until the CEO has tested it and replied (CEO rule, 21 Oct). The days below are build days only; the CEO's testing time between slices is added by the calendar. Per slice: sanity checks, the full suite in CI's order and one production-shaped run on that commit. One full QA round, at the end only. Days are from the go (day 0 = 2026-10-21).
 
-| Iteration | What the CEO can play | Items | Ready by | Confidence |
+| Build | What the CEO can play | Items | Ready by | Confidence |
 |---|---|---|---|---|
-| 1 | Move the Keeper with WASD, auto-fire flares at the nearest fog creature, press Space for Flare Barrage, keep falls = run over | HF-M2-14 first slice (Flare Archer) | Day 1 (22 Oct) | Medium |
-| 2 | The Dusk Mage and Tideblade pillars, enemies fight back, light posts, knock-down and respawn, a minimal home screen | HF-M2-14 pillars, HF-M2-15, KIT-08 (CI only) | Day 2 to 3 | Medium |
-| 3 | Gold and upgrades that save, the recruitment board and a 2-slot squad, Mac build | KIT-06, KIT-07, HF-M2-02, HF-M2-03, HF-M2-00 | Day 4 to 5 | Low |
-| 4 | Hero skill paths (10 nodes each), Recruit skill trees, blessings | HF-M2-14 rest, HF-M2-03 trees, HF-M2-04 | Day 6 to 7 | Low |
-| 5 | Hero gear, the level-2 or 3 elite drop, the level-5 mini-boss, feel and sound, home and keep polish | HF-M2-16, HF-M2-06, HF-M2-07 | Day 7 to 8 | Low |
-| 6 | Pacing bands pass in the simulator, style guide for approval, name check | HF-M2-01, HF-M2-05, HF-M2-08, HF-M2-11 | Day 8 | Medium |
-| End | Full QA round on one fixed commit, then the Gate 2 brief | HF-M2-12, HF-M2-13 | Day 8 to 9 | Low |
+| 1 (done) | Move the Keeper with WASD, auto-fire flares, Space for Flare Barrage, keep falls = run over | HF-M2-14 first slice | 22 Oct | Done |
+| 2 and 2b (done) | Three pillars, enemies fight back, light posts, knock-down, stronger monsters, Recruits that move and revive | HF-M2-14 pillars, HF-M2-15, HF-M2-17 | 22 Oct | Done |
+| 3 of 7 | Gold and upgrades that save, the 5-level biome, a plain home and keep screen, Hero gets up where it fell, Mac build | KIT-06, KIT-07, HF-M2-02, HF-M2-06 (part), HF-M2-18, HF-M2-00 | About 2 build days after go | Low |
+| 4 of 7 | Hero skill paths (10 nodes each) and blessings | HF-M2-14 rest, HF-M2-04 | About 2 build days | Low |
+| 5 of 7 | Monster variety, the elite drop, Hero gear, the level-5 mini-boss, hit feel and sound | HF-M2-16, HF-M2-07 | About 1.5 build days | Low |
+| 6 of 7 | Pacing bands passed in the simulator for every pillar, style guide for approval, name check (end of the core) | HF-M2-01, HF-M2-05, HF-M2-08, HF-M2-11 | About 1 build day | Medium |
+| 7 of 7 (parked) | Recruits: hiring, classes, movement, skill trees, recruitment board. Only if the CEO wants it after the core | HF-M2-03 | About 1.5 build days | Low |
+| End | Full QA round on one fixed commit, then the Gate 2 brief | HF-M2-12, HF-M2-13 | About 1 build day | Low |
 
-**Build numbering (CEO request, 2026-10-22): the CEO gets 6 playable builds, one per iteration above, so a handoff reads "Build N of 6". A quick fix after a playtest counts inside its slice with a letter (Build 2b of 6), not as a new number. The final full QA round and the Gate 2 brief are not numbered builds. If feedback adds a slice, the new total is stated before it starts.**
+**Build numbering (CEO request, 2026-10-22): the CEO gets 7 playable builds (revised 2026-10-22, core gameplay first, Recruits last), so a handoff reads "Build N of 7". A quick fix after a playtest counts inside its slice with a letter (Build 2b), not as a new number. The final full QA round and the Gate 2 brief are not numbered builds. If feedback adds a slice, the new total is stated before it starts.**
 
-**Build total: about 7 to 9 days** to Gate 2, down from 8 to 10 now that the tester prep and per-slice QA rounds are out. The builder is one Gameplay Engineer, so slices are sequential; the UI Engineer joins at iteration 3 and the Balance Analyst, Product Designer and Researcher at iteration 6. HF-M2-10 and the session log wait for the later testing stage. Fixes from the CEO's feedback are small PRs merged fast, inside the day where they are blocker or major.
+**Remaining build: about 6 to 8 build days from the 2026-10-22 go (low confidence), same total as before because Recruits only moved to the end. Earlier total: about 7 to 9 days** to Gate 2, down from 8 to 10 now that the tester prep and per-slice QA rounds are out. The builder is one Gameplay Engineer, so slices are sequential; the UI Engineer joins at iteration 3 and the Balance Analyst, Product Designer and Researcher at iteration 6. HF-M2-10 and the session log wait for the later testing stage. Fixes from the CEO's feedback are small PRs merged fast, inside the day where they are blocker or major.
 
 ### Waits (the calendar, not build time)
 

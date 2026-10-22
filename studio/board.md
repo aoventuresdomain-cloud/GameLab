@@ -78,7 +78,7 @@
 
 ### KIT-06 Pack format v1: references and versioning
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** Ready, Build 3 of 7
 - **QA:** full
 - **Done when:**
   - [ ] Packs can reference entries in other files by id, and the loader rejects a dangling reference naming the file and field (tested).
@@ -87,7 +87,7 @@
 
 ### KIT-07 Save service
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** Ready, Build 3 of 7
 - **QA:** full
 - **Done when:**
   - [ ] Progress saves locally and reloads exactly, at any moment, including mid-run (tested). That covers gold, upgrades, the Hero's paths, nodes and gear, the Recruit roster with levels, traits and skill picks, unlocked blessings and names.
@@ -198,7 +198,7 @@
 
 ### HF-M2-00 Mac test build and live Steam achievement
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** Ready, Build 3 of 7
 - **QA:** full
 - **Done when:**
   - [ ] CI builds an unsigned macOS build with GodotSteam (template pinned by name and SHA-256, as for Windows) and a one-click `steam-test.command`.
@@ -218,11 +218,11 @@
 
 ### HF-M2-02 Meta progression: biome, 5 levels and the upgrade tree
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** Ready, Build 3 of 7 (the mini-boss on level 5 follows in Build 5; until then level 5 is a plain level)
 - **QA:** full
 - **Done when:**
   - [ ] One coastal biome with 5 hand-made levels, the fifth ending in the mini-boss from HF-M2-16, all from packs. The fog edge sits where the keep's beam reaches, and enemies spawn at it, so widening the beam lengthens their walk in (distances from packs, tested).
-  - [ ] About 30 upgrade-tree nodes are bought with gold between runs, from packs. The branches are towers (damage, health, repair between waves), keep and gold gain, and unlocks (levels, the 3rd and 4th deploy slots, the recruitment board's size). The Hero's own paths are separate (HF-M2-14).
+  - [ ] About 30 upgrade-tree nodes are bought with gold between runs, from packs. The branches are towers (damage, health, repair between waves), keep and gold gain, and unlocks (levels). The 3rd and 4th deploy slots and the recruitment board's size come back with the Recruits in Build 7. The Hero's own paths are separate (HF-M2-14).
   - [ ] Gold and upgrades persist through KIT-07.
   - [ ] The headless and playable builds still end a seeded run identically (parity test).
 
@@ -234,7 +234,7 @@
   - [ ] There is one player-named Hero, the Keeper. They move with WASD and auto-aim at the nearest enemy. The attack comes from their path, and the ability from their path fires with Space on a cooldown. The lantern is the Keeper's light, not their attack: it pushes the fog edge back and gives a damage bonus to anything the Hero hits inside lit areas. Every attack is light, fire or the shadow that light casts. The mouse-cursor aura is gone.
   - [ ] The Hero has 3 pillars from packs (working names, the CEO can rename): Flare Archer (auto-fires flares, Space is Flare Barrage; capstone Beacon Arrow plants a temporary light post), Dusk Mage (auto shadow pulses with a small area, extra damage in unlit fog; Space is Eclipse, which dims the Keeper's own light for a few seconds and pulls and slows enemies into a dark zone; capstone Total Eclipse, with nearby light posts dark while it lasts) and Tideblade (quick short arc stabs, Space is Dash-Strike with the cooldown refunded on a kill; capstone Lighthouse Sweep, a rotating blade line). Only three attack behaviours are coded (projectile, area, arc); the rest is pack data. Each has 10 nodes on a shared skeleton: tier 1 stats and feel, tier 2 changes to the Space ability, tier 3 changes to the main attack, plus a capstone that changes the ability. At least half changing behaviour rather than a percentage, and unlocks a different active ability. Hero level is capped so a tester can buy about 8 nodes in a session; only the next tier is open and deeper tiers show locked. Pillars can be mixed, and a full respec between runs is free or cheap.
   - [ ] Movement and abilities are inputs on the kit engine's fixed timestep, so a seeded run with recorded inputs ends identically headless and in the playable build (parity test).
-  - [ ] At zero health the Hero is knocked down, drops their unbanked XP where they fell for the player to collect, and gets back up at the keep. The delay grows with each knock-down in the run (delays from packs, tested).
+  - [ ] At zero health the Hero is knocked down, drops their unbanked XP where they fell for the player to collect, and gets back up where they fell (CEO change, 2026-10-22, see HF-M2-18). The delay grows with each knock-down in the run (delays from packs, tested).
   - [ ] Head of QA's strict expected-failure tests, written from worked examples before the build, now pass; boundary cases (zero health, first and fourth knock-down, off and empty pack values) are covered.
 
 ### HF-M2-15 Enemies fight back
@@ -250,7 +250,7 @@
 
 ### HF-M2-03 Recruits: hiring, traits, levels and the squad
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** On hold (CEO, 2026-10-22): Recruit work is parked until the core gameplay is established. What exists (Bryn, Wren, revive, leash) stays as is. Comes back as Build 7 of 7 if the CEO wants it
 - **QA:** full
 - **Done when:**
   - [ ] A recruitment board on the keep screen offers Recruits to hire with gold, from packs. Each has a generated name, one of 4 classes (Warden, Lookout, Alchemist, Engineer; Recruits hold posts and the Hero owns the damage, so Recruit damage stays modest; the Alchemist lays status fields at posts: burn, slow, heal) and one of about 8 traits (for example "Steady: +20% range", "Coward: flees below half health"). Each trait is covered by a rules test.
@@ -289,6 +289,16 @@
   - [ ] Recruits move: each Recruit has a home post and moves to engage the nearest enemy within a leash distance of it, retreats to the post when hurt or when nothing is in range, and stays inside the leash (rule in the rules engine, pack values, tested at the boundary: exactly at the leash, zero leash, downed Recruit does not move). A Recruit staffing a light post stays at it and still adds its role effect.
   - [ ] Parity test and the 60 second budget still pass, the progression hash is re-pinned once with old and new in the PR, and the web build is checked in Chromium.
 
+### HF-M2-18 Hero gets back up where they fell
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, Build 3 of 7 (CEO playtest of Build 2b, 2026-10-22; replaces the keep respawn)
+- **QA:** sanity
+- **Depends on:** HF-M2-14
+- **Done when:**
+  - [ ] After the 3 s, 6 s, 10 s wait the Hero gets back up where they fell, not at the keep or beside a tower; the wait and the unbanked XP drop where they fell are unchanged (tested for the first and fourth knock-down).
+  - [ ] The Hero is untouchable for a short pack-set time (default 2 s) after getting up, so they are not knocked down again at once by whatever stood over them (time from packs, zero allowed, tested at the boundary).
+  - [ ] A Hero who fell outside the playfield or on blocked ground gets back up on the nearest open ground inside it (tested), and the headless run and the playable build agree (parity test).
+
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
 - **Status:** Ready
@@ -300,8 +310,8 @@
   - [ ] CI fails when a band is missed.
 
 ### HF-M2-06 Home screen and keep screen
-- **Owner:** UI Engineer
-- **Status:** Ready
+- **Owner:** Gameplay Engineer for the Build 3 part below (plain screens, no new role woken); UI Engineer for the polish later
+- **Status:** Ready, Build 3 of 7 part only: home screen (Continue, New game, Settings, Quit) and a keep screen with level select, the upgrade tree and the Hero's pillar pick, all mouse-only and readable at both sizes. The Hero's paths and respec screen come in Build 4; the recruitment board, roster, squad pick come with Build 7; the blessing picker with Build 4
 - **QA:** screens
 - **Done when:**
   - [ ] A home screen (Continue, New game, Settings, Quit) leads to the keep screen, the hub between runs.
@@ -437,6 +447,8 @@
 
 ## Decisions and open questions
 
+- 2026-10-22: **Go on the revised plan** (CEO). Recruits are parked until the core gameplay is established (HF-M2-03 on hold, what exists stays as is). The CEO now gets 7 builds: 3 Gold and saves, 4 Hero skills, 5 Monsters and the boss, 6 Pacing, 7 Recruits. Build 3 starts now and includes HF-M2-18. Defaults picked by HoE: the Gameplay Engineer builds the plain Build 3 screens (no new role woken); the save service PR (KIT-07, core logic) gets QA's strict tests plus a focused QA check on that one commit, not a full round.
+- 2026-10-22: CEO after Build 2b: pillar difficulty feels good enough (no retune); the Hero gets back up where they fell, not at the keep (HF-M2-18, in Build 3). Defaults picked by HoE: a short untouchable time after getting up, because the Hero can now fall in the middle of a fight; the wait, XP drop and Recruit rules are unchanged.
 - 2026-10-22: CEO's first playtest of slice 2: the Hero is too strong to die, and Recruits must move. Slice 2b (HF-M2-17) is a quick fix before slice 3; the team stops again after its build. The CEO's follow-up: make monsters stronger, do not nerf the Hero. Defaults picked by HoE: Recruits leash to a home post, engage the nearest enemy in range and retreat when hurt; balance is pack data only.
 - 2026-10-06: The repository stays public for now (CEO decision), to go private once the idea matures. Until then `games/holdfast/plan.md` is a build excerpt and nothing commercially sensitive is committed (`CLAUDE.md`).
 - 2026-10-06: Gate 1 web build is played from a password-protected itch.io draft page (not a public release), uploaded by CI with butler. Agreed with the Setup Desk.
