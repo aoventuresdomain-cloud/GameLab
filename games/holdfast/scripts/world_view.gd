@@ -160,6 +160,8 @@ func _draw_bar(at: Vector2, width: float, fraction: float, colour: Color) -> voi
 func _draw_hero(rules: HoldfastRules) -> void:
 	for effect in rules.effects:
 		_draw_effect(effect)
+	if rules.zone_left > 0.0:
+		draw_arc(rules.zone_position, float(rules.hero_ability["zone_radius"]), 0.0, TAU, 64, Color(rules.hero_colour, 0.7), 3.0)
 	for arrow in rules.projectiles:
 		var tail: Vector2 = arrow.position - arrow.velocity.normalized() * 14.0
 		var tint := Color(arrow.colour) if arrow.colour != "" else COLOUR_ARROW

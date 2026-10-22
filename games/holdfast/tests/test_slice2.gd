@@ -46,6 +46,23 @@ func _with_attack(hero: String, edit: Callable = Callable()) -> HoldfastRules:
 	return rules
 
 
+## Pack edits that give the Dusk Mage and the Tideblade their one-off Eclipse blast and Dash-Strike
+## (what the specials were before the zone and the three dashes; a pack still gets them when the
+## `zone_seconds` and `dash_count` fields are absent).
+func _old_eclipse(content: Dictionary) -> void:
+	var ability: Dictionary = content["hero_paths"]["dusk_mage"]["ability"]
+	for key in ["zone_seconds", "zone_radius", "pull"]:
+		ability.erase(key)
+	ability.merge({"centre": "hero", "damage": 14, "range": 150, "cooldown": 10, "radius": 150, "unlit_bonus": 1.0, "slow": 0.5, "slow_seconds": 3}, true)
+
+
+func _old_dash(content: Dictionary) -> void:
+	var ability: Dictionary = content["hero_paths"]["tideblade"]["ability"]
+	for key in ["dash_count", "dash_seconds"]:
+		ability.erase(key)
+	ability.merge({"damage": 20, "range": 40, "cooldown": 6, "dash_distance": 150, "refund_on_kill": true}, true)
+
+
 func _drop_posts(content: Dictionary) -> void:
 	content["levels"]["outpost"]["staff"].erase("post")
 	for at in content["levels"]["outpost"]["recruits"]:
@@ -127,7 +144,7 @@ func test_the_mage_burst_hits_only_what_is_within_its_radius() -> void:
 func test_eclipse_blasts_round_the_hero_and_slows() -> void:
 	# Pack: damage 14, unlit bonus 1.0, radius 150 round the Hero (0,80), slow 0.5 for 3 s.
 	# Reach is 150 + 10: an enemy at (0,-60) is 140 away. Unlit: 14 x 2 = 28, so 72.
-	var rules := _quiet("dusk_mage")
+	var rules := _quiet("dusk_mage", _old_eclipse)
 	var dark := _enemy(rules, Vector2(0, -60))
 	var out := _enemy(rules, Vector2(0, -90))  # 170 away
 	_run(rules, 1, {"ability": true})
@@ -141,7 +158,9 @@ func test_eclipse_blasts_round_the_hero_and_slows() -> void:
 func test_eclipse_in_the_light_gets_the_lit_bonus_instead() -> void:
 	# Enemy at (-100,60), 31.6 from the west post: lit, so 14 x 1.5 = 21 (no unlit bonus). Wren's
 	# post is dropped so her mark does not add to it.
-	var rules := _quiet("dusk_mage", _drop_posts)
+	var rules := _quiet("dusk_mage", func(c: Dictionary) -> void:
+		_drop_posts(c)
+		_old_eclipse(c))
 	var lit := _enemy(rules, Vector2(-100, 60))
 	_run(rules, 1, {"ability": true})
 	expect_near(lit.health, 79.0, 0.0001, "lit: 14 x 1.5")
@@ -179,7 +198,7 @@ func test_the_arc_edge_is_inclusive_at_fifty_degrees() -> void:
 func test_dash_strike_runs_through_enemies_along_the_path() -> void:
 	# Pack: dash 150, range 40 (reach 50 with an enemy's radius), damage 20, cooldown 6.
 	# Hero (0,80) faces N at (0,0), straight up, and ends the dash at (0,-70).
-	var rules := _quiet("tideblade")
+	var rules := _quiet("tideblade", _old_dash)
 	var n := _enemy(rules, Vector2(0, 0))
 	var near_path := _enemy(rules, Vector2(30, -30))  # 30 from the path
 	var edge := _enemy(rules, Vector2(50, 10))        # exactly 50 from the path: hit
@@ -196,13 +215,13 @@ func test_dash_strike_runs_through_enemies_along_the_path() -> void:
 
 
 func test_dash_strike_that_kills_gives_the_ability_back() -> void:
-	var rules := _quiet("tideblade")
+	var rules := _quiet("tideblade", _old_dash)
 	var weak := _enemy(rules, Vector2(0, 0), 20.0)
 	_run(rules, 1, {"ability": true})
 	expect_eq(rules.kills, 1)
 	expect_true(weak.health <= 0.0)
 	expect_eq(rules.hero_ability_ready_in, 0.0, "refunded on a kill")
-	var spared := _quiet("tideblade")
+	var spared := _quiet("tideblade", _old_dash)
 	_enemy(spared, Vector2(0, 0), 20.5)
 	_run(spared, 1, {"ability": true})
 	expect_eq(spared.kills, 0)

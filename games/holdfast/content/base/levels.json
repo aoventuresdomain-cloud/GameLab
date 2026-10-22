@@ -109,8 +109,8 @@
         {"delay": 4, "health_scale": 1.1, "damage_scale": 0.488, "spawns": [{"enemy": "grunt", "count": 11, "interval": 0.6}, {"enemy": "runner", "count": 7, "interval": 0.8}, {"enemy": "brute", "count": 2, "interval": 3}]},
         {"delay": 5, "health_scale": 1.15, "damage_scale": 0.618, "spawns": [{"enemy": "grunt", "count": 12, "interval": 0.55}, {"enemy": "runner", "count": 8, "interval": 0.7}, {"enemy": "brute", "count": 3, "interval": 2.5}]},
         {"delay": 5, "health_scale": 1.2, "damage_scale": 0.78, "spawns": [{"enemy": "grunt", "count": 13, "interval": 0.5}, {"enemy": "runner", "count": 10, "interval": 0.65}, {"enemy": "brute", "count": 4, "interval": 2.5}]},
-        {"delay": 5, "health_scale": 1.25, "damage_scale": 0.91, "spawns": [{"enemy": "grunt", "count": 16, "interval": 0.45}, {"enemy": "runner", "count": 11, "interval": 0.6}, {"enemy": "brute", "count": 4, "interval": 2.5}]},
-        {"delay": 6, "health_scale": 1.3, "damage_scale": 1.04, "spawns": [{"enemy": "grunt", "count": 18, "interval": 0.4}, {"enemy": "runner", "count": 13, "interval": 0.55}, {"enemy": "brute", "count": 5, "interval": 2.5}]}
+        {"delay": 5, "health_scale": 1.25, "damage_scale": 1.1, "spawns": [{"enemy": "grunt", "count": 16, "interval": 0.45}, {"enemy": "runner", "count": 11, "interval": 0.6}, {"enemy": "brute", "count": 4, "interval": 2.5}]},
+        {"delay": 6, "health_scale": 1.3, "damage_scale": 1.4, "spawns": [{"enemy": "grunt", "count": 22, "interval": 0.35}, {"enemy": "runner", "count": 16, "interval": 0.5}, {"enemy": "brute", "count": 6, "interval": 2.5}]}
       ]
     },
     {
