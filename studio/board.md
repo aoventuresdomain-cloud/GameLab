@@ -207,13 +207,13 @@
   - [ ] If the Mac route fails, the live check moves to M4 with the real app ID, and the board says so.
 
 ### HF-M2-01 Pacing bands
-- **Owner:** Balance Analyst
-- **Status:** Ready
-- **QA:** sanity
+- **Owner:** Gameplay Engineer (the Balance Analyst role is not woken; amended 2026-10-22 for Build 7 of 8)
+- **Status:** Ready, Build 7 of 8, parked until the CEO confirms after testing Build 6 (CEO 2026-10-22 23:02)
+- **QA:** full (pack retune changes outcomes)
 - **Done when:**
-  - [ ] `games/holdfast/content/pacing-bands.json` encodes the plan's targets for the slice: first upgrade within 60 seconds, a new unlock every 3-5 minutes in the first hour, no grind wall over 10 minutes of repeated runs.
-  - [ ] It adds the Advisor's bands: a bot finishes the slice in 45-75 minutes, runs last 3-8 minutes, the first Recruit can be hired by the end of run 1, and a squad adds a meaningful clear-rate gain over the Hero alone.
-  - [ ] Each band says how the simulator measures it and is checked against both an optimal bot and a mediocre-skill bot. The Gameplay Engineer reviews them.
+  - [ ] `games/holdfast/content/pacing-bands.json` holds first-time win-rate bands per pillar and per bot (average and poor) for levels 1-5, with a per-pillar first-time floor, from the Advisor's targets. Hero stats are not nerfed.
+  - [ ] It also holds the special on/off gap rule and the Old Pier first-time band. Each band says how the simulator measures it.
+  - [ ] Volley and Sniper are within a stated gap on every level (F-044), and Shingle Beach is fair for the Dusk Mage including with one post (F-049). Any Hero buff is cleared with the Advisor and logged first.
   - [ ] The Advisor's view on the bands is logged on the board.
 
 ### HF-M2-02 Meta progression: biome, 5 levels and the upgrade tree
@@ -399,12 +399,12 @@
 
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** Ready, Build 7 of 8, parked until the CEO confirms after testing Build 6; amended for the parked Recruits
 - **QA:** full
-- **Depends on:** HF-M2-01 to HF-M2-04, HF-M2-14, HF-M2-15
+- **Depends on:** HF-M2-01
 - **Done when:**
-  - [ ] Two bots play the whole slice headless in CI within the existing time budget: one that picks a Hero path and a squad, moves the Hero towards the largest group of enemies near the keep and uses the ability on cooldown, and a weak version of it. The run covers levels, upgrades, hiring, path and squad picks, and blessings.
-  - [ ] The report checks HF-M2-01's bands for both bots and every Hero path. It shows time to each unlock and the first Recruit, grind walls and run length.
+  - [ ] Two bots (average and poor) play levels 1-5 headless in CI within the existing time budget, for every pillar, with upgrades, tree picks and post sites.
+  - [ ] The report checks HF-M2-01's bands for both bots and every pillar, and shows win rates per level and pillar.
   - [ ] CI fails when a band is missed.
 
 ### HF-M2-06 Home screen and keep screen
@@ -460,7 +460,7 @@
 
 ### HF-M2-11 Name check
 - **Owner:** Researcher (per job)
-- **Status:** Ready
+- **Status:** Ready, parked with Build 7 until the CEO confirms after Build 6; needs a Researcher thread from the Chief of Staff (the Gameplay Engineer does not do trademark searches)
 - **QA:** none (research)
 - **Done when:**
   - [ ] Steam and UK/EU/US trademark search for "Holdfast" and for "The Last Lighthouse", with any clash noted in the plan.
@@ -625,4 +625,5 @@
 - 2026-10-22 19:31: CEO: waves keep stacking on the timer (no change to the wave overlap). Backlog, idea only: call the next wave early for a bonus, a next-wave countdown, and a wait-for-clear option. Slice 4b (HF-M2-27) is the stronger specials and the post-win screen, held until the CEO's go.
 - 2026-10-22 19:35: CEO GO: build 4b (HF-M2-27), Build 5 (HF-M2-26) and Build 6 (HF-M2-16) together as one run, then stop for the CEO's decision. The plan stays at 8 builds; no Look and feel build now. Feel, look and animation (HF-M2-07, HF-M2-08) are agreed after Build 8, with Designer sketches in a separate thread. Waves keep stacking. One combined handoff, labelled 4b / 5 of 8 / 6 of 8. Merge order: 4b, 5, 6.
 
-- 2026-10-22 22:41: CEO GO: add Build 7 of 8 (pacing: HF-M2-01, HF-M2-05, name check HF-M2-11) to the run, so the run is 4b + 5 + 6 + 7 with one combined handoff and then a stop. The style guide, look and art stay out (decided after Build 8). Build 8 (Recruits) stays parked. Merge order 5, 6, 7.
+- 2026-10-22 22:41: CEO GO to add Build 7 of 8 to the run. Reversed at 23:02 (below).
+- 2026-10-22 23:02: CEO: reverse the Build 7 add. The run is 4b + 5 + 6 again. The team stops after Build 6 and waits for the CEO to test and confirm before Build 7 (pacing) starts. The Build 7 board items stay amended and parked. Hero buffs vs pack-only tuning is an open question for the Advisor, asked at 23:01, to be answered when Build 7 starts.
