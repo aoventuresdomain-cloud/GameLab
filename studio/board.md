@@ -311,7 +311,7 @@
 
 ### HF-M2-20 Levels unlock by winning the previous level
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 3c of 7 (CEO playtest of Builds 3 and 3b, 2026-10-22)
+- **Status:** Merged in #57, Build 3c of 7, waiting on the CEO's playtest
 - **QA:** full (changes save data)
 - **Depends on:** HF-M2-02
 - **Done when:**
@@ -322,7 +322,7 @@
 
 ### HF-M2-21 Monsters go for the tower and only fight the Hero up close
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 3c of 7 (CEO playtest of Builds 3 and 3b, 2026-10-22)
+- **Status:** Merged in #58, Build 3c of 7, waiting on the CEO's playtest
 - **QA:** full (core rules)
 - **Depends on:** HF-M2-17
 - **Done when:**
@@ -453,6 +453,8 @@
 | F-028 | HF-M2-01 | Balance: the Flare Archer wins Tidewrack Cove about 1 in 40 seeds with its kit (1 in 12 before the bigger arena) while the Tideblade wins most; not retuned in Build 3 | Minor | Gameplay Engineer | Open, handled with the pacing bands in Build 6 unless the CEO's playtest says otherwise |
 | F-029 | HF-M2-19 | FOLLOW-UP from QA's screens walk: Recruit name and down labels are about 7 px tall at 1280x720 (0.65 scale), hard to read | Minor | Gameplay Engineer | Open, a small fix in a later build |
 | F-030 | HF-M2-19 | FOLLOW-UP from QA's screens walk: with the Hero at the top edge, its aura arc and health bar draw faintly over the HUD panel's lower edge | Minor | Gameplay Engineer | Open, a small fix in a later build |
+| F-031 | HF-M2-21 | FOLLOW-UP from QA: with monsters going for the tower, bot win rates fall (336 to 282 wins of 540 across pillars, levels and upgrade tiers; Dusk Mage and Tideblade harder, Flare Archer level; fresh-profile Gull Rock 0 of 36). No pack value weakens the Hero or strengthens monsters beyond the targeting rule. Not retuned in Build 3c | Minor | Gameplay Engineer | Open, handled with the pacing bands in Build 6 unless the CEO's playtest says otherwise |
+| F-032 | HF-M2-20 | FOLLOW-UP from QA: the save migration crashes on wrong-typed fields in a hash-valid, hand-edited save (null upgrades, non-numeric gold), and a hand-edited unlocked list can open a later level alone. Not reachable in normal play | Minor | Gameplay Engineer | Open, low priority |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -477,6 +479,10 @@
 | 2026-10-22 | `games/holdfast/tests/test_hero.gd::test_the_hero_cannot_leave_the_spawn_ring` to `..._leave_the_arena` (#51) | The Hero now stops at the arena edge (x = 960) instead of the spawn ring | HF-M2-19 (CEO change). Intent kept: the Hero cannot walk out of play | Head of Engineering |
 | 2026-10-22 | `games/holdfast/tests/test_build3.gd` fog-edge test and get-up-outside test (#51) | Fog-edge test drops its `hero_max_distance` line; get-up-outside test uses x = 1200 and expects 960 | The old distance cap is replaced by the arena edge. Intent kept | Head of Engineering |
 | 2026-10-22 | Progression hash | Re-pinned in #51: `62191b7c...63f7` to `d0bae866...2829` | Bigger arenas change every run. Parity passes; 49 runs, 9.4 s. Tidewrack Cove `balance_check` seeds raised from 12 to 40 (pack data) | Head of Engineering |
+| 2026-10-22 | `games/holdfast/tests/test_build3.gd` (#57): `test_the_tree_has_about_thirty_nodes_in_the_four_branches` to about 26 nodes in three branches; `test_levels_unlock_through_bought_nodes...` to `..._through_wins`; two tests deleted (`test_every_level_has_one_unlock_node_and_levels_open_in_order`, `test_a_dangling_unlock_is_refused_by_the_pack_loader_naming_the_field`); new-profile shape test gains `unlocked`; flow and parity tests no longer buy unlock nodes | Levels now unlock by winning (CEO change, HF-M2-20); the `unlocks` field leaves the game pack schema. Intent kept: tree, unlocks and save rules still tested, now for the new rule | Head of Engineering |
+| 2026-10-22 | Progression hash | Re-pinned in #57: `d0bae866...2829` to `143e03de...5115` (44 runs, 10.1 s) | The 26-node tree and unlock-by-win change every run. Parity passes | Head of Engineering |
+| 2026-10-22 | `games/holdfast/tests/test_hero.gd` `_quiet()` setup (#58) | One setup line pins the Flare Archer's attack damage at 6.0; four tests' assertions unchanged (the hero fires and the arrow hits; keeps firing on the cooldown; a fast arrow cannot skip a thin enemy; an arrow stops at the first enemy) | The Archer's pack damage went from 6 to 7 (a Hero buff), and these tests are hand-worked from 6. Same pattern as test_slice2 | Head of Engineering |
+| 2026-10-22 | Progression hash | Re-pinned in #58: `143e03de...5115` to `c90d0a9e...b199` (40 runs, 9.4 s) | Monsters go for the tower, so every run changes. Parity passes | Head of Engineering |
 
 ## Advisor views
 
