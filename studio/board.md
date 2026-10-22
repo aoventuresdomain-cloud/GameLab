@@ -309,6 +309,28 @@
   - [ ] The Hero can walk to every edge and corner of the arena and no further (tested at each edge and corner), and the arrow and enemy spawns still sit inside it.
   - [ ] No rule, pack tuning or pillar number changes except the arena size and where things sit in it; the progression hash is unchanged or re-pinned once with old and new in the PR, and parity and the 60 second budget still pass.
 
+### HF-M2-20 Levels unlock by winning the previous level
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, Build 3c of 7 (CEO playtest of Builds 3 and 3b, 2026-10-22)
+- **QA:** full (changes save data)
+- **Depends on:** HF-M2-02
+- **Done when:**
+  - [ ] Level N+1 unlocks only when level N is won, never by buying a node; the level-unlock nodes leave the upgrade tree (no node sells a level) and the keep screen shows a locked level with the plain reason "Win the previous level".
+  - [ ] An existing save keeps every level it has already unlocked, and a level that was unlocked only by a bought node but never won stays playable for that save (migration tested from the Build 3 save, plus a damaged and a newer save).
+  - [ ] Winning a level saves the unlock at once (tested: win, reload, next level open); losing or quitting a level never unlocks the next.
+  - [ ] The ten-hour progression run and the parity test still pass, the progression hash is re-pinned once with old and new in the PR, and the 60 second budget holds.
+
+### HF-M2-21 Monsters go for the tower and only fight the Hero up close
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, Build 3c of 7 (CEO playtest of Builds 3 and 3b, 2026-10-22)
+- **QA:** full (core rules)
+- **Depends on:** HF-M2-17
+- **Done when:**
+  - [ ] Monsters head for the tower by default. A monster attacks the Hero (or a Recruit) only while that unit is within a pack-set close distance of it, and goes back to the tower once the unit is out of range; it never follows a unit across the map (tested at the boundary: exactly at the distance, just outside, zero distance means never).
+  - [ ] A monster already attacking the tower keeps attacking it while the Hero stands nearby, unless the Hero is inside its close distance (tested).
+  - [ ] The Hero is not weaker and monsters are not weaker: the pillar bots still lose some runs and win some, checked with the simulator by pillar (numbers from packs, any retune written in the PR).
+  - [ ] Parity test and the 60 second budget pass, the progression hash is re-pinned once with old and new in the PR, and the web build is checked in Chromium.
+
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
 - **Status:** Ready
@@ -474,6 +496,7 @@
 - 2026-10-22: **Go on the revised plan** (CEO). Recruits are parked until the core gameplay is established (HF-M2-03 on hold, what exists stays as is). The CEO now gets 7 builds: 3 Gold and saves, 4 Hero skills, 5 Monsters and the boss, 6 Pacing, 7 Recruits. Build 3 starts now and includes HF-M2-18. Defaults picked by HoE: the Gameplay Engineer builds the plain Build 3 screens (no new role woken); the save service PR (KIT-07, core logic) gets QA's strict tests plus a focused QA check on that one commit, not a full round.
 - 2026-10-22: CEO after Build 2b: pillar difficulty feels good enough (no retune); the Hero gets back up where they fell, not at the keep (HF-M2-18, in Build 3). Defaults picked by HoE: a short untouchable time after getting up, because the Hero can now fall in the middle of a fight; the wait, XP drop and Recruit rules are unchanged.
 - 2026-10-22: CEO after Build 3 start: the map felt small and the Hero could not reach the edge (HF-M2-19). Defaults picked by HoE: a quick fix with the Build 3 letter (3b) that rides after Build 3 and changes only arena size; the estimate stays the same.
+- 2026-10-22: CEO after Builds 3 and 3b: the map size is fine; levels must unlock by winning the previous level, not by buying in the tree (HF-M2-20); monsters go for the tower and only fight the Hero up close, no chasing across the map (HF-M2-21); the skill tree needs big changes, not yet specified. Defaults picked by HoE: a quick fix called Build 3c of 7 with HF-M2-20 and HF-M2-21 only; the tree changes fold into Build 4, after the Game Design Advisor reviews the tree and the CEO says what they dislike.
 - 2026-10-22: CEO's first playtest of slice 2: the Hero is too strong to die, and Recruits must move. Slice 2b (HF-M2-17) is a quick fix before slice 3; the team stops again after its build. The CEO's follow-up: make monsters stronger, do not nerf the Hero. Defaults picked by HoE: Recruits leash to a home post, engage the nearest enemy in range and retreat when hurt; balance is pack data only.
 - 2026-10-06: The repository stays public for now (CEO decision), to go private once the idea matures. Until then `games/holdfast/plan.md` is a build excerpt and nothing commercially sensitive is committed (`CLAUDE.md`).
 - 2026-10-06: Gate 1 web build is played from a password-protected itch.io draft page (not a public release), uploaded by CI with butler. Agreed with the Setup Desk.
