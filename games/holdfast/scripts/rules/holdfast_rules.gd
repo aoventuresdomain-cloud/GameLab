@@ -906,6 +906,7 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 			hero_rapid_left = float(hero_ability["rapid_seconds"])
 		elif float(hero_ability.get("dash_seconds", 0.0)) > 0.0:
 			hero_dash_left = float(hero_ability["dash_seconds"])
+			hero_grace_left = maxf(hero_grace_left, hero_dash_left)
 			_start_dash(target)
 		elif float(hero_ability.get("zone_seconds", 0.0)) > 0.0:
 			zone_left = float(hero_ability["zone_seconds"])

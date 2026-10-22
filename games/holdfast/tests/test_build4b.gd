@@ -282,6 +282,16 @@ func test_nothing_can_hurt_the_hero_during_the_dashes_and_the_grace_ends_with_th
 	expect_false(rules.hero_untouchable(), "grace over soon after the last dash")
 
 
+func test_the_hero_is_untouchable_from_the_tick_of_the_cast() -> void:
+	# QA follow-up: the grace was set a tick late, so the tick after the cast could still hurt.
+	var rules := _rules("tideblade")
+	_enemy(rules, Vector2(0, -100), 1000.0)
+	_run(rules, 1, {"ability": true})
+	expect_true(rules.hero_untouchable(), "on the cast tick itself")
+	_run(rules, 1)
+	expect_true(rules.hero_untouchable(), "and on the tick after")
+
+
 func test_a_dash_chain_of_one_and_of_zero_seconds() -> void:
 	# One dash of 0.4 s: a single 300 px run, hit once. Zero seconds is the plain one-off dash.
 	var one := _rules("tideblade", func(c: Dictionary) -> void:
@@ -355,9 +365,14 @@ func test_the_shipped_burst_fires_an_arrow_every_five_ticks_for_five_seconds() -
 	var seen := []
 	for tick in range(1, 200):
 		_run(rules, 1, {"ability": tick == 1})
-		if not rules.projectiles.is_empty() and not rules.projectiles.back() in seen:
-			seen.append(rules.projectiles.back())
+		var fresh := 0
+		for arrow in rules.projectiles:
+			if not arrow in seen:
+				seen.append(arrow)
+				fresh += 1
+		if fresh > 0:
 			shots.append(tick)
-	expect_true(shots.size() >= 30 and shots.size() <= 31, "arrows in one burst: %d" % shots.size())
+	expect_true(seen.size() >= 30 and seen.size() <= 31, "arrows spawned in one burst: %d" % seen.size())
+	expect_eq(seen.size(), shots.size(), "one arrow per shot, never two at once")
 	expect_eq(shots.slice(0, 4), [1, 6, 11, 16], "one every five ticks")
 	expect_eq(shots[29], 146, "the thirtieth")
