@@ -15,11 +15,9 @@ var _decisions := 0
 var _held := {}
 
 
-static func make(model: Dictionary) -> HoldfastSkilledBot:
-	var bot := HoldfastSkilledBot.new()
-	bot.reaction_ticks = maxi(int(model["reaction_ticks"]), 1)
-	bot.ability_every = maxi(int(model["ability_every"]), 1)
-	return bot
+func _init(model: Dictionary = AVERAGE) -> void:
+	reaction_ticks = maxi(int(model["reaction_ticks"]), 1)
+	ability_every = maxi(int(model["ability_every"]), 1)
 
 
 func get_input(rules: SimRules, tick: int) -> Dictionary:

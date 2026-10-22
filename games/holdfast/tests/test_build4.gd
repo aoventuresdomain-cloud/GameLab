@@ -17,7 +17,7 @@ func _win_rate(level: String, pillar: String, model: Dictionary, seeds: int) -> 
 	var won := 0
 	for run_seed in range(1, seeds + 1):
 		var config := HoldfastContent.run_config(level, [], {}, pillar)
-		var bot := HoldfastSkilledBot.make(model)
+		var bot := HoldfastSkilledBot.new(model)
 		var result: Dictionary = SimBotRunner.run(HoldfastRules.new(), bot, run_seed, config, 200000, HoldfastRules.TICK_RATE)["result"]
 		won += 1 if result["outcome"] == HoldfastRules.OUTCOME_WON else 0
 	return float(won) / seeds
