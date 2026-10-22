@@ -222,6 +222,14 @@ var hero_ability_ready_in := 0.0
 ## Seconds left of a rapid-fire ability, and the wait until its next arrow.
 var hero_rapid_left := 0.0
 var hero_rapid_ready_in := 0.0
+## An Eclipse zone: seconds left, and where. Enemies in it are pulled in and slowed; it collapses at the end.
+var zone_left := 0.0
+var zone_position := Vector2.ZERO
+## A chain of dashes: seconds left in all of it and in the current dash, its direction, and who it has hit.
+var hero_dash_left := 0.0
+var hero_dash_in := 0.0
+var hero_dash_dir := Vector2.ZERO
+var hero_dash_hit: Array = []
 ## The Hero stays inside the spawn ring.
 ## Half the arena's width and height: the keep is at its centre, and nothing
 ## (the Hero, a spawn) is outside it.
@@ -486,6 +494,7 @@ func step(dt: float, input: Dictionary) -> void:
 	hero_grace_left = HeroGetUp.tick_grace(hero_grace_left, dt)
 	if hero_grace_left < TIME_EPSILON:
 		hero_grace_left = 0.0
+	_step_zone(dt)
 	_step_enemies(dt)
 	if keep_health <= 0:
 		_finish(OUTCOME_LOST)
@@ -736,6 +745,9 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 			hero_grace_left = up["grace_left"]
 			_targets_dirty = true
 		return
+	if hero_dash_left > TIME_EPSILON:
+		_step_dash(dt)
+		return
 	var move := _input_vector(input.get("move"))
 	if move != Vector2.ZERO:
 		hero_position = _in_arena(hero_position + move * hero_speed * dt)
@@ -753,11 +765,74 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 		hero_ability_ready_in = float(hero_ability["cooldown"])
 		if float(hero_ability.get("rapid_seconds", 0.0)) > 0.0:
 			hero_rapid_left = float(hero_ability["rapid_seconds"])
+		elif float(hero_ability.get("dash_seconds", 0.0)) > 0.0:
+			hero_dash_left = float(hero_ability["dash_seconds"])
+			_start_dash(target)
+		elif float(hero_ability.get("zone_seconds", 0.0)) > 0.0:
+			zone_left = float(hero_ability["zone_seconds"])
+			zone_position = hero_position if target == null else target.position
 		else:
 			_use(hero_ability, target)
 	if hero_rapid_left > 0.0 and hero_rapid_ready_in <= 0.0:
 		hero_rapid_ready_in = float(hero_ability.get("rapid_interval", hero_attack["cooldown"]))
 		_fire(hero_ability)
+
+
+## Starts the next dash of a chain, aimed at the nearest enemy (or along the facing when none is left).
+func _start_dash(target: Enemy) -> void:
+	if target != null and target.position != hero_position:
+		hero_facing = (target.position - hero_position).normalized()
+	hero_dash_dir = hero_facing
+	hero_dash_in = float(hero_ability["dash_seconds"]) / int(hero_ability.get("dash_count", 1))
+	hero_dash_hit.clear()
+
+
+## One tick of a dash chain: the Hero runs `dash_distance` along the dash's direction over its
+## share of `dash_seconds`, hurting each enemy within `range` of the run once, and cannot be hurt
+## meanwhile. The Hero does nothing else until the chain is over.
+func _step_dash(dt: float) -> void:
+	hero_grace_left = maxf(hero_grace_left, hero_dash_left)
+	var step := minf(dt, hero_dash_in)
+	var from := hero_position
+	var per := float(hero_ability["dash_seconds"]) / int(hero_ability.get("dash_count", 1))
+	hero_position = _in_arena(from + hero_dash_dir * (float(hero_ability["dash_distance"]) * step / per))
+	var reach := float(hero_ability["range"])
+	for enemy in enemies:
+		if enemy.health <= 0.0 or enemy in hero_dash_hit:
+			continue
+		if Geometry2D.get_closest_point_to_segment(enemy.position, from, hero_position).distance_to(enemy.position) <= reach + enemy.radius:
+			hero_dash_hit.append(enemy)
+			_hurt(enemy, float(hero_ability["damage"]), float(hero_ability.get("unlit_bonus", 0.0)))
+	_add_effect("dash", from, reach, hero_position - from)
+	hero_dash_left -= dt
+	hero_dash_in -= dt
+	if hero_dash_left < TIME_EPSILON:
+		hero_dash_left = 0.0
+	if hero_dash_in <= TIME_EPSILON and hero_dash_left > TIME_EPSILON:
+		_start_dash(_nearest_enemy(hero_position))
+
+
+## An Eclipse zone for one tick: enemies inside `zone_radius` are slowed by `slow` and drawn
+## toward the middle at `pull` px/s. When it runs out it collapses: every enemy within `radius`
+## of the middle is hurt for `damage`.
+func _step_zone(dt: float) -> void:
+	if zone_left <= 0.0:
+		return
+	zone_left = maxf(zone_left - dt, 0.0)
+	var reach := float(hero_ability["zone_radius"])
+	for enemy in enemies:
+		if enemy.health <= 0.0 or enemy.position.distance_to(zone_position) > reach + enemy.radius:
+			continue
+		enemy.slow_amount = maxf(enemy.slow_amount, float(hero_ability["slow"]))
+		enemy.slowed_for = maxf(enemy.slowed_for, 2.0 * dt)
+		enemy.position = enemy.position.move_toward(zone_position, float(hero_ability["pull"]) * dt)
+	if zone_left < TIME_EPSILON:
+		zone_left = 0.0
+		var radius := float(hero_ability["radius"])
+		for enemy in enemies:
+			if enemy.health > 0.0 and enemy.position.distance_to(zone_position) <= radius + enemy.radius:
+				_hurt(enemy, float(hero_ability["damage"]), float(hero_ability.get("unlit_bonus", 0.0)))
+		_add_effect("burst", zone_position, radius, Vector2.ZERO)
 
 
 ## `at` held inside the arena, edges included.
@@ -1115,7 +1190,7 @@ func snapshot() -> Dictionary:
 		"result": result(),
 		"staff_xp": staff_xp,
 		"aura": [aura_active, aura_position.x, aura_position.y],
-		"hero": [hero_position.x, hero_position.y, hero_facing.x, hero_facing.y, hero_attack_ready_in, hero_ability_ready_in, hero_rapid_left, hero_rapid_ready_in],
+		"hero": [hero_position.x, hero_position.y, hero_facing.x, hero_facing.y, hero_attack_ready_in, hero_ability_ready_in, hero_rapid_left, hero_rapid_ready_in, zone_left, zone_position.x, zone_position.y, hero_dash_left, hero_dash_in],
 		"hero_state": hero_state,
 		"hero_grace_left": hero_grace_left,
 		"carried_xp": carried_xp,

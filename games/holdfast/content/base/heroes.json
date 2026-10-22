@@ -63,16 +63,17 @@
       "ability": {
         "name": "Eclipse",
         "kind": "area",
-        "centre": "hero",
-        "damage": 14,
+        "damage": 20,
         "range": 150,
-        "cooldown": 10,
-        "radius": 150,
-        "unlit_bonus": 1.0,
-        "slow": 0.5,
-        "slow_seconds": 3
+        "cooldown": 16,
+        "radius": 130,
+        "unlit_bonus": 0.6,
+        "slow": 0.6,
+        "zone_seconds": 4,
+        "zone_radius": 255,
+        "pull": 60
       },
-      "blurb": "Shadow pulses that hit hardest in the dark. Space: Eclipse, a blast round you that slows enemies.",
+      "blurb": "Shadow pulses that hit hardest in the dark. Space: Eclipse, a zone that drags enemies in, slows them and then collapses.",
       "colour": "#9b7be0"
     },
     {
@@ -97,13 +98,14 @@
       "ability": {
         "name": "Dash-Strike",
         "kind": "arc",
-        "damage": 20,
+        "damage": 27,
         "range": 40,
-        "cooldown": 6,
-        "dash_distance": 150,
-        "refund_on_kill": true
+        "cooldown": 12,
+        "dash_distance": 300,
+        "dash_count": 3,
+        "dash_seconds": 1.2
       },
-      "blurb": "Quick stabs up close. Space: Dash-Strike, a dash through enemies that resets if it kills.",
+      "blurb": "Quick stabs up close. Space: Dash-Strike, three dashes through enemies while nothing can hurt you.",
       "colour": "#4fc3c8"
     }
   ]
