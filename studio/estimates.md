@@ -28,10 +28,12 @@ The CEO asked for a very lean M2: small changes shipped fast, quick fixes, and t
 | 4 of 8 | Winnable early levels and a 1 s pause with a "Wave N" banner between waves (CEO feedback; tower revive dropped) | HF-M2-22, HF-M2-23 | Done, handed over 2026-10-22 | Done |
 | 4b of 8 | CEO feedback after Build 4: waves wait for the last monsters (if the Advisor and the CEO choose that), a longer Flare Barrage that fires rapidly for a few seconds, buttons after a win to go to the next level or the upgrade screen. Held until the Advisor's view and the CEO's go | to be itemised | AI build time: about 45 to 60 minutes including QA | Medium |
 | 5 of 8 | Flare Archer and Archer Post tree: sections, a Sniper/Volley fork, site planning on levels 1 and 2 with enemies from more than one direction (CEO, 2026-10-22 19:15). Reuses the held 17-node work's save migration, respec and next-unlock display | HF-M2-26, HF-M2-14 rest (Flare Archer), HF-M2-04 if kept | AI build time: about 3 to 4 hours, plus about 45 minutes QA (recalibrated 2026-10-22, see below) | Medium to low |
-| 6 of 8 | Monster variety, the elite drop, Hero gear, the level-5 mini-boss, hit feel and sound | HF-M2-16, HF-M2-07 | About 4 to 5 hours | Low |
+| 6 of 8 | Monster variety, the elite drop, Hero gear, the level-5 mini-boss, new monster types, the Hero gear (hit feel and sound moved to after Build 8, CEO 2026-10-22) | HF-M2-16 | About 4 to 5 hours | Low |
 | 7 of 8 | Pacing bands passed in the simulator for every pillar, style guide for approval, name check (end of the core) | HF-M2-01, HF-M2-05, HF-M2-08, HF-M2-11 | About 2 to 3 hours | Medium |
 | 8 of 8 (parked) | Recruits: hiring, classes, movement, skill trees, recruitment board. Only if the CEO wants it after the core | HF-M2-03 | About 4 to 5 hours | Low |
 | End | Full QA round on one fixed commit, then the Gate 2 brief | HF-M2-12, HF-M2-13 | About 2 to 3 hours | Low |
+
+**The run 4b + 5 + 6 (CEO go, 2026-10-22 19:35): about 9 to 11 hours of AI build time (4b about 1 hour, Build 5 about 4, Build 6 about 4 to 5) plus about 2 hours of QA across the three, low to medium confidence; one handoff at the end. Your test time is not counted.**
 
 **Recalibration (CEO feedback, 2026-10-22 19:27): the figures were about 3 to 4 times too high. Build 4 was quoted at about 2 build days with the tree and 4 hours for its non-tree part; the non-tree part (wave pause, easing, bots, QA, merges) took about 2 hours from go to handover, and the 17-node tree about 45 minutes to build. From now on one hour of quoted AI build time is based on this pace: a slice of this size is 1 to 4 hours including QA, and I convert to days only for the whole plan. Builds 6 to the end are cut by the same factor; confidence stays low for them.**
 

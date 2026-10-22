@@ -269,10 +269,11 @@
 
 ### HF-M2-16 Hero gear and the first boss
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** Go (CEO 2026-10-22 19:35), Build 6 of 8, third in the run 4b + 5 + 6. Recruits are parked, so the "squad" lines below mean the Hero plus towers for now
 - **QA:** full
 - **Depends on:** HF-M2-14, HF-M2-15, HF-M2-02
 - **Done when:**
+  - [ ] At least 2 new monster types from packs (for example a fast runner and a heavy one), appearing from level 2, each with a rules test and a place in the simulator's bands.
   - [ ] Gear is for the Hero only: the Hero has 2 gear slots filled from a pool of about 6 items in packs, Recruits have no gear slots (tested), and gear persists through KIT-07.
   - [ ] An elite on level 2 or 3 always drops a gear item, so every tester sees gear before the boss.
   - [ ] Level 5 ends with a mini-boss from the fog that cannot be beaten without the Hero's path ability; its behaviour comes from packs (tested) and it drops gear.
@@ -375,7 +376,7 @@
 
 ### HF-M2-26 Flare Archer and Archer Post tree, with site planning
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 5 of 8, starts only on the CEO's go after testing Build 4 (CEO direction 2026-10-22 19:15, plan signed off 19:19: do the Archer and the Archer Post properly first, then other towers, characters and synergies one at a time; Advisor's first-slice shape accepted). No new tower types; the Mage Post and the rest are later slices and need the CEO's go
+- **Status:** Go (CEO 2026-10-22 19:35), Build 5 of 8, second in the run 4b + 5 + 6 (CEO direction 2026-10-22 19:15, plan signed off 19:19: do the Archer and the Archer Post properly first, then other towers, characters and synergies one at a time; Advisor's first-slice shape accepted). No new tower types; the Mage Post and the rest are later slices and need the CEO's go
 - **QA:** full (upgrade and save data, core rules)
 - **Depends on:** HF-M2-14, HF-M2-22
 - **Done when:**
@@ -387,7 +388,7 @@
 
 ### HF-M2-27 Stronger specials and a post-win screen (slice 4b)
 - **Owner:** Gameplay Engineer
-- **Status:** Held until the CEO's go (CEO feedback after Build 4, 2026-10-22 19:27 and 19:31). The other pillars' specials wait on the Advisor's view
+- **Status:** Go (CEO 2026-10-22 19:35): slice 4b, built first in the run 4b + Build 5 + Build 6. The Dusk Mage's and Tideblade's specials follow the Advisor's view, asked for at the start of the run
 - **QA:** full (core rules for the special), screens for the post-win screen
 - **Depends on:** HF-M2-14
 - **Done when:**
@@ -419,7 +420,7 @@
 
 ### HF-M2-07 Feel and settings
 - **Owner:** UI Engineer
-- **Status:** Ready
+- **Status:** Deferred (CEO, 2026-10-22 19:35): mechanics first; feel, look and animation are agreed after Build 8, with a Designer giving rough sketches in a separate thread first. Not part of Build 6
 - **QA:** screens
 - **Done when:**
   - [ ] Hit flash, screen shake, damage number pops, particles, clear Hero ability hits and a keep that grows with upgrades, in code, within the style guide.
@@ -604,3 +605,4 @@
 
 - 2026-10-22 19:15: CEO (with the Advisor): the tree should be Incrempire-like, with sections per tower, but start with the Flare Archer and the Archer Post only, then other towers, characters and synergies one at a time. Tree work becomes its own slice, HF-M2-26, as Build 5 of 8 (the build total goes from 7 to 8: Build 4 is the wave pause and easing, 5 the tree slice, 6 monsters and boss, 7 pacing, 8 Recruits, parked). HF-M2-25 is superseded. The Advisor's wider ideas (Mage and Mender posts, bridges between sections, Recruits at posts, mid-run placing) are not in scope until the CEO says go.
 - 2026-10-22 19:31: CEO: waves keep stacking on the timer (no change to the wave overlap). Backlog, idea only: call the next wave early for a bonus, a next-wave countdown, and a wait-for-clear option. Slice 4b (HF-M2-27) is the stronger specials and the post-win screen, held until the CEO's go.
+- 2026-10-22 19:35: CEO GO: build 4b (HF-M2-27), Build 5 (HF-M2-26) and Build 6 (HF-M2-16) together as one run, then stop for the CEO's decision. The plan stays at 8 builds; no Look and feel build now. Feel, look and animation (HF-M2-07, HF-M2-08) are agreed after Build 8, with Designer sketches in a separate thread. Waves keep stacking. One combined handoff, labelled 4b / 5 of 8 / 6 of 8. Merge order: 4b, 5, 6.
