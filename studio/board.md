@@ -207,13 +207,13 @@
   - [ ] If the Mac route fails, the live check moves to M4 with the real app ID, and the board says so.
 
 ### HF-M2-01 Pacing bands
-- **Owner:** Balance Analyst
-- **Status:** Ready
-- **QA:** sanity
+- **Owner:** Gameplay Engineer (the Balance Analyst role is not woken; amended 2026-10-22 for Build 7 of 8)
+- **Status:** Go (CEO 2026-10-22 22:41), Build 7 of 8
+- **QA:** full (pack retune changes outcomes)
 - **Done when:**
-  - [ ] `games/holdfast/content/pacing-bands.json` encodes the plan's targets for the slice: first upgrade within 60 seconds, a new unlock every 3-5 minutes in the first hour, no grind wall over 10 minutes of repeated runs.
-  - [ ] It adds the Advisor's bands: a bot finishes the slice in 45-75 minutes, runs last 3-8 minutes, the first Recruit can be hired by the end of run 1, and a squad adds a meaningful clear-rate gain over the Hero alone.
-  - [ ] Each band says how the simulator measures it and is checked against both an optimal bot and a mediocre-skill bot. The Gameplay Engineer reviews them.
+  - [ ] `games/holdfast/content/pacing-bands.json` holds first-time win-rate bands per pillar and per bot (average and poor) for levels 1-5, with a per-pillar first-time floor, from the Advisor's targets. Hero stats are not nerfed.
+  - [ ] It also holds the special on/off gap rule and the Old Pier first-time band. Each band says how the simulator measures it.
+  - [ ] Volley and Sniper are within a stated gap on every level (F-044), and Shingle Beach is fair for the Dusk Mage including with one post (F-049). Any Hero buff is cleared with the Advisor and logged first.
   - [ ] The Advisor's view on the bands is logged on the board.
 
 ### HF-M2-02 Meta progression: biome, 5 levels and the upgrade tree
@@ -399,12 +399,12 @@
 
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** Go (CEO 2026-10-22 22:41), Build 7 of 8; amended for the parked Recruits
 - **QA:** full
-- **Depends on:** HF-M2-01 to HF-M2-04, HF-M2-14, HF-M2-15
+- **Depends on:** HF-M2-01
 - **Done when:**
-  - [ ] Two bots play the whole slice headless in CI within the existing time budget: one that picks a Hero path and a squad, moves the Hero towards the largest group of enemies near the keep and uses the ability on cooldown, and a weak version of it. The run covers levels, upgrades, hiring, path and squad picks, and blessings.
-  - [ ] The report checks HF-M2-01's bands for both bots and every Hero path. It shows time to each unlock and the first Recruit, grind walls and run length.
+  - [ ] Two bots (average and poor) play levels 1-5 headless in CI within the existing time budget, for every pillar, with upgrades, tree picks and post sites.
+  - [ ] The report checks HF-M2-01's bands for both bots and every pillar, and shows win rates per level and pillar.
   - [ ] CI fails when a band is missed.
 
 ### HF-M2-06 Home screen and keep screen
@@ -460,7 +460,7 @@
 
 ### HF-M2-11 Name check
 - **Owner:** Researcher (per job)
-- **Status:** Ready
+- **Status:** Go (CEO 2026-10-22 22:41), Build 7 of 8 run; needs a Researcher thread from the Chief of Staff (the Gameplay Engineer does not do trademark searches)
 - **QA:** none (research)
 - **Done when:**
   - [ ] Steam and UK/EU/US trademark search for "Holdfast" and for "The Last Lighthouse", with any clash noted in the plan.
