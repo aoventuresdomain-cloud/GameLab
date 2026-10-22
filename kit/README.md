@@ -7,7 +7,7 @@ A Godot 4 addon shared by every GameLab game. Each game links it in as `addons/g
 | `sim/` | Deterministic simulation engine: fixed timestep, seeded RNG, bot runner. No rendering dependency, so it runs headless. Games plug their own rules into it |
 | `packs/` | Pack loader and schema validation |
 | `schema/` | Versioned base JSON schemas; games extend them |
-| `services/` | Platform services. Today: `steam/` (KIT-04). Save and telemetry come when a game needs them |
+| `services/` | Platform services. Today: `steam/` (KIT-04) and `save/` (KIT-07). Telemetry comes when a game needs it |
 | `tests/` | Kit tests, run in CI for every game |
 | `testing/` | The headless test runner and `KitTestCase` every game's tests use |
 
@@ -23,8 +23,20 @@ A game writes its rules as a `SimRules` (setup, step, is_finished, snapshot, res
 
 A pack is a folder with `pack.json` (manifest) and the JSON files it lists. `schema/pack.v0.schema.json` is the versioned base for levels, enemies, towers, staff and upgrade nodes; a game extends it with `"$extends"`. `PackLoader.load_pack(dir, schema)` validates every file, checks `x-ref` ids, and refuses anything that is not data (non-JSON files, res:// or user:// paths, scripts, scenes, resources). Errors name the file and the field, e.g. `enemies.json: $.enemies[0].health: expected number, got string`.
 
+Every `pack.json` carries `format_version`, the pack format major version the pack was written for. A version the kit does not read is refused first, with one error (`pack.json: $.format_version: unknown major version 2 (this kit reads pack format 0)`). References (`x-ref`) are checked across all of a pack's files, so a level in one file can name an enemy in another; a dangling id is reported against the file and field that holds it.
+
 Nothing game-specific belongs here: no game names, no game rules, no game content. `tools/studio/check_repo.py` fails CI if `kit/` names a game.
 
 ## Steam service (`services/steam/`)
 
 `SteamService` wraps GodotSteam: `init(app_id)`, `unlock_achievement(name)`, `store_stats()`, `poll()` once per frame. Wherever Steam can't be used (GodotSteam not in the build, web or headless build, Steam not running) every call is a no-op that returns false and logs the reason once. The `Steam` singleton comes from GodotSteam's prebuilt Windows export template, pinned by release, file name and SHA-256 in `tools/ci/fetch_godotsteam.sh`; a game's Windows preset uses it as a custom template, and `steam_api64.dll` ships next to the `.exe`. The game passes its own app ID; no credentials live in the kit.
+
+## Save service (`services/save/`)
+
+`SaveService.new(path, version, migrations)` keeps one versioned save file: `save(data)` and `load_save()`, which returns `{status, data, message, from_version}`. `status` is `ok`, `missing`, `migrated`, `recovered`, `corrupt`, `newer` or `unsupported`; `message` is text for the player whenever they need telling.
+
+- Numbers keep their exact type and value (JSON alone would turn ints into floats and drop digits), and only plain data is accepted: null, bool, int, float, String, Array, and Dictionary with String keys not starting with `$`. NaN, infinity and objects are refused before anything is written.
+- A save is written to a temporary file and swapped in; the save it replaces becomes `<path>.bak`. A damaged save (truncated, edited or garbage; the file carries a SHA-256 of its body) falls back to that copy and the message says so.
+- Loading never writes. An older build that finds a newer save refuses it, leaves it untouched, and cannot overwrite it by saving. That is the rollback note: after a format change, an older build is safe to run but will not read or touch the newer file.
+- `migrations` maps a version to a `Callable` taking that version's data and returning the next version's. A missing or failing step refuses the save (`unsupported`) rather than guessing.
+- The path is a `user://` path: the data folder on Windows and macOS, browser storage (IndexedDB) in the web build.
