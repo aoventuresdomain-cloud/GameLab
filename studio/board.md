@@ -278,6 +278,17 @@
   - [ ] Level 5 ends with a mini-boss from the fog that cannot be beaten without the Hero's path ability; its behaviour comes from packs (tested) and it drops gear.
   - [ ] Every Hero path, with a squad the bot picks, beats the boss in the simulator (bot report per path), and a Hero-only bot is measured against Hero plus squad.
 
+### HF-M2-17 Slice 2b: the Hero can lose, and Recruits move
+- **Owner:** Gameplay Engineer
+- **Status:** Ready
+- **QA:** sanity plus the simulator check below (a quick fix to slice 2, from the CEO's first playtest on 2026-10-22; findings F-024 and F-025)
+- **Depends on:** HF-M2-14, HF-M2-15
+- **Done when:**
+  - [ ] A normal run is genuinely at risk for all three pillars: Hero damage, health and enemy pressure are retuned in packs (no code change just for balance) so that a bot playing each pillar with no upgrades loses some runs and wins some, and a run played with no input loses.
+  - [ ] A simulator test fails if a Hero can never lose: for each pillar, across a fixed set of seeds, at least one run ends with the keep fallen or the Hero knocked down more than once, and at least one run is won (thresholds from packs, run in CI order).
+  - [ ] Recruits move: each Recruit has a home post and moves to engage the nearest enemy within a leash distance of it, retreats to the post when hurt or when nothing is in range, and stays inside the leash (rule in the rules engine, pack values, tested at the boundary: exactly at the leash, zero leash, downed Recruit does not move). A Recruit staffing a light post stays at it and still adds its role effect.
+  - [ ] Parity test and the 60 second budget still pass, the progression hash is re-pinned once with old and new in the PR, and the web build is checked in Chromium.
+
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
 - **Status:** Ready
@@ -393,6 +404,8 @@
 | F-021 | KIT-03 | One invalid enemy entry drops the whole enemies file, so the loader adds about 11 follow-on "no enemies entry with id" errors, valid enemies included; the first error is correct. The version error also prints "must be one of [0.0]" (Head of QA, HF-M1-07) | Minor | Gameplay Engineer | Open: after Gate 1 |
 | F-022 | HF-M1-02 | The progression report prints "budget 0 s" for a fractional budget (Head of QA, HF-M1-07) | Minor | Gameplay Engineer | Open: after Gate 1 |
 | F-023 | HF-M2-14 | `test_playable_hero.gd::test_the_player_controller_reads_actions_and_keeps_a_press_until_a_tick_takes_it` failed once in CI on a PR that touched no code ("expected false, got true"), then passed on re-run of the same commit (HoE, #35) | Minor | Gameplay Engineer | Fixed in `player_hero.gd` in #36 with the test unchanged |
+| F-024 | HF-M2-17 | The Hero is too strong: the CEO could not die in the slice 2 build (CEO playtest, 2026-10-22) | Major | Gameplay Engineer | Open: MUST FIX in slice 2b |
+| F-025 | HF-M2-17 | Recruits do not move; the CEO expects them to move and fight, not stand like towers (CEO playtest, 2026-10-22) | Major | Gameplay Engineer | Open: MUST FIX in slice 2b |
 
 ## Test changes
 
@@ -422,6 +435,7 @@
 
 ## Decisions and open questions
 
+- 2026-10-22: CEO's first playtest of slice 2: the Hero is too strong to die, and Recruits must move. Slice 2b (HF-M2-17) is a quick fix before slice 3; the team stops again after its build. Defaults picked by HoE: Recruits leash to a home post, engage the nearest enemy in range and retreat when hurt; balance is pack data only.
 - 2026-10-06: The repository stays public for now (CEO decision), to go private once the idea matures. Until then `games/holdfast/plan.md` is a build excerpt and nothing commercially sensitive is committed (`CLAUDE.md`).
 - 2026-10-06: Gate 1 web build is played from a password-protected itch.io draft page (not a public release), uploaded by CI with butler. Agreed with the Setup Desk.
 - 2026-10-06: Godot pinned at 4.6-stable. KIT-01 owns `project.godot`; KIT-05 runs the UI tests in CI (overlaps from HF-M1-04, settled by the Head of Engineering).
