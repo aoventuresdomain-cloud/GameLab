@@ -333,7 +333,7 @@
 
 ### HF-M2-22 Early levels are winnable
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 3d of 7 (CEO playtest of Build 3c, 2026-10-22: could not beat the levels)
+- **Status:** Ready, now part of Build 4 of 7 (CEO playtest of Build 3c, 2026-10-22: could not beat the levels)
 - **QA:** full (balance change in packs)
 - **Depends on:** HF-M2-21
 - **Done when:**
@@ -344,7 +344,7 @@
 
 ### HF-M2-23 A short pause and a banner between waves
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 3d of 7 (CEO playtest of Build 3c, 2026-10-22)
+- **Status:** Ready, now part of Build 4 of 7 (CEO playtest of Build 3c, 2026-10-22)
 - **QA:** screens
 - **Depends on:** HF-M2-14
 - **Done when:**
@@ -352,15 +352,26 @@
   - [ ] A clear banner shows "Wave cleared" and then "Wave N" for the pause, readable at 1280x720 and 1920x1080, and does not cover the Hero or the tower.
   - [ ] The ten-hour progression run, parity and the 60 second budget still pass (progression hash re-pinned once if the pause moves it).
 
-### HF-M2-24 Towers can be brought back after they fall
+### HF-M2-24 Towers can be brought back after they fall (DROPPED)
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 3d of 7 (CEO playtest of Build 3c, 2026-10-22). Mechanic picked by HoE: the Hero stands on a fallen tower for a pack-set time (default 3 seconds, the same as reviving a Recruit) and it comes back at a pack-set share of its health; no gold cost
+- **Status:** Dropped (CEO, 2026-10-22 17:18): towers are not resurrectable. Nothing to build; any partial work is reverted
 - **QA:** full (core rules)
 - **Depends on:** HF-M2-15
 - **Done when:**
   - [ ] A fallen tower shows as fallen on the map and comes back when the Hero stands on it for the pack-set time (default 3 s), with a pack-set share of its health, once per fall; the Hero leaving, falling or the wave ending resets the timer (tested at the boundary: exactly at the time, one tick short, zero time, Hero knocked down mid-way).
   - [ ] The keep falling still ends the run, a fallen tower is not targeted by monsters, and a revived tower is targeted again (tested).
   - [ ] The simulator's bots use it and the pillar bots' win rates stay inside the bands from HF-M2-22; parity and the 60 second budget pass, the progression hash is re-pinned once.
+
+### HF-M2-25 Hero skills and upgrade tree rework
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, Build 4 of 7 (CEO direction 2026-10-22 17:19, Advisor's recommended direction). The tree details get discussed after the CEO sees it, so everything is pack data
+- **QA:** full (upgrade and save data)
+- **Depends on:** HF-M2-14, HF-M2-04
+- **Done when:**
+  - [ ] The between-run upgrade tree has about 15 to 20 nodes (down from 26), from packs. Branches offer a real choice (picking one closes another), and most nodes change behaviour rather than add a percentage. The gold chain is 2 to 3 nodes. No new tower types.
+  - [ ] The two next unlocks are visible on screen with their cost and effect; locked deeper nodes show as locked. The Hero's skills (HF-M2-14) sit in the same screen flow without a new menu.
+  - [ ] A blessing pick (1 of 3, HF-M2-04) is offered before each run; each blessing's effect has a rules test.
+  - [ ] Saves from the 26-node tree migrate without losing gold or levels (refund of nodes that no longer exist, tested); parity and the 60 second budget pass, the progression hash is re-pinned once with old and new in the PR, and any existing-test change has my OK first.
 
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
@@ -560,3 +571,4 @@
 - 2026-10-21: **Hero pillars: fire archer, mage, swordsman** (CEO), replacing Guardian, Marksman and Warlord and the lantern as the Hero's attack. The lantern stays as the Keeper's light (fog-push, damage bonus in lit areas). Recruit Archer renamed Lookout (marks targets, slows fog creatures, extends light) so no Recruit duplicates the fire archer. Advisor's view logged. Head of Engineering, from the CEO's message.
 - 2026-10-21: **M2 runs as short iterations** (CEO: keep it very lean, test iteratively, give feedback as it develops). A playable build for the CEO after each slice; outside testers and Recruit trait boss drops are out of M2; Gate 2 is decided from the CEO's own playtests. Sanity checks per slice, one full QA round at the end (HF-M2-12). Plan and dates in `studio/estimates.md`. Head of Engineering, from the CEO's message.
 - 2026-10-21: **Go on M2** (CEO). Scope changes folded in before work: the Hero gets more skills (10 a path), Recruits get small skill trees (reverses 'no skill trees'), gear is for the Hero only, and a mini-boss ends level 5 (coordinator default; further boss placement is M5 planning). New item HF-M2-16. Head of Engineering, from the CEO's message and the Advisor's view.
+- 2026-10-22 17:18: CEO: towers must not be resurrectable (HF-M2-24 dropped), and Build 3d and Build 4 ship together as "Build 4 of 7", evaluated together. Tree built in the Advisor's direction as HF-M2-25 (about 15 to 20 branching, behaviour-changing nodes, gold chain 2 to 3, next unlocks visible, blessing before each run, no new tower types); details to be discussed after the CEO sees it.
