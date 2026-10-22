@@ -301,7 +301,7 @@
 
 ### HF-M2-19 Bigger arena, Hero reaches the edges
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 3b of 7 (CEO playtest of Build 2b, 2026-10-22; quick fix after Build 3)
+- **Status:** Merged in #51, Build 3b of 7, waiting on the CEO's playtest
 - **QA:** screens
 - **Depends on:** HF-M2-14
 - **Done when:**
@@ -428,6 +428,9 @@
 | F-025 | HF-M2-17 | Recruits do not move; the CEO expects them to move and fight, not stand like towers (CEO playtest, 2026-10-22) | Major | Gameplay Engineer | Fixed in #40, waiting on the CEO's playtest |
 | F-026 | HF-M2-02 | FOLLOW-UP from QA on the save service: in the web build a save is lost whole if the tab closes in the same instant it is written (nothing half-written, the previous save loads). The game must autosave at end of run and after spends and upgrades, not rely on a save-on-quit hook (QA, commit 804ecd3a) | Minor | Gameplay Engineer | Fixed in #48 (autosave after every spend and at the end of each run), waiting on the CEO's playtest |
 | F-027 | HF-M2-18 | FOLLOW-UP, design: because the Hero now gets up where they fell, they stand on their own dropped XP and pick it up at once, so the knock-down no longer costs unbanked XP. Left as the CEO specified; the CEO judges after playing, an option is to get up a short step from the token | Minor | Head of Engineering | Open, for the CEO's call after the Build 3 playtest |
+| F-028 | HF-M2-01 | Balance: the Flare Archer wins Tidewrack Cove about 1 in 40 seeds with its kit (1 in 12 before the bigger arena) while the Tideblade wins most; not retuned in Build 3 | Minor | Gameplay Engineer | Open, handled with the pacing bands in Build 6 unless the CEO's playtest says otherwise |
+| F-029 | HF-M2-19 | FOLLOW-UP from QA's screens walk: Recruit name and down labels are about 7 px tall at 1280x720 (0.65 scale), hard to read | Minor | Gameplay Engineer | Open, a small fix in a later build |
+| F-030 | HF-M2-19 | FOLLOW-UP from QA's screens walk: with the Hero at the top edge, its aura arc and health bar draw faintly over the HUD panel's lower edge | Minor | Gameplay Engineer | Open, a small fix in a later build |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -449,6 +452,9 @@
 | 2026-10-22 | `games/holdfast/tests/test_slice2.gd`: `..._gets_up_at_the_start` to `..._gets_up_where_they_fell`; the dropped-XP pickup test places its token directly; `test_the_start_screen_pick_...` to `test_the_keep_screen_pick_...` (#48) | Expectations follow the new get-up rule and the renamed screen; the 31 px and 30 px pickup assertions are unchanged | HF-M2-18 changes the rule these tests pinned (CEO change). Intent kept | Head of Engineering |
 | 2026-10-22 | `games/holdfast/tests/run_ui_tests.gd` | Flow test starts on the home screen and clicks New game; layout test adds home and keep at 1280x720 and 1920x1080 (#48) | The app now opens on the home screen | Head of Engineering |
 | 2026-10-22 | Progression hash | Re-pinned in #48: `a1a752ee...a6b9` to `62191b7c...63f7` | New levels and the 30-node tree change every run. The ten-hour run now stops once every upgrade is bought (50 runs, 9.8 s) because the full ten hours took 71 s against the 60 s budget. Parity test passes | Head of Engineering |
+| 2026-10-22 | `games/holdfast/tests/test_hero.gd::test_the_hero_cannot_leave_the_spawn_ring` to `..._leave_the_arena` (#51) | The Hero now stops at the arena edge (x = 960) instead of the spawn ring | HF-M2-19 (CEO change). Intent kept: the Hero cannot walk out of play | Head of Engineering |
+| 2026-10-22 | `games/holdfast/tests/test_build3.gd` fog-edge test and get-up-outside test (#51) | Fog-edge test drops its `hero_max_distance` line; get-up-outside test uses x = 1200 and expects 960 | The old distance cap is replaced by the arena edge. Intent kept | Head of Engineering |
+| 2026-10-22 | Progression hash | Re-pinned in #51: `62191b7c...63f7` to `d0bae866...2829` | Bigger arenas change every run. Parity passes; 49 runs, 9.4 s. Tidewrack Cove `balance_check` seeds raised from 12 to 40 (pack data) | Head of Engineering |
 
 ## Advisor views
 
