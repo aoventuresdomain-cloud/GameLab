@@ -347,7 +347,6 @@ func test_the_fog_edge_is_where_the_beam_reaches_and_enemies_spawn_there() -> vo
 	var wide := HoldfastRules.new()
 	wide.setup(HoldfastContent.run_config("outpost", ["keep_beam_1", "keep_beam_2"]), SimRng.new(1))
 	expect_eq(wide.spawn_radius, 480.0)
-	expect_eq(wide.hero_max_distance, 480.0, "the Hero may go as far as the beam reaches")
 	var guard := 0
 	while wide.enemies.is_empty() and guard < 200:
 		wide.step(DT, {})
@@ -481,10 +480,10 @@ func test_a_hero_who_fell_on_blocked_ground_or_outside_gets_up_on_open_ground() 
 	_run(rules, 91)
 	expect_eq(rules.hero_position, Vector2(0, -48), "pushed to the edge of the keep")
 	var far := _quiet()
-	far.hero_position = Vector2(600, 0)  # beyond the 420 playfield
+	far.hero_position = Vector2(1200, 0)  # beyond the 960 half-width of the arena
 	_knock_down(far)
 	_run(far, 91)
-	expect_eq(far.hero_position, Vector2(420, 0), "pulled back inside the playfield")
+	expect_eq(far.hero_position, Vector2(960, 0), "pulled back inside the arena")
 
 
 func test_the_hero_is_untouchable_for_the_pack_time_after_getting_up() -> void:

@@ -5,13 +5,14 @@ extends Node2D
 ## Reads the run source's rules for drawing only; it never changes or steps them.
 ## Placeholder art: shapes drawn in code (see assets/CREDITS.md). The keep sits
 ## at this node's position, centred in the visible area below the HUD bar. The
-## view scales down towards fitting the spawn ring there, but never below
-## MIN_SCALE: enemies may walk in from off-screen, while the keep and the tower
-## and staff ranges always stay clear of the HUD.
+## view scales down to fit the whole arena there, but never below MIN_SCALE; the
+## keep and the tower and staff ranges always stay clear of the HUD.
 
 @export var source_path: NodePath
 
-const COLOUR_GROUND := Color("#1f2a1f")
+const COLOUR_GROUND := Color("#141b14")
+const COLOUR_ARENA := Color("#1f2a1f")
+const COLOUR_ARENA_EDGE := Color("#4a5d4a")
 const COLOUR_KEEP := Color("#c9b88a")
 const COLOUR_KEEP_EDGE := Color("#3b3324")
 const COLOUR_HERO := Color("#f2b13a")
@@ -41,13 +42,11 @@ const COLOUR_HEALTH := Color("#d64545")
 ## draws it from y = 16 to about y = 121).
 const HUD_CLEARANCE := 132.0
 const BOTTOM_MARGIN := 16.0
-## Drawn beyond the spawn ring: the largest enemy's radius plus its health bar.
-const RING_EDGE := 32.0
+## Space kept round the arena's border on screen.
+const ARENA_MARGIN := 8.0
 const HERO_RADIUS := 12.0
 ## Smallest view scale: below this, enemies and the aura get too small to read.
-const MIN_SCALE := 0.85
-## Spawn ring radius used before a run has rules (start screen, the UI tests' stub).
-const DEFAULT_SPAWN_RADIUS := 420.0
+const MIN_SCALE := 0.5
 const ENEMY_COLOURS := {
 	"grunt": Color("#9c5b5b"),
 	"runner": Color("#c47e3a"),
@@ -64,17 +63,17 @@ func _process(_delta: float) -> void:
 	queue_redraw()
 
 
-## Centres the keep in the area below the HUD and scales the view down towards
-## fitting the spawn ring in that area, clamped to MIN_SCALE..1.
+## Centres the keep in the area below the HUD and scales the view to fit the whole
+## arena in that area, clamped to MIN_SCALE..1.
 func _fit_below_hud() -> void:
 	var view := get_viewport_rect()
 	var area := Rect2(view.position.x, view.position.y + HUD_CLEARANCE,
 			view.size.x, maxf(view.size.y - HUD_CLEARANCE - BOTTOM_MARGIN, 1.0))
-	var ring := DEFAULT_SPAWN_RADIUS
+	var arena := HoldfastRules.DEFAULT_ARENA
 	if source is HoldfastRunSource and source.get_rules() != null:
-		ring = source.get_rules().spawn_radius
-	var reach := (ring + RING_EDGE) * 2.0
-	var fit := clampf(minf(area.size.x / reach, area.size.y / reach), MIN_SCALE, 1.0)
+		arena = source.get_rules().arena_size()
+	var span := arena + Vector2.ONE * ARENA_MARGIN * 2.0
+	var fit := clampf(minf(area.size.x / span.x, area.size.y / span.y), MIN_SCALE, 1.0)
 	position = area.get_center()
 	scale = Vector2(fit, fit)
 
@@ -90,6 +89,9 @@ func _draw() -> void:
 	var rules: HoldfastRules = source.get_rules()
 	if rules == null:
 		return
+	var arena := Rect2(-rules.arena_half, rules.arena_size())
+	draw_rect(arena, COLOUR_ARENA)
+	draw_rect(arena, COLOUR_ARENA_EDGE, false, 3.0)
 	# Where the keep's beam reaches: the fog edge, and where enemies come from.
 	draw_arc(Vector2.ZERO, rules.spawn_radius, 0.0, TAU, 96, Color(COLOUR_LIGHT, 0.18), 2.0)
 	for post in rules.posts:

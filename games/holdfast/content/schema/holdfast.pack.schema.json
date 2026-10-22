@@ -28,6 +28,24 @@
           "type": "number",
           "exclusiveMinimum": 0
         },
+        "arena": {
+          "type": "object",
+          "required": [
+            "width",
+            "height"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "width": {
+              "type": "number",
+              "minimum": 300
+            },
+            "height": {
+              "type": "number",
+              "minimum": 300
+            }
+          }
+        },
         "first_wave_delay": {
           "type": "number",
           "minimum": 0
