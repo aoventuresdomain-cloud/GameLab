@@ -1,20 +1,27 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/run_flow.gd" id="1_flow"]
 [ext_resource type="Script" path="res://scripts/holdfast_run_source.gd" id="2_run"]
 [ext_resource type="Script" path="res://scripts/world_view.gd" id="6_world"]
 [ext_resource type="Script" path="res://scripts/autoplay.gd" id="7_autoplay"]
 [ext_resource type="Script" path="res://scripts/steam_hooks.gd" id="8_steam"]
-[ext_resource type="PackedScene" path="res://scenes/ui/start_screen.tscn" id="3_start"]
+[ext_resource type="Script" path="res://scripts/holdfast_profile.gd" id="9_profile"]
+[ext_resource type="PackedScene" path="res://scenes/ui/home_screen.tscn" id="10_home"]
+[ext_resource type="PackedScene" path="res://scenes/ui/keep_screen.tscn" id="3_keep"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="4_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/run_summary.tscn" id="5_summary"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_flow")
 source_path = NodePath("RunSource")
-start_screen_path = NodePath("UI/StartScreen")
+profile_path = NodePath("Profile")
+home_path = NodePath("UI/HomeScreen")
+keep_screen_path = NodePath("UI/KeepScreen")
 hud_path = NodePath("UI/Hud")
 summary_path = NodePath("UI/RunSummary")
+
+[node name="Profile" type="Node" parent="."]
+script = ExtResource("9_profile")
 
 [node name="RunSource" type="Node" parent="."]
 script = ExtResource("2_run")
@@ -30,7 +37,9 @@ layer = 10
 
 [node name="RunSummary" parent="UI" instance=ExtResource("5_summary")]
 
-[node name="StartScreen" parent="UI" instance=ExtResource("3_start")]
+[node name="KeepScreen" parent="UI" instance=ExtResource("3_keep")]
+
+[node name="HomeScreen" parent="UI" instance=ExtResource("10_home")]
 
 [node name="Autoplay" type="Node" parent="."]
 script = ExtResource("7_autoplay")

@@ -463,7 +463,7 @@ func test_a_staffed_engineer_repairs_the_tower_up_to_its_maximum() -> void:
 
 # ------------------------------------------------------------------ the Hero falls
 
-func test_a_hero_who_falls_drops_their_xp_and_gets_up_at_the_start() -> void:
+func test_a_hero_who_falls_drops_their_xp_and_gets_up_where_they_fell() -> void:
 	var rules := _quiet("flare_archer", _drop_posts)
 	rules.carried_xp = 25
 	rules.hero_position = Vector2(50, 80)
@@ -480,11 +480,13 @@ func test_a_hero_who_falls_drops_their_xp_and_gets_up_at_the_start() -> void:
 	expect_true(rules.hero_state["downed"], "still down after 81 ticks")
 	_run(rules, 15)
 	expect_false(rules.hero_state["downed"], "up by 96")
-	expect_eq(rules.hero_position, Vector2(0, 80), "back at the start")
+	expect_eq(rules.hero_position, Vector2(50, 80), "up where they fell")
 	expect_eq(rules.hero_state["health"], 60.0, "with full health")
-	expect_eq(rules.xp_tokens.size(), 1, "the token waits where they fell")
-	# The second fall waits 6 s.
-	var again := _enemy(rules, Vector2(0, 80), BIG, 60)
+	expect_eq(rules.carried_xp, 25, "and standing on the token, they pick it up")
+	expect_true(rules.xp_tokens.is_empty())
+	# The second fall waits 6 s (the 2 s of being untouchable are over first).
+	_run(rules, 60)
+	var again := _enemy(rules, rules.hero_position, BIG, 60)
 	_run(rules, 1)
 	rules.enemies.erase(again)
 	expect_near(rules.hero_state["get_up_in"], 6.0 - DT, 0.001, "second fall: 6 s")
@@ -493,12 +495,10 @@ func test_a_hero_who_falls_drops_their_xp_and_gets_up_at_the_start() -> void:
 func test_the_hero_picks_their_dropped_xp_up_by_walking_to_it() -> void:
 	# Pickup radius 30, edge included.
 	var rules := _quiet("flare_archer", _drop_posts)
-	rules.carried_xp = 25
-	rules.hero_position = Vector2(50, 80)
-	var hitter := _enemy(rules, Vector2(50, 80), BIG, 60)
-	_run(rules, 1)
-	rules.enemies.erase(hitter)
-	_run(rules, 100)
+	var token := HoldfastRules.XpToken.new()
+	token.position = Vector2(50, 80)
+	token.amount = 25
+	rules.xp_tokens.append(token)
 	rules.hero_position = Vector2(19, 80)  # 31 away
 	_run(rules, 1)
 	expect_eq(rules.carried_xp, 0, "31 px is out of reach")
@@ -527,14 +527,14 @@ func test_a_hero_who_is_down_does_nothing_and_enemies_leave_them_alone() -> void
 
 # ------------------------------------------------------------------ playable build
 
-func test_the_start_screen_pick_chooses_the_pillar_of_the_run() -> void:
+func test_the_keep_screen_pick_chooses_the_pillar_of_the_run() -> void:
 	var main := Main.instantiate()
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	source.auto_step = false
 	tree.root.add_child(main)
-	main.start_screen.select_pillar("tideblade")
-	main.start_screen.select_pillar("not_a_pillar")
-	expect_eq(main.start_screen.selected_pillar, "tideblade", "an unknown id changes nothing")
+	main.keep_screen.select_pillar("tideblade")
+	main.keep_screen.select_pillar("not_a_pillar")
+	expect_eq(main.keep_screen.selected_pillar, "tideblade", "an unknown id changes nothing")
 	main.call("_start_run")
 	expect_eq(source.get_rules().hero_path_id, "tideblade")
 	main.free()

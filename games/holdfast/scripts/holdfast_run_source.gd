@@ -147,3 +147,27 @@ func get_rules() -> HoldfastRules:
 
 func get_engine() -> SimEngine:
 	return _engine
+
+
+func get_hero_health() -> int:
+	return ceili(float(_rules.hero_state["health"])) if _rules else 0
+
+
+func get_hero_health_max() -> int:
+	return ceili(float(_rules.hero_state["max_health"])) if _rules else 0
+
+
+func get_ability_wait() -> float:
+	return _rules.hero_ability_ready_in if _rules else 0.0
+
+
+func get_hero_down_seconds() -> float:
+	return float(_rules.hero_state["get_up_in"]) if _rules and _rules.hero_state["downed"] else 0.0
+
+
+func get_towers_lost() -> int:
+	return _rules.towers_lost if _rules else 0
+
+
+func get_recruits_lost() -> int:
+	return _rules.recruits_downed if _rules else 0

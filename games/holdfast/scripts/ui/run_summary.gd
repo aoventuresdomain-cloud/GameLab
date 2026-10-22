@@ -2,6 +2,7 @@ extends Control
 ## End-of-run summary: outcome, gold earned and waves cleared.
 
 signal play_again_requested
+signal keep_requested
 
 const Hud = preload("res://scripts/ui/hud.gd")
 
@@ -9,10 +10,12 @@ const Hud = preload("res://scripts/ui/hud.gd")
 @onready var _gold_value: Label = %GoldValue
 @onready var _waves_value: Label = %WavesValue
 @onready var _play_again_button: Button = %PlayAgainButton
+@onready var _keep_button: Button = %KeepButton
 
 
 func _ready() -> void:
 	_play_again_button.pressed.connect(play_again_requested.emit)
+	_keep_button.pressed.connect(keep_requested.emit)
 	visibility_changed.connect(_on_visibility_changed)
 
 

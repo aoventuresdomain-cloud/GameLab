@@ -39,8 +39,11 @@ static func _requirements_met(node: Dictionary, owned: Array) -> bool:
 	return true
 
 
-## Plays `sim_hours` of progression from `p_seed` and returns the report.
-static func play(p_seed: int, sim_hours: float, level: String = HoldfastContent.DEFAULT_LEVEL) -> Dictionary:
+## Plays up to `sim_hours` of progression from `p_seed` and returns the report. It
+## stops early once every upgrade is bought, since later runs would only repeat.
+## Each run plays `level`, or the latest level the bought upgrades have unlocked
+## when it is "".
+static func play(p_seed: int, sim_hours: float, level: String = "") -> Dictionary:
 	var content := HoldfastContent.base()
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	var budget := sim_hours * 3600.0
@@ -52,13 +55,15 @@ static func play(p_seed: int, sim_hours: float, level: String = HoldfastContent.
 	var outcomes := {}
 	while sim_time < budget:
 		var run_seed := p_seed * 100003 + runs.size()
-		var report := HoldfastSim.run_headless(run_seed, HoldfastContent.run_config(level, owned, content))
+		var run_level := level if level != "" else str(HoldfastMeta.unlocked_levels(content, {"upgrades": owned})[-1])
+		var report := HoldfastSim.run_headless(run_seed, HoldfastContent.run_config(run_level, owned, content))
 		var result: Dictionary = report["result"]
 		sim_time += float(report["seconds"]) + BETWEEN_RUNS_SECONDS
 		bank += int(result["gold"])
 		var outcome := str(result["outcome"])
 		outcomes[outcome] = int(outcomes.get(outcome, 0)) + 1
 		runs.append({
+			"level": run_level,
 			"gold": result["gold"],
 			"xp": result["xp"],
 			"outcome": outcome,
@@ -69,12 +74,14 @@ static func play(p_seed: int, sim_hours: float, level: String = HoldfastContent.
 			bank -= int(nodes[id]["cost"])
 			owned.append(id)
 			unlocks.append({"id": id, "cost": int(nodes[id]["cost"]), "at_seconds": sim_time, "after_run": runs.size()})
+		if owned.size() == nodes.size():
+			break
 	var gold_per_run := []
 	for run in runs:
 		gold_per_run.append(run["gold"])
 	var report := {
 		"seed": p_seed,
-		"level": level,
+		"level": level if level != "" else "latest unlocked",
 		"sim_hours": sim_hours,
 		"sim_seconds": sim_time,
 		"runs_played": runs.size(),

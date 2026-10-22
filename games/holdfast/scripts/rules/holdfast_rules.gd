@@ -45,6 +45,10 @@ const RETARGET_TICKS := 10
 const EFFECT_SECONDS := 0.25
 ## A tower or Recruit with nothing in range looks again after this long.
 const SCAN_SECONDS := 0.1
+## How long the Hero cannot be hurt after getting up, when the Hero path does not say.
+const DEFAULT_UNTOUCHABLE_SECONDS := 2.0
+## A time within this of a deadline counts as having reached it.
+const TIME_EPSILON := 0.000001
 
 
 class Enemy:
@@ -157,6 +161,8 @@ var aura_radius := 0.0
 var aura_dps := 0.0
 var cursor_speed := DEFAULT_CURSOR_SPEED
 var gold_multiplier := 1.0
+## Tower health restored per second while no enemy is on the field (between waves).
+var tower_repair := 0.0
 var total_waves := 0
 
 # State.
@@ -181,6 +187,9 @@ var hero_pickup_radius := 0.0
 ## HeroKnockdown state: health, whether they are down and for how much longer.
 var hero_state: Dictionary = {}
 var hero_delays: Array = []
+## Seconds the Hero cannot be hurt after getting up, and how many are left.
+var hero_untouchable_seconds := DEFAULT_UNTOUCHABLE_SECONDS
+var hero_grace_left := 0.0
 ## Where the Hero last fell, for drawing.
 var hero_fell_at := Vector2.ZERO
 ## The path's colour ("#rrggbb") for drawing.
@@ -238,6 +247,8 @@ var _ticking: Array = []
 ## Set when a unit goes down or gets up: the target lists are rebuilt and every
 ## enemy picks its target again.
 var _targets_dirty := true
+## Whether enemies may pick the Hero (up and not untouchable); a change retargets them.
+var _hero_targetable := true
 ## Set when something may have been killed, so _collect_dead looks only then.
 var _any_dead := false
 var _enemy_types: Dictionary = {}
@@ -267,6 +278,7 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	var light: Dictionary = level["light"]
 	var problems := LitArea.validate(light["radius"], light["bonus"])
 	problems.append_array(HeroKnockdown.validate(content["hero_paths"][hero_path]["knockdown_delays"]))
+	problems.append_array(HeroGetUp.validate_grace(content["hero_paths"][hero_path].get("untouchable_seconds", DEFAULT_UNTOUCHABLE_SECONDS)))
 	var roles := []
 	var placements: Array = [level["staff"]]
 	placements.append_array(level.get("recruits", []))
@@ -286,7 +298,9 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	keep_health_max = int(level["keep_health"]) + int(_add(stats, "keep_health"))
 	keep_health = keep_health_max
 	keep_radius = float(level["keep_radius"])
-	spawn_radius = float(level["spawn_radius"])
+	# The fog edge is where the keep's beam reaches, and enemies spawn at it.
+	spawn_radius = _apply(stats, "beam_reach", float(level["spawn_radius"]))
+	tower_repair = _add(stats, "tower_repair")
 	var aura: Dictionary = level["aura"]
 	aura_radius = _apply(stats, "aura_radius", float(aura["radius"]))
 	aura_dps = _apply(stats, "aura_dps", float(aura["dps"]))
@@ -315,13 +329,14 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	hero_attack = hero_data["attack"]
 	hero_ability = hero_data["ability"]
 	hero_delays = hero_data["knockdown_delays"]
+	hero_untouchable_seconds = float(hero_data.get("untouchable_seconds", DEFAULT_UNTOUCHABLE_SECONDS))
 	hero_state = HeroKnockdown.new_state(float(hero_data["health"]))
 	hero_max_distance = spawn_radius
 	_tie_order.append("hero")
 
 	var tower_at: Dictionary = level["tower"]
 	var tower_data: Dictionary = content["towers"][tower_at["id"]]
-	tower = _attacker("tower", tower_at, tower_data, _apply(stats, "tower_damage", float(tower_data["damage"])))
+	tower = _attacker("tower", tower_at, tower_data, _apply(stats, "tower_damage", float(tower_data["damage"])), _add(stats, "tower_health"))
 	for at in placements:
 		var data: Dictionary = content["staff"][at["id"]]
 		var recruit := _attacker("recruit", at, data, _apply(stats, "staff_damage", float(data["damage"])))
@@ -360,13 +375,13 @@ func _fail(message: String) -> void:
 	outcome = OUTCOME_INVALID
 
 
-func _attacker(kind: String, at: Dictionary, data: Dictionary, damage: float) -> Attacker:
+func _attacker(kind: String, at: Dictionary, data: Dictionary, damage: float, extra_health := 0.0) -> Attacker:
 	var a := Attacker.new()
 	a.id = str(at["id"])
 	a.kind = kind
 	a.key = "%s:%s" % [kind, a.id]
 	a.radius = float(data["radius"])
-	a.health = UnitHealth.new_unit(float(data["health"])) if kind == "tower" else RecruitRules.new_recruit(str(data["class"]), float(data["health"]))
+	a.health = UnitHealth.new_unit(float(data["health"]) + extra_health) if kind == "tower" else RecruitRules.new_recruit(str(data["class"]), float(data["health"]))
 	_by_key[a.key] = a
 	a.position = Vector2(float(at["x"]), float(at["y"]))
 	a.candidate = {"id": a.key, "pos": a.position, "taunt_radius": 0.0, "downed": false}
@@ -439,6 +454,9 @@ func step(dt: float, input: Dictionary) -> void:
 	ticks += 1
 	time = ticks * dt
 	_spawn_due()
+	hero_grace_left = HeroGetUp.tick_grace(hero_grace_left, dt)
+	if hero_grace_left < TIME_EPSILON:
+		hero_grace_left = 0.0
 	_step_enemies(dt)
 	if keep_health <= 0:
 		_finish(OUTCOME_LOST)
@@ -452,6 +470,8 @@ func step(dt: float, input: Dictionary) -> void:
 	_move_projectiles(dt)
 	_step_recruits(dt)
 	_attack(tower, tower.damage, dt)
+	if tower_repair > 0.0 and enemies.is_empty():
+		tower.health = UnitHealth.repair(tower.health, tower_repair * dt)
 	for recruit in recruits:
 		_attack(recruit, recruit.damage + (staff_level - 1) * recruit.damage_per_level, dt)
 	_collect_dead()
@@ -486,7 +506,7 @@ func _refresh_targets() -> void:
 	_candidates.clear()
 	_lookouts.clear()
 	_ticking.clear()
-	if not hero_state["downed"]:
+	if _hero_targetable:
 		_candidates.append(_hero_candidate)
 	for unit in _defenders:
 		unit.candidate["taunt_radius"] = 0.0
@@ -509,6 +529,10 @@ func _refresh_targets() -> void:
 
 
 func _step_enemies(dt: float) -> void:
+	var targetable: bool = not hero_state["downed"] and not hero_untouchable()
+	if targetable != _hero_targetable:
+		_hero_targetable = targetable
+		_targets_dirty = true
 	var retarget_all := _targets_dirty
 	_refresh_targets()
 	if retarget_all:
@@ -573,15 +597,18 @@ func _pick_target(enemy: Enemy) -> void:
 ## `unit` is the tower or Recruit that was hit, or null for the Hero.
 func _hit_unit(unit: Attacker, amount: float) -> void:
 	if unit == null:
+		if hero_untouchable():
+			return
 		var before := int(hero_state["knockdowns"])
-		hero_state = HeroKnockdown.take_damage(hero_state, amount, hero_delays)
+		hero_state = HeroGetUp.take_damage(hero_state, amount, hero_delays, hero_grace_left)
 		if int(hero_state["knockdowns"]) > before:
 			_targets_dirty = true
-			hero_fell_at = hero_position
-			if carried_xp > 0:
+			var fall := HeroGetUp.start_fall(hero_position, carried_xp)
+			hero_fell_at = fall["fell_at"]
+			if fall["drop_amount"] > 0:
 				var token := XpToken.new()
-				token.position = hero_position
-				token.amount = carried_xp
+				token.position = fall["drop_pos"]
+				token.amount = fall["drop_amount"]
 				xp_tokens.append(token)
 				carried_xp = 0
 		return
@@ -656,15 +683,21 @@ func _revive(recruit: Attacker, dt: float) -> void:
 
 ## The Hero for one tick: move, face the nearest enemy, attack on the cooldown
 ## when that enemy is in range, and use the ability when asked. A knocked-down
-## Hero only waits, then gets back up at the start. The keyboard and the bot
-## reach this only through the tick input.
+## Hero only waits, then gets back up where they fell, untouchable for a short
+## while. The keyboard and the bot reach this only through the tick input.
 func _step_hero(dt: float, input: Dictionary) -> void:
 	hero_attack_ready_in = maxf(hero_attack_ready_in - dt, 0.0)
 	hero_ability_ready_in = maxf(hero_ability_ready_in - dt, 0.0)
 	if hero_state["downed"]:
 		hero_state = HeroKnockdown.tick(hero_state, dt)
 		if not hero_state["downed"]:
-			hero_position = hero_start
+			# The playfield is a disc round the keep; its bounding square and the square round
+			# the keep (with the Hero's own width) stand in for it and for ground they cannot stand on.
+			var reach := hero_max_distance
+			var keep_square := keep_radius + hero_radius
+			var up := HeroGetUp.rise(hero_fell_at, Rect2(-reach, -reach, 2.0 * reach, 2.0 * reach), [Rect2(-keep_square, -keep_square, 2.0 * keep_square, 2.0 * keep_square)], hero_untouchable_seconds)
+			hero_position = up["pos"]
+			hero_grace_left = up["grace_left"]
 			_targets_dirty = true
 		return
 	var move := _input_vector(input.get("move"))
@@ -683,6 +716,11 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 	if ability is bool and ability and hero_ability_ready_in <= 0.0:
 		hero_ability_ready_in = float(hero_ability["cooldown"])
 		_use(hero_ability, target)
+
+
+## True while the Hero cannot be hurt or picked as a target after getting up.
+func hero_untouchable() -> bool:
+	return hero_grace_left > 0.0
 
 
 ## A move input as a vector of at most length 1. Anything that is not a pair of
@@ -1004,6 +1042,7 @@ func snapshot() -> Dictionary:
 		"aura": [aura_active, aura_position.x, aura_position.y],
 		"hero": [hero_position.x, hero_position.y, hero_facing.x, hero_facing.y, hero_attack_ready_in, hero_ability_ready_in],
 		"hero_state": hero_state,
+		"hero_grace_left": hero_grace_left,
 		"carried_xp": carried_xp,
 		"xp_tokens": _token_states(),
 		"recruits": _recruit_states(),
