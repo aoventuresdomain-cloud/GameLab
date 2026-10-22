@@ -78,7 +78,7 @@
 
 ### KIT-06 Pack format v1: references and versioning
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 3 of 7
+- **Status:** Merged in #44, Build 3 of 7
 - **QA:** full
 - **Done when:**
   - [ ] Packs can reference entries in other files by id, and the loader rejects a dangling reference naming the file and field (tested).
@@ -87,7 +87,7 @@
 
 ### KIT-07 Save service
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 3 of 7
+- **Status:** Merged in #44, Build 3 of 7 (QA focused check clear, no must-fix)
 - **QA:** full
 - **Done when:**
   - [ ] Progress saves locally and reloads exactly, at any moment, including mid-run (tested). That covers gold, upgrades, the Hero's paths, nodes and gear, the Recruit roster with levels, traits and skill picks, unlocked blessings and names.
@@ -218,7 +218,7 @@
 
 ### HF-M2-02 Meta progression: biome, 5 levels and the upgrade tree
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 3 of 7 (the mini-boss on level 5 follows in Build 5; until then level 5 is a plain level)
+- **Status:** Merged in #48, Build 3 of 7, waiting on the CEO's playtest (the mini-boss on level 5 follows in Build 5; until then level 5 is a plain level)
 - **QA:** full
 - **Done when:**
   - [ ] One coastal biome with 5 hand-made levels, the fifth ending in the mini-boss from HF-M2-16, all from packs. The fog edge sits where the keep's beam reaches, and enemies spawn at it, so widening the beam lengthens their walk in (distances from packs, tested).
@@ -291,7 +291,7 @@
 
 ### HF-M2-18 Hero gets back up where they fell
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 3 of 7 (CEO playtest of Build 2b, 2026-10-22; replaces the keep respawn)
+- **Status:** Merged in #48, Build 3 of 7, waiting on the CEO's playtest
 - **QA:** sanity
 - **Depends on:** HF-M2-14
 - **Done when:**
@@ -321,7 +321,7 @@
 
 ### HF-M2-06 Home screen and keep screen
 - **Owner:** Gameplay Engineer for the Build 3 part below (plain screens, no new role woken); UI Engineer for the polish later
-- **Status:** Ready, Build 3 of 7 part only: home screen (Continue, New game, Settings, Quit) and a keep screen with level select, the upgrade tree and the Hero's pillar pick, all mouse-only and readable at both sizes. The Hero's paths and respec screen come in Build 4; the recruitment board, roster, squad pick come with Build 7; the blessing picker with Build 4
+- **Status:** Build 3 part merged in #48, waiting on the CEO's playtest; the Build 4 and 5 parts stay Ready
 - **QA:** screens
 - **Done when:**
   - [ ] A home screen (Continue, New game, Settings, Quit) leads to the keep screen, the hub between runs.
@@ -426,7 +426,9 @@
 | F-023 | HF-M2-14 | `test_playable_hero.gd::test_the_player_controller_reads_actions_and_keeps_a_press_until_a_tick_takes_it` failed once in CI on a PR that touched no code ("expected false, got true"), then passed on re-run of the same commit (HoE, #35) | Minor | Gameplay Engineer | Fixed in `player_hero.gd` in #36 with the test unchanged |
 | F-024 | HF-M2-17 | The monsters are too weak: the CEO could not die in the slice 2 build; the fix is stronger monsters, not a weaker Hero (CEO playtest, 2026-10-22) | Major | Gameplay Engineer | Fixed in #40, waiting on the CEO's playtest |
 | F-025 | HF-M2-17 | Recruits do not move; the CEO expects them to move and fight, not stand like towers (CEO playtest, 2026-10-22) | Major | Gameplay Engineer | Fixed in #40, waiting on the CEO's playtest |
-| F-026 | HF-M2-02 | FOLLOW-UP from QA on the save service: in the web build a save is lost whole if the tab closes in the same instant it is written (nothing half-written, the previous save loads). The game must autosave at end of run and after spends and upgrades, not rely on a save-on-quit hook (QA, commit 804ecd3a) | Minor | Gameplay Engineer | Open, handled in the Build 3 game PR |
+| F-026 | HF-M2-02 | FOLLOW-UP from QA on the save service: in the web build a save is lost whole if the tab closes in the same instant it is written (nothing half-written, the previous save loads). The game must autosave at end of run and after spends and upgrades, not rely on a save-on-quit hook (QA, commit 804ecd3a) | Minor | Gameplay Engineer | Fixed in #48 (autosave after every spend and at the end of each run), waiting on the CEO's playtest |
+| F-027 | HF-M2-18 | FOLLOW-UP, design: because the Hero now gets up where they fell, they stand on their own dropped XP and pick it up at once, so the knock-down no longer costs unbanked XP. Left as the CEO specified; the CEO judges after playing, an option is to get up a short step from the token | Minor | Head of Engineering | Open, for the CEO's call after the Build 3 playtest |
+| 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
 
@@ -442,6 +444,11 @@
 | 2026-10-22 | Progression hash | Re-pinned once: `61b99537...4558` to `05a32bb8...b07f` | Enemies fighting back changes every run; the parity test and the 60 second budget (29.9 s for two passes) are the safeguards. Full hashes in PR #36 | Head of Engineering |
 | 2026-10-22 | `games/holdfast/tests/test_slice2.gd::test_a_staffed_warden_pulls_enemies_within_reach_off_what_is_nearer` | Setup adds the east post to Bryn; assertions unchanged | The Warden now roams unless staffing a post, so the old default no longer had him staffed. Intent kept | Head of Engineering |
 | 2026-10-22 | Progression hash | Re-pinned once more in #40: `05a32bb8...b07f` to `a1a752ee...a6b9` | Stronger monsters and roaming Recruits change every run. Parity test passes; ten-hour run 45.1 s of the 60 s budget (was 29.9 s) | Head of Engineering |
+| 2026-10-22 | `games/holdfast/tests/qa_pending.json` | Removed `save_wiring` and `hero_getup` (#48), `save_service` (#44) | Their seams now exist; QA's ratchet requires the removal | Head of Engineering |
+| 2026-10-22 | `games/holdfast/tests/test_holdfast_rules.gd::test_numbers_come_from_the_pack` | Node `aura_focus_1` changed to `tower_drills_1`, asserting tower damage is base + 2 (#48) | The aura is gone from play (HF-M2-14) and the tree has no aura nodes. Intent kept: a pack upgrade changes a live stat | Head of Engineering |
+| 2026-10-22 | `games/holdfast/tests/test_slice2.gd`: `..._gets_up_at_the_start` to `..._gets_up_where_they_fell`; the dropped-XP pickup test places its token directly; `test_the_start_screen_pick_...` to `test_the_keep_screen_pick_...` (#48) | Expectations follow the new get-up rule and the renamed screen; the 31 px and 30 px pickup assertions are unchanged | HF-M2-18 changes the rule these tests pinned (CEO change). Intent kept | Head of Engineering |
+| 2026-10-22 | `games/holdfast/tests/run_ui_tests.gd` | Flow test starts on the home screen and clicks New game; layout test adds home and keep at 1280x720 and 1920x1080 (#48) | The app now opens on the home screen | Head of Engineering |
+| 2026-10-22 | Progression hash | Re-pinned in #48: `a1a752ee...a6b9` to `62191b7c...63f7` | New levels and the 30-node tree change every run. The ten-hour run now stops once every upgrade is bought (50 runs, 9.8 s) because the full ten hours took 71 s against the 60 s budget. Parity test passes | Head of Engineering |
 
 ## Advisor views
 
