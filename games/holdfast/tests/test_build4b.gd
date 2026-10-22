@@ -320,3 +320,43 @@ func test_zone_and_dash_values_outside_the_limits_are_rejected() -> void:
 		var errors := PackedStringArray()
 		schema.validate_def(paths[id], "hero_path", id, errors, [])
 		expect_true(errors.is_empty(), "%s is valid: %s" % [id, errors])
+
+
+# ------------------------------------------------------------------ follow-ups from QA of the burst
+
+func test_an_enemy_the_burn_kills_neither_hits_nor_moves_that_tick() -> void:
+	var rules := _rules("flare_archer")
+	var enemy := _enemy(rules, rules.tower.position + Vector2(20, 0), 0.05)
+	enemy.damage = 5
+	enemy.hit_interval = 1.0
+	enemy.speed = 60.0
+	enemy.burn_dps = 3.0
+	enemy.burn_left = 2.0
+	_run(rules, 1)
+	expect_eq(rules.tower.health["health"], 60.0, "the dead enemy did not hit the tower")
+	expect_eq(rules.enemies.size(), 0, "and is gone with its kill counted")
+	expect_eq(rules.kills, 1)
+	var alive := _enemy(rules, rules.tower.position + Vector2(20, 0), 5.0)
+	alive.damage = 5
+	alive.hit_interval = 1.0
+	alive.burn_dps = 3.0
+	alive.burn_left = 2.0
+	_run(rules, 1)
+	expect_eq(rules.tower.health["health"], 55.0, "one that survives its burn still hits")
+
+
+func test_the_shipped_burst_fires_an_arrow_every_five_ticks_for_five_seconds() -> void:
+	# Pack: 5 s of rapid fire, an arrow every 0.16 s. A tick is 1/30 s, so 0.16 s is reached on the
+	# fifth tick: arrows on ticks 1, 6, 11 ... 146, thirty of them. The burst's last tick is the
+	# 150th (a 151st would sit on the float edge of 5 s, so the count is checked as 30 or 31).
+	var rules := _rules("flare_archer")
+	var shots := []
+	var seen := []
+	for tick in range(1, 200):
+		_run(rules, 1, {"ability": tick == 1})
+		if not rules.projectiles.is_empty() and not rules.projectiles.back() in seen:
+			seen.append(rules.projectiles.back())
+			shots.append(tick)
+	expect_true(shots.size() >= 30 and shots.size() <= 31, "arrows in one burst: %d" % shots.size())
+	expect_eq(shots.slice(0, 4), [1, 6, 11, 16], "one every five ticks")
+	expect_eq(shots[29], 146, "the thirtieth")

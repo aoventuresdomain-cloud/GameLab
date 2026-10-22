@@ -583,7 +583,12 @@ func _step_enemies(dt: float) -> void:
 		if enemy.burn_left > 0.0 and enemy.health > 0.0:
 			enemy.burn_left = maxf(enemy.burn_left - dt, 0.0)
 			enemy.health -= enemy.burn_dps * dt
-			_any_dead = _any_dead or enemy.health <= 0.0
+			if enemy.health <= 0.0:
+				# Burnt down: it neither moves nor hits this tick, and is collected after it.
+				_any_dead = true
+				enemies[kept] = enemy
+				kept += 1
+				continue
 		if enemy.slowed_for > 0.0:
 			enemy.slowed_for = maxf(enemy.slowed_for - dt, 0.0)
 			slow = maxf(slow, enemy.slow_amount)
