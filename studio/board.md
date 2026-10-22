@@ -426,6 +426,7 @@
 | F-023 | HF-M2-14 | `test_playable_hero.gd::test_the_player_controller_reads_actions_and_keeps_a_press_until_a_tick_takes_it` failed once in CI on a PR that touched no code ("expected false, got true"), then passed on re-run of the same commit (HoE, #35) | Minor | Gameplay Engineer | Fixed in `player_hero.gd` in #36 with the test unchanged |
 | F-024 | HF-M2-17 | The monsters are too weak: the CEO could not die in the slice 2 build; the fix is stronger monsters, not a weaker Hero (CEO playtest, 2026-10-22) | Major | Gameplay Engineer | Fixed in #40, waiting on the CEO's playtest |
 | F-025 | HF-M2-17 | Recruits do not move; the CEO expects them to move and fight, not stand like towers (CEO playtest, 2026-10-22) | Major | Gameplay Engineer | Fixed in #40, waiting on the CEO's playtest |
+| F-026 | HF-M2-02 | FOLLOW-UP from QA on the save service: in the web build a save is lost whole if the tab closes in the same instant it is written (nothing half-written, the previous save loads). The game must autosave at end of run and after spends and upgrades, not rely on a save-on-quit hook (QA, commit 804ecd3a) | Minor | Gameplay Engineer | Open, handled in the Build 3 game PR |
 
 ## Test changes
 
