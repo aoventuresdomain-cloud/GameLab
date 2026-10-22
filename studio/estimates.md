@@ -24,7 +24,8 @@ The CEO asked for a very lean M2: small changes shipped fast, quick fixes, and t
 | 2 and 2b (done) | Three pillars, enemies fight back, light posts, knock-down, stronger monsters, Recruits that move and revive | HF-M2-14 pillars, HF-M2-15, HF-M2-17 | 22 Oct | Done |
 | 3 of 7 | Gold and upgrades that save, the 5-level biome, a plain home and keep screen, Hero gets up where it fell, Mac build | KIT-06, KIT-07, HF-M2-02, HF-M2-06 (part), HF-M2-18, HF-M2-00 | AI build time: about 3 to 5 hours from 22 Oct 10:50 (kit and QA tests already merged; game PR, fixes and CI left) | Low |
 | 3b of 7 | Bigger arena, Hero reaches every edge (CEO feedback) | HF-M2-19 | AI build time: about 1 hour after Build 3 | Medium |
-| 4 of 7 | Hero skill paths (10 nodes each) and blessings | HF-M2-14 rest, HF-M2-04 | About 2 build days | Low |
+| 3c of 7 | Levels unlock by winning the previous level; monsters go for the tower and fight the Hero only up close (CEO feedback) | HF-M2-20, HF-M2-21 | AI build time: about 3 hours after go (QA full round on core rules adds about 1 hour) | Medium |
+| 4 of 7 | Hero skill paths (10 nodes each) and blessings, plus the upgrade tree changes the CEO asks for after the Advisor review (scope not yet known, so this figure may rise) | HF-M2-14 rest, HF-M2-04 | About 2 build days | Low |
 | 5 of 7 | Monster variety, the elite drop, Hero gear, the level-5 mini-boss, hit feel and sound | HF-M2-16, HF-M2-07 | About 1.5 build days | Low |
 | 6 of 7 | Pacing bands passed in the simulator for every pillar, style guide for approval, name check (end of the core) | HF-M2-01, HF-M2-05, HF-M2-08, HF-M2-11 | About 1 build day | Medium |
 | 7 of 7 (parked) | Recruits: hiring, classes, movement, skill trees, recruitment board. Only if the CEO wants it after the core | HF-M2-03 | About 1.5 build days | Low |
