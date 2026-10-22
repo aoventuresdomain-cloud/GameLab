@@ -49,6 +49,8 @@ const SCAN_SECONDS := 0.1
 const DEFAULT_UNTOUCHABLE_SECONDS := 2.0
 ## A time within this of a deadline counts as having reached it.
 const TIME_EPSILON := 0.000001
+## The arena's width and height when the level does not give them.
+const DEFAULT_ARENA := Vector2(1920.0, 858.0)
 
 
 class Enemy:
@@ -203,7 +205,9 @@ var hero_ability: Dictionary = {}
 var hero_attack_ready_in := 0.0
 var hero_ability_ready_in := 0.0
 ## The Hero stays inside the spawn ring.
-var hero_max_distance := 0.0
+## Half the arena's width and height: the keep is at its centre, and nothing
+## (the Hero, a spawn) is outside it.
+var arena_half := DEFAULT_ARENA * 0.5
 var projectiles: Array[Projectile] = []
 var enemies: Array[Enemy] = []
 var tower: Attacker
@@ -331,7 +335,9 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	hero_delays = hero_data["knockdown_delays"]
 	hero_untouchable_seconds = float(hero_data.get("untouchable_seconds", DEFAULT_UNTOUCHABLE_SECONDS))
 	hero_state = HeroKnockdown.new_state(float(hero_data["health"]))
-	hero_max_distance = spawn_radius
+	var arena: Dictionary = level.get("arena", {})
+	arena_half = Vector2(float(arena.get("width", DEFAULT_ARENA.x)), float(arena.get("height", DEFAULT_ARENA.y))) * 0.5
+	hero_position = _in_arena(hero_position)
 	_tie_order.append("hero")
 
 	var tower_at: Dictionary = level["tower"]
@@ -691,18 +697,16 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 	if hero_state["downed"]:
 		hero_state = HeroKnockdown.tick(hero_state, dt)
 		if not hero_state["downed"]:
-			# The playfield is a disc round the keep; its bounding square and the square round
-			# the keep (with the Hero's own width) stand in for it and for ground they cannot stand on.
-			var reach := hero_max_distance
+			# The square round the keep (with the Hero's own width) is ground they cannot stand on.
 			var keep_square := keep_radius + hero_radius
-			var up := HeroGetUp.rise(hero_fell_at, Rect2(-reach, -reach, 2.0 * reach, 2.0 * reach), [Rect2(-keep_square, -keep_square, 2.0 * keep_square, 2.0 * keep_square)], hero_untouchable_seconds)
+			var up := HeroGetUp.rise(hero_fell_at, Rect2(-arena_half, arena_half * 2.0), [Rect2(-keep_square, -keep_square, 2.0 * keep_square, 2.0 * keep_square)], hero_untouchable_seconds)
 			hero_position = up["pos"]
 			hero_grace_left = up["grace_left"]
 			_targets_dirty = true
 		return
 	var move := _input_vector(input.get("move"))
 	if move != Vector2.ZERO:
-		hero_position = (hero_position + move * hero_speed * dt).limit_length(hero_max_distance)
+		hero_position = _in_arena(hero_position + move * hero_speed * dt)
 	var target := _nearest_enemy(hero_position)
 	var to_target := Vector2.ZERO if target == null else target.position - hero_position
 	if to_target.length_squared() > 0.0001:
@@ -716,6 +720,16 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 	if ability is bool and ability and hero_ability_ready_in <= 0.0:
 		hero_ability_ready_in = float(hero_ability["cooldown"])
 		_use(hero_ability, target)
+
+
+## `at` held inside the arena, edges included.
+func _in_arena(at: Vector2) -> Vector2:
+	return Vector2(clampf(at.x, -arena_half.x, arena_half.x), clampf(at.y, -arena_half.y, arena_half.y))
+
+
+## The arena's width and height, for drawing.
+func arena_size() -> Vector2:
+	return arena_half * 2.0
 
 
 ## True while the Hero cannot be hurt or picked as a target after getting up.
@@ -800,7 +814,7 @@ func _sweep(action: Dictionary) -> void:
 	var dash := float(action.get("dash_distance", 0.0))
 	var from := hero_position
 	if dash > 0.0:
-		hero_position = (from + hero_facing * dash).limit_length(hero_max_distance)
+		hero_position = _in_arena(from + hero_facing * dash)
 	var half_arc := deg_to_rad(float(action.get("arc_degrees", 360.0))) / 2.0
 	var killed := false
 	for enemy in enemies:
@@ -921,7 +935,7 @@ func _spawn_due() -> void:
 		enemy.type = entry[2]
 		enemy.wave = w
 		var angle := _rng.next_float() * TAU
-		enemy.position = Vector2(cos(angle), sin(angle)) * spawn_radius
+		enemy.position = _in_arena(Vector2(cos(angle), sin(angle)) * spawn_radius)
 		enemy.max_health = float(data["health"]) * _wave_health_scale[w]
 		enemy.health = enemy.max_health
 		enemy.speed = float(data["speed"])

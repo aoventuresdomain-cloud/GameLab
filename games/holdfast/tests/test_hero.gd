@@ -75,11 +75,12 @@ func test_off_empty_and_garbage_move_input_means_no_movement() -> void:
 	expect_eq(none.hero_position, Vector2(0, 80), "no move key at all")
 
 
-func test_the_hero_cannot_leave_the_spawn_ring() -> void:
-	# Pack: spawn_radius 420. Walk right for 5 s (850 px of travel) from x = 0.
+func test_the_hero_cannot_leave_the_arena() -> void:
+	# Pack: the Outpost arena is 1920 wide, so 960 either side of the keep. Walk right for
+	# 6 s (1020 px of travel at 170 px/s) from x = 0.
 	var rules := _quiet()
-	_run(rules, 5 * HoldfastRules.TICK_RATE, {"move": [1, 0]})
-	expect_near(rules.hero_position.length(), 420.0, 0.001, "stopped at the ring")
+	_run(rules, 6 * HoldfastRules.TICK_RATE, {"move": [1, 0]})
+	expect_eq(rules.hero_position.x, 960.0, "stopped at the arena's right edge")
 
 
 func test_the_hero_fires_at_an_enemy_in_range_and_the_arrow_hits_it() -> void:

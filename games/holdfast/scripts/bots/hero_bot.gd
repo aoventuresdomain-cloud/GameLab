@@ -43,7 +43,18 @@ func get_input(rules: SimRules, _tick: int) -> Dictionary:
 			move = towards
 		elif nearest_dist < want - HOLD_BAND:
 			move = -towards
+	move = _stay_in_the_ring(run, move)
 	return {"move": [move.x, move.y], "ability": in_ability_reach >= ABILITY_MIN_ENEMIES}
+
+
+## The bot plays inside the fog edge, where enemies come from: a step that would
+## cross it is cut short to end on it (the arena itself is bigger than that).
+func _stay_in_the_ring(run: HoldfastRules, move: Vector2) -> Vector2:
+	var step := run.hero_speed * dt
+	if move == Vector2.ZERO or step <= 0.0:
+		return move
+	var next := (run.hero_position + move * step).limit_length(run.spawn_radius)
+	return ((next - run.hero_position) / step).limit_length(1.0)
 
 
 ## How far from the Hero an ability reaches: its range, or its radius when it
