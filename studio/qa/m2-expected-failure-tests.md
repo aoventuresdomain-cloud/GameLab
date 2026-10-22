@@ -19,6 +19,7 @@ So a test cannot sit pending behind a finished build. Removing an id is the buil
 | `hero_paths` | HF-M2-14 | `scripts/rules/hero_paths.gd` | same |
 | `enemy_targeting`, `unit_health`, `lit_area` | HF-M2-15 | `scripts/rules/enemy_targeting.gd`, `unit_health.gd`, `lit_area.gd` | same |
 | `hero_gear`, `boss_rules` | HF-M2-16 | `scripts/rules/hero_gear.gd`, `boss_rules.gd` | same |
+| `recruit_rules` | HF-M2-15 (slice 2) | `scripts/rules/recruit_rules.gd` | same |
 
 Each test file opens with the exact function signatures and the rules it pins. Names are QA's: if one has to change, ask QA before the build starts, never after.
 
