@@ -124,15 +124,23 @@ func _test_readable_layout() -> void:
 		var view := root.get_visible_rect()
 		_check(Vector2i(view.size) == BASE_SIZE, "%dx%d window shows the whole 1280x720 layout" % [window.x, window.y])
 		for screen in [_main.home, _main.keep_screen, hud, _main.summary]:
-			screen.visible = true
-			await process_frame
-			for control in _texts(screen):
-				var name := "%dp %s/%s" % [window.y, screen.name, screen.get_path_to(control)]
-				var px := roundi(control.get_theme_font_size("font_size") * scale)
-				_check(px >= MIN_FONT_PX, "%s text is %dpx on screen" % [name, px])
-				_check(view.encloses(control.get_global_rect()), "%s fits on screen" % name)
-				_check(control.size.x + 0.5 >= control.get_minimum_size().x, "%s is not clipped" % name)
-			screen.visible = false
+			await _check_layout(screen, window, scale, view)
+		# The summary after a win, with Next level and the Upgrade screen as well.
+		_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": false}, "shingle_beach")
+		await _check_layout(_main.summary, window, scale, view)
+		_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": true})
+
+
+func _check_layout(screen: Control, window: Vector2i, scale: float, view: Rect2) -> void:
+	screen.visible = true
+	await process_frame
+	for control in _texts(screen):
+		var name := "%dp %s/%s" % [window.y, screen.name, screen.get_path_to(control)]
+		var px := roundi(control.get_theme_font_size("font_size") * scale)
+		_check(px >= MIN_FONT_PX, "%s text is %dpx on screen" % [name, px])
+		_check(view.encloses(control.get_global_rect()), "%s fits on screen" % name)
+		_check(control.size.x + 0.5 >= control.get_minimum_size().x, "%s is not clipped" % name)
+	screen.visible = false
 
 
 func _texts(node: Node) -> Array:

@@ -129,6 +129,12 @@ func get_unlocked_levels() -> Array:
 	return HoldfastMeta.unlocked_levels(_content, data)
 
 
+## The level after `id` when the player can play it now, else "".
+func get_next_level(id: String) -> String:
+	var next := HoldfastMeta.next_level(_content, id)
+	return next if next in get_unlocked_levels() else ""
+
+
 func is_level_won(id: String) -> bool:
 	return id in data["levels_won"]
 

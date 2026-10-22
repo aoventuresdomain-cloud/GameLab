@@ -162,8 +162,9 @@ func _draw_hero(rules: HoldfastRules) -> void:
 		_draw_effect(effect)
 	for arrow in rules.projectiles:
 		var tail: Vector2 = arrow.position - arrow.velocity.normalized() * 14.0
-		draw_line(tail, arrow.position, COLOUR_ARROW, 3.0)
-		draw_circle(arrow.position, arrow.radius * 0.6, COLOUR_ARROW)
+		var tint := Color(arrow.colour) if arrow.colour != "" else COLOUR_ARROW
+		draw_line(tail, arrow.position, tint, 3.0)
+		draw_circle(arrow.position, arrow.radius * 0.6, tint)
 	var at := rules.hero_position
 	var colour := Color(rules.hero_colour)
 	var radius := rules.hero_radius
