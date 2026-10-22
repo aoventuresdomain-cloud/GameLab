@@ -397,6 +397,16 @@
   - [ ] After a win, a screen offers Next level and Upgrade screen (Next level is not offered after the last unlocked level or a loss; a loss keeps its current screen); readable at 1280x720 and 1920x1080; saved gold and unlocks are written before the screen shows.
   - [ ] Parity and the 60 second budget pass, the progression hash is re-pinned once with old and new in the PR, and any existing-test change has my OK first.
 
+### HF-M2-28 Recalibrate levels and balance all pillars
+- **Owner:** Gameplay Engineer
+- **Status:** Backlog, future work (CEO 2026-10-22 23:10): the focus is the Flare Archer and getting the mechanics complete; levels and the other pillars are recalibrated later
+- **QA:** full (pack retune changes outcomes)
+- **Done when:**
+  - [ ] Bands per pillar and per bot (average, poor) for every level, with a per-pillar first-time floor, from the Advisor's targets (pillar balance view, 2026-10-22, in the Advisor views table). Hero stats are not nerfed.
+  - [ ] Dusk Mage and Tideblade are brought within the floor (F-044, F-049, F-043), and Volley and Sniper are within the stated gap per level.
+  - [ ] The simulator gates on the bands and CI fails when one is missed (HF-M2-01, HF-M2-05).
+- **Notes:** Re-scoped from Build 7 (parked). When Build 7 is proposed again it is mechanics-first and Archer-only, not a cross-pillar balance pass.
+
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
 - **Status:** Ready, Build 7 of 8, parked until the CEO confirms after testing Build 6; amended for the parked Recruits
@@ -628,3 +638,4 @@
 
 - 2026-10-22 22:41: CEO GO to add Build 7 of 8 to the run. Reversed at 23:02 (below).
 - 2026-10-22 23:02: CEO: reverse the Build 7 add. The run is 4b + 5 + 6 again. The team stops after Build 6 and waits for the CEO to test and confirm before Build 7 (pacing) starts. The Build 7 board items stay amended and parked. Hero buffs vs pack-only tuning is an open question for the Advisor, asked at 23:01, to be answered when Build 7 starts.
+- 2026-10-22 23:10: CEO: focus on the Flare Archer and getting the mechanics complete. Balancing the other pillars and recalibrating level difficulty across the board is future work (backlog HF-M2-28, with the Advisor's findings). Build 6 gets only the tuning the Archer needs to be playable. Build 7 stays parked and, when re-scoped, is proposed mechanics-first and Archer-only.
