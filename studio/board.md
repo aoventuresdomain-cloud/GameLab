@@ -301,7 +301,7 @@
 
 ### HF-M2-19 Bigger arena, Hero reaches the edges
 - **Owner:** Gameplay Engineer
-- **Status:** In review (#51), Build 3b of 7
+- **Status:** Merged in #51, Build 3b of 7, waiting on the CEO's playtest
 - **QA:** screens
 - **Depends on:** HF-M2-14
 - **Done when:**
@@ -429,6 +429,8 @@
 | F-026 | HF-M2-02 | FOLLOW-UP from QA on the save service: in the web build a save is lost whole if the tab closes in the same instant it is written (nothing half-written, the previous save loads). The game must autosave at end of run and after spends and upgrades, not rely on a save-on-quit hook (QA, commit 804ecd3a) | Minor | Gameplay Engineer | Fixed in #48 (autosave after every spend and at the end of each run), waiting on the CEO's playtest |
 | F-027 | HF-M2-18 | FOLLOW-UP, design: because the Hero now gets up where they fell, they stand on their own dropped XP and pick it up at once, so the knock-down no longer costs unbanked XP. Left as the CEO specified; the CEO judges after playing, an option is to get up a short step from the token | Minor | Head of Engineering | Open, for the CEO's call after the Build 3 playtest |
 | F-028 | HF-M2-01 | Balance: the Flare Archer wins Tidewrack Cove about 1 in 40 seeds with its kit (1 in 12 before the bigger arena) while the Tideblade wins most; not retuned in Build 3 | Minor | Gameplay Engineer | Open, handled with the pacing bands in Build 6 unless the CEO's playtest says otherwise |
+| F-029 | HF-M2-19 | FOLLOW-UP from QA's screens walk: Recruit name and down labels are about 7 px tall at 1280x720 (0.65 scale), hard to read | Minor | Gameplay Engineer | Open, a small fix in a later build |
+| F-030 | HF-M2-19 | FOLLOW-UP from QA's screens walk: with the Hero at the top edge, its aura arc and health bar draw faintly over the HUD panel's lower edge | Minor | Gameplay Engineer | Open, a small fix in a later build |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
