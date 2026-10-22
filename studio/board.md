@@ -234,7 +234,7 @@
   - [ ] There is one player-named Hero, the Keeper. They move with WASD and auto-aim at the nearest enemy. The attack comes from their path, and the ability from their path fires with Space on a cooldown. The lantern is the Keeper's light, not their attack: it pushes the fog edge back and gives a damage bonus to anything the Hero hits inside lit areas. Every attack is light, fire or the shadow that light casts. The mouse-cursor aura is gone.
   - [ ] The Hero has 3 pillars from packs (working names, the CEO can rename): Flare Archer (auto-fires flares, Space is Flare Barrage; capstone Beacon Arrow plants a temporary light post), Dusk Mage (auto shadow pulses with a small area, extra damage in unlit fog; Space is Eclipse, which dims the Keeper's own light for a few seconds and pulls and slows enemies into a dark zone; capstone Total Eclipse, with nearby light posts dark while it lasts) and Tideblade (quick short arc stabs, Space is Dash-Strike with the cooldown refunded on a kill; capstone Lighthouse Sweep, a rotating blade line). Only three attack behaviours are coded (projectile, area, arc); the rest is pack data. Each has 10 nodes on a shared skeleton: tier 1 stats and feel, tier 2 changes to the Space ability, tier 3 changes to the main attack, plus a capstone that changes the ability. At least half changing behaviour rather than a percentage, and unlocks a different active ability. Hero level is capped so a tester can buy about 8 nodes in a session; only the next tier is open and deeper tiers show locked. Pillars can be mixed, and a full respec between runs is free or cheap.
   - [ ] Movement and abilities are inputs on the kit engine's fixed timestep, so a seeded run with recorded inputs ends identically headless and in the playable build (parity test).
-  - [ ] At zero health the Hero is knocked down, drops their unbanked XP where they fell for the player to collect, and gets back up at the keep. The delay grows with each knock-down in the run (delays from packs, tested).
+  - [ ] At zero health the Hero is knocked down, drops their unbanked XP where they fell for the player to collect, and gets back up where they fell (CEO change, 2026-10-22, see HF-M2-18). The delay grows with each knock-down in the run (delays from packs, tested).
   - [ ] Head of QA's strict expected-failure tests, written from worked examples before the build, now pass; boundary cases (zero health, first and fourth knock-down, off and empty pack values) are covered.
 
 ### HF-M2-15 Enemies fight back
@@ -288,6 +288,16 @@
   - [ ] A simulator test fails if a Hero can never lose: for each pillar, across a fixed set of seeds, at least one run ends with the keep fallen or the Hero knocked down more than once, and at least one run is won (thresholds from packs, run in CI order).
   - [ ] Recruits move: each Recruit has a home post and moves to engage the nearest enemy within a leash distance of it, retreats to the post when hurt or when nothing is in range, and stays inside the leash (rule in the rules engine, pack values, tested at the boundary: exactly at the leash, zero leash, downed Recruit does not move). A Recruit staffing a light post stays at it and still adds its role effect.
   - [ ] Parity test and the 60 second budget still pass, the progression hash is re-pinned once with old and new in the PR, and the web build is checked in Chromium.
+
+### HF-M2-18 Hero gets back up where they fell
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, part of Build 3 (CEO playtest of Build 2b, 2026-10-22; replaces the keep respawn)
+- **QA:** sanity
+- **Depends on:** HF-M2-14
+- **Done when:**
+  - [ ] After the 3 s, 6 s, 10 s wait the Hero gets back up where they fell, not at the keep or beside a tower; the wait and the unbanked XP drop where they fell are unchanged (tested for the first and fourth knock-down).
+  - [ ] The Hero is untouchable for a short pack-set time (default 2 s) after getting up, so they are not knocked down again at once by whatever stood over them (time from packs, zero allowed, tested at the boundary).
+  - [ ] A Hero who fell outside the playfield or on blocked ground gets back up on the nearest open ground inside it (tested), and the headless run and the playable build agree (parity test).
 
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
@@ -437,6 +447,7 @@
 
 ## Decisions and open questions
 
+- 2026-10-22: CEO after Build 2b: pillar difficulty feels good enough (no retune); the Hero gets back up where they fell, not at the keep (HF-M2-18, in Build 3). Defaults picked by HoE: a short untouchable time after getting up, because the Hero can now fall in the middle of a fight; the wait, XP drop and Recruit rules are unchanged.
 - 2026-10-22: CEO's first playtest of slice 2: the Hero is too strong to die, and Recruits must move. Slice 2b (HF-M2-17) is a quick fix before slice 3; the team stops again after its build. The CEO's follow-up: make monsters stronger, do not nerf the Hero. Defaults picked by HoE: Recruits leash to a home post, engage the nearest enemy in range and retreat when hurt; balance is pack data only.
 - 2026-10-06: The repository stays public for now (CEO decision), to go private once the idea matures. Until then `games/holdfast/plan.md` is a build excerpt and nothing commercially sensitive is committed (`CLAUDE.md`).
 - 2026-10-06: Gate 1 web build is played from a password-protected itch.io draft page (not a public release), uploaded by CI with butler. Agreed with the Setup Desk.

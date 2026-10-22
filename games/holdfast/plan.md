@@ -11,7 +11,7 @@
 **Run (3-8 minutes):**
 1. Pick a level, a squad of Recruits for your deploy slots (2 to start, up to 4), and 1 of 3 offered blessings (temporary boosts for this run).
 2. Enemies come in waves. You move your Hero on the battlefield (WASD or a controller stick); the Hero attacks on their own within range and has one active ability, set by their skill path, on a cooldown. Towers and Recruits fight on their own.
-3. Enemies fight back: they attack towers, Recruits and the Hero, so towers can be destroyed and Recruits knocked out for the rest of the run. The Hero gets back up at the keep instead, after a wait that grows with each knock-down.
+3. Enemies fight back: they attack towers, Recruits and the Hero, so towers can be destroyed and Recruits knocked out for the rest of the run. The Hero gets back up where they fell instead, after a wait that grows with each knock-down.
 4. Enemies drop gold and occasional XP tokens. The Hero and Recruits level up mid-run.
 5. The run ends when the keep falls or the boss dies. You keep all the gold.
 
