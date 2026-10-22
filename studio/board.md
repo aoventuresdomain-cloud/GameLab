@@ -299,6 +299,16 @@
   - [ ] The Hero is untouchable for a short pack-set time (default 2 s) after getting up, so they are not knocked down again at once by whatever stood over them (time from packs, zero allowed, tested at the boundary).
   - [ ] A Hero who fell outside the playfield or on blocked ground gets back up on the nearest open ground inside it (tested), and the headless run and the playable build agree (parity test).
 
+### HF-M2-19 Bigger arena, Hero reaches the edges
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, Build 3b of 7 (CEO playtest of Build 2b, 2026-10-22; quick fix after Build 3)
+- **QA:** screens
+- **Depends on:** HF-M2-14
+- **Done when:**
+  - [ ] The playable arena is larger (size from packs, default about 1.5 times the current width and height), and the camera shows it without clipping on a 16:9 window and a laptop-sized one.
+  - [ ] The Hero can walk to every edge and corner of the arena and no further (tested at each edge and corner), and the arrow and enemy spawns still sit inside it.
+  - [ ] No rule, pack tuning or pillar number changes except the arena size and where things sit in it; the progression hash is unchanged or re-pinned once with old and new in the PR, and parity and the 60 second budget still pass.
+
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
 - **Status:** Ready
@@ -449,6 +459,7 @@
 
 - 2026-10-22: **Go on the revised plan** (CEO). Recruits are parked until the core gameplay is established (HF-M2-03 on hold, what exists stays as is). The CEO now gets 7 builds: 3 Gold and saves, 4 Hero skills, 5 Monsters and the boss, 6 Pacing, 7 Recruits. Build 3 starts now and includes HF-M2-18. Defaults picked by HoE: the Gameplay Engineer builds the plain Build 3 screens (no new role woken); the save service PR (KIT-07, core logic) gets QA's strict tests plus a focused QA check on that one commit, not a full round.
 - 2026-10-22: CEO after Build 2b: pillar difficulty feels good enough (no retune); the Hero gets back up where they fell, not at the keep (HF-M2-18, in Build 3). Defaults picked by HoE: a short untouchable time after getting up, because the Hero can now fall in the middle of a fight; the wait, XP drop and Recruit rules are unchanged.
+- 2026-10-22: CEO after Build 3 start: the map felt small and the Hero could not reach the edge (HF-M2-19). Defaults picked by HoE: a quick fix with the Build 3 letter (3b) that rides after Build 3 and changes only arena size; the estimate stays the same.
 - 2026-10-22: CEO's first playtest of slice 2: the Hero is too strong to die, and Recruits must move. Slice 2b (HF-M2-17) is a quick fix before slice 3; the team stops again after its build. The CEO's follow-up: make monsters stronger, do not nerf the Hero. Defaults picked by HoE: Recruits leash to a home post, engage the nearest enemy in range and retreat when hurt; balance is pack data only.
 - 2026-10-06: The repository stays public for now (CEO decision), to go private once the idea matures. Until then `games/holdfast/plan.md` is a build excerpt and nothing commercially sensitive is committed (`CLAUDE.md`).
 - 2026-10-06: Gate 1 web build is played from a password-protected itch.io draft page (not a public release), uploaded by CI with butler. Agreed with the Setup Desk.
