@@ -13,9 +13,12 @@ const DIMMED := Color(1, 1, 1, 0.45)
 const NODE_SIZE := Vector2(260, 48)
 ## A section's heading sits this far above its first row.
 const HEADING_GAP := 44.0
-const ZOOM_MIN := 0.5
-const ZOOM_MAX := 1.5
+## About 0.4, a power-of-two fraction so the stored scale equals the limit exactly.
+const ZOOM_MIN := 0.375
+const ZOOM_MAX := 2.5
 const ZOOM_STEP := 1.15
+## A press that moves further than this is a drag that pans the web, not a click that buys.
+const DRAG_PX := 6.0
 ## Space kept around a tab's sections, and the part of the web that must stay in view.
 const FIT_PAD := 12.0
 const KEEP_IN_VIEW := 120.0
@@ -83,6 +86,11 @@ var _tab := ""
 ## True once the player (or the Hero page) has picked a tab, so opening the tree keeps it.
 var _tab_picked := false
 var _panning := false
+## A mouse button is down on a node, how far the pointer has moved since, and whether that made
+## it a drag (the press then pans the web and buys nothing).
+var _held := false
+var _moved := 0.0
+var _dragged := false
 var _default_info := "Spend gold and stars on upgrades. Point at one to read what it does."
 
 
@@ -156,10 +164,14 @@ func _build_tree() -> void:
 				continue
 			var at := Vector2(float(node["at"]["x"]), float(node["at"]["y"]))
 			var button := _button(str(node["name"]), FONT_PX, 1)
+			# Pass the mouse on, so a wheel turn or a drag that starts on a node still reaches the view.
+			button.mouse_filter = Control.MOUSE_FILTER_PASS
 			button.clip_text = true
 			button.custom_minimum_size = NODE_SIZE
 			button.position = at - NODE_SIZE * 0.5
-			button.pressed.connect(func() -> void: buy_requested.emit(id))
+			button.button_down.connect(_node_pressed)
+			button.button_up.connect(_node_released)
+			button.pressed.connect(_node_clicked.bind(id))
 			button.mouse_entered.connect(func() -> void: show_info(_node_text(id)))
 			button.mouse_exited.connect(_show_default)
 			holder.add_child(button)
@@ -278,23 +290,50 @@ func zoom_by(factor: float, around := Vector2(-1, -1)) -> void:
 	_keep_in_view()
 
 
-## Drag the background to pan, scroll or pinch to zoom.
+## Drag anywhere (a node included) to pan, wheel, trackpad scroll or pinch to zoom at the pointer.
 func _on_view_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_MIDDLE:
 			_panning = event.pressed
-		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			zoom_by(ZOOM_STEP, event.position)
-		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			zoom_by(1.0 / ZOOM_STEP, event.position)
-	elif event is InputEventMouseMotion and _panning:
-		_web.position += event.relative
-		_keep_in_view()
+		elif event.pressed and (event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+			# A trackpad sends many small turns: the factor says how much of a step each is.
+			var turn: float = event.factor if event.factor > 0.0 else 1.0
+			zoom_by(pow(ZOOM_STEP if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.0 / ZOOM_STEP, turn), event.position)
+			accept_event()
+	elif event is InputEventMouseMotion and (_panning or _held):
+		_moved += event.relative.length()
+		if _held and _moved > DRAG_PX:
+			_dragged = true
+			_panning = true
+		if _panning:
+			_web.position += event.relative
+			_keep_in_view()
 	elif event is InputEventMagnifyGesture:
 		zoom_by(event.factor, event.position)
+		accept_event()
 	elif event is InputEventPanGesture:
 		_web.position -= event.delta * 20.0
 		_keep_in_view()
+		accept_event()
+
+
+## A press on a node may turn into a drag, so it buys only when let go without having moved.
+func _node_pressed() -> void:
+	_held = true
+	_moved = 0.0
+	_dragged = false
+
+
+func _node_released() -> void:
+	_held = false
+	_panning = false
+
+
+func _node_clicked(id: String) -> void:
+	if _dragged:
+		_dragged = false
+		return
+	buy_requested.emit(id)
 
 
 ## Never lets the shown sections be panned out of sight altogether.
