@@ -56,6 +56,7 @@ func _test_flow_with_mouse() -> void:
 
 	await _click(start._buttons["outpost"])
 	_check(_main.planning.visible and not start.visible, "Tapping the first level opens the planning screen (it has Archer Post sites)")
+	await _click(_main.planning.get_node("%AutoButton"))
 	await _click(_main.planning.get_node("%StartButton"))
 	_check(hud.visible and not start.visible, "Play shows the HUD")
 	_check(_source.is_running(), "Play starts a run")

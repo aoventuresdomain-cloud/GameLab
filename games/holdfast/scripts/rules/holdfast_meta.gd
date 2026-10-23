@@ -221,6 +221,12 @@ static func layout_for(content: Dictionary, profile: Dictionary, level: String) 
 	return saved.duplicate() if saved != null and is_valid_layout(data, saved) else HoldfastRules.best_layout(data)
 
 
+## True when the player has a valid layout of their own saved for `level` (not just the suggested one).
+static func has_saved_layout(content: Dictionary, profile: Dictionary, level: String) -> bool:
+	var data: Dictionary = content.get("levels", {}).get(level, {})
+	return data.has("sites") and profile.get("layouts", {}).has(level) and is_valid_layout(data, profile["layouts"][level])
+
+
 ## The profile with `level`'s layout set; an invalid layout changes nothing.
 static func set_layout(content: Dictionary, profile: Dictionary, level: String, layout: Array) -> Dictionary:
 	if not content.get("levels", {}).has(level) or not is_valid_layout(content["levels"][level], layout):
