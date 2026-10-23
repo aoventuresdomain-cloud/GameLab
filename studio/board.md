@@ -464,11 +464,11 @@
 
 ### HF-M2-35 Retune levels 1 to 5 for the empty-castle start (tree rework, part 4)
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, last of the tree slice: after HF-M2-37 is merged (it tunes everything the earlier items added). Archer only; other pillars stay in HF-M2-28
+- **Status:** Building (HF-M2-37 merged), last of the tree slice (it tunes everything the earlier items added). Archer only; other pillars stay in HF-M2-28
 - **QA:** full
 - **Depends on:** HF-M2-37
 - **Done when:**
-  - [ ] The simulator has bots that place posts by the stars a player would have at that point, wear the gear a player would have found, place Mage Posts when the gate is taken, and buy gold nodes on the same curve, and the progression hash is re-pinned with the reason logged.
+  - [ ] The simulator has bots that place posts by the stars a player would have at that point, wear the gear a player would have found, place Mage Posts when the gate is taken (auto-place and the Plan page's "Posts: N of M" count use slots and Mage cards sensibly, F-074), and buy gold nodes on the same curve, and the progression hash is re-pinned with the reason logged.
   - [ ] Levels 1 to 5 hit the Advisor's win-rate targets for the Flare Archer on that curve (about 90% on level 1 and 75% on level 2, the rest from the Advisor's table), with the numbers in the PR body.
   - [ ] A player never goes more than about three runs without being able to afford something new, checked by the same bots.
   - [ ] Any pack numbers changed are data only, and no existing test is loosened without my OK.
@@ -486,14 +486,14 @@
 
 ### HF-M2-37 Mage Post and the first Tower Gate
 - **Owner:** Gameplay Engineer
-- **Status:** Building (HF-M2-36 merged). CEO go 2026-10-23 10:12 on the Mage Post and the first Tower Gate. Design: the Advisor's sketch (`advisor-tree-grammar-and-first-nodes.md`, Tower Gate I) and its tree view (`advisor-tree-stats-gear-ring.md`, section 1)
+- **Status:** Merged (#108, QA clear at 14a1318). The Hero link (Eclipse wider on a Mage Post) is for the Dusk Mage only, per the Advisor text; Flare Archer players do not see it. Originally: Building. CEO go 2026-10-23 10:12 on the Mage Post and the first Tower Gate. Design: the Advisor's sketch (`advisor-tree-grammar-and-first-nodes.md`, Tower Gate I) and its tree view (`advisor-tree-stats-gear-ring.md`, section 1)
 - **QA:** full (new tower type, tree and Plan page change)
 - **Depends on:** HF-M2-36
 - **Done when:**
-  - [ ] Tower Gate I is a star node in the tree (2 stars, and 5 nodes owned) that says how many more nodes it needs. It offers the Mage Post; the Mender and Frost posts are not built and are not offered yet. Taking the gate opens a Mage card on the Plan page, placed in the same slots as the Archer.
-  - [ ] The Mage Post works in a run: area damage that hits hardest in the dark, from pack data (stats in `towers.json`), with its own health, range and cooldown, and monsters target it like the Archer Post.
-  - [ ] A short Mage branch in the tree (a few gold stat nodes, with one Hero link: Eclipse is wider when centred on a Mage Post), placed next to the gate.
-  - [ ] Old saves load unchanged (the gate is simply not taken). The three reserved links, the Mender and Frost posts, walls and Gate II are not built.
+  - [x] Tower Gate I is a star node in the tree (2 stars, and 5 nodes owned) that says how many more nodes it needs. It offers the Mage Post; the Mender and Frost posts are not built and are not offered yet. Taking the gate opens a Mage card on the Plan page, placed in the same slots as the Archer.
+  - [x] The Mage Post works in a run: area damage that hits hardest in the dark, from pack data (stats in `towers.json`), with its own health, range and cooldown, and monsters target it like the Archer Post.
+  - [x] A short Mage branch in the tree (a few gold stat nodes, with one Hero link: Eclipse is wider when centred on a Mage Post), placed next to the gate.
+  - [x] Old saves load unchanged (the gate is simply not taken). The three reserved links, the Mender and Frost posts, walls and Gate II are not built.
 
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
@@ -658,6 +658,10 @@
 | F-069 | HF-M2-36 | FOLLOW-UP from QA (#106, 9d66269): test gap. An old-slot entry in a damaged save wins by key order ({"charm": stave, "weapon": bowstring}) and an unknown slot name wears the piece in its own slot; nothing pins either | Minor | Gameplay Engineer | In HF-M2-37 if cheap |
 | F-070 | HF-M2-36 | FOLLOW-UP from QA (#106, 9d66269): the Beacon visor's fog-edge effect has no row in the Hero numbers, though the Helmet label says "beam reach" | Minor | Gameplay Engineer | Open, Gate 2 round |
 | F-071 | HF-M2-36 | FOLLOW-UP from QA (#106, 9d66269): dropping a worn piece on the header or pillar buttons, or below the bag, does nothing and the piece stays worn; the code comment says anywhere else takes it off. Not harmful | Minor | Gameplay Engineer | Open, Gate 2 round |
+| F-072 | HF-M2-37 | FOLLOW-UP from QA (#108, 14a1318): the Eclipse ring is drawn at the pack radius 255 (`world_view.gd:178` ignores `zone_scale`) while the widened zone reaches about 331. Dusk Mage with the link only | Minor | Gameplay Engineer | Open, M2b |
+| F-073 | HF-M2-37 | FOLLOW-UP from QA (#108, 14a1318): the Mage hits 8.0 in the dark against 7.5 lit because the +50% light bonus also applies, so "hardest in the dark" is only about 7%. Balance | Minor | Gameplay Engineer | Open, M2b |
+| F-074 | HF-M2-37 | FOLLOW-UP from QA (#108, 14a1318): "Posts: 2 of 3" counts cards, not slots; auto-place and default layouts fill Archers first, so a Mage never appears unless swapped in by hand | Minor | Gameplay Engineer | In HF-M2-35 |
+| F-075 | HF-M2-37 | FOLLOW-UP from QA (#108, 14a1318): dropping a lifted post on the blank space right of the tray does nothing (same class as F-071) | Minor | Gameplay Engineer | Open, Gate 2 round |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -703,6 +707,7 @@
 | 2026-10-23 | `test_build3.gd`, `test_build5.gd`, `test_build6.gd`, `test_rework_a.gd`, `test_rework_b.gd`, `test_stars_and_castle.gd`, `through_level_zero.gd` (#102, listed old to new in its description) | Node-count bound `<= 40` to `<= 50` (loosened, the tree has 45 nodes); castle buys applied before tree tests; fork tests run on a forked pack copy; respec gold expectations include fees; tab node lists show only visible nodes; progression hash re-pinned `d71d47e4...` to `97bb407b...` | The tree is one connected graph with prerequisites, no real fork, a respec fee and hidden far nodes; QA checked the diff and found nothing else loosened | Head of Engineering |
 | 2026-10-23 | `test_build3.gd` (node-count bound), `test_rework_b.gd`, `test_tree_connected.gd`, known tower stat list, post section count, star-node list, Longer sight buy text (#104, listed old to new in its description) | Node-count bound `<= 50` to `<= 60` (loosened, the tree has 51 nodes); NODE_COUNT 45 to 51; tower stat list +13; post section 11 to 17; star-node list +6; "+2 shown" for the Watchtower link; progression hash re-pinned `97bb407b...` to `3c95f7b0...` | Six Hero and tower links add nodes, tower stats and a longer post section; QA found only additions apart from the bound | Head of Engineering |
 | 2026-10-23 | `test_build6.gd`, `test_build3.gd`, `test_rework_a.gd`, known Hero stat list, damaged-save test (#106, listed old to new in its description) | Gear slots weapon/charm to five and items 6 to 12 with drop pools; new-profile equality; Hero stat list +3; damaged-save test uses unknown slot "hat" with a non-owned item; progression hash re-pinned `3c95f7b0...` to `b137a200...` | Five slots, twelve items and first-clear gear; the bot now banks and wears first-clear pieces; QA checked the diff, nothing loosened, and logged the remaining gap as F-069 | Head of Engineering |
+| 2026-10-23 | "Hero node sits in its Hero's section" check, plus tower stat and node-count lists (#108, listed old to new in its description) | The check skips nodes that also have a tower (Dusk Eclipse is a link in the Mage section); counts and lists gain the Mage nodes; F-069 test added in `test_gear_slots.gd`; progression hash re-pinned `b137a200...` to `08cb412c...` | The Mage Post section and Tower Gate I add nodes; QA confirmed the relaxed check hides nothing else (`link_eclipse` is the only node with both a tower and a hero) | Head of Engineering |
 
 ## Advisor views
 
