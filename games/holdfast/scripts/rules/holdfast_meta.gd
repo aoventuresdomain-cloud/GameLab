@@ -29,12 +29,22 @@ extends RefCounted
 ## Archer Post cards with stars; migrate_v3 refunds every bought node in gold, grants the stars
 ## the won levels would have paid and resets the layouts.
 
-const SAVE_VERSION := 4
+## Version 5: one connected tree. Every node but the first needs another, the three capstones
+## cost stars, and a respec costs a fee; migrate_v4 refunds every bought node in gold (the
+## capstones at the gold they cost before), keeps the stars and resets the layouts.
+
+const SAVE_VERSION := 5
 
 ## The most stars one level can pay; the pack's star tiers never go above it.
 const MAX_LEVEL_STARS := 3
 ## The castle's own id in the pack's `castle_rules`.
 const CASTLE := "castle"
+## A respec takes a tenth of a gold node's price (at least the minimum) and a flat fee for a star node.
+const RESPEC_FEE_SHARE := 0.1
+const RESPEC_MIN_FEE := 20
+const RESPEC_STAR_FEE := 50
+## The capstones were bought with gold until version 5.
+const V4_CAPSTONE_GOLD := {"flare_inferno": 2400, "post_piercing": 3000, "post_storm": 3000}
 
 ## The Archer Post nodes version 2 sold, which no longer exist: node id -> what it cost.
 const V2_TOWER_COSTS := {
@@ -226,7 +236,7 @@ static func migrate_v3(data: Dictionary, content: Dictionary) -> Dictionary:
 	for id in _list(out.get("upgrades")):
 		if nodes.has(id) and not id in refunded:
 			refunded.append(id)
-			gold += int(nodes[id]["cost"])
+			gold += _refund_price(nodes, id)
 	var stars := {}
 	var won := _list(out.get("levels_won")).duplicate()
 	for id in won:
@@ -248,6 +258,32 @@ static func migrate_v3(data: Dictionary, content: Dictionary) -> Dictionary:
 	out["levels_won"] = won
 	out["layouts"] = {}
 	return out
+
+
+## A version 4 save as version 5. Every bought node goes back to the gold it cost, the tree
+## is bought again from the first slot, and the layouts are reset. Stars are kept: they are
+## worked out from the levels won, and the star nodes are free again.
+static func migrate_v4(data: Dictionary, content: Dictionary) -> Dictionary:
+	var out := data.duplicate(true)
+	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	var gold := maxi(_whole(out.get("gold")), 0)
+	var refunded := []
+	for id in _list(out.get("upgrades")):
+		if nodes.has(id) and not id in refunded:
+			refunded.append(id)
+			gold += _refund_price(nodes, id)
+	out["upgrades"] = []
+	out["gold"] = gold
+	out["layouts"] = {}
+	return out
+
+
+## The gold a bought node goes back for in a migration: nothing for a star node (its stars are
+## free again), its price for a gold node, and what the capstones cost before they took stars.
+static func _refund_price(nodes: Dictionary, id: String) -> int:
+	if V4_CAPSTONE_GOLD.has(id):
+		return int(V4_CAPSTONE_GOLD[id])
+	return 0 if is_star_node(nodes[id]) else int(nodes[id]["cost"])
 
 
 static func _tutorial(level: Dictionary) -> bool:
@@ -438,6 +474,25 @@ static func is_near(content: Dictionary, profile: Dictionary, id: String) -> boo
 	return true
 
 
+## True when the tree shows the node: the first one, any node next to one the player owns (it
+## needs it), and every bought one. A node of another Hero's path is never shown.
+static func is_visible(content: Dictionary, profile: Dictionary, id: String) -> bool:
+	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	if not nodes.has(id):
+		return false
+	if nodes[id].has("hero") and str(nodes[id]["hero"]) != str(profile["pillar"]):
+		return false
+	if id in profile["upgrades"]:
+		return true
+	var needs: Array = nodes[id].get("requires", [])
+	if needs.is_empty():
+		return true
+	for required in needs:
+		if required in profile["upgrades"]:
+			return true
+	return false
+
+
 ## The next gold upgrades to show: up to `limit` near nodes, cheapest first (ties by id).
 ## Star nodes are left out: their price is not comparable with gold, and the map guides
 ## the first of them.
@@ -462,17 +517,45 @@ static func _closed_by(nodes: Dictionary, bought: Array, id: String) -> String:
 	return ""
 
 
-## The profile with every upgrade refunded at its pack price (gold back for gold nodes; the
-## stars of a star node are free again the moment it goes) and the tree empty, so the choices
-## can be made again. Free: the gold is only moved back.
-static func respec(content: Dictionary, profile: Dictionary) -> Dictionary:
+## What taking one bought node back costs, in gold: a tenth of a gold node's price (at least
+## RESPEC_MIN_FEE), a flat RESPEC_STAR_FEE for a star node (its stars come back in full).
+static func respec_fee(node: Dictionary) -> int:
+	if is_star_node(node):
+		return RESPEC_STAR_FEE
+	return maxi(RESPEC_MIN_FEE, int(round(float(node.get("cost", 0)) * RESPEC_FEE_SHARE)))
+
+
+## The gold a respec changes the purse by: each gold node's price less its fee, less the fee of
+## each star node. Negative when the fees are more than the refunds.
+static func respec_gold_change(content: Dictionary, profile: Dictionary) -> int:
+	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	var change := 0
+	for id in profile["upgrades"]:
+		if not nodes.has(id):
+			continue
+		change -= respec_fee(nodes[id])
+		if not is_star_node(nodes[id]):
+			change += int(nodes[id]["cost"])
+	return change
+
+
+## "" when a respec can go ahead, else why not.
+static func why_not_respec(content: Dictionary, profile: Dictionary) -> String:
 	if profile["upgrades"].is_empty():
+		return "Nothing to respec"
+	if int(profile["gold"]) + respec_gold_change(content, profile) < 0:
+		return "Not enough gold for the respec fee"
+	return ""
+
+
+## The profile with every upgrade taken back and the tree empty, so the choices can be made
+## again: each gold node's price comes back less its fee, a star node costs its fee in gold and
+## frees its stars. Unchanged when `why_not_respec` says no.
+static func respec(content: Dictionary, profile: Dictionary) -> Dictionary:
+	if why_not_respec(content, profile) != "":
 		return profile
 	var out := profile.duplicate(true)
-	var nodes: Dictionary = content.get("upgrade_nodes", {})
-	for id in profile["upgrades"]:
-		if not is_star_node(nodes.get(id, {})):
-			out["gold"] = int(out["gold"]) + int(nodes.get(id, {}).get("cost", 0))
+	out["gold"] = int(out["gold"]) + respec_gold_change(content, profile)
 	out["upgrades"] = []
 	return out
 

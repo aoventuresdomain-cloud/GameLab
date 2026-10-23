@@ -75,9 +75,13 @@ var _content: Dictionary
 var _node_buttons: Dictionary = {}
 ## Each section's holder in the web: hiding it hides its nodes and their links.
 var _section_columns: Dictionary = {}
+## Each section's heading, which sits above the nodes of it that are shown.
+var _headings: Dictionary = {}
 var _tab_buttons: Dictionary = {}
 var _tab_group := ButtonGroup.new()
 var _tab := ""
+## True once the player (or the Hero page) has picked a tab, so opening the tree keeps it.
+var _tab_picked := false
 var _panning := false
 var _default_info := "Spend gold and stars on upgrades. Point at one to read what it does."
 
@@ -89,7 +93,7 @@ func _ready() -> void:
 	_zoom_out.pressed.connect(zoom_by.bind(1.0 / ZOOM_STEP))
 	_zoom_in.pressed.connect(zoom_by.bind(ZOOM_STEP))
 	_view.gui_input.connect(_on_view_input)
-	_view.resized.connect(func() -> void: show_tab(_tab))
+	_view.resized.connect(func() -> void: show_tab(_tab, false))
 	_web.draw.connect(_draw_links)
 	visibility_changed.connect(_on_visibility_changed)
 	_build_tree()
@@ -120,16 +124,20 @@ func refresh() -> void:
 		var button: Button = _node_buttons[id]
 		var bought: bool = id in owned
 		var closed: bool = _profile.why_not_buy(id).begins_with("Closed")
+		button.visible = _profile.is_visible(id)
 		button.text = "%s (bought)" % node["name"] if bought else ("%s (closed)" % node["name"] if closed else "%s  %s" % [node["name"], _price(node)])
 		button.disabled = bought or _profile.why_not_buy(id) != ""
 		button.set_pressed_no_signal(bought)
 		# Only what is one buy away (or already bought) is drawn in full; the rest is dimmed.
 		button.modulate = Color.WHITE if bought or _profile.is_near(id) else DIMMED
 	for section in _section_columns:
-		_section_columns[section].visible = not _content["hero_paths"].has(section) or section == selected_pillar
+		_section_columns[section].visible = (not _content["hero_paths"].has(section) or section == selected_pillar) and _section_has_shown_node(section)
+		_place_heading(section)
 	_refresh_tabs()
 	_web.queue_redraw()
 	_respec.disabled = owned.is_empty()
+	var change: int = _profile.get_respec_gold_change()
+	_respec.text = "Respec: %s%s gold" % ["+" if change >= 0 else "-", Hud.format_number(absi(change))] if not owned.is_empty() else "Respec"
 	var next_parts: PackedStringArray = []
 	for id in _profile.get_next_unlocks():
 		next_parts.append("%s (%s): %s" % [_content["upgrade_nodes"][id]["name"], _price(_content["upgrade_nodes"][id]), _effect_text(id)])
@@ -142,13 +150,11 @@ func _build_tree() -> void:
 		holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_web.add_child(holder)
 		_section_columns[str(section["id"])] = holder
-		var top_left := Vector2(INF, INF)
 		for id in _content["upgrade_nodes"]:
 			var node: Dictionary = _content["upgrade_nodes"][id]
 			if node["branch"] != section["id"]:
 				continue
 			var at := Vector2(float(node["at"]["x"]), float(node["at"]["y"]))
-			top_left = top_left.min(at - NODE_SIZE * 0.5)
 			var button := _button(str(node["name"]), FONT_PX, 1)
 			button.clip_text = true
 			button.custom_minimum_size = NODE_SIZE
@@ -162,8 +168,8 @@ func _build_tree() -> void:
 		heading.text = str(section["name"])
 		heading.add_theme_font_size_override("font_size", FONT_PX)
 		heading.theme_type_variation = &"HudCaption"
-		heading.position = top_left - Vector2(0, HEADING_GAP)
 		holder.add_child(heading)
+		_headings[str(section["id"])] = heading
 	# The web is as big as everything in it, so what it draws is never culled.
 	_web.custom_minimum_size = _holders_rect(_section_columns.values()).end
 
@@ -176,6 +182,24 @@ func tab_names() -> PackedStringArray:
 		if _section_columns[section["id"]].visible and not label in out:
 			out.append(label)
 	return out
+
+
+## True when some node of the section is on show (the heading goes with the section).
+func _section_has_shown_node(section: String) -> bool:
+	for id in _node_buttons:
+		if _content["upgrade_nodes"][id]["branch"] == section and _node_buttons[id].visible:
+			return true
+	return false
+
+
+## The heading sits above the top-left of the section's nodes that are on show.
+func _place_heading(section: String) -> void:
+	var top_left := Vector2(INF, INF)
+	for id in _node_buttons:
+		if _content["upgrade_nodes"][id]["branch"] == section and _node_buttons[id].visible:
+			top_left = top_left.min(_node_buttons[id].position)
+	if top_left.x != INF:
+		_headings[section].position = top_left - Vector2(0, HEADING_GAP)
 
 
 func _sections_in_order() -> Array:
@@ -201,14 +225,15 @@ func _refresh_tabs() -> void:
 		_tabs.add_child(button)
 		_tab_buttons[label] = button
 	if not _tab in names and not names.is_empty():
-		show_tab(names[0])
+		show_tab(names[0], false)
 
 
 ## Moves the view to a tab's sections at real size, or smaller when they would not fit.
-func show_tab(label: String) -> void:
+func show_tab(label: String, picked := true) -> void:
 	if not label in tab_names():
 		return
 	_tab = label
+	_tab_picked = _tab_picked or picked
 	if _tab_buttons.has(label):
 		_tab_buttons[label].set_pressed_no_signal(true)
 	var rect := _tab_rect(label)
@@ -237,6 +262,8 @@ func _holders_rect(holders: Array) -> Rect2:
 	var found := false
 	for holder in holders:
 		for child in holder.get_children():
+			if not child.visible:
+				continue
 			var child_rect := Rect2(child.position, child.size.max(child.get_combined_minimum_size()))
 			rect = child_rect if not found else rect.merge(child_rect)
 			found = true
@@ -288,17 +315,19 @@ func _draw_links() -> void:
 	var owned: Array = _profile.get_upgrades() if _profile != null else []
 	for id in _node_buttons:
 		var node: Dictionary = _content["upgrade_nodes"][id]
-		if not _section_columns[node["branch"]].visible:
+		if not _node_buttons[id].visible:
 			continue
 		var here := Vector2(float(node["at"]["x"]), float(node["at"]["y"]))
 		for required in node.get("requires", []):
+			if not _node_buttons[required].visible:
+				continue
 			var other: Dictionary = _content["upgrade_nodes"][required]
 			var there := Vector2(float(other["at"]["x"]), float(other["at"]["y"]))
 			var middle := (there.y + here.y) * 0.5
 			var elbow := PackedVector2Array([there + half, Vector2(there.x, middle), Vector2(here.x, middle), here - half])
 			_web.draw_polyline(elbow, LINK_BOUGHT if id in owned and required in owned else LINK_OPEN, 3.0)
 		for other_id in node.get("excludes", []):
-			if str(other_id) > id:
+			if str(other_id) > id and _node_buttons[other_id].visible:
 				var other: Dictionary = _content["upgrade_nodes"][other_id]
 				# Side by side: from the edge of one node to the edge of the other.
 				var there := Vector2(float(other["at"]["x"]), float(other["at"]["y"]))
@@ -386,5 +415,7 @@ static func _trim(value: float) -> String:
 func _on_visibility_changed() -> void:
 	if is_visible_in_tree():
 		refresh()
+		if not _tab_picked and not tab_names().is_empty():
+			show_tab(tab_names()[0], false)
 		_show_default()
 		_back.grab_focus()

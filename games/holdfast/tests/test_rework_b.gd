@@ -3,7 +3,7 @@ extends KitTestCase
 ## with jump tabs along the top. Node positions and the tabs come from the packs.
 
 const Main := preload("res://scenes/main.tscn")
-const NODE_COUNT := 37
+const NODE_COUNT := 45
 
 
 func _tree_page() -> Array:
@@ -11,6 +11,8 @@ func _tree_page() -> Array:
 	main.get_node("RunSource").auto_step = false
 	tree.root.add_child(main)
 	tree.root.size = Vector2i(1280, 720)
+	# The first slot and Archer Post are bought, so the sections next to them are on show.
+	ThroughLevelZero.apply_castle(main.get_node("Profile"))
 	main.journey.get_node("%TreeButton").pressed.emit()
 	# One frame for the layout, one for the deferred move to the first tab.
 	await tree.process_frame
@@ -74,7 +76,7 @@ func test_the_tabs_are_hero_archer_post_keep_and_castle_and_opening_lands_on_the
 	expect_eq(page.tab_names(), PackedStringArray(["Hero", "Archer Post", "Keep", "Castle"]))
 	expect_eq(page.get_node("%Tabs").get_child_count(), 4)
 	expect_eq(page._tab, "Hero")
-	expect_true(_in_view(page, "flare_boots") and _in_view(page, "flare_inferno"), "the Hero section is on show")
+	expect_true(_in_view(page, "flare_boots") and _in_view(page, "flare_focus"), "the Hero section is on show")
 	expect_false(_in_view(page, "post_timbers"), "the other sections are out of view")
 	main.free()
 
@@ -84,9 +86,9 @@ func test_each_tab_moves_the_view_to_its_sections_at_real_size() -> void:
 	var main: Node = made[0]
 	var page: Control = made[1]
 	var expected := {
-		"Hero": ["flare_boots", "flare_inferno", "flare_twin"],
-		"Archer Post": ["post_timbers", "post_rate", "post_piercing", "post_storm"],
-		"Keep": ["keep_walls_1", "keep_walls_5", "keep_beam_3", "tithe_1", "tithe_6"],
+		"Hero": ["flare_boots", "flare_hide", "flare_focus"],
+		"Archer Post": ["post_timbers", "post_sight", "post_drills", "post_rate"],
+		"Keep": ["keep_walls_1", "keep_beam_1", "tithe_1"],
 	}
 	for label in expected:
 		page._tab_buttons[label].pressed.emit()

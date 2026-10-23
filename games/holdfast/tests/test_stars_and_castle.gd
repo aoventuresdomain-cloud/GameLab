@@ -109,14 +109,15 @@ func test_a_star_node_costs_stars_not_gold_and_is_refused_without_them() -> void
 	expect_eq(HoldfastMeta.cost_text(content["upgrade_nodes"]["keep_walls_1"]), "60 gold")
 
 
-func test_respec_frees_the_stars_and_gives_gold_back_only_for_gold_nodes() -> void:
+func test_respec_frees_the_stars_and_gives_gold_back_less_a_fee_for_each_node() -> void:
 	var content := _content()
 	var profile := ThroughLevelZero.of(content, _fresh())
 	profile["gold"] = 100
 	profile["upgrades"].append("keep_walls_1")
 	profile["layouts"]["outpost"] = ["spot_1"]
 	var after := HoldfastMeta.respec(content, profile)
-	expect_eq(after["gold"], 160)
+	# 100 held + 60 back for the Keep wall, less its 20 gold fee and 50 gold for each of the two star nodes.
+	expect_eq(after["gold"], 100 + 60 - 20 - 2 * 50)
 	expect_eq(after["upgrades"], [])
 	expect_eq(HoldfastMeta.stars_available(content, after), 2, "both stars are free again")
 	expect_false(HoldfastMeta.has_a_tower(content, after))

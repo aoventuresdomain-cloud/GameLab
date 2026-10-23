@@ -50,7 +50,7 @@ func _ready() -> void:
 	hero_page.gear_requested.connect(profile.toggle_gear)
 	keep_screen.back_requested.connect(_show.bind(Screen.MAP))
 	keep_screen.buy_requested.connect(profile.buy)
-	keep_screen.respec_requested.connect(profile.respec)
+	keep_screen.respec_requested.connect(_respec_requested)
 	summary.play_again_requested.connect(_plan_run)
 	planning.start_requested.connect(_planned)
 	planning.back_requested.connect(_show.bind(Screen.MAP))
@@ -96,6 +96,14 @@ func _plan_run() -> void:
 	var saved := profile.has_saved_layout(level)
 	planning.open(level, profile.get_layout(level) if saved else [], saved, profile.get_owned_spots(), profile.get_castle_cards())
 	_show(Screen.PLAN)
+
+
+## A respec changes what the next run is built on, so it waits until the run is over.
+func _respec_requested() -> void:
+	if source.is_running():
+		profile.notice.emit("A respec waits until the run is over.")
+		return
+	profile.respec()
 
 
 ## The player's sites are saved with the profile, then the run starts on them.

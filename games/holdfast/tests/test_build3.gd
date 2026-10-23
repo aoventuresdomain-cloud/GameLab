@@ -81,7 +81,7 @@ func _save_path(name: String) -> String:
 func test_the_tree_has_sections_with_real_depth() -> void:
 	var nodes := _nodes()
 	var sections: Dictionary = HoldfastContent.base()["upgrade_sections"]
-	expect_true(nodes.size() >= 30 and nodes.size() <= 40, "about 35 nodes, got %d" % nodes.size())
+	expect_true(nodes.size() >= 30 and nodes.size() <= 50, "about 45 nodes, got %d" % nodes.size())
 	var by_branch := {}
 	for id in nodes:
 		expect_true(sections.has(nodes[id]["branch"]), id + " sits in a section the pack lists")
@@ -144,19 +144,20 @@ func test_a_new_profile_starts_empty_on_the_first_level_and_pillar() -> void:
 
 func test_buying_pays_the_cost_and_records_the_upgrade_without_changing_the_old_profile() -> void:
 	var content := _meta_content()
-	var before := HoldfastMeta.new_profile(content)
+	var before := ThroughLevelZero.of(content, HoldfastMeta.new_profile(content))
 	before["gold"] = 200
+	var owned: Array = before["upgrades"].duplicate()
 	var result := HoldfastMeta.buy(content, before, "keep_walls_1")  # costs 60
 	expect_true(result["ok"])
 	expect_eq(result["profile"]["gold"], 140)
-	expect_eq(result["profile"]["upgrades"], ["keep_walls_1"])
+	expect_eq(result["profile"]["upgrades"], owned + ["keep_walls_1"])
 	expect_eq(before["gold"], 200, "the profile given is untouched")
-	expect_eq(before["upgrades"], [])
+	expect_eq(before["upgrades"], owned)
 
 
 func test_buying_is_refused_with_a_reason_and_changes_nothing() -> void:
 	var content := _meta_content()
-	var profile := HoldfastMeta.new_profile(content)
+	var profile := ThroughLevelZero.of(content, HoldfastMeta.new_profile(content))
 	profile["gold"] = 109
 	var cases := {
 		"post_drills": "Not enough gold",   # costs 110, one short
@@ -261,6 +262,7 @@ func test_the_profile_saves_after_each_change_and_reloads_exactly() -> void:
 	profile.save_path = path
 	tree.root.add_child(profile)
 	expect_eq(profile.load_status, "missing", "no save yet")
+	ThroughLevelZero.apply_castle(profile)
 	profile.bank_run({"gold": 300, "outcome": "won", "level": "outpost"})
 	expect_true(profile.buy("keep_walls_1"))          # 60
 	profile.select_level("shingle_beach")
@@ -789,6 +791,7 @@ func test_the_keep_screen_buys_through_the_flow_and_the_profile_saves() -> void:
 	var path := _save_path("keep_buy")
 	var main := _main(path)
 	var profile: HoldfastProfile = main.get_node("Profile")
+	ThroughLevelZero.apply(profile)
 	profile.bank_run({"gold": 200, "outcome": "lost", "level": "outpost"})
 	var keep: Control = main.keep_screen
 	keep.visible = true
@@ -806,7 +809,7 @@ func test_the_keep_screen_buys_through_the_flow_and_the_profile_saves() -> void:
 	main.free()
 	var reloaded: Dictionary = SaveService.new(path, HoldfastMeta.SAVE_VERSION).load_save()["data"]
 	expect_eq(reloaded["gold"], 30)
-	expect_eq(reloaded["upgrades"], ["keep_walls_1", "post_drills"])
+	expect_eq(reloaded["upgrades"], ["castle_slot_1", "castle_archer_1", "keep_walls_1", "post_drills"])
 
 
 func test_level_and_pillar_picks_start_the_next_run_with_the_bought_upgrades() -> void:

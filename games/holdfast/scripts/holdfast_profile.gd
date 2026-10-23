@@ -41,7 +41,7 @@ func load_profile() -> void:
 		_service = null
 		changed.emit()
 		return
-	_service = SaveService.new(save_path, HoldfastMeta.SAVE_VERSION, {1: HoldfastMeta.migrate_v1.bind(_content), 2: HoldfastMeta.migrate_v2.bind(_content), 3: HoldfastMeta.migrate_v3.bind(_content)})
+	_service = SaveService.new(save_path, HoldfastMeta.SAVE_VERSION, {1: HoldfastMeta.migrate_v1.bind(_content), 2: HoldfastMeta.migrate_v2.bind(_content), 3: HoldfastMeta.migrate_v3.bind(_content), 4: HoldfastMeta.migrate_v4.bind(_content)})
 	var loaded := _service.load_save()
 	load_status = str(loaded["status"])
 	load_message = str(loaded["message"])
@@ -80,9 +80,25 @@ func buy(id: String) -> bool:
 	return result["ok"]
 
 
-## Gives back every bought upgrade's gold (and frees the stars of star nodes) and empties the tree.
+## Takes every bought upgrade back and empties the tree: the gold of gold nodes less a fee for
+## each node, the stars of star nodes free again. Refused (with a notice) when the fees are more
+## than the gold the player has.
 func respec() -> void:
+	var reason := why_not_respec()
+	if reason != "":
+		notice.emit(reason)
+		return
 	_apply(HoldfastMeta.respec(_content, data))
+
+
+## "" when a respec can go ahead, else why not.
+func why_not_respec() -> String:
+	return HoldfastMeta.why_not_respec(_content, data)
+
+
+## What a respec would do to the gold: the refunds less the fees (negative when fees win).
+func get_respec_gold_change() -> int:
+	return HoldfastMeta.respec_gold_change(_content, data)
 
 
 ## Sets the Archer Post sites for a level (ignored when they are not valid for it).
@@ -219,6 +235,11 @@ func is_level_won(id: String) -> bool:
 
 func is_near(id: String) -> bool:
 	return HoldfastMeta.is_near(_content, data, id)
+
+
+## True when the tree shows the node: the first, one next to a bought node, or a bought one.
+func is_visible(id: String) -> bool:
+	return HoldfastMeta.is_visible(_content, data, id)
 
 
 ## Up to two nodes one buy away, cheapest first.

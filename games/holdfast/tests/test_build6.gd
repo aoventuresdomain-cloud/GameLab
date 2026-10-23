@@ -637,7 +637,7 @@ func test_a_damaged_save_with_no_list_or_number_in_the_field_still_loads() -> vo
 
 func test_a_hero_node_of_another_path_cannot_be_bought() -> void:
 	var content := HoldfastContent.base()
-	var profile := HoldfastMeta.new_profile(content)
+	var profile := ThroughLevelZero.of(content, HoldfastMeta.new_profile(content))
 	profile["gold"] = 5000
 	profile["pillar"] = "dusk_mage"
 	expect_eq(HoldfastMeta.why_not_buy(content, profile, "flare_boots"), "Belongs to another Hero")
