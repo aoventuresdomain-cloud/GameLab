@@ -431,17 +431,17 @@
 
 ### HF-M2-32 Stars, empty castle and Level 0 (tree rework, part 1)
 - **Owner:** Gameplay Engineer
-- **Status:** Ready. CEO go 2026-10-23 09:27 on the Advisor's tree and star logic (`/mnt/project-files/holdfast/m2/advisor-tree-grammar-and-first-nodes.md`). Costs are placeholders, tuned in HF-M2-35. Build order is HF-M2-32, 33, 34, 35, one PR each, merged in order
+- **Status:** Merged (#100, QA clear at 8ca3388). Originally: Ready. CEO go 2026-10-23 09:27 on the Advisor's tree and star logic (`/mnt/project-files/holdfast/m2/advisor-tree-grammar-and-first-nodes.md`). Costs are placeholders, tuned in HF-M2-35. Build order is HF-M2-32, 33, 34, 35, one PR each, merged in order
 - **QA:** full (save data and the run flow change)
 - **Done when:**
-  - [ ] A new game starts with an empty castle (no slots, no cards, no stars). Level 0 is on the journey map, cannot be lost (the Keep cannot fall) and pays exactly 2 stars and 150 gold once; its teaching text is a short stub (the full tutorial text follows later).
-  - [ ] A won level pays stars once per level: 1 for a win, 2 above 50% Keep health left, 3 above 80%; a replay pays only the stars not yet earned. Stars show on the journey map and in the tree.
-  - [ ] After Level 0 the map guides two compulsory purchases in order, First Slot then the first tower from the tree (Archer is the only choice for now), before any level can be started. The Plan page shows only the slots and cards owned, around the castle ring of 8 spots, and will not start a level with no tower placed.
-  - [ ] Old saves load: every bought node is refunded in full as gold, stars are granted as if the won levels had paid 3 each plus the 2 from Level 0, and layouts reset to a first visit. A null or damaged field loads as a fresh value, never a crash.
+  - [x] A new game starts with an empty castle (no slots, no cards, no stars). Level 0 is on the journey map, cannot be lost (the Keep cannot fall) and pays exactly 2 stars and 150 gold once; its teaching text is a short stub (the full tutorial text follows later).
+  - [x] A won level pays stars once per level: 1 for a win, 2 above 50% Keep health left, 3 above 80%; a replay pays only the stars not yet earned. Stars show on the journey map and in the tree.
+  - [x] After Level 0 the map guides two compulsory purchases in order, First Slot then the first tower from the tree (Archer is the only choice for now), before any level can be started. The Plan page shows only the slots and cards owned, around the castle ring of 8 spots, and will not start a level with no tower placed.
+  - [x] Old saves load: every bought node is refunded in full as gold, stars are granted as if the won levels had paid 3 each plus the 2 from Level 0, and layouts reset to a first visit. A null or damaged field loads as a fresh value, never a crash.
 
 ### HF-M2-33 One connected tree with stars, slots and respec (tree rework, part 2)
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, after HF-M2-32 is merged. The CEO approved the pan and zoom fix (2026-10-23 10:12); it goes in as its own commit
+- **Status:** Building (HF-M2-32 merged). The CEO approved the pan and zoom fix (2026-10-23 10:12); it goes in as its own commit
 - **QA:** full
 - **Depends on:** HF-M2-32
 - **Done when:**
@@ -449,6 +449,7 @@
   - [ ] Gold nodes cost gold, star nodes cost stars; castle nodes grant the slots and cards the Plan page uses (cards stay two behind slots); forks exclude each other; both Archer capstones can be bought with enough stars; the two new stat nodes (Steady hands, Lamp oil) work in a run.
   - [ ] Respec refunds a node's price minus a fee (about 10% of a gold node's price, at least 20 gold; a flat 50 gold for a star node; stars back in full) and is refused mid-run.
   - [ ] Dragging pans the web from anywhere including over nodes (a click without movement still buys), wheel and trackpad zoom at the cursor between about 0.4x and 2.5x, and the page does not scroll or zoom over the tree.
+  - [ ] The Plan page's slot buttons and tray do not overlap with all 8 spots and 8 cards at 1280x720 and 1920x1080 (F-063); the journey map header spaces Gold and Stars cleanly and the map does not shift when the guide strip goes (F-062).
   - [ ] Mage, Mender and Frost posts, Tower Gate I, walls, Recruits and Hard and Nightmare replays are not built (they need the CEO's go).
 
 ### HF-M2-34 Six Hero and tower links (tree rework, part 3)
@@ -647,6 +648,9 @@
 | F-058 | HF-M2-30 | FOLLOW-UP from QA (#92, 134c2f2): the "Hero" tab name is hard-coded in `run_flow.gd` but tab names are pack data, so a rename silently breaks the Hero link jump | Minor | Gameplay Engineer | Open, Gate 2 round |
 | F-059 | HF-M2-30 | FOLLOW-UP from QA (#92, 134c2f2): the layout test no longer size- or clip-checks section heading labels (nodes are checked as strictly as before) | Minor | Gameplay Engineer | Open, Gate 2 round |
 | F-060 | HF-M2-28 | Backlog from QA (#92): with Dusk Mage or Tideblade there is no Hero tab, so the Hero page link still says "Open the Dusk Mage section" and opens on Archer Post. Belongs with the other pillars' work | Minor | Gameplay Engineer | Backlog, HF-M2-28 |
+| F-061 | HF-M2-32 | FOLLOW-UP from QA (#100, 8ca3388): the Level 0 teaching text is one unwrapped line, clipped at both screen edges, and vanishes about 2 s into Wave 1. Waits for the full tutorial text, which the CEO skipped for now | Minor | Gameplay Engineer | Backlog, with the tutorial text |
+| F-062 | HF-M2-32 | FOLLOW-UP from QA (#100, 8ca3388), cosmetic: the map header separates the Gold caption from its value and the value sits against Stars; the map shifts vertically when the guide strip disappears | Minor | Gameplay Engineer | In HF-M2-33 |
+| F-063 | HF-M2-33 | FOLLOW-UP from QA (#100, 8ca3388): with 8 spots and 8 cards the Plan slot buttons overlap in pairs (3/5/7, 4/6/8) at both sizes. Not reachable in the real pack yet (1 slot, 1 card) | Minor | Gameplay Engineer | In HF-M2-33 |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -688,6 +692,7 @@
 | 2026-10-23 | `test_build3.gd` (4 tests), `test_build4b.gd` (3), `test_build5.gd` (4), `test_build6.gd` (2), `test_slice2.gd` (1), `run_ui_tests.gd` (flow and layout list) | Approved by the Head of Engineering for #88: repointed at the journey map, Hero page and Main menu/Journey map buttons (the keep screen is split); level tap replaces the Play button; pillar and gear checks move to the Hero page. Old and new for each are in the #88 body; no assertion loosened or removed | HF-M2-29 (CEO change). Intent kept | Head of Engineering |
 | 2026-10-23 | `test_build5.gd::test_play_opens_the_planning_screen_and_start_runs_on_the_chosen_site`; `run_ui_tests.gd`; `kit/testing/run_tests.gd` (F-053) | Approved for #91: the first-visit test expects 'Posts: 0 of 1' with Start disabled, then places west_gate and north_gate (limit behaviour unchanged); the first-run UI flow presses Auto-place before Start; the runner now reports a script error in a test as FAIL, with a kit test that runs it on a fixture. QA checked eight erroring scratch tests all fail, and the stricter runner exposed no other erroring test. No assertion loosened | HF-M2-29 Plan page (CEO change) and F-053 | Head of Engineering |
 | 2026-10-23 | `games/holdfast/tests/run_ui_tests.gd::_check_layout` (and `_texts` gains an optional skip argument) | Approved for #92: the general layout loop skips the web's panned nodes and a per-tab check, after jumping to each tab, asserts every node of the tab is in view, not clipped and at least 20 px on screen including zoom. Nodes are checked as strictly as before; section heading labels are no longer size- or clip-checked (F-059). No other existing test changed | HF-M2-30 tree web (CEO change). Intent kept | Head of Engineering |
+| 2026-10-23 | `test_build3.gd`, `test_build4.gd`, `test_build4b.gd`, `test_build5.gd`, `test_build6.gd`, `test_rework_a.gd`, `test_rework_a_plan.gd`, `test_rework_b.gd`, `test_arena.gd`, `run_ui_tests.gd` (#100, listed old to new in its description) | First level, section count, node count, spot ids and start flow updated; `test_arena.gd` sets `source.layout = null` | New first level (Level 0), empty castle, Castle tab and spot ring; no assertion loosened (QA checked the diff) | Head of Engineering |
 
 ## Advisor views
 
