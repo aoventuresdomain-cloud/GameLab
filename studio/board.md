@@ -573,6 +573,7 @@
 | F-050 | HF-M2-16 | FOLLOW-UP from QA (#82): null `levels_won`, `unlocked` or `gear.owned` in a save still throws in `from_save` and leaves the profile data empty (the guard covers only gold and upgrades; use `_list` for all list reads). Same family as F-046 | Minor | Gameplay Engineer | Open, next Gameplay PR (data-integrity) |
 | F-051 | HF-M2-16 | FOLLOW-UP from QA (#82): after the `kit_gold` pack change the fork test reaches only the first fork node at Old Pier 5000 and none elsewhere; the Flare Archer wins 40 of 40 on every kit level and `min_hard_runs` is 0, so no loss check exists on kit levels | Minor | Gameplay Engineer | Open, goes with HF-M2-28 (recalibrate with the levels) |
 | F-052 | HF-M2-16 | FOLLOW-UP from QA (#82): not checked, the Hero-only bot against the Hero-plus-squad line | Minor | Head of QA | Open, Gate 2 round |
+| F-053 | HF-M2-29 | MUST FIX from the Gameplay Engineer (#88): the test runner does not report FAIL when a test dies with a script error after an earlier expectation passed (three `test_build4b.gd` tests errored on a missing node and still showed ok) | Major | Gameplay Engineer | Open, fixed in PR 2 of HF-M2-29 (runner treats a script error as FAIL; I OK the runner change) |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -611,6 +612,7 @@
 | 2026-10-23 | Progression hash | Re-pinned in #82: `bda28bd4...09fa7` to `d71d47e4...be7d` (HF-M2-16 new monsters, gear, boss and the levels 2-5 retune; 24 runs, 5.1 s) | New monsters and the retune change run outcomes | Head of Engineering |
 | 2026-10-23 | `games/holdfast/tests/test_build3.gd::test_a_new_profile_starts_empty_on_the_first_level_and_pillar` | #82: the expected profile gains `"gear": {"owned": [], "equipped": {"weapon": "", "charm": ""}}`, as `"layouts"` did in #77. One UI layout check added in `run_ui_tests.gd`; nothing existing touched or loosened | New save field | Head of Engineering |
 | 2026-10-22 | `games/holdfast/tests/test_hero.gd` (four `_fan` fixture setups) | Setup-only change in #74 so the fixtures fit the burst fire rate; no assertion changed | Fixture set-up only | Head of Engineering |
+| 2026-10-23 | `test_build3.gd` (4 tests), `test_build4b.gd` (3), `test_build5.gd` (4), `test_build6.gd` (2), `test_slice2.gd` (1), `run_ui_tests.gd` (flow and layout list) | Approved by the Head of Engineering for #88: repointed at the journey map, Hero page and Main menu/Journey map buttons (the keep screen is split); level tap replaces the Play button; pillar and gear checks move to the Hero page. Old and new for each are in the #88 body; no assertion loosened or removed | HF-M2-29 (CEO change). Intent kept | Head of Engineering |
 
 ## Advisor views
 
