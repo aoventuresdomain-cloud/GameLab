@@ -380,7 +380,16 @@ func test_a_twin_arrow_shot_fires_two_arrows_across_ten_degrees() -> void:
 
 # ------------------------------------------------------------------ the tree's shape
 
-func test_the_post_section_has_eleven_nodes_and_a_fork_that_closes_the_other_side() -> void:
+## The base pack with Scope and Twin arrows made a fork again: the real tree has none (both Archer
+## capstones can be bought), so the fork rules are tested on this copy.
+func _forked() -> Dictionary:
+	var content: Dictionary = HoldfastContent.base().duplicate(true)
+	content["upgrade_nodes"]["post_scope"]["excludes"] = ["post_twin"]
+	content["upgrade_nodes"]["post_twin"]["excludes"] = ["post_scope"]
+	return content
+
+
+func test_the_post_section_has_eleven_nodes_and_no_fork() -> void:
 	var nodes: Dictionary = HoldfastContent.base()["upgrade_nodes"]
 	var post := []
 	for id in nodes:
@@ -388,15 +397,15 @@ func test_the_post_section_has_eleven_nodes_and_a_fork_that_closes_the_other_sid
 			post.append(id)
 	expect_eq(post.size(), 11, "four basics, one repair, three a side")
 	for id in ["post_timbers", "post_drills", "post_sight", "post_rate"]:
-		expect_false(nodes[id].has("requires"), id + " is a cheap basic")
-	expect_eq(nodes["post_scope"]["excludes"], ["post_twin"])
-	expect_eq(nodes["post_twin"]["excludes"], ["post_scope"])
+		expect_eq(nodes[id]["requires"], ["castle_archer_1"], id + " is a cheap basic that needs only the first Archer Post")
+	for id in nodes:
+		expect_false(nodes[id].has("excludes"), "%s closes nothing: both Archer capstones can be bought" % id)
 	expect_eq(nodes["post_piercing"]["requires"], ["post_marksman"])
 	expect_eq(nodes["post_storm"]["requires"], ["post_burst"])
 	var flare := 0
 	for id in nodes:
 		flare += 1 if nodes[id]["branch"] == "flare_archer" else 0
-	expect_eq(flare, 10, "the Flare Archer's ten nodes")
+	expect_eq(flare, 12, "the Flare Archer's twelve nodes")
 	for id in nodes:
 		if nodes[id].has("tower"):
 			expect_eq(nodes[id]["branch"], "archer_post", id)
@@ -423,7 +432,7 @@ func test_a_further_tower_section_plugs_in_from_the_pack_alone() -> void:
 # ------------------------------------------------------------------ the profile
 
 func test_a_fork_closes_the_other_side_both_ways_and_names_why() -> void:
-	var content := HoldfastContent.base()
+	var content := _forked()
 	var profile := HoldfastMeta.new_profile(content)
 	profile["gold"] = 99999
 	profile["upgrades"] = ["post_sight", "post_scope"]
@@ -440,18 +449,18 @@ func test_a_fork_closes_the_other_side_both_ways_and_names_why() -> void:
 
 
 func test_a_save_holding_both_sides_of_a_fork_keeps_the_first() -> void:
-	var content := HoldfastContent.base()
+	var content := _forked()
 	var loaded := HoldfastMeta.from_save(content, {"gold": 5, "upgrades": ["post_drills", "post_sight", "post_scope", "post_twin"]})
 	expect_eq(loaded["upgrades"], ["post_drills", "post_sight", "post_scope"])
 
 
-func test_respec_gives_every_upgrade_back_at_its_price_and_costs_nothing() -> void:
+func test_respec_gives_every_upgrade_back_at_its_price_less_a_fee_each() -> void:
 	var content := HoldfastContent.base()
 	var profile := HoldfastMeta.new_profile(content)
 	profile["gold"] = 40
 	profile["upgrades"] = ["post_timbers", "keep_walls_1", "flare_boots"]   # 70 + 60 + 90
 	var after := HoldfastMeta.respec(content, profile)
-	expect_eq(after["gold"], 40 + 70 + 60 + 90)
+	expect_eq(after["gold"], 40 + 70 + 60 + 90 - 3 * 20, "each node's price less its fee (a tenth, at least 20)")
 	expect_eq(after["upgrades"], [])
 	expect_eq(profile["upgrades"].size(), 3, "the profile given is untouched")
 	expect_eq(HoldfastMeta.respec(content, after), after, "nothing to give back the second time")
@@ -461,18 +470,20 @@ func test_respec_gives_every_upgrade_back_at_its_price_and_costs_nothing() -> vo
 
 func test_the_next_unlocks_are_the_two_cheapest_nodes_one_buy_away_for_this_pillar() -> void:
 	var content := HoldfastContent.base()
-	var profile := HoldfastMeta.new_profile(content)
+	var profile := ThroughLevelZero.of(content, HoldfastMeta.new_profile(content))
+	var castle: Array = profile["upgrades"].duplicate()
 	expect_eq(HoldfastMeta.next_unlocks(content, profile), ["keep_walls_1", "post_timbers"], "60 and 70")
-	profile["upgrades"] = ["keep_walls_1", "post_timbers"]
+	profile["upgrades"] = castle + ["keep_walls_1", "post_timbers"]
 	expect_eq(HoldfastMeta.next_unlocks(content, profile), ["flare_hide", "flare_boots"], "80 and 90")
 	expect_true(HoldfastMeta.is_near(content, profile, "post_mend"), "its requirement is bought")
 	expect_false(HoldfastMeta.is_near(content, profile, "post_burst"), "two buys away")
 	expect_false(HoldfastMeta.is_near(content, profile, "post_timbers"), "bought is not next")
 	profile["pillar"] = "dusk_mage"
 	expect_false(HoldfastMeta.is_near(content, profile, "flare_hide"), "another Hero's node is never next")
-	profile["upgrades"] = ["post_drills", "post_scope"]
-	expect_false(HoldfastMeta.is_near(content, profile, "post_twin"), "a closed node is never next")
-	profile["upgrades"] = []
+	profile["upgrades"] = castle + ["post_drills", "post_scope"]
+	expect_true(HoldfastMeta.is_near(content, profile, "post_twin"), "with no fork, the other side is next")
+	expect_false(HoldfastMeta.is_near(_forked(), profile, "post_twin"), "on a fork, a closed node is never next")
+	profile["upgrades"] = castle
 	expect_eq(HoldfastMeta.next_unlocks(content, profile, 1), ["keep_walls_1"], "the limit holds")
 
 
@@ -625,13 +636,19 @@ func test_the_keep_screen_shows_sections_dims_the_far_nodes_and_lists_the_next_u
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var keep: Control = main.keep_screen
 	keep.visible = true
+	expect_true(keep.get_node("%RespecButton").disabled, "nothing to respec yet")
+	ThroughLevelZero.apply_castle(profile)
 	expect_eq(keep._section_columns.keys().size(), 5, "Flare Archer, Archer Post, Keep, Tithe, Castle")
 	expect_true(keep._section_columns["flare_archer"].visible)
 	expect_eq(keep._node_buttons["post_timbers"].modulate, Color.WHITE, "one buy away: in full")
 	expect_eq(keep._node_buttons["post_burst"].modulate, keep.DIMMED, "far: dimmed")
 	expect_true(keep.get_node("%NextUnlocks").text.contains("Stone walls I (60)") and keep.get_node("%NextUnlocks").text.contains("Post timbers (70)"), keep.get_node("%NextUnlocks").text)
 	expect_true(keep.get_node("%NextUnlocks").text.contains("+25 keep health"), "with the effect")
-	expect_true(keep.get_node("%RespecButton").disabled, "nothing to respec yet")
+	expect_false(keep.get_node("%RespecButton").disabled, "the two castle buys can be taken back")
+	# The real tree has no fork; this one runs on a copy that makes Scope and Twin arrows one.
+	var forked := _forked()
+	profile._content = forked
+	keep._content = forked
 	main.hero_page.select_pillar("dusk_mage")
 	expect_false(keep._section_columns["flare_archer"].visible, "another Hero: the Flare Archer's section is hidden")
 	profile.bank_run({"gold": 5000, "outcome": "lost", "level": "outpost"})
@@ -646,7 +663,7 @@ func test_the_keep_screen_shows_sections_dims_the_far_nodes_and_lists_the_next_u
 	var gold_before := profile.get_gold()
 	keep.get_node("%RespecButton").pressed.emit()
 	expect_eq(profile.get_upgrades(), [])
-	expect_eq(profile.get_gold(), gold_before + 110 + 120 + 600)
+	expect_eq(profile.get_gold(), gold_before + 110 + 120 + 600 - 20 - 20 - 60 - 2 * 50, "the gold nodes' prices less a fee each, and 50 for each of the two star nodes")
 	expect_false(keep._node_buttons["post_twin"].disabled == true and keep._node_buttons["post_twin"].text.contains("closed"), "the choice is open again")
 	main.free()
 
@@ -663,15 +680,21 @@ func test_effect_text_names_each_new_stat_in_words() -> void:
 # ------------------------------------------------------------------ the bots
 
 func test_the_progression_bot_never_buys_both_sides_of_a_fork_and_can_avoid_one() -> void:
-	var nodes: Dictionary = HoldfastContent.base()["upgrade_nodes"]
-	var plenty := HoldfastProgression.buy_cheapest(nodes, [], 999999)
+	var nodes: Dictionary = _forked()["upgrade_nodes"]
+	var castle := ["castle_slot_1", "castle_archer_1"]
+	var plenty := HoldfastProgression.buy_cheapest(nodes, castle, 999999)
 	expect_true("post_scope" in plenty and not "post_twin" in plenty, "ties go to the first id: Scope")
 	expect_false("post_burst" in plenty or "post_storm" in plenty, "and nothing behind the closed side")
-	var twin := HoldfastProgression.buy_cheapest(nodes, [], 999999, ["post_scope"])
-	expect_true("post_twin" in twin and "post_storm" in twin and not "post_scope" in twin, "avoiding Scope takes the Volley side")
-	expect_eq(HoldfastProgression.reachable_total(nodes, [], []), 35 - 0, "an empty profile can still reach every node")
-	expect_eq(HoldfastProgression.reachable_total(nodes, ["post_scope"]), 35 - 3, "Scope closes Twin, Burst fire and Arrow storm")
-	expect_eq(HoldfastProgression.reachable_total(nodes, [], ["post_scope"]), 35 - 3, "avoiding it does the same")
+	var twin := HoldfastProgression.buy_cheapest(nodes, castle, 999999, ["post_scope"])
+	expect_true("post_twin" in twin and "post_burst" in twin and not "post_scope" in twin, "avoiding Scope takes the Volley side")
+	expect_true("post_storm" in HoldfastProgression.buy_cheapest(nodes, castle + twin, 0, ["post_scope"], 99), "and its star capstone with the stars")
+	expect_eq(HoldfastProgression.reachable_total(nodes, [], []), 34 - 0, "an empty profile can still reach every gold node")
+	expect_eq(HoldfastProgression.reachable_total(nodes, ["post_scope"]), 34 - 2, "Scope closes Twin and Burst fire (Arrow storm is a star node, not counted)")
+	expect_eq(HoldfastProgression.reachable_total(nodes, [], ["post_scope"]), 34 - 2, "avoiding it does the same")
+	var real: Dictionary = HoldfastContent.base()["upgrade_nodes"]
+	var both := HoldfastProgression.buy_cheapest(real, castle, 999999)
+	expect_true("post_scope" in both and "post_twin" in both, "the real tree has no fork: the bot buys both sides")
+	expect_eq(HoldfastProgression.reachable_total(real, ["post_scope"]), 34, "and Scope closes nothing")
 
 
 func test_the_bots_play_the_planning_choice() -> void:

@@ -19,6 +19,23 @@ static func of(content: Dictionary, profile: Dictionary) -> Dictionary:
 	return out
 
 
+## Only the two guided buys, with the stars to pay for them: the level lists and the gold stay as
+## they were, for a test that counts them.
+static func castle(content: Dictionary, profile: Dictionary) -> Dictionary:
+	var out := profile.duplicate(true)
+	var first := HoldfastMeta.tutorial_level(content)
+	out["stars"][first] = int(content["levels"][first]["reward"]["stars"])
+	for id in HoldfastMeta.castle_rules(content)["guided"]:
+		out = HoldfastMeta.buy(content, out, id)["profile"]
+	return out
+
+
+## `castle` for a HoldfastProfile node.
+static func apply_castle(profile: HoldfastProfile) -> void:
+	profile.data = castle(HoldfastContent.base(), profile.data)
+	profile.changed.emit()
+
+
 ## The same for a HoldfastProfile node.
 static func apply(profile: HoldfastProfile) -> void:
 	profile.data = of(HoldfastContent.base(), profile.data)

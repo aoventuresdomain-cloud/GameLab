@@ -95,6 +95,7 @@ func test_the_skill_tree_button_says_how_many_upgrades_can_be_bought() -> void:
 	var profile: HoldfastProfile = main.get_node("Profile")
 	expect_eq(map.upgrades_available(), 0)
 	expect_eq(map.get_node("%TreeButton").text, "Skill tree")
+	ThroughLevelZero.apply_castle(profile)
 	profile.bank_run({"gold": 100, "outcome": "lost", "level": "outpost"})
 	var affordable := 0
 	for id in HoldfastContent.base()["upgrade_nodes"]:
