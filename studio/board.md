@@ -407,16 +407,27 @@
   - [ ] The simulator gates on the bands and CI fails when one is missed (HF-M2-01, HF-M2-05).
 - **Notes:** Re-scoped from Build 7 (parked). When Build 7 is proposed again it is mechanics-first and Archer-only, not a cross-pillar balance pass.
 
-### HF-M2-29 Menus and navigation rework
+### HF-M2-29 Menus, journey map and Plan page (navigation rework, part 1)
 - **Owner:** UI Engineer (the Gameplay Engineer changes the profile and rules only where the screens need it, on this item's PRs)
-- **Status:** Proposed (CEO feedback 2026-10-23 00:45; the Done when lines are provisional, after testing 4b, 5 and 6). Not started: the structure comes from the Advisor first, then the Done when lines below are finalised and the CEO decides the slice. Archer-only and mechanics-first still stand
-- **QA:** full (screens and the run flow change; tests that click through the flow change)
+- **Status:** Proposed. Structure approved by the CEO 2026-10-23 (the Advisor's recommendation: main menu, journey map hub, tree page, Plan page; the CEO adds tower cards dragged into slots around the castle). No work until the CEO says go. Archer-only and mechanics-first stand
+- **QA:** full (screens and the run flow change; tests that click through the flow change, each with my OK first)
 - **Done when:**
-  - [ ] A main menu whose entries each open their own page (play, skill tree, settings). The home screen and the keep screen are no longer two screens that do the same job.
-  - [ ] Levels are a path map: available levels can be tapped to load the game, locked ones show as locked, and the page offers a way to the skill tree.
-  - [ ] The skill tree has its own page, as tabs per section (tower, Hero and later recruit) or one large tree, from the Advisor's recommendation. Buying, respec, refund and the Hero pillar choice work there as they do now.
-  - [ ] Archer Post placement has its own page, not inside the level, and the run starts only from there.
-  - [ ] Saves from before the rework load unchanged, and the win screen offers the next level, the path map and the skill tree.
+  - [ ] A main menu with Continue, New game, Settings and Quit opens the journey map. The home and keep screens no longer exist as two screens that do the same job.
+  - [ ] The journey map is a path of level nodes: cleared nodes show a tick, the next glows, locked ones are dimmed, the level 5 boss is marked. Tapping an available level opens the Plan page, and the map has a button to the skill tree (the existing tree screen, unchanged for now) and shows gold and an "upgrades available" glow.
+  - [ ] The Plan page shows the level map with the tower sites. Available towers are cards (the Archer Post card only) that the player drags into slots around the castle, within the pack-set post limit. Auto-place gives a suggested layout, and Quick start reuses the last layout and starts the level. Nothing is placed inside the level.
+  - [ ] The result screen offers Next level (to the Plan page) and the journey map, and the skill tree beside it. Old saves load unchanged, with layouts and gear kept.
+  - [ ] Walls and other new piece types are not built (they need the CEO's go); the slot and card data leave room for them.
+
+### HF-M2-30 Skill tree as one zoomable web with jump tabs (navigation rework, part 2)
+- **Owner:** UI Engineer (the Gameplay Engineer owns the pack data for node positions)
+- **Status:** Proposed, after HF-M2-29. Structure approved by the CEO 2026-10-23. No work until the CEO says go
+- **QA:** full
+- **Depends on:** HF-M2-29
+- **Done when:**
+  - [ ] The skill tree is one web the player pans and zooms, with tabs along the top (Hero, Archer Post, Keep) that move the view to a section. Sections for towers and Recruits that do not exist yet are not shown.
+  - [ ] Node positions and links come from the packs (data only); nodes beyond the next one or two steps are dimmed, and buying, respec, refund and the Hero pillar choice work as they do now.
+  - [ ] The tree opens from the journey map, and the existing save, migration and refund rules are unchanged (no node ids lost).
+  - [ ] Bridge nodes and Hero and tower synergies (the Keeper's light through towers) are NOT in this item; they follow as their own item once the web and the Plan page exist.
 
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
@@ -615,6 +626,7 @@
 | 2026-10-21 | Pillar names | Flare Archer, Dusk Mage and Tideblade with a dark pillar allowed under 'light, fire or the shadow light casts'; Alchemist to status fields at posts so it no longer overlaps the mage's burst; the mage's lit and unlit zones need the simulator to model them | Accepted: HF-M2-14, HF-M2-03, HF-M2-05 |
 | 2026-10-22 | Upgrade tree (Build 4) | The 26 nodes left after the level unlocks go are all number bumps in chains, so there is no build variety and the gold chain is a trap. Fewer, chunkier nodes (15 to 20), branching choices, two or three new tower types, a short gold chain, the next unlocks shown on screen, a first-clear reward. Asked the CEO what bothered them most (too samey, too slow, too few choices) | Pending the CEO's answer; folded into Build 4 |
 | 2026-10-22 | Pillar balance for Build 7 (asked 23:01) | Recommends buffing the weak pillars (Dusk Mage, Tideblade) and leaving the Flare Archer alone, rather than pack-only tuning, which hides the gap; try a smaller Mage buff plus a stronger Eclipse, and cap flat armour at about 70% block or let area damage partly ignore it. Floor: no pillar more than 10 points under or over the level target, Flare up to +15 on levels 1-2 only, targets about 75 / 60 / 50 / 50 for levels 2-5 (level 5 spread is 50 points today). Volley and Sniper within about 10 points averaged over levels 1-5, one fork may lead by up to 20 on a level only if the monster mix favours it; measure per level, not pooled. Not applied: Build 7 is parked until the CEO confirms after Build 6. |
+| 2026-10-23 | Menus and navigation | Four pages joined by a journey map (main menu, journey map hub, skill tree, Plan page). The tree is one big zoomable web with jump tabs, not separate tab pages, so Hero and tower links show as bridges. Placement moves to a Plan page before each level with a budget, Auto-place and a Quick start for the last layout; inside the level the player only upgrades and repairs between waves. Order: menus, map and Plan page first; the web second; bridge nodes and synergies third. Headline twist: the Keeper's light flows through the towers (lit posts, the special fired through nearby towers). Full note: `holdfast/m2/advisor-menus-navigation.md` in the project files. Answered: accepted. Changed: bridge nodes and synergies stay out of the first two items. |
 
 ## Decisions and open questions
 
@@ -658,3 +670,4 @@
 
 - 2026-10-23 00:30: Run complete: 4b (#74, #76), Build 5 (#77) and Build 6 (#82) are merged, QA clear on each. The team stops and waits for the CEO to test and confirm. Build 7 is parked (notes in `studio/handoffs/2026-10-23-build7-resume.md`).
 - 2026-10-23 00:45: CEO feedback after testing 4b, 5 and 6: the upgrade screen and home screen are the same thing; rework into separate pages from a main menu, with levels as a path map (tap an available level to load it), the skill tree on its own page with tabs (tower, Hero, recruit) or one large Incrempire-style tree, and placement on its own page instead of inside the level. The long-term aim is an Incrempire-like game with the CEO's own twist (Hero and tower synergy, other ideas). Advisor asked first for the structure; board item HF-M2-29 proposed. Build 7 stays parked and this likely replaces it as the next slice (CEO decides).
+- 2026-10-23 00:56: CEO approved the Advisor's navigation structure (main menu, journey map hub, one zoomable tree page with jump tabs, Plan page before each level) and added that the Plan page is tower cards dragged into slots around the castle, with walls maybe later (a new piece type, needs the CEO's go). HF-M2-29 (menu, map, Plan page) and HF-M2-30 (tree web) are finalised as proposed items; nothing starts until the CEO says go.
