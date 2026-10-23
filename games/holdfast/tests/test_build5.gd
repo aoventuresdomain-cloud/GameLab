@@ -550,8 +550,8 @@ func test_play_opens_the_planning_screen_and_start_runs_on_the_chosen_site() -> 
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var source: HoldfastRunSource = main.get_node("RunSource")
-	main.keep_screen.get_node("%PlayButton").pressed.emit()
-	expect_true(main.planning.visible and not main.keep_screen.visible and not source.is_running(), "planning comes first")
+	main.journey._buttons["outpost"].pressed.emit()
+	expect_true(main.planning.visible and not main.journey.visible and not source.is_running(), "planning comes first")
 	expect_eq(main.planning.get_node("%Count").text, "Posts: 1 of 1")
 	main.planning._site_buttons["north_gate"].pressed.emit()
 	expect_eq(main.planning.get_node("%Count").text, "Posts: 1 of 1", "one post: the new choice replaces the old")
@@ -567,7 +567,7 @@ func test_play_opens_the_planning_screen_and_start_runs_on_the_chosen_site() -> 
 
 func test_the_planning_screen_toggles_sites_up_to_the_limit_and_will_not_start_empty() -> void:
 	var main := _main()
-	main.keep_screen.get_node("%PlayButton").pressed.emit()
+	main.journey._buttons["outpost"].pressed.emit()
 	var planning: Control = main.planning
 	planning.open("shingle_beach", ["west_gate", "east_gate"])
 	expect_eq(planning.get_node("%Count").text, "Posts: 2 of 2")
@@ -586,17 +586,16 @@ func test_the_planning_screen_toggles_sites_up_to_the_limit_and_will_not_start_e
 	main.free()
 
 
-func test_back_from_planning_returns_to_the_keep_and_a_level_without_sites_starts_at_once() -> void:
+func test_back_from_planning_returns_to_the_journey_map_and_a_level_without_sites_starts_at_once() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var source: HoldfastRunSource = main.get_node("RunSource")
-	main.keep_screen.get_node("%PlayButton").pressed.emit()
+	main.journey._buttons["outpost"].pressed.emit()
 	main.planning.get_node("%BackButton").pressed.emit()
-	expect_true(main.keep_screen.visible and not main.planning.visible and not source.is_running())
+	expect_true(main.journey.visible and not main.planning.visible and not source.is_running())
 	for won in ["outpost", "shingle_beach"]:
 		profile.bank_run({"gold": 0, "outcome": "won", "level": won})
-	profile.select_level("tidewrack_cove")
-	main.keep_screen.get_node("%PlayButton").pressed.emit()
+	main.journey._buttons["tidewrack_cove"].pressed.emit()
 	expect_true(source.is_running() and not main.planning.visible, "no sites, no planning")
 	expect_eq(source.get_rules().layout_ids, [])
 	expect_eq(source.get_posts_note(), "", "and no posts line")
@@ -615,7 +614,7 @@ func test_the_keep_screen_shows_sections_dims_the_far_nodes_and_lists_the_next_u
 	expect_true(keep.get_node("%NextUnlocks").text.contains("Stone walls I (60)") and keep.get_node("%NextUnlocks").text.contains("Post timbers (70)"), keep.get_node("%NextUnlocks").text)
 	expect_true(keep.get_node("%NextUnlocks").text.contains("+25 keep health"), "with the effect")
 	expect_true(keep.get_node("%RespecButton").disabled, "nothing to respec yet")
-	keep.select_pillar("dusk_mage")
+	main.hero_page.select_pillar("dusk_mage")
 	expect_false(keep._section_columns["flare_archer"].visible, "another Hero: the Flare Archer's section is hidden")
 	profile.bank_run({"gold": 5000, "outcome": "lost", "level": "outpost"})
 	keep._node_buttons["post_drills"].pressed.emit()

@@ -1,15 +1,10 @@
 extends Control
-## Keep screen, the hub between runs: pick a level, pick a Hero pillar, spend gold
-## on the upgrade tree, start a run. It shows the profile and asks for changes
-## through signals; the run flow acts on them. Mouse only.
+## Skill tree page: spend gold on the upgrade tree. It shows the profile and asks for
+## changes through signals; the run flow acts on them. Mouse only.
 
-signal play_requested
-signal home_requested
+signal back_requested
 signal buy_requested(id: String)
-signal level_requested(id: String)
-signal pillar_requested(id: String)
 signal respec_requested
-signal gear_requested(id: String)
 
 const Hud = preload("res://scripts/ui/hud.gd")
 const FONT_PX := 20
@@ -47,38 +42,28 @@ const STAT_TEXT := {
 	"ability.cooldown": "barrage cooldown (seconds)",
 }
 
-## The Hero path id and level id the profile has picked.
+## The Hero path id the profile has picked (its section is the one the tree shows).
 var selected_pillar := ""
-var selected_level := ""
 
 @onready var _gold: Label = %GoldValue
-@onready var _level_row: HBoxContainer = %LevelRow
-@onready var _pillar_row: HBoxContainer = %PillarRow
 @onready var _tree_row: HBoxContainer = %TreeRow
 @onready var _info: Label = %Info
-@onready var _gear_row: HBoxContainer = %GearRow
 @onready var _next: Label = %NextUnlocks
 @onready var _respec: Button = %RespecButton
 @onready var _back: Button = %BackButton
-@onready var _play: Button = %PlayButton
 
 var _profile: Node
 var _content: Dictionary
-var _level_buttons: Dictionary = {}
-var _pillar_buttons: Dictionary = {}
 var _node_buttons: Dictionary = {}
 var _section_columns: Dictionary = {}
-var _default_info := "Pick a level and a Hero, spend gold on upgrades, then start a run."
+var _default_info := "Spend gold on upgrades. Point at one to read what it does."
 
 
 func _ready() -> void:
 	_content = HoldfastContent.base()
-	_play.pressed.connect(play_requested.emit)
-	_back.pressed.connect(home_requested.emit)
+	_back.pressed.connect(back_requested.emit)
 	_respec.pressed.connect(respec_requested.emit)
 	visibility_changed.connect(_on_visibility_changed)
-	_build_levels()
-	_build_pillars()
 	_build_tree()
 	_info.text = _default_info
 
@@ -88,11 +73,6 @@ func bind(profile: Node) -> void:
 	profile.changed.connect(refresh)
 	profile.notice.connect(show_info)
 	refresh()
-
-
-## Asks for a Hero pillar; an unknown id changes nothing.
-func select_pillar(id: String) -> void:
-	pillar_requested.emit(id)
 
 
 func show_info(text: String) -> void:
@@ -105,21 +85,6 @@ func refresh() -> void:
 		return
 	_gold.text = Hud.format_number(_profile.get_gold())
 	selected_pillar = _profile.get_pillar()
-	selected_level = _profile.get_level()
-	var unlocked: Array = _profile.get_unlocked_levels()
-	for id in _level_buttons:
-		var button: Button = _level_buttons[id]
-		var open: bool = id in unlocked
-		var name := str(_content["levels"][id]["name"])
-		button.disabled = not open
-		if not open:
-			name += " (locked)"
-		elif _profile.is_level_won(id):
-			name += " (won)"
-		button.text = name
-		button.set_pressed_no_signal(id == selected_level)
-	for id in _pillar_buttons:
-		_pillar_buttons[id].set_pressed_no_signal(id == selected_pillar)
 	var owned: Array = _profile.get_upgrades()
 	for id in _node_buttons:
 		var node: Dictionary = _content["upgrade_nodes"][id]
@@ -134,62 +99,10 @@ func refresh() -> void:
 	for section in _section_columns:
 		_section_columns[section].visible = not _content["hero_paths"].has(section) or section == selected_pillar
 	_respec.disabled = owned.is_empty()
-	_refresh_gear()
 	var next_parts: PackedStringArray = []
 	for id in _profile.get_next_unlocks():
 		next_parts.append("%s (%d): %s" % [_content["upgrade_nodes"][id]["name"], int(_content["upgrade_nodes"][id]["cost"]), _effect_text(id)])
 	_next.text = "Next: " + ("  |  ".join(next_parts) if not next_parts.is_empty() else "nothing left to buy here")
-
-
-## One toggle per gear item the player owns (lit when worn), or a hint that there is none yet.
-func _refresh_gear() -> void:
-	for child in _gear_row.get_children():
-		_gear_row.remove_child(child)
-		child.queue_free()
-	var caption := Label.new()
-	caption.add_theme_font_size_override("font_size", FONT_PX)
-	var owned: Array = _profile.get_gear_owned()
-	caption.text = "Gear:" if not owned.is_empty() else "Gear: none yet. An elite on levels 2 and 3 drops the first piece."
-	_gear_row.add_child(caption)
-	var worn: Dictionary = _profile.get_gear_worn()
-	for id in owned:
-		var item: Dictionary = _content["gear_items"][id]
-		var button := _button(str(item["name"]), FONT_PX, 1)
-		button.toggle_mode = true
-		button.set_pressed_no_signal(worn.get(item["slot"], "") == id)
-		button.pressed.connect(func() -> void: gear_requested.emit(id))
-		button.mouse_entered.connect(func() -> void: show_info(_gear_text(id, worn.get(item["slot"], "") == id)))
-		button.mouse_exited.connect(_show_default)
-		_gear_row.add_child(button)
-
-
-func _build_levels() -> void:
-	var group := ButtonGroup.new()
-	for id in _content["levels"]:
-		var button := _button(str(_content["levels"][id]["name"]))
-		button.toggle_mode = true
-		button.button_group = group
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.pressed.connect(func() -> void: level_requested.emit(id))
-		button.mouse_entered.connect(func() -> void: show_info(_level_text(id)))
-		button.mouse_exited.connect(_show_default)
-		_level_row.add_child(button)
-		_level_buttons[id] = button
-
-
-func _build_pillars() -> void:
-	var group := ButtonGroup.new()
-	for id in _content["hero_paths"]:
-		var path: Dictionary = _content["hero_paths"][id]
-		var button := _button(str(path["name"]))
-		button.toggle_mode = true
-		button.button_group = group
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.pressed.connect(func() -> void: pillar_requested.emit(id))
-		button.mouse_entered.connect(func() -> void: show_info("%s: %s" % [path["name"], path.get("blurb", "")]))
-		button.mouse_exited.connect(_show_default)
-		_pillar_row.add_child(button)
-		_pillar_buttons[id] = button
 
 
 func _build_tree() -> void:
@@ -246,23 +159,11 @@ func _show_default() -> void:
 	_info.text = _default_info
 
 
-func _level_text(id: String) -> String:
-	var level: Dictionary = _content["levels"][id]
-	var waves: Array = level["waves"]
-	var open: bool = _profile != null and id in _profile.get_unlocked_levels()
-	return "%s: %d waves. %s" % [level["name"], waves.size(), "" if open else "Locked. Win the previous level."]
-
-
 func _effect_text(id: String) -> String:
 	return _effects_text(_content["upgrade_nodes"][id].get("effects", []))
 
 
-func _gear_text(id: String, worn: bool) -> String:
-	var item: Dictionary = _content["gear_items"][id]
-	return "%s (%s): %s. %s." % [item["name"], item["slot"], _effects_text(item["effects"]), "Worn, press to take off" if worn else "Not worn, press to wear"]
-
-
-func _effects_text(effects: Array) -> String:
+static func _effects_text(effects: Array) -> String:
 	var parts: PackedStringArray = []
 	for effect in effects:
 		var what := _stat_text(str(effect["stat"]))
@@ -306,4 +207,4 @@ func _on_visibility_changed() -> void:
 	if is_visible_in_tree():
 		refresh()
 		_show_default()
-		_play.grab_focus()
+		_back.grab_focus()

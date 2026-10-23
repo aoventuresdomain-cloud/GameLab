@@ -95,9 +95,16 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "Play again"
 
-[node name="KeepButton" type="Button" parent="Centre/Panel/Column"]
+[node name="MapButton" type="Button" parent="Centre/Panel/Column"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Back to the keep"
+text = "Journey map"
+
+[node name="TreeButton" type="Button" parent="Centre/Panel/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Skill tree"

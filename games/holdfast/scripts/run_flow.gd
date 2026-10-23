@@ -1,13 +1,16 @@
 extends Node
-## Run flow: home -> keep -> run (HUD) -> summary -> keep. The game layer: the
+## Run flow: main menu -> journey map -> plan -> run (HUD) -> summary -> journey map. The
+## Hero page and the skill tree open from the map and close back to it. The game layer: the
 ## only place that starts a run or changes the profile. Screens ask through their
 ## signals and the flow acts, so a screen never writes progress itself.
 
-enum Screen { HOME, KEEP, PLAN, RUN, SUMMARY }
+enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY }
 
 @export var source_path: NodePath
 @export var profile_path: NodePath
 @export var home_path: NodePath
+@export var journey_path: NodePath
+@export var hero_page_path: NodePath
 @export var keep_screen_path: NodePath
 @export var hud_path: NodePath
 @export var summary_path: NodePath
@@ -16,6 +19,9 @@ enum Screen { HOME, KEEP, PLAN, RUN, SUMMARY }
 @onready var source: Node = get_node(source_path)
 @onready var profile: HoldfastProfile = get_node(profile_path)
 @onready var home: Control = get_node(home_path)
+@onready var journey: Control = get_node(journey_path)
+@onready var hero_page: Control = get_node(hero_page_path)
+## The skill tree page.
 @onready var keep_screen: Control = get_node(keep_screen_path)
 @onready var hud: Control = get_node(hud_path)
 @onready var summary: Control = get_node(summary_path)
@@ -27,29 +33,42 @@ var screen := Screen.HOME
 func _ready() -> void:
 	hud.bind(source)
 	home.bind(profile)
+	journey.bind(profile)
+	hero_page.bind(profile)
 	keep_screen.bind(profile)
-	home.continue_requested.connect(_show.bind(Screen.KEEP))
+	home.continue_requested.connect(_show.bind(Screen.MAP))
 	home.new_game_requested.connect(_new_game)
 	home.quit_requested.connect(get_tree().quit)
-	keep_screen.play_requested.connect(_plan_run)
-	keep_screen.home_requested.connect(_show.bind(Screen.HOME))
+	journey.home_requested.connect(_show.bind(Screen.HOME))
+	journey.tree_requested.connect(_show.bind(Screen.TREE))
+	journey.hero_requested.connect(_show.bind(Screen.HERO))
+	journey.level_requested.connect(_level_picked)
+	hero_page.back_requested.connect(_show.bind(Screen.MAP))
+	hero_page.tree_requested.connect(_show.bind(Screen.TREE))
+	hero_page.pillar_requested.connect(profile.select_pillar)
+	hero_page.gear_requested.connect(profile.toggle_gear)
+	keep_screen.back_requested.connect(_show.bind(Screen.MAP))
 	keep_screen.buy_requested.connect(profile.buy)
-	keep_screen.level_requested.connect(profile.select_level)
-	keep_screen.pillar_requested.connect(profile.select_pillar)
 	keep_screen.respec_requested.connect(profile.respec)
-	keep_screen.gear_requested.connect(profile.toggle_gear)
 	summary.play_again_requested.connect(_plan_run)
 	planning.start_requested.connect(_planned)
-	planning.back_requested.connect(_show.bind(Screen.KEEP))
+	planning.back_requested.connect(_show.bind(Screen.MAP))
 	summary.next_level_requested.connect(_next_level)
-	summary.keep_requested.connect(_show.bind(Screen.KEEP))
+	summary.map_requested.connect(_show.bind(Screen.MAP))
+	summary.tree_requested.connect(_show.bind(Screen.TREE))
 	source.run_ended.connect(_on_run_ended)
 	_show(Screen.HOME)
 
 
 func _new_game() -> void:
 	profile.new_game()
-	_show(Screen.KEEP)
+	_show(Screen.MAP)
+
+
+## A tap on an open level of the journey map plans a run on it.
+func _level_picked(id: String) -> void:
+	profile.select_level(id)
+	_plan_run()
 
 
 ## Asks for the Archer Post sites first when the level has any, else starts the run.
@@ -105,7 +124,9 @@ func _on_run_ended(result: Dictionary) -> void:
 func _show(next: Screen) -> void:
 	screen = next
 	home.visible = next == Screen.HOME
-	keep_screen.visible = next == Screen.KEEP
+	journey.visible = next == Screen.MAP
+	hero_page.visible = next == Screen.HERO
+	keep_screen.visible = next == Screen.TREE
 	planning.visible = next == Screen.PLAN
 	hud.visible = next == Screen.RUN
 	summary.visible = next == Screen.SUMMARY

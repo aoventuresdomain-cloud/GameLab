@@ -39,9 +39,9 @@ func test_a_win_offers_the_next_level_and_the_upgrade_screen() -> void:
 	main.call("_on_run_ended", _ended("outpost", HoldfastRules.OUTCOME_WON, 50))
 	expect_true(main.summary.visible)
 	expect_true(main.summary.get_node("%NextLevelButton").visible, "Shingle Beach opened by the win")
-	expect_eq(main.summary.get_node("%KeepButton").text, "Upgrade screen")
-	main.summary.get_node("%KeepButton").pressed.emit()
-	expect_true(main.keep_screen.visible and not main.summary.visible, "the upgrade screen is the keep")
+	expect_eq(main.summary.get_node("%MapButton").text, "Journey map")
+	main.summary.get_node("%MapButton").pressed.emit()
+	expect_true(main.journey.visible and not main.summary.visible, "the way back is the journey map")
 	main.free()
 
 
@@ -63,7 +63,7 @@ func test_a_loss_keeps_its_screen_with_no_next_level() -> void:
 	var main := _main()
 	main.call("_on_run_ended", _ended("outpost", HoldfastRules.OUTCOME_LOST, 5))
 	expect_false(main.summary.get_node("%NextLevelButton").visible, "no next level after a loss")
-	expect_eq(main.summary.get_node("%KeepButton").text, "Back to the keep")
+	expect_eq(main.summary.get_node("%MapButton").text, "Journey map")
 	expect_true(main.summary.get_node("%PlayAgainButton").visible)
 	expect_eq(main.summary.get_node("%Title").text, "The keep has fallen")
 	main.free()
@@ -83,7 +83,7 @@ func test_the_last_level_has_no_next_level() -> void:
 	var levels: Array = HoldfastContent.base()["levels"].keys()
 	main.call("_on_run_ended", _ended(levels[levels.size() - 1], HoldfastRules.OUTCOME_WON, 50))
 	expect_false(main.summary.get_node("%NextLevelButton").visible, "nothing after the last level")
-	expect_eq(main.summary.get_node("%KeepButton").text, "Upgrade screen")
+	expect_eq(main.summary.get_node("%MapButton").text, "Journey map")
 	main.free()
 
 

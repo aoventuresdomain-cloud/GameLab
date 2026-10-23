@@ -6,6 +6,7 @@ signal continue_requested
 signal new_game_requested
 signal quit_requested
 
+const Hud = preload("res://scripts/ui/hud.gd")
 const SETTINGS_NOTICE := "Settings (volume, screen shake, flashes) arrive in a later build."
 const CONFIRM_TEXT := "Erase your progress?\nClick again to start over"
 
@@ -40,8 +41,16 @@ func bind(profile: Node) -> void:
 func refresh() -> void:
 	var has_progress: bool = _profile != null and _profile.has_progress()
 	_continue.disabled = not has_progress
+	_continue.text = _continue_text() if has_progress else "Continue"
 	if not _confirming:
 		_new_game.text = "New game"
+
+
+## "Continue", and under it where the player is: level, Hero path and gold.
+func _continue_text() -> String:
+	var content := HoldfastContent.base()
+	var level: Dictionary = content["levels"][_profile.get_level()]
+	return "Continue\nLevel %d · %s · %s gold" % [int(level.get("number", 0)), content["hero_paths"][_profile.get_pillar()]["name"], Hud.format_number(_profile.get_gold())]
 
 
 func show_notice(message: String) -> void:

@@ -546,14 +546,14 @@ func test_a_hero_who_is_down_does_nothing_and_enemies_leave_them_alone() -> void
 
 # ------------------------------------------------------------------ playable build
 
-func test_the_keep_screen_pick_chooses_the_pillar_of_the_run() -> void:
+func test_the_hero_page_pick_chooses_the_pillar_of_the_run() -> void:
 	var main := Main.instantiate()
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	source.auto_step = false
 	tree.root.add_child(main)
-	main.keep_screen.select_pillar("tideblade")
-	main.keep_screen.select_pillar("not_a_pillar")
-	expect_eq(main.keep_screen.selected_pillar, "tideblade", "an unknown id changes nothing")
+	main.hero_page.select_pillar("tideblade")
+	main.hero_page.select_pillar("not_a_pillar")
+	expect_eq(main.hero_page.selected_pillar, "tideblade", "an unknown id changes nothing")
 	main.call("_start_run")
 	expect_eq(source.get_rules().hero_path_id, "tideblade")
 	main.free()
