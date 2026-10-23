@@ -287,3 +287,26 @@ func test_a_damaged_version_four_save_still_migrates() -> void:
 	expect_eq(migrated["upgrades"], [])
 	expect_eq(migrated["layouts"], {})
 	expect_eq(HoldfastMeta.migrate_v4({}, content)["gold"], 0)
+
+
+# ------------------------------------------------------------------ the tree screen
+
+func test_the_tree_screen_shows_only_the_nodes_next_to_what_is_owned() -> void:
+	var main := Main.instantiate()
+	main.get_node("RunSource").auto_step = false
+	tree.root.add_child(main)
+	var profile: HoldfastProfile = main.get_node("Profile")
+	var keep: Control = main.keep_screen
+	keep.visible = true
+	var shown := []
+	for id in keep._node_buttons:
+		if keep._node_buttons[id].visible:
+			shown.append(id)
+	expect_eq(shown, ["castle_slot_1"], "a new game shows First Slot alone")
+	expect_eq(keep.tab_names(), PackedStringArray(["Castle"]))
+	ThroughLevelZero.apply_castle(profile)
+	expect_true(keep._node_buttons["flare_boots"].visible, "next to the first Archer Post")
+	expect_false(keep._node_buttons["flare_longer"].visible, "two buys away")
+	expect_false(keep._node_buttons["castle_slot_3"].visible)
+	expect_eq(keep.tab_names(), PackedStringArray(["Hero", "Archer Post", "Keep", "Castle"]))
+	main.free()

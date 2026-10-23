@@ -102,6 +102,9 @@ func test_the_map_does_not_move_when_the_guide_strip_goes() -> void:
 	var main: Node = made[0]
 	var map: Control = made[1]
 	expect_true(map.get_node("%Guide").visible, "the guide is on")
+	var guide: Rect2 = map.get_node("%Guide").get_global_rect()
+	expect_true(guide.size.y >= 56.0, "the strip has room for its two-line text (%s)" % guide.size)
+	expect_false(guide.intersects(map._map.get_global_rect()), "and does not sit over the map")
 	var before: Rect2 = map._map.get_global_rect()
 	var positions := {}
 	for id in map._ids:
