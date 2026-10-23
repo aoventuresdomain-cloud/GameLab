@@ -475,18 +475,18 @@
 
 ### HF-M2-36 Hero gear: five slots, inventory and stat breakdown
 - **Owner:** Gameplay Engineer
-- **Status:** Building (HF-M2-34 merged). CEO go 2026-10-23 10:12. Design: Advisor's view (`/mnt/project-files/holdfast/m2/advisor-tree-stats-gear-ring.md`, section 3). Item numbers are placeholders for HF-M2-35
+- **Status:** Merged (#106, QA clear at 9d66269). Originally: Building. CEO go 2026-10-23 10:12. Design: Advisor's view (`/mnt/project-files/holdfast/m2/advisor-tree-stats-gear-ring.md`, section 3). Item numbers are placeholders for HF-M2-35
 - **QA:** full (save data and Hero stats change)
 - **Depends on:** HF-M2-34
 - **Done when:**
-  - [ ] The Hero has five slots (Weapon, Helmet, Armour, Boots, Ring), each with its own stat identity (pack data). The six existing items move to the right slots with their ids kept, and about six new items fill Helmet, Armour, Boots and Ring (about 12 in all).
-  - [ ] The Hero page shows an inventory of owned items; dragging an item into its slot wears it (same gesture as the Plan-page cards) and a tap works too; wearing and removing save, and the Hero page shows a stat breakdown (base, tree, gear) using the existing add-then-multiply rule.
-  - [ ] Items come from play: one first-clear item per level plus elite and boss drops, each given once. Old saves keep what they own and wear (the old `charm` slot maps to the item's new slot) and load without a crash.
-  - [ ] Gear stays Hero-only; no Recruit gear.
+  - [x] The Hero has five slots (Weapon, Helmet, Armour, Boots, Ring), each with its own stat identity (pack data). The six existing items move to the right slots with their ids kept, and about six new items fill Helmet, Armour, Boots and Ring (about 12 in all).
+  - [x] The Hero page shows an inventory of owned items; dragging an item into its slot wears it (same gesture as the Plan-page cards) and a tap works too; wearing and removing save, and the Hero page shows a stat breakdown (base, tree, gear) using the existing add-then-multiply rule.
+  - [x] Items come from play: one first-clear item per level plus elite and boss drops, each given once. Old saves keep what they own and wear (the old `charm` slot maps to the item's new slot) and load without a crash.
+  - [x] Gear stays Hero-only; no Recruit gear.
 
 ### HF-M2-37 Mage Post and the first Tower Gate
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, after HF-M2-36 is merged. CEO go 2026-10-23 10:12 on the Mage Post and the first Tower Gate. Design: the Advisor's sketch (`advisor-tree-grammar-and-first-nodes.md`, Tower Gate I) and its tree view (`advisor-tree-stats-gear-ring.md`, section 1)
+- **Status:** Building (HF-M2-36 merged). CEO go 2026-10-23 10:12 on the Mage Post and the first Tower Gate. Design: the Advisor's sketch (`advisor-tree-grammar-and-first-nodes.md`, Tower Gate I) and its tree view (`advisor-tree-stats-gear-ring.md`, section 1)
 - **QA:** full (new tower type, tree and Plan page change)
 - **Depends on:** HF-M2-36
 - **Done when:**
@@ -655,6 +655,9 @@
 | F-066 | HF-M2-34 | FOLLOW-UP from QA (#104, 55701ab): Crossfire rarely triggers. With posts on East and West it never did on levels 1 to 3; adjacent posts trigger it on about 5 of 38 enemies per level, three posts about 14 of 43. Tune in the retune | Minor | Gameplay Engineer | In HF-M2-35 |
 | F-067 | HF-M2-34 | FOLLOW-UP from QA (#104, 55701ab): Lit Post's 150 px radius is wider than the ring's 100 px radius, so a Hero minding the Keep keeps every post lit. Tune in the retune | Minor | Gameplay Engineer | In HF-M2-35 |
 | F-068 | HF-M2-34 | FOLLOW-UP from QA (#104, 55701ab): Pillar Echo's burn lands on the post's first target only; Twin arrows and piercing extra hits do not burn. A second pillar needs its own flavour nodes | Minor | Gameplay Engineer | In HF-M2-35 |
+| F-069 | HF-M2-36 | FOLLOW-UP from QA (#106, 9d66269): test gap. An old-slot entry in a damaged save wins by key order ({"charm": stave, "weapon": bowstring}) and an unknown slot name wears the piece in its own slot; nothing pins either | Minor | Gameplay Engineer | In HF-M2-37 if cheap |
+| F-070 | HF-M2-36 | FOLLOW-UP from QA (#106, 9d66269): the Beacon visor's fog-edge effect has no row in the Hero numbers, though the Helmet label says "beam reach" | Minor | Gameplay Engineer | Open, Gate 2 round |
+| F-071 | HF-M2-36 | FOLLOW-UP from QA (#106, 9d66269): dropping a worn piece on the header or pillar buttons, or below the bag, does nothing and the piece stays worn; the code comment says anywhere else takes it off. Not harmful | Minor | Gameplay Engineer | Open, Gate 2 round |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -699,6 +702,7 @@
 | 2026-10-23 | `test_build3.gd`, `test_build4.gd`, `test_build4b.gd`, `test_build5.gd`, `test_build6.gd`, `test_rework_a.gd`, `test_rework_a_plan.gd`, `test_rework_b.gd`, `test_arena.gd`, `run_ui_tests.gd` (#100, listed old to new in its description) | First level, section count, node count, spot ids and start flow updated; `test_arena.gd` sets `source.layout = null` | New first level (Level 0), empty castle, Castle tab and spot ring; no assertion loosened (QA checked the diff) | Head of Engineering |
 | 2026-10-23 | `test_build3.gd`, `test_build5.gd`, `test_build6.gd`, `test_rework_a.gd`, `test_rework_b.gd`, `test_stars_and_castle.gd`, `through_level_zero.gd` (#102, listed old to new in its description) | Node-count bound `<= 40` to `<= 50` (loosened, the tree has 45 nodes); castle buys applied before tree tests; fork tests run on a forked pack copy; respec gold expectations include fees; tab node lists show only visible nodes; progression hash re-pinned `d71d47e4...` to `97bb407b...` | The tree is one connected graph with prerequisites, no real fork, a respec fee and hidden far nodes; QA checked the diff and found nothing else loosened | Head of Engineering |
 | 2026-10-23 | `test_build3.gd` (node-count bound), `test_rework_b.gd`, `test_tree_connected.gd`, known tower stat list, post section count, star-node list, Longer sight buy text (#104, listed old to new in its description) | Node-count bound `<= 50` to `<= 60` (loosened, the tree has 51 nodes); NODE_COUNT 45 to 51; tower stat list +13; post section 11 to 17; star-node list +6; "+2 shown" for the Watchtower link; progression hash re-pinned `97bb407b...` to `3c95f7b0...` | Six Hero and tower links add nodes, tower stats and a longer post section; QA found only additions apart from the bound | Head of Engineering |
+| 2026-10-23 | `test_build6.gd`, `test_build3.gd`, `test_rework_a.gd`, known Hero stat list, damaged-save test (#106, listed old to new in its description) | Gear slots weapon/charm to five and items 6 to 12 with drop pools; new-profile equality; Hero stat list +3; damaged-save test uses unknown slot "hat" with a non-owned item; progression hash re-pinned `3c95f7b0...` to `b137a200...` | Five slots, twelve items and first-clear gear; the bot now banks and wears first-clear pieces; QA checked the diff, nothing loosened, and logged the remaining gap as F-069 | Head of Engineering |
 
 ## Advisor views
 
