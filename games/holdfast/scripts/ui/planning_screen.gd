@@ -1,9 +1,9 @@
 extends Control
-## Plan page, shown before a run on a level with Archer Post sites: a map of the level with
-## the places enemies come from, slots around the keep, and the tower cards (the pack's post
-## limit) the player drags into them, or presses a slot to place and lift one. Auto-place
-## suggests a layout and Quick start reuses the last one. It shows the choice and asks for
-## the run through signals; the run flow acts. Mouse only.
+## Plan page, shown before a run: a map of the level with the places enemies come from, the
+## castle's ring of spots around the keep (only the slots the player owns), and the tower cards
+## the player owns, which they drag into the slots, or press a slot to place and lift one.
+## Auto-place suggests a layout and Quick start reuses the last one. It shows the choice and
+## asks for the run through signals; the run flow acts. Mouse only.
 
 signal start_requested(layout: Array)
 signal back_requested
@@ -27,12 +27,15 @@ const COLOUR_SLOT := Color(0.95, 0.85, 0.5)
 @onready var _auto: Button = %AutoButton
 @onready var _quick: Button = %QuickButton
 @onready var _side: Control = %Side
-@onready var _tray: VBoxContainer = %Tray
+@onready var _tray: GridContainer = %Tray
 
 var _content: Dictionary
 var _level_id := ""
 var _level: Dictionary = {}
 var _chosen: Array = []
+## The castle spots the player owns ({id, name, x, y}, by id) and the Archer Post cards they hold.
+var _spots: Dictionary = {}
+var _cards := 0
 ## The layout of the last run on this level ("" none yet): what Quick start reuses.
 var _saved: Array = []
 var _site_buttons: Dictionary = {}
@@ -52,20 +55,24 @@ func _ready() -> void:
 	visibility_changed.connect(_on_visibility_changed)
 
 
-## Shows the level's map with `layout` (site ids) already placed. `saved` says the layout is
-## the player's own from an earlier run, which Quick start can then reuse.
-func open(level_id: String, layout: Array, saved := false) -> void:
+## Shows the level's map with `layout` (spot ids) already placed. `spots` are the castle spots
+## the player owns and `cards` the Archer Posts they hold. `saved` says the layout is the
+## player's own from an earlier run, which Quick start can then reuse.
+func open(level_id: String, layout: Array, saved: bool, spots: Array, cards: int) -> void:
 	_level_id = level_id
 	_level = _content["levels"][level_id]
+	_cards = cards
+	_spots.clear()
+	for spot in spots:
+		_spots[str(spot["id"])] = spot
 	_chosen = layout.duplicate()
 	_saved = layout.duplicate() if saved else []
 	for button in _site_buttons.values():
 		button.queue_free()
 	_site_buttons.clear()
-	for site in _level["sites"]:
-		var id := str(site["id"])
+	for id in _spots:
 		var button := Button.new()
-		button.tooltip_text = id.replace("_", " ").capitalize()
+		button.tooltip_text = _slot_name(id)
 		button.toggle_mode = true
 		button.add_theme_font_size_override("font_size", FONT_PX)
 		button.pressed.connect(_toggle.bind(id))
@@ -84,14 +91,14 @@ func _toggle(id: String) -> void:
 		_chosen.erase(id)
 	else:
 		_chosen.append(id)
-		while _chosen.size() > int(_level.get("max_posts", 1)):
+		while _chosen.size() > _cards:
 			_chosen.pop_front()
 	_refresh()
 
 
 ## The suggested layout: the sites nearest where the enemies come from.
 func auto_place() -> void:
-	_chosen = HoldfastRules.best_layout(_level)
+	_chosen = HoldfastRules.best_sites(_spots.values(), _level.get("spawn_arcs", []), _cards)
 	_refresh()
 
 
@@ -101,7 +108,7 @@ func _refresh() -> void:
 		_site_buttons[id].set_pressed_no_signal(placed)
 		_site_buttons[id].text = "%s: %s" % [_tower_name(), _slot_name(id)] if placed else _slot_name(id)
 		_site_buttons[id].reset_size()
-	_count.text = "Posts: %d of %d" % [_chosen.size(), int(_level.get("max_posts", 1))]
+	_count.text = "Posts: %d of %d" % [_chosen.size(), _cards]
 	_start.disabled = _chosen.is_empty()
 	_quick.disabled = _saved.is_empty()
 	_refresh_cards()
@@ -114,7 +121,7 @@ func _tower_name() -> String:
 
 
 func _slot_name(id: String) -> String:
-	return id.trim_suffix("_gate").replace("_", " ").capitalize()
+	return str(_spots[id]["name"])
 
 
 ## One card for each post the level allows: the ones in hand can be dragged, the placed ones wait greyed.
@@ -123,11 +130,11 @@ func _refresh_cards() -> void:
 		_tray.remove_child(child)
 		child.queue_free()
 	var tower: Dictionary = _content["towers"][str(_level["tower"]["id"])]
-	for i in int(_level.get("max_posts", 1)):
+	for i in _cards:
 		var in_hand: bool = i >= _chosen.size()
 		var card := PanelContainer.new()
 		var label := Label.new()
-		label.text = "%s\n%s" % [tower["name"], "in hand: drag it to a slot" if in_hand else "placed"]
+		label.text = str(tower["name"]) if in_hand else "Placed"
 		label.add_theme_font_size_override("font_size", FONT_PX)
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.add_child(label)
@@ -170,7 +177,7 @@ func _slot_can_drop(_at: Vector2, data: Variant, id: String) -> bool:
 	if not data is Dictionary or str(data.get("kind", "")) != "tower" or id in _chosen:
 		return false
 	var from := str(data.get("from", ""))
-	return _chosen.size() < int(_level.get("max_posts", 1)) if from == "" else from in _chosen
+	return _chosen.size() < _cards if from == "" else from in _chosen
 
 
 func _slot_drop(_at: Vector2, data: Variant, id: String) -> void:
@@ -195,22 +202,23 @@ func _side_drop(_at: Vector2, data: Variant) -> void:
 		_refresh()
 
 
-## World units to map pixels: zoomed on the keep so the sites fill most of the map.
+## World units to map pixels: zoomed on the keep so the whole ring fills most of the map,
+## whichever of its spots are owned yet.
 func _scale() -> float:
 	var reach := 100.0
-	for site in _level["sites"]:
-		reach = maxf(reach, Vector2(float(site["x"]), float(site["y"])).length())
+	for spot in HoldfastMeta.castle_rules(_content).get("spots", []):
+		reach = maxf(reach, Vector2(float(spot["x"]), float(spot["y"])).length())
 	return minf(_map.size.x, _map.size.y) * 0.5 * SITE_FILL / reach
 
 
 func _place_buttons() -> void:
 	if _level.is_empty():
 		return
-	for site in _level["sites"]:
-		var button: Button = _site_buttons.get(str(site["id"]))
+	for id in _spots:
+		var button: Button = _site_buttons.get(id)
 		if button == null:
 			continue
-		var at: Vector2 = _map.size * 0.5 + Vector2(float(site["x"]), float(site["y"])) * _scale()
+		var at: Vector2 = _map.size * 0.5 + Vector2(float(_spots[id]["x"]), float(_spots[id]["y"])) * _scale()
 		button.reset_size()
 		button.position = at - button.size * 0.5
 
@@ -223,10 +231,10 @@ func _draw_map() -> void:
 	_map.draw_rect(Rect2(Vector2.ZERO, _map.size), COLOUR_ARENA, false, 2.0)
 	_map.draw_circle(centre, float(_level["keep_radius"]) * scale, COLOUR_KEEP)
 	var reach := float(_content["towers"][str(_level["tower"]["id"])]["range"])
-	for site in _level["sites"]:
-		var at: Vector2 = centre + Vector2(float(site["x"]), float(site["y"])) * scale
+	for id in _spots:
+		var at: Vector2 = centre + Vector2(float(_spots[id]["x"]), float(_spots[id]["y"])) * scale
 		_map.draw_circle(at, 6.0, COLOUR_SLOT)
-		if str(site["id"]) in _chosen:
+		if id in _chosen:
 			_map.draw_circle(at, reach * scale, COLOUR_RANGE)
 	# The red arcs show which way the enemies come from, drawn at the edge of the map.
 	var edge := minf(_map.size.x, _map.size.y) * 0.5 * ARC_FILL

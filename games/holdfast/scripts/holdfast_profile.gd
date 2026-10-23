@@ -41,7 +41,7 @@ func load_profile() -> void:
 		_service = null
 		changed.emit()
 		return
-	_service = SaveService.new(save_path, HoldfastMeta.SAVE_VERSION, {1: HoldfastMeta.migrate_v1.bind(_content), 2: HoldfastMeta.migrate_v2.bind(_content)})
+	_service = SaveService.new(save_path, HoldfastMeta.SAVE_VERSION, {1: HoldfastMeta.migrate_v1.bind(_content), 2: HoldfastMeta.migrate_v2.bind(_content), 3: HoldfastMeta.migrate_v3.bind(_content)})
 	var loaded := _service.load_save()
 	load_status = str(loaded["status"])
 	load_message = str(loaded["message"])
@@ -80,7 +80,7 @@ func buy(id: String) -> bool:
 	return result["ok"]
 
 
-## Gives back every bought upgrade's gold and empties the tree.
+## Gives back every bought upgrade's gold (and frees the stars of star nodes) and empties the tree.
 func respec() -> void:
 	_apply(HoldfastMeta.respec(_content, data))
 
@@ -132,11 +132,44 @@ func get_upgrades() -> Array:
 	return data["upgrades"]
 
 
+## Stars earned in all, spent on star nodes, and free to spend.
+func get_stars_earned() -> int:
+	return HoldfastMeta.stars_earned(data)
+
+
+func get_stars() -> int:
+	return HoldfastMeta.stars_available(_content, data)
+
+
+## Stars `level` has paid so far (0 to 3).
+func get_level_stars(level: String) -> int:
+	return int(data["stars"].get(level, 0))
+
+
+## Castle slots bought, and Archer Post cards (what the Plan page lets the player place).
+func get_castle_slots() -> int:
+	return HoldfastMeta.castle_slots(_content, data)
+
+
+func get_castle_cards() -> int:
+	return HoldfastMeta.castle_cards(_content, data)
+
+
+## The castle spots the player owns, in the pack's order: [{id, name, x, y}].
+func get_owned_spots() -> Array:
+	return HoldfastMeta.owned_spots(_content, data)
+
+
+## True once the player has a slot and an Archer Post to put in it, so any level can be planned.
+func has_a_tower() -> bool:
+	return HoldfastMeta.has_a_tower(_content, data)
+
+
 func get_level() -> String:
 	return str(data["level"])
 
 
-## The Archer Post sites a run on `level` builds on ([] when the level has none).
+## The castle spots a run on `level` builds on ([] for the tutorial, or before the first Archer Post).
 func get_layout(level: String) -> Array:
 	return HoldfastMeta.layout_for(_content, data, level)
 
@@ -168,6 +201,16 @@ func get_unlocked_levels() -> Array:
 func get_next_level(id: String) -> String:
 	var next := HoldfastMeta.next_level(_content, id)
 	return next if next in get_unlocked_levels() else ""
+
+
+## True for a tutorial level (Level 0): no Plan page, a Keep that cannot fall, a fixed reward.
+func is_tutorial(id: String) -> bool:
+	return bool(_content.get("levels", {}).get(id, {}).get("tutorial", false))
+
+
+## The gold a level pays the first time it is won, besides what the run collects.
+func get_reward_gold(id: String) -> int:
+	return int(_content.get("levels", {}).get(id, {}).get("reward", {}).get("gold", 0))
 
 
 func is_level_won(id: String) -> bool:

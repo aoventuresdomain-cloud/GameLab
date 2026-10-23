@@ -54,6 +54,22 @@ func _test_flow_with_mouse() -> void:
 	await _click(home.get_node("%NewGameButton"))
 	_check(start.visible and not home.visible, "New game opens the journey map")
 
+	# Level 0 has its own post, so it starts at once; the stub run does not bank a result, so the
+	# profile is told Level 0 was won and the two guided buys are clicked on the map.
+	await _click(start._buttons["first_watch"])
+	_check(hud.visible and not start.visible and _source.is_running(), "Tapping Level 0 starts it with no planning")
+	_source.step(1000.0)
+	await process_frame
+	_check(summary.visible, "Level 0 ends on the summary")
+	await _click(summary.get_node("%MapButton"))
+	_check(start.visible and not start.get_node("%Guide").visible, "the map has no guide until Level 0 is won")
+	_main.get_node("Profile").bank_run({"outcome": "won", "level": "first_watch", "gold": 0})
+	await process_frame
+	_check(start.get_node("%Guide").visible and start._buttons["outpost"].disabled, "after Level 0 the guide asks for the First Slot and Level 1 waits")
+	await _click(start.get_node("%GuideButton"))
+	await _click(start.get_node("%GuideButton"))
+	_check(not start.get_node("%Guide").visible and not start._buttons["outpost"].disabled, "two clicks buy the First Slot and the first Archer Post and open Level 1")
+
 	await _click(start._buttons["outpost"])
 	_check(_main.planning.visible and not start.visible, "Tapping the first level opens the planning screen (it has Archer Post sites)")
 	await _click(_main.planning.get_node("%AutoButton"))
@@ -117,6 +133,9 @@ func _click(control: Control) -> void:
 func _test_readable_layout() -> void:
 	print("layout: readable and on screen at 1280x720 and 1920x1080")
 	_source.step(1000.0) # end the run
+	# The map at its fullest: Level 0 won, and the guide asks for a star that is not there yet.
+	_main.get_node("Profile").new_game()
+	_main.get_node("Profile").data["levels_won"].append("first_watch")
 	_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": true})
 	var hud: Control = _main.hud
 	hud._on_gold_changed(9_999_999)
@@ -128,7 +147,7 @@ func _test_readable_layout() -> void:
 		var scale := float(window.y) / BASE_SIZE.y
 		var view := root.get_visible_rect()
 		_check(Vector2i(view.size) == BASE_SIZE, "%dx%d window shows the whole 1280x720 layout" % [window.x, window.y])
-		_main.planning.open("shingle_beach", ["west_gate", "east_gate"])
+		_main.planning.open("shingle_beach", ["spot_2", "spot_1"], false, HoldfastContent.base()["castle_rules"]["castle"]["spots"], 8)
 		hud.get_node("%PostsNote").text = "Posts: North Gate, South Gate"
 		hud.get_node("%PostsNote").visible = true
 		for screen in [_main.home, _main.journey, _main.hero_page, _main.keep_screen, hud, _main.summary, _main.planning]:

@@ -494,8 +494,8 @@ func test_a_version_two_file_loads_through_the_profile_and_saves_as_version_thre
 	profile.save_path = path
 	tree.root.add_child(profile)
 	expect_eq(profile.load_status, "migrated")
-	expect_eq(profile.get_upgrades(), ["keep_walls_1"])
-	expect_eq(profile.get_gold(), 30 + 70 + 520)
+	expect_eq(profile.get_upgrades(), [], "the castle starts empty, so every bought node is refunded")
+	expect_eq(profile.get_gold(), 30 + 70 + 520 + 60)
 	expect_eq(profile.get_level(), "shingle_beach")
 	expect_eq(profile.get_pillar(), "tideblade")
 	expect_eq(profile.data["layouts"], {})
@@ -505,25 +505,33 @@ func test_a_version_two_file_loads_through_the_profile_and_saves_as_version_thre
 	again.save_path = path
 	tree.root.add_child(again)
 	expect_eq(again.load_status, "ok", "saved as the new version")
-	expect_eq(again.get_gold(), 30 + 70 + 520)
+	expect_eq(again.get_gold(), 30 + 70 + 520 + 60)
 	again.free()
 
 
+## The pack's content with the castle grown to four slots and two Archer Post cards, so layouts of more than one post can be checked.
+func _wide_castle() -> Dictionary:
+	var content: Dictionary = HoldfastContent.base().duplicate(true)
+	content["upgrade_nodes"]["castle_slot_1"]["grants"]["slots"] = 4
+	content["upgrade_nodes"]["castle_archer_1"]["grants"]["cards"] = 2
+	return content
+
+
 func test_a_layout_is_checked_saved_and_defaulted() -> void:
-	var content := HoldfastContent.base()
-	var profile := HoldfastMeta.new_profile(content)
-	expect_eq(HoldfastMeta.layout_for(content, profile, "shingle_beach"), ["west_gate", "east_gate"], "the default is the best layout")
-	expect_eq(HoldfastMeta.layout_for(content, profile, "tidewrack_cove"), [], "no sites, no layout")
-	var chosen := HoldfastMeta.set_layout(content, profile, "shingle_beach", ["north_gate", "south_gate"])
-	expect_eq(chosen["layouts"]["shingle_beach"], ["north_gate", "south_gate"])
-	expect_eq(HoldfastMeta.layout_for(content, chosen, "shingle_beach"), ["north_gate", "south_gate"])
+	var content := _wide_castle()
+	var profile := ThroughLevelZero.of(content, HoldfastMeta.new_profile(content))
+	expect_eq(HoldfastMeta.layout_for(content, profile, "shingle_beach"), ["spot_2", "spot_1"], "the default is the best layout")
+	expect_eq(HoldfastMeta.layout_for(content, profile, "first_watch"), [], "the tutorial has its own post")
+	var chosen := HoldfastMeta.set_layout(content, profile, "shingle_beach", ["spot_4", "spot_3"])
+	expect_eq(chosen["layouts"]["shingle_beach"], ["spot_4", "spot_3"])
+	expect_eq(HoldfastMeta.layout_for(content, chosen, "shingle_beach"), ["spot_4", "spot_3"])
 	expect_eq(profile["layouts"], {}, "the profile given is untouched")
-	for bad in [[], ["west_gate", "east_gate", "north_gate"], ["west_gate", "west_gate"], ["nowhere"]]:
+	for bad in [[], ["spot_2", "spot_1", "spot_4"], ["spot_2", "spot_2"], ["nowhere"], ["spot_5"]]:
 		expect_eq(HoldfastMeta.set_layout(content, chosen, "shingle_beach", bad), chosen, "refused: " + str(bad))
-	expect_eq(HoldfastMeta.set_layout(content, chosen, "tidewrack_cove", ["west_gate"]), chosen, "a level with no sites")
-	expect_eq(HoldfastMeta.set_layout(content, chosen, "no_such_level", ["west_gate"]), chosen)
-	var loaded := HoldfastMeta.from_save(content, {"layouts": {"shingle_beach": ["north_gate"], "outpost": ["bogus"], "gone": ["x"], "tidewrack_cove": ["west_gate"]}})
-	expect_eq(loaded["layouts"], {"shingle_beach": ["north_gate"]}, "only valid layouts of real levels are kept")
+	expect_eq(HoldfastMeta.set_layout(content, chosen, "first_watch", ["spot_2"]), chosen, "the tutorial")
+	expect_eq(HoldfastMeta.set_layout(content, chosen, "no_such_level", ["spot_2"]), chosen)
+	var loaded := HoldfastMeta.from_save(content, {"stars": {"first_watch": 2}, "upgrades": ["castle_slot_1", "castle_archer_1"], "layouts": {"shingle_beach": ["spot_4"], "outpost": ["bogus"], "gone": ["x"], "tidewrack_cove": ["west_gate"], "old_pier": ["spot_6"]}})
+	expect_eq(loaded["layouts"], {"shingle_beach": ["spot_4"]}, "only valid layouts of real levels are kept")
 	expect_eq(HoldfastMeta.from_save(content, {"layouts": 7})["layouts"], {}, "and nonsense is dropped")
 
 
@@ -532,15 +540,16 @@ func test_a_chosen_layout_survives_a_save_and_a_reload() -> void:
 	var profile := HoldfastProfile.new()
 	profile.save_path = path
 	tree.root.add_child(profile)
-	profile.set_layout("outpost", ["north_gate"])
+	ThroughLevelZero.apply(profile)
+	profile.set_layout("outpost", ["spot_1"])
 	profile.set_layout("outpost", ["nowhere"])
-	expect_eq(profile.get_layout("outpost"), ["north_gate"])
+	expect_eq(profile.get_layout("outpost"), ["spot_1"])
 	profile.free()
 	var again := HoldfastProfile.new()
 	again.save_path = path
 	tree.root.add_child(again)
-	expect_eq(again.get_layout("outpost"), ["north_gate"])
-	expect_eq(again.get_layout("shingle_beach"), ["west_gate", "east_gate"])
+	expect_eq(again.get_layout("outpost"), ["spot_1"])
+	expect_eq(again.get_layout("shingle_beach"), ["spot_1"], "a level never planned gets the best layout the castle allows")
 	again.free()
 
 
@@ -550,58 +559,64 @@ func test_play_opens_the_planning_screen_and_start_runs_on_the_chosen_site() -> 
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var source: HoldfastRunSource = main.get_node("RunSource")
+	ThroughLevelZero.apply(profile)
 	main.journey._buttons["outpost"].pressed.emit()
 	expect_true(main.planning.visible and not main.journey.visible and not source.is_running(), "planning comes first")
 	expect_eq(main.planning.get_node("%Count").text, "Posts: 0 of 1", "a first visit starts with empty slots")
 	expect_true(main.planning.get_node("%StartButton").disabled, "no post, no start")
-	main.planning._site_buttons["west_gate"].pressed.emit()
+	main.planning.open("outpost", [], false, HoldfastContent.base()["castle_rules"]["castle"]["spots"].slice(0, 2), 1)
+	main.planning._site_buttons["spot_2"].pressed.emit()
 	expect_eq(main.planning.get_node("%Count").text, "Posts: 1 of 1")
-	main.planning._site_buttons["north_gate"].pressed.emit()
+	main.planning._site_buttons["spot_1"].pressed.emit()
 	expect_eq(main.planning.get_node("%Count").text, "Posts: 1 of 1", "one post: the new choice replaces the old")
+	main.journey.level_requested.emit("outpost")
+	main.planning._site_buttons["spot_1"].pressed.emit()
 	main.planning.get_node("%StartButton").pressed.emit()
 	expect_true(source.is_running() and main.hud.visible and not main.planning.visible)
-	expect_eq(source.get_rules().layout_ids, ["north_gate"])
-	expect_eq(source.get_rules().tower.position, Vector2(-20, -100))
-	expect_eq(profile.get_layout("outpost"), ["north_gate"], "saved with the profile")
-	expect_eq(source.get_posts_note(), "Posts: North Gate", "and shown as the run starts")
+	expect_eq(source.get_rules().layout_ids, ["spot_1"])
+	expect_eq(source.get_rules().tower.position, Vector2(100, 0))
+	expect_eq(profile.get_layout("outpost"), ["spot_1"], "saved with the profile")
+	expect_eq(source.get_posts_note(), "Posts: East", "and shown as the run starts")
 	expect_eq(source.get_wave_banner(), "", "the wave banner is left alone")
 	main.free()
 
 
 func test_the_planning_screen_toggles_sites_up_to_the_limit_and_will_not_start_empty() -> void:
 	var main := _main()
+	ThroughLevelZero.apply(main.get_node("Profile"))
 	main.journey._buttons["outpost"].pressed.emit()
 	var planning: Control = main.planning
-	planning.open("shingle_beach", ["west_gate", "east_gate"])
+	planning.open("shingle_beach", ["spot_2", "spot_1"], false, HoldfastContent.base()["castle_rules"]["castle"]["spots"].slice(0, 4), 2)
 	expect_eq(planning.get_node("%Count").text, "Posts: 2 of 2")
-	planning._site_buttons["south_gate"].pressed.emit()
-	expect_eq(planning._chosen, ["east_gate", "south_gate"], "at the limit the oldest makes way")
-	planning._site_buttons["south_gate"].pressed.emit()
-	planning._site_buttons["east_gate"].pressed.emit()
+	planning._site_buttons["spot_3"].pressed.emit()
+	expect_eq(planning._chosen, ["spot_1", "spot_3"], "at the limit the oldest makes way")
+	planning._site_buttons["spot_3"].pressed.emit()
+	planning._site_buttons["spot_1"].pressed.emit()
 	expect_eq(planning._chosen, [])
 	expect_true(planning.get_node("%StartButton").disabled, "no post, no start")
-	planning._site_buttons["west_gate"].pressed.emit()
+	planning._site_buttons["spot_2"].pressed.emit()
 	expect_false(planning.get_node("%StartButton").disabled)
 	var heard := []
 	planning.start_requested.connect(func(layout: Array) -> void: heard.append(layout))
 	planning.get_node("%StartButton").pressed.emit()
-	expect_eq(heard, [["west_gate"]])
+	expect_eq(heard, [["spot_2"]])
 	main.free()
 
 
-func test_back_from_planning_returns_to_the_journey_map_and_a_level_without_sites_starts_at_once() -> void:
+func test_back_from_planning_returns_to_the_journey_map_and_the_tutorial_starts_at_once() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var source: HoldfastRunSource = main.get_node("RunSource")
+	main.journey._buttons["first_watch"].pressed.emit()
+	expect_true(source.is_running() and not main.planning.visible, "the tutorial has its own post, so no planning")
+	expect_eq(source.get_rules().layout_ids, [])
+	expect_eq(source.get_posts_note(), HoldfastContent.base()["levels"]["first_watch"]["intro"], "and says its teaching text instead of a posts line")
+	source.step(3600.0)
+	main.call("_show", main.Screen.MAP)
+	ThroughLevelZero.apply(profile)
 	main.journey._buttons["outpost"].pressed.emit()
 	main.planning.get_node("%BackButton").pressed.emit()
 	expect_true(main.journey.visible and not main.planning.visible and not source.is_running())
-	for won in ["outpost", "shingle_beach"]:
-		profile.bank_run({"gold": 0, "outcome": "won", "level": won})
-	main.journey._buttons["tidewrack_cove"].pressed.emit()
-	expect_true(source.is_running() and not main.planning.visible, "no sites, no planning")
-	expect_eq(source.get_rules().layout_ids, [])
-	expect_eq(source.get_posts_note(), "", "and no posts line")
 	main.free()
 
 
@@ -610,7 +625,7 @@ func test_the_keep_screen_shows_sections_dims_the_far_nodes_and_lists_the_next_u
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var keep: Control = main.keep_screen
 	keep.visible = true
-	expect_eq(keep._section_columns.keys().size(), 4, "Flare Archer, Archer Post, Keep, Tithe")
+	expect_eq(keep._section_columns.keys().size(), 5, "Flare Archer, Archer Post, Keep, Tithe, Castle")
 	expect_true(keep._section_columns["flare_archer"].visible)
 	expect_eq(keep._node_buttons["post_timbers"].modulate, Color.WHITE, "one buy away: in full")
 	expect_eq(keep._node_buttons["post_burst"].modulate, keep.DIMMED, "far: dimmed")

@@ -102,7 +102,7 @@ func test_the_new_monsters_come_from_level_two_and_never_on_level_one() -> void:
 		for wave in levels[id]["waves"]:
 			for spawn in wave["spawns"]:
 				seen[spawn["enemy"]] = int(seen.get(spawn["enemy"], 0)) + int(spawn["count"])
-		if id == "outpost":
+		if id == "outpost" or id == "first_watch":
 			for type in ["sprinter", "bulwark", "tide_captain", "fog_warden"]:
 				expect_false(seen.has(type), "%s has no %s" % [id, type])
 		else:
@@ -522,8 +522,10 @@ func test_the_run_flow_sends_the_worn_gear_and_the_owned_list_to_the_run() -> vo
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var source: HoldfastRunSource = main.get_node("RunSource")
+	ThroughLevelZero.apply(profile)
 	profile.bank_run({"outcome": "lost", "level": "outpost", "gold": 0, "gear_found": ["tarred_bowstring"]})
 	main.journey._buttons["outpost"].pressed.emit()
+	main.planning.auto_place()
 	main.planning.get_node("%StartButton").pressed.emit()
 	expect_true(source.is_running())
 	expect_eq(source.gear, {"weapon": "tarred_bowstring"})

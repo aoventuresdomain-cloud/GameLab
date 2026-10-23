@@ -1,6 +1,34 @@
 {
   "levels": [
     {
+      "id": "first_watch",
+      "name": "First Watch",
+      "number": 0,
+      "tutorial": true,
+      "intro": "Move with W, A, S and D. Press Space for your special. Stand in the lamplight and the post does the rest. The Keep cannot fall here.",
+      "reward": {"stars": 2, "gold": 150},
+      "keep_health": 100,
+      "keep_radius": 36,
+      "spawn_radius": 420,
+      "arena": {"width": 1920, "height": 858},
+      "first_wave_delay": 2,
+      "aura": {"radius": 70, "dps": 12, "cursor_speed": 1800},
+      "light": {"radius": 90, "bonus": 0.5},
+      "posts": [
+        {"id": "east_post", "x": 130, "y": -60},
+        {"id": "west_post", "x": -130, "y": 70}
+      ],
+      "hero": {"path": "flare_archer", "x": 0, "y": 80},
+      "tower": {"id": "archer_post", "x": -90, "y": 30},
+      "spawn_arcs": [{"centre": 200, "width": 80}, {"centre": 20, "width": 80}],
+      "staff": {"id": "bryn", "x": 112, "y": -48},
+      "recruits": [{"id": "wren", "x": -118, "y": 58, "post": "west_post"}],
+      "waves": [
+        {"health_scale": 1, "damage_scale": 1, "spawns": [{"enemy": "grunt", "count": 5, "interval": 1.2}]},
+        {"delay": 4, "health_scale": 1, "damage_scale": 1, "spawns": [{"enemy": "grunt", "count": 7, "interval": 1}]}
+      ]
+    },
+    {
       "id": "outpost",
       "name": "The Outpost",
       "number": 1,

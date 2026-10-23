@@ -29,6 +29,8 @@ func test_first_time_players_win_levels_one_and_two_inside_the_pack_bands() -> v
 	var levels: Dictionary = HoldfastContent.base()["levels"]
 	var banded := 0
 	for level in levels:
+		if levels[level].get("tutorial", false):
+			continue
 		var check: Dictionary = levels[level]["balance_check"]
 		if not check.has("first_time"):
 			continue
@@ -108,6 +110,8 @@ func test_the_skilled_bots_are_deterministic_and_the_poor_one_reacts_slower() ->
 func test_the_later_levels_can_still_be_lost_by_the_pillar_bots() -> void:
 	var content := HoldfastContent.base()
 	for level in content["levels"]:
+		if content["levels"][level].get("tutorial", false):
+			continue
 		var check: Dictionary = content["levels"][level]["balance_check"]
 		if check.has("first_time"):
 			continue

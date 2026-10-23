@@ -13,9 +13,10 @@ func _main() -> Node:
 	return main
 
 
-func _open(level := "shingle_beach", layout: Array = [], saved := false) -> Control:
+## Opens the Plan page for a player who owns the first `slots` castle spots and `cards` Archer Posts.
+func _open(level := "shingle_beach", layout: Array = [], saved := false, slots := 4, cards := 2) -> Control:
 	var plan: Control = _main().planning
-	plan.open(level, layout, saved)
+	plan.open(level, layout, saved, HoldfastMeta.castle_rules(HoldfastContent.base())["spots"].slice(0, slots), cards)
 	return plan
 
 
@@ -23,10 +24,10 @@ func _card(from := "") -> Dictionary:
 	return {"kind": "tower", "tower": "archer_post", "from": from}
 
 
-func test_a_first_visit_has_empty_slots_one_card_per_allowed_post_and_nothing_to_start() -> void:
+func test_a_first_visit_has_empty_slots_one_card_per_owned_post_and_nothing_to_start() -> void:
 	var plan := _open("shingle_beach")
 	expect_eq(plan._chosen, [])
-	expect_eq(plan._tray.get_child_count(), 2, "the pack allows two posts here")
+	expect_eq(plan._tray.get_child_count(), 2, "the player owns two Archer Posts")
 	expect_true(plan.get_node("%StartButton").disabled, "no post, no start")
 	expect_true(plan.get_node("%QuickButton").disabled, "no last layout yet")
 	expect_eq(plan.get_node("%Count").text, "Posts: 0 of 2")
@@ -34,7 +35,7 @@ func test_a_first_visit_has_empty_slots_one_card_per_allowed_post_and_nothing_to
 
 
 func test_the_outpost_allows_one_card() -> void:
-	var plan := _open("outpost")
+	var plan := _open("outpost", [], false, 1, 1)
 	expect_eq(plan._tray.get_child_count(), 1)
 	plan.get_parent().get_parent().free()
 
@@ -42,7 +43,8 @@ func test_the_outpost_allows_one_card() -> void:
 func test_auto_place_is_the_suggested_layout_and_lets_the_player_start() -> void:
 	var plan := _open("shingle_beach")
 	plan.get_node("%AutoButton").pressed.emit()
-	expect_eq(plan._chosen, HoldfastRules.best_layout(HoldfastContent.base()["levels"]["shingle_beach"]))
+	var owned: Array = HoldfastContent.base()["castle_rules"]["castle"]["spots"].slice(0, 4)
+	expect_eq(plan._chosen, HoldfastRules.best_sites(owned, HoldfastContent.base()["levels"]["shingle_beach"]["spawn_arcs"], 2))
 	expect_eq(plan._chosen.size(), 2)
 	expect_false(plan.get_node("%StartButton").disabled)
 	expect_eq(plan.get_node("%Count").text, "Posts: 2 of 2")
@@ -51,100 +53,105 @@ func test_auto_place_is_the_suggested_layout_and_lets_the_player_start() -> void
 
 func test_dragging_a_card_onto_an_empty_slot_places_it_until_the_limit() -> void:
 	var plan := _open("shingle_beach")
-	expect_true(plan._slot_can_drop(Vector2.ZERO, _card(), "west_gate"))
-	plan._slot_drop(Vector2.ZERO, _card(), "west_gate")
-	expect_eq(plan._chosen, ["west_gate"])
-	expect_false(plan._slot_can_drop(Vector2.ZERO, _card(), "west_gate"), "a slot already holding a post takes no card")
-	plan._slot_drop(Vector2.ZERO, _card(), "east_gate")
-	expect_eq(plan._chosen, ["west_gate", "east_gate"])
-	expect_false(plan._slot_can_drop(Vector2.ZERO, _card(), "south_gate"), "no card left in hand")
-	plan._slot_drop(Vector2.ZERO, _card(), "south_gate")
-	expect_eq(plan._chosen, ["west_gate", "east_gate"], "a refused drop changes nothing")
+	expect_true(plan._slot_can_drop(Vector2.ZERO, _card(), "spot_2"))
+	plan._slot_drop(Vector2.ZERO, _card(), "spot_2")
+	expect_eq(plan._chosen, ["spot_2"])
+	expect_false(plan._slot_can_drop(Vector2.ZERO, _card(), "spot_2"), "a slot already holding a post takes no card")
+	plan._slot_drop(Vector2.ZERO, _card(), "spot_1")
+	expect_eq(plan._chosen, ["spot_2", "spot_1"])
+	expect_false(plan._slot_can_drop(Vector2.ZERO, _card(), "spot_3"), "no card left in hand")
+	plan._slot_drop(Vector2.ZERO, _card(), "spot_3")
+	expect_eq(plan._chosen, ["spot_2", "spot_1"], "a refused drop changes nothing")
 	plan.get_parent().get_parent().free()
 
 
 func test_a_drop_that_is_not_a_tower_card_is_refused() -> void:
 	var plan := _open("shingle_beach")
 	for bad in [null, "x", {}, {"kind": "wall", "from": ""}]:
-		expect_false(plan._slot_can_drop(Vector2.ZERO, bad, "west_gate"))
+		expect_false(plan._slot_can_drop(Vector2.ZERO, bad, "spot_2"))
 	expect_false(plan._side_can_drop(Vector2.ZERO, _card()), "a card from the tray has nothing to return")
 	plan.get_parent().get_parent().free()
 
 
 func test_a_placed_post_can_be_moved_to_another_slot_keeping_its_place_in_order() -> void:
-	var plan := _open("shingle_beach", ["west_gate", "east_gate"])
-	var data: Variant = plan._slot_drag(Vector2.ZERO, "west_gate", plan._site_buttons["west_gate"])
-	expect_eq(data, _card("west_gate"))
-	expect_false(plan._slot_can_drop(Vector2.ZERO, data, "east_gate"), "not onto another post")
-	plan._slot_drop(Vector2.ZERO, data, "south_gate")
-	expect_eq(plan._chosen, ["south_gate", "east_gate"])
+	var plan := _open("shingle_beach", ["spot_2", "spot_1"])
+	var data: Variant = plan._slot_drag(Vector2.ZERO, "spot_2", plan._site_buttons["spot_2"])
+	expect_eq(data, _card("spot_2"))
+	expect_false(plan._slot_can_drop(Vector2.ZERO, data, "spot_1"), "not onto another post")
+	plan._slot_drop(Vector2.ZERO, data, "spot_3")
+	expect_eq(plan._chosen, ["spot_3", "spot_1"])
 	plan.get_parent().get_parent().free()
 
 
 func test_an_empty_slot_has_nothing_to_drag() -> void:
 	var plan := _open("shingle_beach")
-	expect_true(plan._slot_drag(Vector2.ZERO, "west_gate", plan._site_buttons["west_gate"]) == null)
+	expect_true(plan._slot_drag(Vector2.ZERO, "spot_2", plan._site_buttons["spot_2"]) == null)
 	plan.get_parent().get_parent().free()
 
 
 func test_dropping_a_lifted_post_on_the_card_side_returns_its_card() -> void:
-	var plan := _open("shingle_beach", ["west_gate", "east_gate"])
-	expect_true(plan._side_can_drop(Vector2.ZERO, _card("east_gate")))
-	plan._side_drop(Vector2.ZERO, _card("east_gate"))
-	expect_eq(plan._chosen, ["west_gate"])
+	var plan := _open("shingle_beach", ["spot_2", "spot_1"])
+	expect_true(plan._side_can_drop(Vector2.ZERO, _card("spot_1")))
+	plan._side_drop(Vector2.ZERO, _card("spot_1"))
+	expect_eq(plan._chosen, ["spot_2"])
 	expect_eq(plan.get_node("%Count").text, "Posts: 1 of 2")
-	expect_false(plan._side_can_drop(Vector2.ZERO, _card("east_gate")), "it is no longer placed")
+	expect_false(plan._side_can_drop(Vector2.ZERO, _card("spot_1")), "it is no longer placed")
 	plan.get_parent().get_parent().free()
 
 
 func test_placed_cards_wait_greyed_and_cards_in_hand_are_lit() -> void:
-	var plan := _open("shingle_beach", ["west_gate"])
+	var plan := _open("shingle_beach", ["spot_2"])
 	expect_eq(plan._tray.get_child(0).modulate, Color(1, 1, 1, 0.45), "placed")
 	expect_eq(plan._tray.get_child(1).modulate, Color.WHITE, "in hand")
 	plan.get_parent().get_parent().free()
 
 
 func test_quick_start_reuses_the_last_layout_and_is_greyed_without_one() -> void:
-	var plan := _open("shingle_beach", ["east_gate", "south_gate"], true)
+	var plan := _open("shingle_beach", ["spot_1", "spot_3"], true)
 	expect_false(plan.get_node("%QuickButton").disabled)
 	var heard := []
 	plan.start_requested.connect(func(layout: Array) -> void: heard.append(layout))
-	plan._chosen = ["west_gate"]
+	plan._chosen = ["spot_2"]
 	plan.get_node("%QuickButton").pressed.emit()
-	expect_eq(heard, [["east_gate", "south_gate"]], "the saved one, whatever is placed now")
+	expect_eq(heard, [["spot_1", "spot_3"]], "the saved one, whatever is placed now")
 	plan.get_parent().get_parent().free()
 
 
 func test_the_flow_opens_empty_the_first_time_then_with_the_last_layout() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
+	ThroughLevelZero.apply(profile)
 	main.journey.level_requested.emit("outpost")
 	expect_eq(main.planning._chosen, [], "first visit")
 	expect_true(main.planning.get_node("%QuickButton").disabled)
-	main.planning._site_buttons["north_gate"].pressed.emit()
+	expect_eq(main.planning._site_buttons.keys(), ["spot_1"], "only the one slot the player owns")
+	main.planning._site_buttons["spot_1"].pressed.emit()
 	main.planning.get_node("%StartButton").pressed.emit()
 	expect_true(profile.has_saved_layout("outpost"))
 	main.free()
 	var again := _main()
-	again.get_node("Profile").set_layout("outpost", ["north_gate"])
+	ThroughLevelZero.apply(again.get_node("Profile"))
+	again.get_node("Profile").set_layout("outpost", ["spot_1"])
 	again.journey.level_requested.emit("outpost")
-	expect_eq(again.planning._chosen, ["north_gate"], "kept for the next visit")
+	expect_eq(again.planning._chosen, ["spot_1"], "kept for the next visit")
 	expect_false(again.planning.get_node("%QuickButton").disabled)
 	again.planning.get_node("%QuickButton").pressed.emit()
 	expect_true(again.get_node("RunSource").is_running() and again.hud.visible, "Quick start starts the level")
-	expect_eq(again.get_node("RunSource").get_rules().layout_ids, ["north_gate"])
+	expect_eq(again.get_node("RunSource").get_rules().layout_ids, ["spot_1"])
 	again.free()
 
 
 func test_a_layout_is_saved_only_when_valid_so_quick_start_never_reuses_a_bad_one() -> void:
 	var content := HoldfastContent.base()
-	var profile := HoldfastMeta.new_profile(content)
+	var profile := ThroughLevelZero.of(content, HoldfastMeta.new_profile(content))
 	expect_false(HoldfastMeta.has_saved_layout(content, profile, "shingle_beach"))
-	profile["layouts"]["shingle_beach"] = ["west_gate", "no_such_site"]
-	expect_false(HoldfastMeta.has_saved_layout(content, profile, "shingle_beach"), "an invalid one is not a saved layout")
-	profile["layouts"]["shingle_beach"] = ["west_gate", "east_gate"]
+	for bad in [["spot_1", "no_such_spot"], ["spot_2"], ["spot_1", "spot_1"], []]:
+		profile["layouts"]["shingle_beach"] = bad
+		expect_false(HoldfastMeta.has_saved_layout(content, profile, "shingle_beach"), "not a saved layout: %s" % [bad])
+	profile["layouts"]["shingle_beach"] = ["spot_1"]
 	expect_true(HoldfastMeta.has_saved_layout(content, profile, "shingle_beach"))
-	expect_false(HoldfastMeta.has_saved_layout(content, profile, "tidewrack_cove"), "a level with no sites has none")
+	profile["layouts"]["first_watch"] = ["spot_1"]
+	expect_false(HoldfastMeta.has_saved_layout(content, profile, "first_watch"), "the tutorial has no layout")
 
 
 # ------------------------------------------------------------------ F-056: a lifted post returns from anywhere
@@ -180,7 +187,7 @@ func test_a_post_let_go_on_a_card_a_button_the_map_or_empty_space_returns_to_the
 	plan.visible = true
 	await tree.process_frame
 	for name in ["a card", "Auto-place", "Quick start", "Start level", "Journey map", "the map's empty space", "the backdrop"]:
-		plan.open("shingle_beach", ["west_gate"])
+		plan.open("shingle_beach", ["spot_2"], false, HoldfastContent.base()["castle_rules"]["castle"]["spots"].slice(0, 4), 2)
 		await tree.process_frame
 		var spots := {
 			"a card": plan._tray.get_child(1).get_global_rect().get_center(),
@@ -191,12 +198,12 @@ func test_a_post_let_go_on_a_card_a_button_the_map_or_empty_space_returns_to_the
 			"the map's empty space": plan._map.get_global_rect().position + Vector2(40, 40),
 			"the backdrop": Vector2(640, 700),
 		}
-		var from: Vector2 = plan._site_buttons["west_gate"].get_global_rect().get_center()
+		var from: Vector2 = plan._site_buttons["spot_2"].get_global_rect().get_center()
 		await _drag(from, spots[name])
 		expect_eq(plan._chosen, [], "let go on %s: the post is back in the tray" % name)
 	# A free slot still takes it, which moves the post rather than returning it.
-	plan.open("shingle_beach", ["west_gate"])
+	plan.open("shingle_beach", ["spot_2"], false, HoldfastContent.base()["castle_rules"]["castle"]["spots"].slice(0, 4), 2)
 	await tree.process_frame
-	await _drag(plan._site_buttons["west_gate"].get_global_rect().get_center(), plan._site_buttons["east_gate"].get_global_rect().get_center())
-	expect_eq(plan._chosen, ["east_gate"], "a free slot moves it")
+	await _drag(plan._site_buttons["spot_2"].get_global_rect().get_center(), plan._site_buttons["spot_1"].get_global_rect().get_center())
+	expect_eq(plan._chosen, ["spot_1"], "a free slot moves it")
 	main.free()

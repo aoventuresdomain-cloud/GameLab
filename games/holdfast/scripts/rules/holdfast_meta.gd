@@ -8,12 +8,13 @@ extends RefCounted
 ## profile: {
 ##   gold: int,            banked gold, spent on upgrades
 ##   upgrades: [ids],      bought upgrade nodes, in the order bought
+##   stars: {level: int}   the most stars each level has paid (1 to 3; a tutorial pays its reward)
 ##   levels_won: [ids],
 ##   unlocked: [ids],      levels opened beyond the first, by winning the one before
 ##   level: id,            the level the next run plays
 ##   pillar: id,           the Hero path the next run plays
 ##   runs: int,            runs banked
-##   layouts: {level: [site ids]}   the Archer Post sites the player chose per level
+##   layouts: {level: [spot ids]}   the castle spots the player put Archer Posts on, per level
 ##   gear: {owned: [item ids], equipped: {slot: item id or ""}}   the Hero's gear (the Hero only)
 ## }
 ## The save format version is SAVE_VERSION; bump it with a migration when the shape changes.
@@ -24,7 +25,16 @@ extends RefCounted
 ## the three Archer Post chains (drills, timbers, patch-up) became different nodes;
 ## migrate_v2 refunds the old ones at their price and keeps everything else.
 
-const SAVE_VERSION := 3
+## Version 4: stars and the castle. The player starts with an empty castle and buys slots and
+## Archer Post cards with stars; migrate_v3 refunds every bought node in gold, grants the stars
+## the won levels would have paid and resets the layouts.
+
+const SAVE_VERSION := 4
+
+## The most stars one level can pay; the pack's star tiers never go above it.
+const MAX_LEVEL_STARS := 3
+## The castle's own id in the pack's `castle_rules`.
+const CASTLE := "castle"
 
 ## The Archer Post nodes version 2 sold, which no longer exist: node id -> what it cost.
 const V2_TOWER_COSTS := {
@@ -48,6 +58,7 @@ static func new_profile(content: Dictionary) -> Dictionary:
 	return {
 		"gold": 0,
 		"upgrades": [],
+		"stars": {},
 		"levels_won": [],
 		"unlocked": [],
 		"level": levels[0] if not levels.is_empty() else "",
@@ -73,26 +84,35 @@ static func _whole(value: Variant) -> int:
 static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 	var profile := new_profile(content)
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	var levels: Dictionary = content.get("levels", {})
 	profile["gold"] = maxi(_whole(data.get("gold")), 0)
 	profile["runs"] = maxi(_whole(data.get("runs")), 0)
+	var saved_stars: Variant = data.get("stars", {})
+	if saved_stars is Dictionary:
+		for level in saved_stars:
+			if levels.has(level) and (saved_stars[level] is int or saved_stars[level] is float):
+				profile["stars"][level] = clampi(int(saved_stars[level]), 0, MAX_LEVEL_STARS)
 	for id in _list(data.get("upgrades")):
 		if nodes.has(id) and not id in profile["upgrades"] and _closed_by(nodes, profile["upgrades"], id) == "":
+			# A save cannot hold more star nodes than the stars it has earned.
+			if is_star_node(nodes[id]) and stars_spent(content, profile) + int(nodes[id]["cost"]) > stars_earned(profile):
+				continue
 			profile["upgrades"].append(id)
-	for id in data.get("levels_won", []):
-		if content.get("levels", {}).has(id) and not id in profile["levels_won"]:
+	for id in _list(data.get("levels_won")):
+		if levels.has(id) and not id in profile["levels_won"]:
 			profile["levels_won"].append(id)
-	for id in data.get("unlocked", []):
-		if content.get("levels", {}).has(id) and not id in profile["unlocked"]:
+	for id in _list(data.get("unlocked")):
+		if levels.has(id) and not id in profile["unlocked"]:
 			profile["unlocked"].append(id)
 	var saved_layouts: Variant = data.get("layouts", {})
 	if saved_layouts is Dictionary:
 		for level in saved_layouts:
-			if content.get("levels", {}).has(level) and is_valid_layout(content["levels"][level], saved_layouts[level]):
+			if levels.has(level) and is_valid_layout(content, profile, saved_layouts[level]):
 				profile["layouts"][level] = saved_layouts[level].duplicate()
 	var saved_gear: Variant = data.get("gear", {})
 	if saved_gear is Dictionary:
 		var items: Dictionary = content.get("gear_items", {})
-		for id in saved_gear.get("owned", []):
+		for id in _list(saved_gear.get("owned")):
 			if items.has(id) and not id in profile["gear"]["owned"]:
 				profile["gear"]["owned"].append(id)
 		var worn: Variant = saved_gear.get("equipped", {})
@@ -194,42 +214,179 @@ static func migrate_v2(data: Dictionary, _content: Dictionary) -> Dictionary:
 	return out
 
 
-## The Archer Post sites a level's player layout may use: site ids from the level, no
-## repeats, at least one and at most the level's `max_posts`. A level with no `sites` has
-## no layout to choose.
-static func is_valid_layout(level: Dictionary, layout: Variant) -> bool:
-	if not level.has("sites") or not layout is Array or layout.is_empty() or layout.size() > int(level.get("max_posts", 1)):
+## A version 3 save as version 4. Every bought node goes back to the gold at its pack
+## price (the castle is empty now, so the tree is bought again from the start), each level
+## it won pays 3 stars and the tutorial pays its own, and the layouts are reset to a first visit.
+static func migrate_v3(data: Dictionary, content: Dictionary) -> Dictionary:
+	var out := data.duplicate(true)
+	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	var levels: Dictionary = content.get("levels", {})
+	var gold := maxi(_whole(out.get("gold")), 0)
+	var refunded := []
+	for id in _list(out.get("upgrades")):
+		if nodes.has(id) and not id in refunded:
+			refunded.append(id)
+			gold += int(nodes[id]["cost"])
+	var stars := {}
+	var won := _list(out.get("levels_won")).duplicate()
+	for id in won:
+		if levels.has(id) and not _tutorial(levels[id]):
+			stars[id] = MAX_LEVEL_STARS
+	var first := tutorial_level(content)
+	if first != "":
+		stars[first] = int(levels[first]["reward"]["stars"])
+		if not first in won:
+			won.append(first)
+		var unlocked := _list(out.get("unlocked")).duplicate()
+		var next := next_level(content, first)
+		if next != "" and not next in unlocked:
+			unlocked.append(next)
+		out["unlocked"] = unlocked
+	out["upgrades"] = []
+	out["gold"] = gold
+	out["stars"] = stars
+	out["levels_won"] = won
+	out["layouts"] = {}
+	return out
+
+
+static func _tutorial(level: Dictionary) -> bool:
+	return bool(level.get("tutorial", false))
+
+
+## The tutorial level's id (Level 0), or "" when the pack has none.
+static func tutorial_level(content: Dictionary) -> String:
+	for id in content.get("levels", {}):
+		if _tutorial(content["levels"][id]):
+			return str(id)
+	return ""
+
+
+## True for a node paid for with stars rather than gold.
+static func is_star_node(node: Dictionary) -> bool:
+	return str(node.get("currency", "gold")) == "stars"
+
+
+## "90 gold", "1 star" or "3 stars": what a node costs, in words.
+static func cost_text(node: Dictionary) -> String:
+	var cost := int(node["cost"])
+	if is_star_node(node):
+		return "%d star%s" % [cost, "" if cost == 1 else "s"]
+	return "%d gold" % cost
+
+
+## Stars the player has earned in all: the most each level has paid, added up.
+static func stars_earned(profile: Dictionary) -> int:
+	var total := 0
+	for level in profile["stars"]:
+		total += int(profile["stars"][level])
+	return total
+
+
+## Stars tied up in the star nodes the player owns (a respec gives them back).
+static func stars_spent(content: Dictionary, profile: Dictionary) -> int:
+	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	var total := 0
+	for id in profile["upgrades"]:
+		if nodes.has(id) and is_star_node(nodes[id]):
+			total += int(nodes[id]["cost"])
+	return total
+
+
+## Stars the player can spend now.
+static func stars_available(content: Dictionary, profile: Dictionary) -> int:
+	return stars_earned(profile) - stars_spent(content, profile)
+
+
+## The stars a finished run pays on this visit: 0 unless it was won; a tutorial pays its
+## reward; any other level pays the pack's highest tier the Keep's health left is above
+## (a win alone is the first). It is the level's total; bank_run pays only what is new.
+static func stars_for_run(content: Dictionary, result: Dictionary) -> int:
+	var level: Dictionary = content.get("levels", {}).get(str(result.get("level", "")), {})
+	if result.get("outcome") != HoldfastRules.OUTCOME_WON or level.is_empty():
+		return 0
+	if _tutorial(level):
+		return int(level["reward"]["stars"])
+	var left := float(result.get("keep_health", 0)) / float(result["keep_health_max"]) if float(result.get("keep_health_max", 0)) > 0.0 else 0.0
+	var stars := 1
+	for tier in castle_rules(content).get("star_tiers", []):
+		if left > float(tier["above"]):
+			stars = maxi(stars, int(tier["stars"]))
+	return stars
+
+
+## The castle's pack entry ({} when the pack has none).
+static func castle_rules(content: Dictionary) -> Dictionary:
+	return content.get("castle_rules", {}).get(CASTLE, {})
+
+
+## Castle slots the player has bought, and Archer Post cards (what the Plan page lets them place).
+static func castle_slots(content: Dictionary, profile: Dictionary) -> int:
+	return _granted(content, profile, "slots")
+
+
+static func castle_cards(content: Dictionary, profile: Dictionary) -> int:
+	return mini(_granted(content, profile, "cards"), castle_slots(content, profile))
+
+
+static func _granted(content: Dictionary, profile: Dictionary, what: String) -> int:
+	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	var total := 0
+	for id in profile["upgrades"]:
+		total += int(nodes.get(id, {}).get("grants", {}).get(what, 0))
+	return total
+
+
+## The castle spots the player can use, in the pack's order (the first `slots` of the ring).
+static func owned_spots(content: Dictionary, profile: Dictionary) -> Array:
+	var spots: Array = castle_rules(content).get("spots", [])
+	return spots.slice(0, castle_slots(content, profile))
+
+
+## True when the player has what a first run needs: a slot and an Archer Post to put in it.
+static func has_a_tower(content: Dictionary, profile: Dictionary) -> bool:
+	return castle_cards(content, profile) >= 1
+
+
+## The castle spots a layout may use: owned spot ids, no repeats, at least one and no more
+## than the cards the player has.
+static func is_valid_layout(content: Dictionary, profile: Dictionary, layout: Variant) -> bool:
+	if not layout is Array or layout.is_empty() or layout.size() > castle_cards(content, profile):
 		return false
 	var known := []
-	for site in level["sites"]:
-		known.append(str(site["id"]))
+	for spot in owned_spots(content, profile):
+		known.append(str(spot["id"]))
 	var seen := []
 	for id in layout:
-		if not str(id) in known or str(id) in seen:
+		if not id is String or not id in known or id in seen:
 			return false
-		seen.append(str(id))
+		seen.append(id)
 	return true
 
 
-## The sites a run on `level` builds on: the player's saved choice, else the sites
-## nearest where the enemies come from. An empty array for a level with no sites.
+## The spots a run on `level` builds on: the player's saved choice if it is still valid, else
+## the spots nearest where the enemies come from. [] for a tutorial (it has its own post) and
+## for a profile with no Archer Post yet.
 static func layout_for(content: Dictionary, profile: Dictionary, level: String) -> Array:
 	var data: Dictionary = content.get("levels", {}).get(level, {})
-	if not data.has("sites"):
+	if data.is_empty() or _tutorial(data) or not has_a_tower(content, profile):
 		return []
 	var saved: Variant = profile.get("layouts", {}).get(level)
-	return saved.duplicate() if saved != null and is_valid_layout(data, saved) else HoldfastRules.best_layout(data)
+	if saved != null and is_valid_layout(content, profile, saved):
+		return saved.duplicate()
+	return HoldfastRules.best_sites(owned_spots(content, profile), data.get("spawn_arcs", []), castle_cards(content, profile))
 
 
 ## True when the player has a valid layout of their own saved for `level` (not just the suggested one).
 static func has_saved_layout(content: Dictionary, profile: Dictionary, level: String) -> bool:
 	var data: Dictionary = content.get("levels", {}).get(level, {})
-	return data.has("sites") and profile.get("layouts", {}).has(level) and is_valid_layout(data, profile["layouts"][level])
+	return not data.is_empty() and not _tutorial(data) and profile.get("layouts", {}).has(level) and is_valid_layout(content, profile, profile["layouts"][level])
 
 
 ## The profile with `level`'s layout set; an invalid layout changes nothing.
 static func set_layout(content: Dictionary, profile: Dictionary, level: String, layout: Array) -> Dictionary:
-	if not content.get("levels", {}).has(level) or not is_valid_layout(content["levels"][level], layout):
+	var data: Dictionary = content.get("levels", {}).get(level, {})
+	if data.is_empty() or _tutorial(data) or not is_valid_layout(content, profile, layout):
 		return profile
 	var out := profile.duplicate(true)
 	out["layouts"][level] = layout.duplicate()
@@ -258,7 +415,10 @@ static func why_not_buy(content: Dictionary, profile: Dictionary, id: String) ->
 	var closed := _closed_by(nodes, profile["upgrades"], id)
 	if closed != "":
 		return "Closed by %s" % str(nodes.get(closed, {}).get("name", closed))
-	if int(profile["gold"]) < int(nodes[id]["cost"]):
+	if is_star_node(nodes[id]):
+		if stars_available(content, profile) < int(nodes[id]["cost"]):
+			return "Not enough stars"
+	elif int(profile["gold"]) < int(nodes[id]["cost"]):
 		return "Not enough gold"
 	return ""
 
@@ -278,11 +438,13 @@ static func is_near(content: Dictionary, profile: Dictionary, id: String) -> boo
 	return true
 
 
-## The next upgrades to show: up to `limit` near nodes, cheapest first (ties by id).
+## The next gold upgrades to show: up to `limit` near nodes, cheapest first (ties by id).
+## Star nodes are left out: their price is not comparable with gold, and the map guides
+## the first of them.
 static func next_unlocks(content: Dictionary, profile: Dictionary, limit := 2) -> Array:
 	var near := []
 	for id in content.get("upgrade_nodes", {}):
-		if is_near(content, profile, id):
+		if is_near(content, profile, id) and not is_star_node(content["upgrade_nodes"][id]):
 			near.append(id)
 	var nodes: Dictionary = content["upgrade_nodes"] if content.has("upgrade_nodes") else {}
 	near.sort_custom(func(a: String, b: String) -> bool:
@@ -300,15 +462,17 @@ static func _closed_by(nodes: Dictionary, bought: Array, id: String) -> String:
 	return ""
 
 
-## The profile with every upgrade refunded at its pack price and the tree empty, so the
-## choices can be made again. Free: the gold is only moved back.
+## The profile with every upgrade refunded at its pack price (gold back for gold nodes; the
+## stars of a star node are free again the moment it goes) and the tree empty, so the choices
+## can be made again. Free: the gold is only moved back.
 static func respec(content: Dictionary, profile: Dictionary) -> Dictionary:
 	if profile["upgrades"].is_empty():
 		return profile
 	var out := profile.duplicate(true)
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	for id in profile["upgrades"]:
-		out["gold"] = int(out["gold"]) + int(nodes.get(id, {}).get("cost", 0))
+		if not is_star_node(nodes.get(id, {})):
+			out["gold"] = int(out["gold"]) + int(nodes.get(id, {}).get("cost", 0))
 	out["upgrades"] = []
 	return out
 
@@ -320,7 +484,8 @@ static func buy(content: Dictionary, profile: Dictionary, id: String) -> Diction
 	if reason != "":
 		return {"ok": false, "profile": profile, "reason": reason}
 	var out := profile.duplicate(true)
-	out["gold"] = int(out["gold"]) - int(content["upgrade_nodes"][id]["cost"])
+	if not is_star_node(content["upgrade_nodes"][id]):
+		out["gold"] = int(out["gold"]) - int(content["upgrade_nodes"][id]["cost"])
 	out["upgrades"].append(id)
 	return {"ok": true, "profile": out, "reason": ""}
 
@@ -344,14 +509,20 @@ static func select_pillar(content: Dictionary, profile: Dictionary, id: String) 
 
 
 ## Banks a finished run's result (HoldfastRules.result()): its gold, and on a win
-## the level as won and the next level in pack order as unlocked.
+## the level as won, the next level in pack order as unlocked, the stars it pays that the
+## level has not paid before and, on the first win of a tutorial, its reward gold.
 static func bank_run(content: Dictionary, profile: Dictionary, result: Dictionary) -> Dictionary:
 	var out := profile.duplicate(true)
 	out["gold"] = int(out["gold"]) + maxi(int(result.get("gold", 0)), 0)
 	out["runs"] = int(out["runs"]) + 1
 	var level := str(result.get("level", ""))
-	if result.get("outcome") == HoldfastRules.OUTCOME_WON and level != "" and not level in out["levels_won"]:
+	var first_win: bool = result.get("outcome") == HoldfastRules.OUTCOME_WON and level != "" and not level in out["levels_won"]
+	if first_win:
 		out["levels_won"].append(level)
+		out["gold"] = int(out["gold"]) + int(content.get("levels", {}).get(level, {}).get("reward", {}).get("gold", 0))
+	var stars := stars_for_run(content, result)
+	if stars > int(out["stars"].get(level, 0)):
+		out["stars"][level] = stars
 	# Gear a run found is kept whatever its outcome, and worn at once when its slot is free.
 	for id in result.get("gear_found", []):
 		var item: Dictionary = content.get("gear_items", {}).get(id, {})
