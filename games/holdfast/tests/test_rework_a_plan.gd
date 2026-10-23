@@ -145,3 +145,58 @@ func test_a_layout_is_saved_only_when_valid_so_quick_start_never_reuses_a_bad_on
 	profile["layouts"]["shingle_beach"] = ["west_gate", "east_gate"]
 	expect_true(HoldfastMeta.has_saved_layout(content, profile, "shingle_beach"))
 	expect_false(HoldfastMeta.has_saved_layout(content, profile, "tidewrack_cove"), "a level with no sites has none")
+
+
+# ------------------------------------------------------------------ F-056: a lifted post returns from anywhere
+
+## Moves the pointer like a hand: press on `from`, move a little, move to `to`, let go.
+func _drag(from: Vector2, to: Vector2) -> void:
+	var to_window := tree.root.get_final_transform()
+	var steps := [[from, true], [from + Vector2(12, 0), true], [to, true], [to, false]]
+	var last: Vector2 = from
+	for step in steps:
+		var at: Vector2 = to_window * step[0]
+		var move := InputEventMouseMotion.new()
+		move.position = at
+		move.relative = step[0] - last
+		last = step[0]
+		move.button_mask = MOUSE_BUTTON_MASK_LEFT if step[1] else 0
+		tree.root.push_input(move)
+		if step == steps[0] or step == steps[3]:
+			var click := InputEventMouseButton.new()
+			click.button_index = MOUSE_BUTTON_LEFT
+			click.pressed = step[1]
+			click.position = at
+			tree.root.push_input(click)
+		await tree.process_frame
+
+
+func test_a_post_let_go_on_a_card_a_button_the_map_or_empty_space_returns_to_the_tray() -> void:
+	var main := _main()
+	tree.root.size = Vector2i(1280, 720)
+	for screen in [main.home, main.journey, main.hero_page, main.keep_screen, main.summary]:
+		screen.visible = false
+	var plan: Control = main.planning
+	plan.visible = true
+	await tree.process_frame
+	for name in ["a card", "Auto-place", "Quick start", "Start level", "Journey map", "the map's empty space", "the backdrop"]:
+		plan.open("shingle_beach", ["west_gate"])
+		await tree.process_frame
+		var spots := {
+			"a card": plan._tray.get_child(1).get_global_rect().get_center(),
+			"Auto-place": plan.get_node("%AutoButton").get_global_rect().get_center(),
+			"Quick start": plan.get_node("%QuickButton").get_global_rect().get_center(),
+			"Start level": plan.get_node("%StartButton").get_global_rect().get_center(),
+			"Journey map": plan.get_node("%BackButton").get_global_rect().get_center(),
+			"the map's empty space": plan._map.get_global_rect().position + Vector2(40, 40),
+			"the backdrop": Vector2(640, 700),
+		}
+		var from: Vector2 = plan._site_buttons["west_gate"].get_global_rect().get_center()
+		await _drag(from, spots[name])
+		expect_eq(plan._chosen, [], "let go on %s: the post is back in the tray" % name)
+	# A free slot still takes it, which moves the post rather than returning it.
+	plan.open("shingle_beach", ["west_gate"])
+	await tree.process_frame
+	await _drag(plan._site_buttons["west_gate"].get_global_rect().get_center(), plan._site_buttons["east_gate"].get_global_rect().get_center())
+	expect_eq(plan._chosen, ["east_gate"], "a free slot moves it")
+	main.free()

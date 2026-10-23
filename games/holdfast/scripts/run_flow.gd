@@ -44,7 +44,7 @@ func _ready() -> void:
 	journey.hero_requested.connect(_show.bind(Screen.HERO))
 	journey.level_requested.connect(_level_picked)
 	hero_page.back_requested.connect(_show.bind(Screen.MAP))
-	hero_page.tree_requested.connect(_show.bind(Screen.TREE))
+	hero_page.tree_requested.connect(_open_tree_at.bind("Hero"))
 	hero_page.pillar_requested.connect(profile.select_pillar)
 	hero_page.gear_requested.connect(profile.toggle_gear)
 	keep_screen.back_requested.connect(_show.bind(Screen.MAP))
@@ -63,6 +63,12 @@ func _ready() -> void:
 func _new_game() -> void:
 	profile.new_game()
 	_show(Screen.MAP)
+
+
+## Opens the skill tree with the view on one of its tabs.
+func _open_tree_at(tab: String) -> void:
+	keep_screen.show_tab(tab)
+	_show(Screen.TREE)
 
 
 ## A tap on an open level of the journey map plans a run on it.

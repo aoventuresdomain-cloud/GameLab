@@ -44,7 +44,9 @@ func _ready() -> void:
 	_start.pressed.connect(func() -> void: start_requested.emit(_chosen.duplicate()))
 	_auto.pressed.connect(auto_place)
 	_quick.pressed.connect(func() -> void: start_requested.emit(_saved.duplicate()))
-	_side.set_drag_forwarding(Callable(), _side_can_drop, _side_drop)
+	# A lifted post goes back to the tray when let go anywhere that is not a free slot.
+	for target in [self, _map, _side, _auto, _quick, _start, _back]:
+		target.set_drag_forwarding(Callable(), _side_can_drop, _side_drop)
 	_map.draw.connect(_draw_map)
 	_map.resized.connect(_place_buttons)
 	visibility_changed.connect(_on_visibility_changed)
@@ -130,9 +132,9 @@ func _refresh_cards() -> void:
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.add_child(label)
 		card.modulate = Color.WHITE if in_hand else Color(1, 1, 1, 0.45)
+		card.set_drag_forwarding(_card_drag.bind(card) if in_hand else Callable(), _side_can_drop, _side_drop)
 		if in_hand:
 			card.mouse_default_cursor_shape = Control.CURSOR_DRAG
-			card.set_drag_forwarding(_card_drag.bind(card), Callable(), Callable())
 		_tray.add_child(card)
 
 
@@ -182,7 +184,7 @@ func _slot_drop(_at: Vector2, data: Variant, id: String) -> void:
 	_refresh()
 
 
-## Dropping a lifted post back on the card side returns its card.
+## Letting a lifted post go on the cards, the buttons, the map or anywhere else returns its card.
 func _side_can_drop(_at: Vector2, data: Variant) -> bool:
 	return data is Dictionary and str(data.get("kind", "")) == "tower" and str(data.get("from", "")) in _chosen
 

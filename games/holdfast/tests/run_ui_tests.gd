@@ -145,21 +145,38 @@ func _test_readable_layout() -> void:
 func _check_layout(screen: Control, window: Vector2i, scale: float, view: Rect2) -> void:
 	screen.visible = true
 	await process_frame
-	for control in _texts(screen):
+	var web: Control = screen.get_node_or_null("%Web")
+	for control in _texts(screen, web):
 		var name := "%dp %s/%s" % [window.y, screen.name, screen.get_path_to(control)]
 		var px := roundi(control.get_theme_font_size("font_size") * scale)
 		_check(px >= MIN_FONT_PX, "%s text is %dpx on screen" % [name, px])
 		_check(view.encloses(control.get_global_rect()), "%s fits on screen" % name)
 		_check(control.size.x + 0.5 >= control.get_minimum_size().x, "%s is not clipped" % name)
+	# A pan-and-zoom web shows one tab at a time: each tab, as the jump tab leaves it, must hold
+	# all its nodes inside the view at a readable size.
+	if web != null:
+		for tab in screen.tab_names():
+			screen.show_tab(tab)
+			await process_frame
+			for id in screen._node_buttons:
+				var node: Button = screen._node_buttons[id]
+				if screen._tab_rect(tab).encloses(Rect2(node.position, node.size)) and node.get_parent().visible:
+					var name := "%dp %s tab %s/%s" % [window.y, screen.name, tab, id]
+					var px := roundi(node.get_theme_font_size("font_size") * web.scale.x * scale)
+					_check(px >= MIN_FONT_PX, "%s text is %dpx on screen" % [name, px])
+					_check(screen.get_node("%View").get_global_rect().encloses(node.get_global_rect()), "%s fits in the view" % name)
+					_check(node.size.x + 0.5 >= node.get_minimum_size().x, "%s is not clipped" % name)
 	screen.visible = false
 
 
-func _texts(node: Node) -> Array:
+func _texts(node: Node, skip: Node = null) -> Array:
 	var out := []
 	for child in node.get_children():
+		if child == skip:
+			continue
 		if (child is Label or child is Button) and child.is_visible_in_tree():
 			out.append(child)
-		out.append_array(_texts(child))
+		out.append_array(_texts(child, skip))
 	return out
 
 
