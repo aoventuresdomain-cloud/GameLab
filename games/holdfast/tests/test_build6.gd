@@ -500,10 +500,10 @@ func test_the_summary_names_the_gear_a_run_found() -> void:
 	main.free()
 
 
-func test_the_keep_screen_lists_owned_gear_and_toggles_it() -> void:
+func test_the_hero_page_lists_owned_gear_and_toggles_it() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
-	var row: HBoxContainer = main.keep_screen.get_node("%GearRow")
+	var row: HBoxContainer = main.hero_page.get_node("%GearRow")
 	expect_eq(row.get_child_count(), 1, "just the hint while there is no gear")
 	expect_true((row.get_child(0) as Label).text.begins_with("Gear: none yet"))
 	profile.bank_run({"outcome": "won", "level": "shingle_beach", "gold": 0, "gear_found": ["driftwood_stave", "sea_glass_charm"]})
@@ -523,7 +523,7 @@ func test_the_run_flow_sends_the_worn_gear_and_the_owned_list_to_the_run() -> vo
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	profile.bank_run({"outcome": "lost", "level": "outpost", "gold": 0, "gear_found": ["tarred_bowstring"]})
-	main.keep_screen.play_requested.emit()
+	main.journey._buttons["outpost"].pressed.emit()
 	main.planning.get_node("%StartButton").pressed.emit()
 	expect_true(source.is_running())
 	expect_eq(source.gear, {"weapon": "tarred_bowstring"})

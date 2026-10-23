@@ -746,14 +746,14 @@ func _main(path: String = "") -> Node:
 	return main
 
 
-func test_the_app_opens_on_the_home_screen_and_new_game_leads_to_the_keep() -> void:
+func test_the_app_opens_on_the_home_screen_and_new_game_leads_to_the_journey_map() -> void:
 	var main := _main()
-	expect_true(main.home.visible and not main.keep_screen.visible)
+	expect_true(main.home.visible and not main.journey.visible)
 	expect_true(main.home.get_node("%ContinueButton").disabled, "nothing to continue yet")
 	main.home.get_node("%NewGameButton").pressed.emit()
-	expect_true(main.keep_screen.visible and not main.home.visible)
-	main.keep_screen.get_node("%BackButton").pressed.emit()
-	expect_true(main.home.visible, "Back returns home")
+	expect_true(main.journey.visible and not main.home.visible)
+	main.journey.get_node("%BackButton").pressed.emit()
+	expect_true(main.home.visible, "Main menu returns home")
 	main.free()
 
 
@@ -773,12 +773,12 @@ func test_continue_resumes_a_save_and_new_game_asks_twice_before_erasing_it() ->
 	expect_true(home.get_node("%NewGameButton").text.contains("Erase"), "and says what it will do")
 	expect_eq(profile.get_gold(), 400, "nothing erased yet")
 	home.get_node("%ContinueButton").pressed.emit()
-	expect_true(main.keep_screen.visible, "Continue goes to the keep")
+	expect_true(main.journey.visible, "Continue goes to the journey map")
 	expect_eq(profile.get_gold(), 400, "and keeps the progress")
-	main.keep_screen.get_node("%BackButton").pressed.emit()
+	main.journey.get_node("%BackButton").pressed.emit()
 	home.get_node("%NewGameButton").pressed.emit()
 	home.get_node("%NewGameButton").pressed.emit()
-	expect_true(main.keep_screen.visible, "the second click starts over")
+	expect_true(main.journey.visible, "the second click starts over")
 	expect_eq(profile.get_gold(), 0)
 	main.free()
 
@@ -812,19 +812,19 @@ func test_level_and_pillar_picks_start_the_next_run_with_the_bought_upgrades() -
 	var profile: HoldfastProfile = main.get_node("Profile")
 	profile.bank_run({"gold": 500, "outcome": "lost", "level": "outpost"})
 	var keep: Control = main.keep_screen
+	var map: Control = main.journey
 	keep.visible = true
-	expect_true(keep._level_buttons["shingle_beach"].disabled, "locked until the first level is won")
-	expect_true(keep._level_text("shingle_beach").contains("Win the previous level"), "and it says why")
+	expect_true(map._buttons["shingle_beach"].disabled, "locked until the first level is won")
+	expect_true(map._level_text("shingle_beach").contains("Win the previous level"), "and it says why")
 	profile.bank_run({"gold": 0, "outcome": "won", "level": "outpost"})
 	keep._node_buttons["keep_beam_1"].pressed.emit()             # 200
 	keep._node_buttons["post_timbers"].pressed.emit()            # 70
-	expect_false(keep._level_buttons["shingle_beach"].disabled, "open now")
-	keep._level_buttons["shingle_beach"].pressed.emit()
-	keep.select_pillar("dusk_mage")
-	keep.select_pillar("not_a_pillar")
-	expect_eq(keep.selected_pillar, "dusk_mage", "an unknown pillar changes nothing")
-	expect_eq(keep.selected_level, "shingle_beach")
-	keep.get_node("%PlayButton").pressed.emit()
+	expect_false(map._buttons["shingle_beach"].disabled, "open now")
+	main.hero_page.select_pillar("dusk_mage")
+	main.hero_page.select_pillar("not_a_pillar")
+	expect_eq(main.hero_page.selected_pillar, "dusk_mage", "an unknown pillar changes nothing")
+	map._buttons["shingle_beach"].pressed.emit()
+	expect_eq(profile.get_level(), "shingle_beach")
 	main.planning.get_node("%StartButton").pressed.emit()
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	var rules := source.get_rules()
@@ -835,7 +835,7 @@ func test_level_and_pillar_picks_start_the_next_run_with_the_bought_upgrades() -
 	main.free()
 
 
-func test_a_finished_run_banks_its_gold_and_the_summary_returns_to_the_keep() -> void:
+func test_a_finished_run_banks_its_gold_and_the_summary_returns_to_the_journey_map() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var source: HoldfastRunSource = main.get_node("RunSource")
@@ -849,9 +849,9 @@ func test_a_finished_run_banks_its_gold_and_the_summary_returns_to_the_keep() ->
 	expect_eq(profile.get_gold(), int(result["gold"]), "the run's gold is in the bank")
 	expect_eq(int(profile.data["runs"]), 1)
 	expect_true(main.summary.visible)
-	main.summary.get_node("%KeepButton").pressed.emit()
-	expect_true(main.keep_screen.visible and not main.summary.visible)
-	expect_eq(main.keep_screen.get_node("%GoldValue").text, Hud.format_number(int(result["gold"])), "and the keep shows it")
+	main.summary.get_node("%MapButton").pressed.emit()
+	expect_true(main.journey.visible and not main.summary.visible)
+	expect_eq(main.journey.get_node("%GoldValue").text, Hud.format_number(int(result["gold"])), "and the map shows it")
 	main.free()
 
 

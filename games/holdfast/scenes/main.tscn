@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/run_flow.gd" id="1_flow"]
 [ext_resource type="Script" path="res://scripts/holdfast_run_source.gd" id="2_run"]
@@ -11,12 +11,16 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="4_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/run_summary.tscn" id="5_summary"]
 [ext_resource type="PackedScene" path="res://scenes/ui/planning_screen.tscn" id="11_plan"]
+[ext_resource type="PackedScene" path="res://scenes/ui/journey_map.tscn" id="12_map"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hero_page.tscn" id="13_hero"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_flow")
 source_path = NodePath("RunSource")
 profile_path = NodePath("Profile")
 home_path = NodePath("UI/HomeScreen")
+journey_path = NodePath("UI/JourneyMap")
+hero_page_path = NodePath("UI/HeroPage")
 keep_screen_path = NodePath("UI/KeepScreen")
 hud_path = NodePath("UI/Hud")
 summary_path = NodePath("UI/RunSummary")
@@ -40,6 +44,10 @@ layer = 10
 [node name="RunSummary" parent="UI" instance=ExtResource("5_summary")]
 
 [node name="PlanningScreen" parent="UI" instance=ExtResource("11_plan")]
+
+[node name="JourneyMap" parent="UI" instance=ExtResource("12_map")]
+
+[node name="HeroPage" parent="UI" instance=ExtResource("13_hero")]
 
 [node name="KeepScreen" parent="UI" instance=ExtResource("3_keep")]
 

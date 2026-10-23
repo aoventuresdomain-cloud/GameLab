@@ -47,15 +47,15 @@ func _check(ok: bool, what: String) -> void:
 func _test_flow_with_mouse() -> void:
 	print("flow: start -> run -> summary -> play again, mouse only")
 	var home: Control = _main.home
-	var start: Control = _main.keep_screen
+	var start: Control = _main.journey
 	var hud: Control = _main.hud
 	var summary: Control = _main.summary
 	_check(home.visible and not start.visible and not hud.visible and not summary.visible, "opens on the home screen")
 	await _click(home.get_node("%NewGameButton"))
-	_check(start.visible and not home.visible, "New game opens the keep screen")
+	_check(start.visible and not home.visible, "New game opens the journey map")
 
-	await _click(start.get_node("%PlayButton"))
-	_check(_main.planning.visible and not start.visible, "Play opens the planning screen (the first level has Archer Post sites)")
+	await _click(start._buttons["outpost"])
+	_check(_main.planning.visible and not start.visible, "Tapping the first level opens the planning screen (it has Archer Post sites)")
 	await _click(_main.planning.get_node("%StartButton"))
 	_check(hud.visible and not start.visible, "Play shows the HUD")
 	_check(_source.is_running(), "Play starts a run")
@@ -130,7 +130,7 @@ func _test_readable_layout() -> void:
 		_main.planning.open("shingle_beach", ["west_gate", "east_gate"])
 		hud.get_node("%PostsNote").text = "Posts: North Gate, South Gate"
 		hud.get_node("%PostsNote").visible = true
-		for screen in [_main.home, _main.keep_screen, hud, _main.summary, _main.planning]:
+		for screen in [_main.home, _main.journey, _main.hero_page, _main.keep_screen, hud, _main.summary, _main.planning]:
 			await _check_layout(screen, window, scale, view)
 		hud.get_node("%PostsNote").text = "Fog Warden shrouded: use your special"
 		await _check_layout(hud, window, scale, view)
