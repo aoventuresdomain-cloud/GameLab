@@ -269,7 +269,7 @@
 
 ### HF-M2-16 Hero gear and the first boss
 - **Owner:** Gameplay Engineer
-- **Status:** Go (CEO 2026-10-22 19:35), Build 6 of 8, third in the run 4b + 5 + 6. Recruits are parked, so the "squad" lines below mean the Hero plus towers for now
+- **Status:** Go (CEO 2026-10-22 19:35), Build 6 of 8, third in the run 4b + 5 + 6. Recruits are parked, so the "squad" lines below mean the Hero plus towers for now Merged in #82 (QA clear on `90acceb`, no MUST FIX). Waiting on the CEO's playtest with 4b and Build 5.
 - **QA:** full
 - **Depends on:** HF-M2-14, HF-M2-15, HF-M2-02
 - **Done when:**
@@ -548,6 +548,9 @@
 | F-047 | HF-M2-26 | FOLLOW-UP from QA (#77): `buy()` in the rules accepts another pillar's Hero node (the UI hides it) | Minor | Gameplay Engineer | Open, Build 6 if tiny |
 | F-048 | HF-M2-26 | FOLLOW-UP from QA (#77): only the first post's repair is tested (mutant survived) | Minor | Gameplay Engineer | Open, Build 6 if tiny |
 | F-049 | HF-M2-26 | FOLLOW-UP from QA (#77): Shingle Beach after the retune is hard for the Dusk Mage (53% to 37%) and one post only is a trap (Dusk 1 of 20) | Minor | Gameplay Engineer | Open, Build 7 pacing |
+| F-050 | HF-M2-16 | FOLLOW-UP from QA (#82): null `levels_won`, `unlocked` or `gear.owned` in a save still throws in `from_save` and leaves the profile data empty (the guard covers only gold and upgrades; use `_list` for all list reads). Same family as F-046 | Minor | Gameplay Engineer | Open, next Gameplay PR (data-integrity) |
+| F-051 | HF-M2-16 | FOLLOW-UP from QA (#82): after the `kit_gold` pack change the fork test reaches only the first fork node at Old Pier 5000 and none elsewhere; the Flare Archer wins 40 of 40 on every kit level and `min_hard_runs` is 0, so no loss check exists on kit levels | Minor | Gameplay Engineer | Open, goes with HF-M2-28 (recalibrate with the levels) |
+| F-052 | HF-M2-16 | FOLLOW-UP from QA (#82): not checked, the Hero-only bot against the Hero-plus-squad line | Minor | Head of QA | Open, Gate 2 round |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -583,6 +586,8 @@
 | 2026-10-22 | `games/holdfast/tests/test_slice2.gd` (four Eclipse and Dash-Strike tests) | Setup-only in #76: each builds with the old Eclipse or Dash fixture; no assertion changed | Fixture set-up only | Head of Engineering |
 | 2026-10-22 | Progression hash | Re-pinned in #77: `3346f51d...048ec` to `bda28bd4...09fa7` (HF-M2-26 Archer Post tree, planning screen and the shingle_beach retune) | Tower stats and layouts change run outcomes | Head of Engineering |
 | 2026-10-22 | `test_build3.gd` items 1-12 and `test_holdfast_rules.gd` item 13, plus planning Start-click insertions in `run_ui_tests.gd`, `test_build3.gd` and `test_build4b.gd` | Approved by the Head of Engineering for #77: the three Archer Post chains are replaced by the 11-node section, tower stats are keyed by tower, the v1 migration refunds removed nodes and Play opens the planning screen. Old and new for each are in the #77 body; no assertion was loosened | Intended design change | Head of Engineering |
+| 2026-10-23 | Progression hash | Re-pinned in #82: `bda28bd4...09fa7` to `d71d47e4...be7d` (HF-M2-16 new monsters, gear, boss and the levels 2-5 retune; 24 runs, 5.1 s) | New monsters and the retune change run outcomes | Head of Engineering |
+| 2026-10-23 | `games/holdfast/tests/test_build3.gd::test_a_new_profile_starts_empty_on_the_first_level_and_pillar` | #82: the expected profile gains `"gear": {"owned": [], "equipped": {"weapon": "", "charm": ""}}`, as `"layouts"` did in #77. One UI layout check added in `run_ui_tests.gd`; nothing existing touched or loosened | New save field | Head of Engineering |
 | 2026-10-22 | `games/holdfast/tests/test_hero.gd` (four `_fan` fixture setups) | Setup-only change in #74 so the fixtures fit the burst fire rate; no assertion changed | Fixture set-up only | Head of Engineering |
 
 ## Advisor views
@@ -639,3 +644,5 @@
 - 2026-10-22 22:41: CEO GO to add Build 7 of 8 to the run. Reversed at 23:02 (below).
 - 2026-10-22 23:02: CEO: reverse the Build 7 add. The run is 4b + 5 + 6 again. The team stops after Build 6 and waits for the CEO to test and confirm before Build 7 (pacing) starts. The Build 7 board items stay amended and parked. Hero buffs vs pack-only tuning is an open question for the Advisor, asked at 23:01, to be answered when Build 7 starts.
 - 2026-10-22 23:10: CEO: focus on the Flare Archer and getting the mechanics complete. Balancing the other pillars and recalibrating level difficulty across the board is future work (backlog HF-M2-28, with the Advisor's findings). Build 6 gets only the tuning the Archer needs to be playable. Build 7 stays parked and, when re-scoped, is proposed mechanics-first and Archer-only.
+
+- 2026-10-23 00:30: Run complete: 4b (#74, #76), Build 5 (#77) and Build 6 (#82) are merged, QA clear on each. The team stops and waits for the CEO to test and confirm. Build 7 is parked (notes in `studio/handoffs/2026-10-23-build7-resume.md`).
