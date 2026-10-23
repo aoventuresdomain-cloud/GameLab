@@ -409,7 +409,7 @@
 
 ### HF-M2-29 Menus, journey map and Plan page (navigation rework, part 1)
 - **Owner:** Gameplay Engineer (the UI Engineer thread is closed; the Gameplay Engineer built the current screens)
-- **Status:** In progress. CEO go 2026-10-23 01:04 on Part A and Part B, mockups approved as a guide
+- **Status:** Merged (#88, #91), QA clear, waiting on the CEO's playtest. Walls, synergies and Recruits stay out
 - **QA:** full (screens and the run flow change; tests that click through the flow change, each with my OK first)
 - **Done when:**
   - [ ] A main menu with Continue, New game, Settings and Quit opens the journey map. The home and keep screens no longer exist as two screens that do the same job.
@@ -420,7 +420,7 @@
 
 ### HF-M2-30 Skill tree as one zoomable web with jump tabs (navigation rework, part 2)
 - **Owner:** Gameplay Engineer (the UI Engineer thread is closed; the Gameplay Engineer built the current screens)
-- **Status:** In progress. CEO go 2026-10-23 01:04 on Part A and Part B, mockups approved as a guide
+- **Status:** Merged (#92), QA clear, waiting on the CEO's playtest. Walls, synergies and Recruits stay out
 - **QA:** full
 - **Depends on:** HF-M2-29
 - **Done when:**
@@ -576,7 +576,7 @@
 | F-053 | HF-M2-29 | MUST FIX from the Gameplay Engineer (#88): the test runner does not report FAIL when a test dies with a script error after an earlier expectation passed (three `test_build4b.gd` tests errored on a missing node and still showed ok) | Major | Gameplay Engineer | Closed in #91 (QA checked) |
 | F-054 | HF-M2-29 | FOLLOW-UP from QA (#88, fadb96d): the drawn Hero figure on the journey map is not tappable, only the "Hero: <path>" button below it (the Done when line says a tappable figure) | Minor | Gameplay Engineer | Closed in #91 (QA checked) |
 | F-055 | HF-M2-29 | FOLLOW-UP from QA (#88, fadb96d), cosmetic: at 1080p the level 1 name label touches the glow ring and the Tidewrack Cove label sits on the path | Minor | Gameplay Engineer | Closed in #91 (QA checked) |
-| F-056 | HF-M2-29 | FOLLOW-UP from QA (#91, 1eea004): returning a lifted post to the tray only works when dropped on the "Towers" caption or thin gaps; dropping on a card, empty space or the buttons silently does nothing | Minor | Gameplay Engineer | Fixed in #92 head 2ef6dff, QA to confirm |
+| F-056 | HF-M2-29 | FOLLOW-UP from QA (#91, 1eea004): returning a lifted post to the tray only works when dropped on the "Towers" caption or thin gaps; dropping on a card, empty space or the buttons silently does nothing | Minor | Gameplay Engineer | Mostly fixed in #92 (2ef6dff). Gap left: the empty spacer between the last card and Auto-place still refuses a drop. Open FOLLOW-UP |
 | F-057 | HF-M2-30 | FOLLOW-UP from QA (#92, 134c2f2): one bad pack section produces 128 follow-on "no upgrade_sections entry" errors after the real one | Minor | Gameplay Engineer | Open, Gate 2 round |
 | F-058 | HF-M2-30 | FOLLOW-UP from QA (#92, 134c2f2): the "Hero" tab name is hard-coded in `run_flow.gd` but tab names are pack data, so a rename silently breaks the Hero link jump | Minor | Gameplay Engineer | Open, Gate 2 round |
 | F-059 | HF-M2-30 | FOLLOW-UP from QA (#92, 134c2f2): the layout test no longer size- or clip-checks section heading labels (nodes are checked as strictly as before) | Minor | Gameplay Engineer | Open, Gate 2 round |
@@ -621,6 +621,7 @@
 | 2026-10-22 | `games/holdfast/tests/test_hero.gd` (four `_fan` fixture setups) | Setup-only change in #74 so the fixtures fit the burst fire rate; no assertion changed | Fixture set-up only | Head of Engineering |
 | 2026-10-23 | `test_build3.gd` (4 tests), `test_build4b.gd` (3), `test_build5.gd` (4), `test_build6.gd` (2), `test_slice2.gd` (1), `run_ui_tests.gd` (flow and layout list) | Approved by the Head of Engineering for #88: repointed at the journey map, Hero page and Main menu/Journey map buttons (the keep screen is split); level tap replaces the Play button; pillar and gear checks move to the Hero page. Old and new for each are in the #88 body; no assertion loosened or removed | HF-M2-29 (CEO change). Intent kept | Head of Engineering |
 | 2026-10-23 | `test_build5.gd::test_play_opens_the_planning_screen_and_start_runs_on_the_chosen_site`; `run_ui_tests.gd`; `kit/testing/run_tests.gd` (F-053) | Approved for #91: the first-visit test expects 'Posts: 0 of 1' with Start disabled, then places west_gate and north_gate (limit behaviour unchanged); the first-run UI flow presses Auto-place before Start; the runner now reports a script error in a test as FAIL, with a kit test that runs it on a fixture. QA checked eight erroring scratch tests all fail, and the stricter runner exposed no other erroring test. No assertion loosened | HF-M2-29 Plan page (CEO change) and F-053 | Head of Engineering |
+| 2026-10-23 | `games/holdfast/tests/run_ui_tests.gd::_check_layout` (and `_texts` gains an optional skip argument) | Approved for #92: the general layout loop skips the web's panned nodes and a per-tab check, after jumping to each tab, asserts every node of the tab is in view, not clipped and at least 20 px on screen including zoom. Nodes are checked as strictly as before; section heading labels are no longer size- or clip-checked (F-059). No other existing test changed | HF-M2-30 tree web (CEO change). Intent kept | Head of Engineering |
 
 ## Advisor views
 
