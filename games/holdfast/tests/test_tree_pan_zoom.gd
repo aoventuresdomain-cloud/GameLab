@@ -168,3 +168,26 @@ func test_a_pinch_zooms_and_a_two_finger_scroll_pans() -> void:
 	page._on_view_input(scroll)
 	expect_eq(web.position, position - Vector2(40, 20), "the tree follows the fingers")
 	main.free()
+
+
+func _fade_of(page: Control, section: String) -> float:
+	return page._section_columns[section].modulate.a
+
+
+func test_the_sections_of_other_tabs_fade_until_the_player_pans_or_zooms() -> void:
+	var made := await _tree_page()
+	var main: Node = made[0]
+	var page: Control = made[1]
+	page.show_tab("Castle")
+	expect_eq(_fade_of(page, "castle"), 1.0, "the shown tab is clear")
+	expect_near(_fade_of(page, "archer_post"), page.OTHER_TAB_ALPHA, 0.001, "the rest are faded")
+	_motion(page, Vector2.ZERO)
+	expect_near(_fade_of(page, "archer_post"), page.OTHER_TAB_ALPHA, 0.001, "a mouse move alone changes nothing")
+	page._panning = true
+	_motion(page, Vector2(10, 0))
+	expect_eq(_fade_of(page, "archer_post"), 1.0, "panning brings them back")
+	page.show_tab("Castle")
+	expect_near(_fade_of(page, "archer_post"), page.OTHER_TAB_ALPHA, 0.001, "choosing a tab fades them again")
+	_wheel(page, true, Vector2(300, 220))
+	expect_eq(_fade_of(page, "archer_post"), 1.0, "so does zooming")
+	main.free()

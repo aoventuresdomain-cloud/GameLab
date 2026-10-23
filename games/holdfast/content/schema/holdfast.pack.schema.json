@@ -467,6 +467,10 @@
             "stars"
           ]
         },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
         "grants": {
           "type": "object",
           "additionalProperties": false,

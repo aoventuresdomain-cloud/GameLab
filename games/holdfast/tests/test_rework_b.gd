@@ -3,7 +3,7 @@ extends KitTestCase
 ## with jump tabs along the top. Node positions and the tabs come from the packs.
 
 const Main := preload("res://scenes/main.tscn")
-const NODE_COUNT := 45
+const NODE_COUNT := 51
 
 
 func _tree_page() -> Array:
