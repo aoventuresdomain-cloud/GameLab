@@ -20,7 +20,6 @@
 - **Your Hero** (the twist, part one): one player-named Hero with 3 pillars (Flare Archer, Dusk Mage, Tideblade), each of about 10 skills and unlocking a different active ability, plus 2 gear slots earned from bosses. Gear is for the Hero only. Paths can be mixed and respecced between runs.
 - **Recruits** (the twist, part two): hire as many as you like from a recruitment board with gold. Each has a generated name, a class (e.g. Warden, Lookout, Alchemist, Engineer) and a trait, levels up, has a small skill tree, and can be renamed. Deploy slots are limited, so choosing your squad is the strategy.
 - **Blessings:** about 20, unlocked through play, so runs feel different.
-- **Offline earnings:** your keep earns gold while the game is closed, **capped at 8 hours**, so playing always beats waiting.
 - **Endless mode** after the main game: scaling waves for upgrade-tree, Hero and Recruit completionists. Hard mode and difficulty modifiers arrive with it (M5), not before, so tester results stay comparable.
 
 **Pacing targets** (checked by the simulator): first upgrade within 60 seconds, a new unlock at least every 3-5 minutes in the first hour, no grind wall longer than 10 minutes of repeated runs, main game finished in 4-6 hours, and every Hero path able to clear the main game.

@@ -3,7 +3,7 @@
 *Owned by the Head of Engineering. One section per game plus the Kit. Every item has one owner and 2-5 checkable Done when lines before anyone works on it; review and QA go against those lines. Only the Head of Engineering changes an item's status and merges (once CI is green); engineers never merge their own work. Every finding goes in **Findings** below with an owner before anyone fixes it, graded MUST FIX (blocks merge) or FOLLOW-UP (logged, doesn't block), as in `studio/playbook/shipping.md`. Dates come only from `studio/estimates.md`.*
 
 **Statuses:** Ready · In progress · In review · In QA · Done · Blocked
-**QA depth:** `full` (core logic: kit, save and offline earnings, Steam, release pipeline) · `screens` (interface only: sanity plus a walk of changed screens) · `sanity`. Unlabelled means full.
+**QA depth:** `full` (core logic: kit, save data, Steam, release pipeline) · `screens` (interface only: sanity plus a walk of changed screens) · `sanity`. Unlabelled means full.
 
 **Current focus:** Holdfast Gate 1 passed (CEO, 2026-10-06): stay on Godot. M2 (fun slice → Gate 2) started on the CEO's go, 2026-10-21. Its items are below, all Ready; Sonnet only, lean builds.
 
@@ -684,3 +684,4 @@
 - 2026-10-23 00:56: CEO approved the Advisor's navigation structure (main menu, journey map hub, one zoomable tree page with jump tabs, Plan page before each level) and added that the Plan page is tower cards dragged into slots around the castle, with walls maybe later (a new piece type, needs the CEO's go). HF-M2-29 (menu, map, Plan page) and HF-M2-30 (tree web) are finalised as proposed items; nothing starts until the CEO says go.
 - 2026-10-23 00:57: CEO idea: show the Hero (and later Recruits) on the journey map, tappable for gear selection. Advisor agreed; folded into HF-M2-29 as a Hero figure and Hero page (existing pillar picker and Gear row move there, no new gear, Recruits later). No separate item. Nothing starts until the CEO says go.
 - 2026-10-23 01:04: CEO go on HF-M2-29 and HF-M2-30 (build A then B, one combined handoff, then stop). Mockups approved as a guide to iterate later. Retry goes via the Plan page with the last layout kept. Still out: walls, Hero-tower synergies, Recruits, Build 7.
+- 2026-10-23 08:32: CEO decision: no offline earnings in the game (it was an M5 line with an 8-hour cap in the plan). Removed from the plan, the QA-by-risk rules and this board; nothing in the code or save existed only for it, so no code change. Recruits stay parked, to be improved later.
