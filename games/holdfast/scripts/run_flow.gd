@@ -48,6 +48,8 @@ func _ready() -> void:
 	hero_page.tree_requested.connect(_open_tree_at.bind("Hero"))
 	hero_page.pillar_requested.connect(profile.select_pillar)
 	hero_page.gear_requested.connect(profile.toggle_gear)
+	hero_page.gear_wear_requested.connect(profile.wear_gear)
+	hero_page.gear_off_requested.connect(profile.take_off_gear)
 	keep_screen.back_requested.connect(_show.bind(Screen.MAP))
 	keep_screen.buy_requested.connect(profile.buy)
 	keep_screen.respec_requested.connect(_respec_requested)

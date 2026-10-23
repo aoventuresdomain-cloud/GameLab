@@ -124,9 +124,10 @@ func test_the_hero_page_shows_the_slots_and_links_to_the_heros_tree_section() ->
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var page: Control = main.hero_page
-	expect_eq(page.get_node("%Slots").text, "Weapon: empty   Charm: empty")
+	var weapon: Label = page.get_node("%SlotColumn").get_child(0).get_node("Row/Item")
+	expect_eq(weapon.text, "empty")
 	profile.bank_run({"outcome": "won", "level": "shingle_beach", "gold": 0, "gear_found": ["tarred_bowstring"]})
-	expect_eq(page.get_node("%Slots").text, "Weapon: Tarred bowstring   Charm: empty")
+	expect_eq(weapon.text, "Tarred bowstring")
 	expect_eq(page.get_node("%TreeButton").text, "Open the Flare Archer section of the skill tree")
 	page.visible = true
 	page.get_node("%TreeButton").pressed.emit()
