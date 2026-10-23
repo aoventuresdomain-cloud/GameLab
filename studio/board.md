@@ -408,8 +408,8 @@
 - **Notes:** Re-scoped from Build 7 (parked). When Build 7 is proposed again it is mechanics-first and Archer-only, not a cross-pillar balance pass.
 
 ### HF-M2-29 Menus, journey map and Plan page (navigation rework, part 1)
-- **Owner:** UI Engineer (the Gameplay Engineer changes the profile and rules only where the screens need it, on this item's PRs)
-- **Status:** Proposed. Structure approved by the CEO 2026-10-23 (the Advisor's recommendation: main menu, journey map hub, tree page, Plan page; the CEO adds tower cards dragged into slots around the castle). No work until the CEO says go. Archer-only and mechanics-first stand
+- **Owner:** Gameplay Engineer (the UI Engineer thread is closed; the Gameplay Engineer built the current screens)
+- **Status:** In progress. CEO go 2026-10-23 01:04 on Part A and Part B, mockups approved as a guide
 - **QA:** full (screens and the run flow change; tests that click through the flow change, each with my OK first)
 - **Done when:**
   - [ ] A main menu with Continue, New game, Settings and Quit opens the journey map. The home and keep screens no longer exist as two screens that do the same job.
@@ -419,8 +419,8 @@
   - [ ] The result screen offers Next level (to the Plan page) and the journey map, and the skill tree beside it. Old saves load unchanged, with layouts and gear kept. Walls and other new piece types are not built (they need the CEO's go); the slot and card data leave room for them.
 
 ### HF-M2-30 Skill tree as one zoomable web with jump tabs (navigation rework, part 2)
-- **Owner:** UI Engineer (the Gameplay Engineer owns the pack data for node positions)
-- **Status:** Proposed, after HF-M2-29. Structure approved by the CEO 2026-10-23. No work until the CEO says go
+- **Owner:** Gameplay Engineer (the UI Engineer thread is closed; the Gameplay Engineer built the current screens)
+- **Status:** In progress. CEO go 2026-10-23 01:04 on Part A and Part B, mockups approved as a guide
 - **QA:** full
 - **Depends on:** HF-M2-29
 - **Done when:**
@@ -672,3 +672,4 @@
 - 2026-10-23 00:45: CEO feedback after testing 4b, 5 and 6: the upgrade screen and home screen are the same thing; rework into separate pages from a main menu, with levels as a path map (tap an available level to load it), the skill tree on its own page with tabs (tower, Hero, recruit) or one large Incrempire-style tree, and placement on its own page instead of inside the level. The long-term aim is an Incrempire-like game with the CEO's own twist (Hero and tower synergy, other ideas). Advisor asked first for the structure; board item HF-M2-29 proposed. Build 7 stays parked and this likely replaces it as the next slice (CEO decides).
 - 2026-10-23 00:56: CEO approved the Advisor's navigation structure (main menu, journey map hub, one zoomable tree page with jump tabs, Plan page before each level) and added that the Plan page is tower cards dragged into slots around the castle, with walls maybe later (a new piece type, needs the CEO's go). HF-M2-29 (menu, map, Plan page) and HF-M2-30 (tree web) are finalised as proposed items; nothing starts until the CEO says go.
 - 2026-10-23 00:57: CEO idea: show the Hero (and later Recruits) on the journey map, tappable for gear selection. Advisor agreed; folded into HF-M2-29 as a Hero figure and Hero page (existing pillar picker and Gear row move there, no new gear, Recruits later). No separate item. Nothing starts until the CEO says go.
+- 2026-10-23 01:04: CEO go on HF-M2-29 and HF-M2-30 (build A then B, one combined handoff, then stop). Mockups approved as a guide to iterate later. Retry goes via the Plan page with the last layout kept. Still out: walls, Hero-tower synergies, Recruits, Build 7.
