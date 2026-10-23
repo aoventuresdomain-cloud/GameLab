@@ -330,6 +330,18 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {}
+        },
+        "splash_radius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unlit_bonus": {
+          "type": "number",
+          "minimum": 0
+        },
+        "colour": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
         }
       }
     },
@@ -487,8 +499,16 @@
             "cards": {
               "type": "integer",
               "minimum": 0
+            },
+            "mage_cards": {
+              "type": "integer",
+              "minimum": 0
             }
           }
+        },
+        "needs_nodes": {
+          "type": "integer",
+          "minimum": 1
         }
       }
     },

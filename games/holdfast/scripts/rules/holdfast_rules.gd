@@ -227,6 +227,14 @@ class Attacker:
 	## True when any link above is on, which is when the tower's hash carries their state.
 	var links := false
 	var pierce_width := 0.0
+	## A Mage Post's blast: every enemy within `splash_radius` of the target takes the shot, and
+	## `unlit_bonus` more outside the posts' light. Dusk Eclipse: a Hero's Eclipse centred within
+	## `eclipse_radius` of this post is `eclipse_widen` wider. `colour` is for drawing.
+	var splash_radius := 0.0
+	var unlit_bonus := 0.0
+	var eclipse_widen := 0.0
+	var eclipse_radius := 0.0
+	var colour := ""
 
 
 # Level, after upgrades.
@@ -290,6 +298,8 @@ var hero_rapid_ready_in := 0.0
 ## An Eclipse zone: seconds left, and where. Enemies in it are pulled in and slowed; it collapses at the end.
 var zone_left := 0.0
 var zone_position := Vector2.ZERO
+## How much wider than its pack size the zone is (a Mage Post's Dusk Eclipse), fixed at the cast.
+var zone_scale := 1.0
 ## A chain of dashes: seconds left in all of it and in the current dash, its direction, and who it has hit.
 var hero_dash_left := 0.0
 var hero_dash_in := 0.0
@@ -486,7 +496,7 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	_tie_order.append("hero")
 
 	spawn_arcs = level.get("spawn_arcs", [])
-	var chosen := _chosen_sites(level, config.get("layout", null))
+	var chosen := _chosen_sites(level, layout_spots(config.get("layout", null)), layout_towers(config.get("layout", null)))
 	if chosen.is_empty():
 		_fail("layout %s is not a valid set of sites for %s" % [config.get("layout"), level_id])
 		return
@@ -499,7 +509,7 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		towers.append(built)
 		_defenders.append(built)
 	tower = towers[0]
-	if _uses_layout(level, config.get("layout", null)):
+	if _uses_layout(level, layout_spots(config.get("layout", null))):
 		for at in chosen:
 			layout_ids.append(str(at["id"]))
 	for at in placements:
@@ -561,6 +571,39 @@ func _uses_layout(level: Dictionary, layout: Variant) -> bool:
 	return not tutorial and (_names_castle_spots(layout) or level.has("sites"))
 
 
+## A layout entry is a spot id ("spot_3", an Archer Post) or a tower kind and a spot id
+## ("mage:spot_3", a Mage Post). These give a layout's spot ids, and the tower id of each
+## spot that is not an Archer's.
+const LAYOUT_TOWERS := {"mage": "mage_post"}
+
+
+static func layout_spots(layout: Variant) -> Variant:
+	if not layout is Array:
+		return layout
+	return layout.map(func(entry: Variant) -> Variant: return layout_spot(entry))
+
+
+static func layout_spot(entry: Variant) -> Variant:
+	if not entry is String or not ":" in entry:
+		return entry
+	return entry.get_slice(":", 1)
+
+
+static func layout_towers(layout: Variant) -> Dictionary:
+	var kinds := {}
+	if layout is Array:
+		for entry in layout:
+			if entry is String and ":" in entry and LAYOUT_TOWERS.has(entry.get_slice(":", 0)):
+				kinds[entry.get_slice(":", 1)] = LAYOUT_TOWERS[entry.get_slice(":", 0)]
+	return kinds
+
+
+## The layout entry for a post of `tower_id` on `spot`.
+static func layout_entry(spot: String, tower_id: String) -> String:
+	var prefix: Variant = LAYOUT_TOWERS.find_key(tower_id)
+	return spot if prefix == null else "%s:%s" % [prefix, spot]
+
+
 func _names_castle_spots(layout: Variant) -> bool:
 	return layout is Array and not layout.is_empty() and _castle_spots.has(str(layout[0]))
 
@@ -570,11 +613,23 @@ func _names_castle_spots(layout: Variant) -> bool:
 ## level with `sites` takes the layout (site ids, at most `max_posts`, no repeats; the first
 ## site when none is given) and a level without keeps its one placed tower. Empty when the
 ## layout is bad.
-func _chosen_sites(level: Dictionary, layout: Variant) -> Array:
+func _chosen_sites(level: Dictionary, layout: Variant, kinds := {}) -> Array:
 	if tutorial:
 		return [level["tower"]]
 	if _names_castle_spots(layout):
-		return _pick(layout, _castle_spots, _castle_spots.size())
+		# Archers first, so the first post (the tower's own key) is an Archer when there is one.
+		var picked := _pick(layout, _castle_spots, _castle_spots.size())
+		var archers := []
+		var mages := []
+		for at in picked:
+			var tower_id: String = kinds.get(str(at["id"]), "")
+			if tower_id == "":
+				archers.append(at)
+			else:
+				var mage: Dictionary = at.duplicate()
+				mage["tower"] = tower_id
+				mages.append(mage)
+		return archers + mages
 	if not level.has("sites"):
 		return [level["tower"]]
 	var by_id := {}
@@ -639,6 +694,9 @@ func _build_tower(at: Dictionary, tower_id: String, data: Dictionary, stats: Dic
 	var a := _attacker("tower", at, data, _apply(stats, key + "damage", float(data["damage"])), _add(stats, key + "health"))
 	a.tower_id = tower_id
 	a.pierce_width = float(data.get("pierce_width", 0.0))
+	a.splash_radius = float(data.get("splash_radius", 0.0))
+	a.unlit_bonus = float(data.get("unlit_bonus", 0.0))
+	a.colour = str(data.get("colour", ""))
 	a.attack_range = _apply(stats, key + "range", a.attack_range)
 	a.cooldown = _apply(stats, key + "cooldown", a.cooldown)
 	a.extra_targets = int(_add(stats, key + "extra_targets"))
@@ -650,7 +708,7 @@ func _build_tower(at: Dictionary, tower_id: String, data: Dictionary, stats: Dic
 	a.storm_share = _add(stats, key + "storm_share")
 	a.storm_in = a.storm_every
 	a.repair = _add(stats, key + "repair")
-	for field in ["hero_haste", "hero_radius", "crossfire", "burn_dps", "burn_seconds", "rally_repair", "rally_shield", "rally_radius", "rally_seconds", "last_light", "last_light_radius", "watch_range", "watch_radius"]:
+	for field in ["hero_haste", "hero_radius", "crossfire", "burn_dps", "burn_seconds", "rally_repair", "rally_shield", "rally_radius", "rally_seconds", "last_light", "last_light_radius", "watch_range", "watch_radius", "eclipse_widen", "eclipse_radius"]:
 		a.set(field, _add(stats, key + field))
 	a.links = a.hero_haste > 0.0 or a.crossfire > 0.0 or a.burn_dps > 0.0 or a.rally_radius > 0.0 or a.last_light > 0.0 or a.watch_range > 0.0
 	return a
@@ -1056,6 +1114,7 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 		elif float(hero_ability.get("zone_seconds", 0.0)) > 0.0:
 			zone_left = float(hero_ability["zone_seconds"])
 			zone_position = hero_position if target == null else target.position
+			zone_scale = _eclipse_scale(zone_position)
 		else:
 			_use(hero_ability, target)
 	if hero_rapid_left > 0.0 and hero_rapid_ready_in <= 0.0:
@@ -1111,7 +1170,7 @@ func _step_zone(dt: float) -> void:
 	if zone_left <= 0.0:
 		return
 	zone_left = maxf(zone_left - dt, 0.0)
-	var reach := float(hero_ability["zone_radius"])
+	var reach := float(hero_ability["zone_radius"]) * zone_scale
 	for enemy in enemies:
 		if enemy.health <= 0.0 or enemy.position.distance_to(zone_position) > reach + enemy.radius:
 			continue
@@ -1120,7 +1179,7 @@ func _step_zone(dt: float) -> void:
 		enemy.position = enemy.position.move_toward(zone_position, float(hero_ability["pull"]) * dt)
 	if zone_left < TIME_EPSILON:
 		zone_left = 0.0
-		var radius := float(hero_ability["radius"])
+		var radius := float(hero_ability["radius"]) * zone_scale
 		for enemy in enemies:
 			if enemy.health > 0.0 and enemy.position.distance_to(zone_position) <= radius + enemy.radius:
 				_hurt(enemy, float(hero_ability["damage"]), float(hero_ability.get("unlit_bonus", 0.0)))
@@ -1412,7 +1471,10 @@ func _attack(attacker: Attacker, damage: float, dt: float) -> void:
 			dealt *= 1.0 + attacker.crossfire
 		best.shot_by = attacker.key
 		best.shot_at = time
-	_hurt(best, dealt, 0.0)
+	if attacker.splash_radius > 0.0:
+		_splash(attacker, best, dealt)
+	else:
+		_hurt(best, dealt, 0.0)
 	if attacker.burn_dps > 0.0:
 		best.burn_dps = maxf(best.burn_dps, attacker.burn_dps)
 		best.burn_left = maxf(best.burn_left, attacker.burn_seconds)
@@ -1422,6 +1484,24 @@ func _attack(attacker: Attacker, damage: float, dt: float) -> void:
 	if attacker.hero_haste > 0.0 and _hero_within(attacker.position, attacker.hero_radius):
 		attacker.ready_in /= 1.0 + attacker.hero_haste
 	attacker.last_target = best.uid
+
+
+## A Mage Post's blast: the target and every enemy within `splash_radius` of it take the shot,
+## hardest outside the posts' light.
+func _splash(attacker: Attacker, target: Enemy, damage: float) -> void:
+	for enemy in enemies:
+		if enemy.health > 0.0 and enemy.position.distance_to(target.position) <= attacker.splash_radius + enemy.radius:
+			_hurt(enemy, damage, attacker.unlit_bonus)
+	_add_effect("burst", target.position, attacker.splash_radius, Vector2.ZERO)
+
+
+## Dusk Eclipse: the widest bonus any standing post gives an Eclipse centred within its reach.
+func _eclipse_scale(centre: Vector2) -> float:
+	var widen := 0.0
+	for built in towers:
+		if built.up and built.eclipse_widen > widen and built.position.distance_to(centre) <= built.eclipse_radius:
+			widen = built.eclipse_widen
+	return 1.0 + widen
 
 
 ## True while the Hero is up and within `reach` of `point`.

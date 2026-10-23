@@ -109,7 +109,7 @@ func _draw() -> void:
 	for post in rules.posts:
 		draw_colored_polygon(PackedVector2Array([post.position + Vector2(0, -9), post.position + Vector2(7, 0), post.position + Vector2(0, 9), post.position + Vector2(-7, 0)]), COLOUR_LIGHT)
 	for built in rules.towers:
-		_draw_attacker(rules, built, COLOUR_TOWER, true)
+		_draw_attacker(rules, built, Color(built.colour) if built.colour != "" else COLOUR_TOWER, true)
 	for recruit in rules.recruits:
 		_draw_attacker(rules, recruit, RECRUIT_COLOURS.get(str(recruit.role.get("class", "")), COLOUR_STAFF), false)
 	for token in rules.xp_tokens:

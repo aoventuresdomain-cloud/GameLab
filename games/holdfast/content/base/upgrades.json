@@ -4,7 +4,8 @@
     {"id": "archer_post", "name": "Archer Post", "order": 1, "tab": "Archer Post"},
     {"id": "keep", "name": "Keep", "order": 2, "tab": "Keep"},
     {"id": "gold", "name": "Tithe", "order": 3, "tab": "Keep"},
-    {"id": "castle", "name": "Castle", "order": 4, "tab": "Castle"}
+    {"id": "castle", "name": "Castle", "order": 4, "tab": "Castle"},
+    {"id": "mage_post", "name": "Mage Post", "order": 5, "tab": "Mage Post"}
   ],
   "upgrade_nodes": [
     {"id": "castle_slot_1", "name": "First Slot", "branch": "castle", "tier": 1, "at": {"x": 2300, "y": 0}, "currency": "stars", "cost": 1, "grants": {"slots": 1}},
@@ -57,6 +58,11 @@
     {"id": "link_last_light", "name": "Last Light", "branch": "archer_post", "tier": 4, "at": {"x": 2010, "y": 320}, "currency": "stars", "cost": 2, "requires": ["link_rally", "post_timbers"], "tower": "archer_post", "text": "a post about to fall flares once and fires a volley at everything in range for four times its damage, if the Hero is close", "effects": [{"stat": "tower.last_light", "add": 4}, {"stat": "tower.last_light_radius", "add": 220}]},
     {"id": "link_watchtower", "name": "Watchtower", "branch": "archer_post", "tier": 3, "at": {"x": 2300, "y": 384}, "currency": "stars", "cost": 1, "requires": ["post_sight"], "tower": "archer_post", "text": "the Hero beside a post shoots 40 paces further", "effects": [{"stat": "tower.watch_range", "add": 40}, {"stat": "tower.watch_radius", "add": 130}]},
     {"id": "link_pillar_echo", "name": "Pillar Echo", "branch": "archer_post", "tier": 3, "at": {"x": 2880, "y": 256}, "currency": "stars", "cost": 2, "requires": ["link_lit_post", "flare_embers"], "tower": "archer_post", "text": "a post's arrows set enemies burning, like the Flare Archer's", "effects": [{"stat": "tower.burn_dps", "add": 2}, {"stat": "tower.burn_seconds", "add": 3}]},
-    {"id": "link_crossfire", "name": "Crossfire", "branch": "archer_post", "tier": 3, "at": {"x": 2880, "y": 320}, "currency": "stars", "cost": 2, "requires": ["castle_archer_2"], "tower": "archer_post", "text": "two posts shooting the same enemy deal 20% more", "effects": [{"stat": "tower.crossfire", "add": 0.2}]}
+    {"id": "link_crossfire", "name": "Crossfire", "branch": "archer_post", "tier": 3, "at": {"x": 2880, "y": 320}, "currency": "stars", "cost": 2, "requires": ["castle_archer_2"], "tower": "archer_post", "text": "two posts shooting the same enemy deal 20% more", "effects": [{"stat": "tower.crossfire", "add": 0.2}]},
+    {"id": "gate_mage", "name": "Tower Gate I: Mage Post", "branch": "mage_post", "tier": 1, "at": {"x": 4620, "y": 128}, "currency": "stars", "cost": 2, "needs_nodes": 5, "requires": ["castle_archer_1"], "grants": {"mage_cards": 1}, "text": "opens the Mage Post: one Mage card, placed in the same slots as the Archer (needs 5 nodes owned)"},
+    {"id": "mage_force", "name": "Mage force", "branch": "mage_post", "tier": 2, "at": {"x": 4330, "y": 192}, "cost": 150, "requires": ["gate_mage"], "tower": "mage_post", "effects": [{"stat": "tower.damage", "add": 2}]},
+    {"id": "mage_sight", "name": "Mage sight", "branch": "mage_post", "tier": 2, "at": {"x": 4620, "y": 192}, "cost": 140, "requires": ["gate_mage"], "tower": "mage_post", "effects": [{"stat": "tower.range", "add": 25}]},
+    {"id": "mage_wards", "name": "Mage wards", "branch": "mage_post", "tier": 2, "at": {"x": 4910, "y": 192}, "cost": 90, "requires": ["gate_mage"], "tower": "mage_post", "effects": [{"stat": "tower.health", "add": 25}]},
+    {"id": "link_eclipse", "name": "Dusk Eclipse", "branch": "mage_post", "hero": "dusk_mage", "tier": 3, "at": {"x": 4620, "y": 256}, "currency": "stars", "cost": 1, "requires": ["mage_sight"], "tower": "mage_post", "text": "Dusk Mage: an Eclipse centred within 120 of a Mage Post is 30% wider", "effects": [{"stat": "tower.eclipse_widen", "add": 0.3}, {"stat": "tower.eclipse_radius", "add": 120}]}
   ]
 }

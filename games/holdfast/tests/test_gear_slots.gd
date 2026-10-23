@@ -254,6 +254,21 @@ func test_a_save_from_before_the_five_slots_loads_and_each_piece_lands_in_its_sl
 	expect_eq(HoldfastMeta.worn_gear(wrong), {}, "a slot the pack still has must match the piece")
 
 
+## F-069: in a damaged save the first entry for a slot wins, whichever key it comes under, and a
+## slot name the pack does not have wears the piece in its own slot.
+func test_a_damaged_save_wears_the_first_entry_for_a_slot_and_an_unknown_name_wears_the_piece_where_it_belongs() -> void:
+	var content := _content()
+	var owned := ["driftwood_stave", "tarred_bowstring"]
+	var charm_first := HoldfastMeta.from_save(content, {"gear": {"owned": owned, "equipped": {"charm": "driftwood_stave", "weapon": "tarred_bowstring"}}})
+	expect_eq(charm_first["gear"]["equipped"]["weapon"], "driftwood_stave", "the old-slot entry comes first, so it wins")
+	var weapon_first := HoldfastMeta.from_save(content, {"gear": {"owned": owned, "equipped": {"weapon": "tarred_bowstring", "charm": "driftwood_stave"}}})
+	expect_eq(weapon_first["gear"]["equipped"]["weapon"], "tarred_bowstring", "and the other order gives the other piece")
+	var unknown := HoldfastMeta.from_save(content, {"gear": {"owned": ["tide_band"], "equipped": {"hat": "tide_band"}}})
+	expect_eq(unknown["gear"]["equipped"]["ring"], "tide_band", "an unknown slot name wears the piece in its own slot")
+	var unowned := HoldfastMeta.from_save(content, {"gear": {"owned": [], "equipped": {"hat": "tide_band"}}})
+	expect_eq(HoldfastMeta.worn_gear(unowned), {}, "but never a piece the player does not own")
+
+
 # ------------------------------------------------------------------ the Hero page
 
 func _page_with(main: Node, owned: Array) -> Control:

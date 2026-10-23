@@ -13,12 +13,14 @@ const COLOUR_ARENA := Color(0.35, 0.4, 0.5)
 const COLOUR_KEEP := Color(0.85, 0.8, 0.55)
 const COLOUR_ARC := Color(0.9, 0.3, 0.25)
 const COLOUR_RANGE := Color(0.55, 0.75, 0.95, 0.25)
+const COLOUR_MAGE_RANGE := Color(0.6, 0.48, 0.88, 0.25)
 const ARC_STEPS := 24
 ## How far out the ring's spots sit on the map (of the way to its edge): far enough that the
 ## buttons of neighbouring spots clear each other.
 const SITE_FILL := 0.78
 const ARC_FILL := 0.92
 const COLOUR_SLOT := Color(0.95, 0.85, 0.5)
+const MAGE_ID := "mage_post"
 
 @onready var _title: Label = %Title
 @onready var _hint: Label = %Hint
@@ -38,6 +40,8 @@ var _chosen: Array = []
 ## The castle spots the player owns ({id, name, x, y}, by id) and the Archer Post cards they hold.
 var _spots: Dictionary = {}
 var _cards := 0
+## The Mage Post cards the player holds, on top of the Archer cards.
+var _mage_cards := 0
 ## The layout of the last run on this level ("" none yet): what Quick start reuses.
 var _saved: Array = []
 var _site_buttons: Dictionary = {}
@@ -57,13 +61,15 @@ func _ready() -> void:
 	visibility_changed.connect(_on_visibility_changed)
 
 
-## Shows the level's map with `layout` (spot ids) already placed. `spots` are the castle spots
-## the player owns and `cards` the Archer Posts they hold. `saved` says the layout is the
-## player's own from an earlier run, which Quick start can then reuse.
-func open(level_id: String, layout: Array, saved: bool, spots: Array, cards: int) -> void:
+## Shows the level's map with `layout` (entries: a spot id, or "mage:<spot id>") already placed.
+## `spots` are the castle spots the player owns, `cards` the Archer Posts they hold and
+## `mage_cards` the Mage Posts. `saved` says the layout is the player's own from an earlier run,
+## which Quick start can then reuse.
+func open(level_id: String, layout: Array, saved: bool, spots: Array, cards: int, mage_cards := 0) -> void:
 	_level_id = level_id
 	_level = _content["levels"][level_id]
 	_cards = cards
+	_mage_cards = mage_cards
 	_spots.clear()
 	for spot in spots:
 		_spots[str(spot["id"])] = spot
@@ -82,36 +88,73 @@ func open(level_id: String, layout: Array, saved: bool, spots: Array, cards: int
 		_map.add_child(button)
 		_site_buttons[id] = button
 	_title.text = "Plan your defence: %s" % _level["name"]
-	_hint.text = "Enemies come from the red edges. Drag an Archer Post card onto a slot, or press a slot, before the first wave."
+	_hint.text = "Enemies come from the red edges. Drag a post card onto a slot, or press a slot, before the first wave."
 	_place_buttons()
 	_refresh()
 
 
-## Chooses or drops a site. At the limit, the oldest choice makes way.
+## Chooses or drops a site: an Archer while there is an Archer card left, then a Mage. At the
+## limit, the oldest choice makes way and the new post is of its kind.
 func _toggle(id: String) -> void:
-	if id in _chosen:
-		_chosen.erase(id)
-	else:
+	var at := _index_of(id)
+	if at >= 0:
+		_chosen.remove_at(at)
+	elif _placed(_archer_id()) < _cards:
 		_chosen.append(id)
-		while _chosen.size() > _cards:
-			_chosen.pop_front()
+	elif _placed(MAGE_ID) < _mage_cards:
+		_chosen.append(HoldfastRules.layout_entry(id, MAGE_ID))
+	elif not _chosen.is_empty():
+		var oldest: String = _chosen.pop_front()
+		_chosen.append(HoldfastRules.layout_entry(id, _tower_of(oldest)))
 	_refresh()
 
 
-## The suggested layout: the sites nearest where the enemies come from.
+## The suggested layout: the sites nearest where the enemies come from, Archers then Mages.
 func auto_place() -> void:
-	_chosen = HoldfastRules.best_sites(_spots.values(), _level.get("spawn_arcs", []), _cards)
+	var ids := HoldfastRules.best_sites(_spots.values(), _level.get("spawn_arcs", []), _cards + _mage_cards)
+	_chosen = []
+	for i in ids.size():
+		_chosen.append(ids[i] if i < _cards else HoldfastRules.layout_entry(ids[i], MAGE_ID))
 	_refresh()
+
+
+func _archer_id() -> String:
+	return str(_level["tower"]["id"])
+
+
+## The tower id of a layout entry.
+func _tower_of(entry: String) -> String:
+	return MAGE_ID if ":" in entry else _archer_id()
+
+
+## Where the spot `id` is in the layout, -1 when it holds no post.
+func _index_of(id: String) -> int:
+	for i in _chosen.size():
+		if HoldfastRules.layout_spot(_chosen[i]) == id:
+			return i
+	return -1
+
+
+func _placed(tower_id: String) -> int:
+	var count := 0
+	for entry in _chosen:
+		if _tower_of(entry) == tower_id:
+			count += 1
+	return count
+
+
+func _cards_of(tower_id: String) -> int:
+	return _mage_cards if tower_id == MAGE_ID else _cards
 
 
 func _refresh() -> void:
 	for id in _site_buttons:
-		var placed: bool = id in _chosen
-		_site_buttons[id].set_pressed_no_signal(placed)
+		var at := _index_of(id)
+		_site_buttons[id].set_pressed_no_signal(at >= 0)
 		# A placed post says what it is; the dot and range circle on the map say where.
-		_site_buttons[id].text = _tower_name() if placed else _slot_name(id)
+		_site_buttons[id].text = _tower_name(_tower_of(_chosen[at])) if at >= 0 else _slot_name(id)
 		_site_buttons[id].reset_size()
-	_count.text = "Posts: %d of %d" % [_chosen.size(), _cards]
+	_count.text = "Posts: %d of %d" % [_chosen.size(), _cards + _mage_cards]
 	_start.disabled = _chosen.is_empty()
 	_quick.disabled = _saved.is_empty()
 	_refresh_cards()
@@ -119,68 +162,76 @@ func _refresh() -> void:
 	_map.queue_redraw()
 
 
-func _tower_name() -> String:
-	return "Archer"
+func _tower_name(tower_id: String) -> String:
+	return "Mage" if tower_id == MAGE_ID else "Archer"
 
 
 func _slot_name(id: String) -> String:
 	return str(_spots[id]["name"])
 
 
-## One card for each post the level allows: the ones in hand can be dragged, the placed ones wait greyed.
+## One card for each post the level allows, Archers then Mages: the ones in hand can be dragged,
+## the placed ones wait greyed.
 func _refresh_cards() -> void:
 	for child in _tray.get_children():
 		_tray.remove_child(child)
 		child.queue_free()
-	var tower: Dictionary = _content["towers"][str(_level["tower"]["id"])]
-	for i in _cards:
-		var in_hand: bool = i >= _chosen.size()
-		var card := PanelContainer.new()
-		var label := Label.new()
-		label.text = str(tower["name"]) if in_hand else "Placed"
-		label.add_theme_font_size_override("font_size", FONT_PX)
-		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		card.add_child(label)
-		card.modulate = Color.WHITE if in_hand else Color(1, 1, 1, 0.45)
-		card.set_drag_forwarding(_card_drag.bind(card) if in_hand else Callable(), _side_can_drop, _side_drop)
-		if in_hand:
-			card.mouse_default_cursor_shape = Control.CURSOR_DRAG
-		_tray.add_child(card)
+	for tower_id in [_archer_id(), MAGE_ID]:
+		var tower: Dictionary = _content["towers"][tower_id]
+		for i in _cards_of(tower_id):
+			var in_hand: bool = i >= _placed(tower_id)
+			var card := PanelContainer.new()
+			card.name = "%sCard%d" % [tower_id, i]
+			var label := Label.new()
+			label.text = str(tower["name"]) if in_hand else "Placed"
+			label.add_theme_font_size_override("font_size", FONT_PX)
+			label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			card.add_child(label)
+			card.modulate = Color.WHITE if in_hand else Color(1, 1, 1, 0.45)
+			card.set_drag_forwarding(_card_drag.bind(card, tower_id) if in_hand else Callable(), _side_can_drop, _side_drop)
+			if in_hand:
+				card.mouse_default_cursor_shape = Control.CURSOR_DRAG
+			_tray.add_child(card)
 
 
-## What is dragged: a post from the tray (`from` ""), or one lifted off a slot.
-func _post_data(from: String) -> Dictionary:
-	return {"kind": "tower", "tower": str(_level["tower"]["id"]), "from": from}
+## What is dragged: a post of `tower_id` from the tray (`from` ""), or one lifted off a slot.
+func _post_data(from: String, tower_id: String) -> Dictionary:
+	return {"kind": "tower", "tower": tower_id, "from": from}
 
 
-func _drag_preview(held: Control) -> void:
+func _drag_preview(held: Control, tower_id: String) -> void:
 	# A preview can only be set while the viewport is dragging.
 	if not held.get_viewport().gui_is_dragging():
 		return
 	var preview := Label.new()
-	preview.text = "Archer Post"
+	preview.text = str(_content["towers"][tower_id]["name"])
 	preview.add_theme_font_size_override("font_size", FONT_PX)
 	held.set_drag_preview(preview)
 
 
-func _card_drag(_at: Vector2, card: Control) -> Variant:
-	_drag_preview(card)
-	return _post_data("")
+func _card_drag(_at: Vector2, card: Control, tower_id: String) -> Variant:
+	_drag_preview(card, tower_id)
+	return _post_data("", tower_id)
 
 
 func _slot_drag(_at: Vector2, id: String, button: Control) -> Variant:
-	if not id in _chosen:
+	var at := _index_of(id)
+	if at < 0:
 		return null
-	_drag_preview(button)
-	return _post_data(id)
+	_drag_preview(button, _tower_of(_chosen[at]))
+	return _post_data(id, _tower_of(_chosen[at]))
 
 
-## A slot takes a card from the tray while a post is left to place, or a post lifted from another slot.
+## A slot takes a card from the tray while a post of its kind is left to place, or a post lifted
+## from another slot.
 func _slot_can_drop(_at: Vector2, data: Variant, id: String) -> bool:
-	if not data is Dictionary or str(data.get("kind", "")) != "tower" or id in _chosen:
+	if not data is Dictionary or str(data.get("kind", "")) != "tower" or _index_of(id) >= 0:
 		return false
 	var from := str(data.get("from", ""))
-	return _chosen.size() < _cards if from == "" else from in _chosen
+	if from != "":
+		return _index_of(from) >= 0
+	var tower_id := str(data.get("tower", ""))
+	return tower_id in [_archer_id(), MAGE_ID] and _placed(tower_id) < _cards_of(tower_id)
 
 
 func _slot_drop(_at: Vector2, data: Variant, id: String) -> void:
@@ -188,20 +239,21 @@ func _slot_drop(_at: Vector2, data: Variant, id: String) -> void:
 		return
 	var from := str(data["from"])
 	if from == "":
-		_chosen.append(id)
+		_chosen.append(HoldfastRules.layout_entry(id, str(data["tower"])))
 	else:
-		_chosen[_chosen.find(from)] = id
+		var at := _index_of(from)
+		_chosen[at] = HoldfastRules.layout_entry(id, _tower_of(_chosen[at]))
 	_refresh()
 
 
 ## Letting a lifted post go on the cards, the buttons, the map or anywhere else returns its card.
 func _side_can_drop(_at: Vector2, data: Variant) -> bool:
-	return data is Dictionary and str(data.get("kind", "")) == "tower" and str(data.get("from", "")) in _chosen
+	return data is Dictionary and str(data.get("kind", "")) == "tower" and _index_of(str(data.get("from", ""))) >= 0
 
 
 func _side_drop(_at: Vector2, data: Variant) -> void:
 	if _side_can_drop(_at, data):
-		_chosen.erase(str(data["from"]))
+		_chosen.remove_at(_index_of(str(data["from"])))
 		_refresh()
 
 
@@ -233,12 +285,13 @@ func _draw_map() -> void:
 	var centre: Vector2 = _map.size * 0.5
 	_map.draw_rect(Rect2(Vector2.ZERO, _map.size), COLOUR_ARENA, false, 2.0)
 	_map.draw_circle(centre, float(_level["keep_radius"]) * scale, COLOUR_KEEP)
-	var reach := float(_content["towers"][str(_level["tower"]["id"])]["range"])
 	for id in _spots:
 		var at: Vector2 = centre + Vector2(float(_spots[id]["x"]), float(_spots[id]["y"])) * scale
 		_map.draw_circle(at, 6.0, COLOUR_SLOT)
-		if id in _chosen:
-			_map.draw_circle(at, reach * scale, COLOUR_RANGE)
+		var placed := _index_of(id)
+		if placed >= 0:
+			var tower_id := _tower_of(_chosen[placed])
+			_map.draw_circle(at, float(_content["towers"][tower_id]["range"]) * scale, COLOUR_MAGE_RANGE if tower_id == MAGE_ID else COLOUR_RANGE)
 	# The red arcs show which way the enemies come from, drawn at the edge of the map.
 	var edge := minf(_map.size.x, _map.size.y) * 0.5 * ARC_FILL
 	for arc in _level.get("spawn_arcs", []):

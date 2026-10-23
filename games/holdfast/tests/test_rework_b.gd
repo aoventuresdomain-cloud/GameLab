@@ -3,7 +3,7 @@ extends KitTestCase
 ## with jump tabs along the top. Node positions and the tabs come from the packs.
 
 const Main := preload("res://scenes/main.tscn")
-const NODE_COUNT := 51
+const NODE_COUNT := 56
 
 
 func _tree_page() -> Array:
@@ -73,8 +73,8 @@ func test_the_tabs_are_hero_archer_post_keep_and_castle_and_opening_lands_on_the
 	var made := await _tree_page()
 	var main: Node = made[0]
 	var page: Control = made[1]
-	expect_eq(page.tab_names(), PackedStringArray(["Hero", "Archer Post", "Keep", "Castle"]))
-	expect_eq(page.get_node("%Tabs").get_child_count(), 4)
+	expect_eq(page.tab_names(), PackedStringArray(["Hero", "Archer Post", "Keep", "Castle", "Mage Post"]))
+	expect_eq(page.get_node("%Tabs").get_child_count(), 5)
 	expect_eq(page._tab, "Hero")
 	expect_true(_in_view(page, "flare_boots") and _in_view(page, "flare_focus"), "the Hero section is on show")
 	expect_false(_in_view(page, "post_timbers"), "the other sections are out of view")
@@ -108,8 +108,8 @@ func test_the_hero_tab_goes_when_the_profile_plays_another_hero() -> void:
 	var main: Node = made[0]
 	var page: Control = made[1]
 	main.get_node("Profile").select_pillar("tideblade")
-	expect_eq(page.tab_names(), PackedStringArray(["Archer Post", "Keep", "Castle"]))
-	expect_eq(page._tab_buttons.keys(), ["Archer Post", "Keep", "Castle"])
+	expect_eq(page.tab_names(), PackedStringArray(["Archer Post", "Keep", "Castle", "Mage Post"]))
+	expect_eq(page._tab_buttons.keys(), ["Archer Post", "Keep", "Castle", "Mage Post"])
 	expect_eq(page._tab, "Archer Post", "the view moves off a tab that is gone")
 	main.free()
 

@@ -186,6 +186,11 @@ func get_castle_cards() -> int:
 	return HoldfastMeta.castle_cards(_content, data)
 
 
+## Mage Post cards the Tower Gate has opened.
+func get_castle_mage_cards() -> int:
+	return HoldfastMeta.castle_mage_cards(_content, data)
+
+
 ## The castle spots the player owns, in the pack's order: [{id, name, x, y}].
 func get_owned_spots() -> Array:
 	return HoldfastMeta.owned_spots(_content, data)

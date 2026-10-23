@@ -14,7 +14,8 @@ extends RefCounted
 ##   level: id,            the level the next run plays
 ##   pillar: id,           the Hero path the next run plays
 ##   runs: int,            runs banked
-##   layouts: {level: [spot ids]}   the castle spots the player put Archer Posts on, per level
+##   layouts: {level: [entries]}   the castle spots the player put posts on, per level: "spot_3" for
+##                         an Archer Post, "mage:spot_3" for a Mage Post
 ##   gear: {owned: [item ids], equipped: {slot: item id or ""}}   the Hero's gear (the Hero only)
 ## }
 ## The save format version is SAVE_VERSION; bump it with a migration when the shape changes.
@@ -448,6 +449,11 @@ static func castle_cards(content: Dictionary, profile: Dictionary) -> int:
 	return mini(_granted(content, profile, "cards"), castle_slots(content, profile))
 
 
+## Mage Post cards: what the Tower Gate grants, up to the slots there are.
+static func castle_mage_cards(content: Dictionary, profile: Dictionary) -> int:
+	return mini(_granted(content, profile, "mage_cards"), castle_slots(content, profile))
+
+
 static func _granted(content: Dictionary, profile: Dictionary, what: String) -> int:
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	var total := 0
@@ -467,25 +473,34 @@ static func has_a_tower(content: Dictionary, profile: Dictionary) -> bool:
 	return castle_cards(content, profile) >= 1
 
 
-## The castle spots a layout may use: owned spot ids, no repeats, at least one and no more
-## than the cards the player has.
+## What a layout may hold: owned spot ids (each at most once) as Archer Posts or, written
+## "mage:<spot id>", as Mage Posts, at least one, no more Archers than Archer cards, no more Mages
+## than Mage cards and no more posts than slots.
 static func is_valid_layout(content: Dictionary, profile: Dictionary, layout: Variant) -> bool:
-	if not layout is Array or layout.is_empty() or layout.size() > castle_cards(content, profile):
+	if not layout is Array or layout.is_empty() or layout.size() > castle_slots(content, profile):
 		return false
 	var known := []
 	for spot in owned_spots(content, profile):
 		known.append(str(spot["id"]))
 	var seen := []
-	for id in layout:
-		if not id is String or not id in known or id in seen:
+	var mages := 0
+	for entry in layout:
+		if not entry is String:
+			return false
+		var id: String = HoldfastRules.layout_spot(entry)
+		if ":" in entry:
+			if not HoldfastRules.LAYOUT_TOWERS.has(entry.get_slice(":", 0)):
+				return false
+			mages += 1
+		if not id in known or id in seen:
 			return false
 		seen.append(id)
-	return true
+	return layout.size() - mages <= castle_cards(content, profile) and mages <= castle_mage_cards(content, profile)
 
 
 ## The spots a run on `level` builds on: the player's saved choice if it is still valid, else
-## the spots nearest where the enemies come from. [] for a tutorial (it has its own post) and
-## for a profile with no Archer Post yet.
+## the spots nearest where the enemies come from (Archers first, then any Mage cards). [] for a
+## tutorial (it has its own post) and for a profile with no Archer Post yet.
 static func layout_for(content: Dictionary, profile: Dictionary, level: String) -> Array:
 	var data: Dictionary = content.get("levels", {}).get(level, {})
 	if data.is_empty() or _tutorial(data) or not has_a_tower(content, profile):
@@ -493,7 +508,12 @@ static func layout_for(content: Dictionary, profile: Dictionary, level: String) 
 	var saved: Variant = profile.get("layouts", {}).get(level)
 	if saved != null and is_valid_layout(content, profile, saved):
 		return saved.duplicate()
-	return HoldfastRules.best_sites(owned_spots(content, profile), data.get("spawn_arcs", []), castle_cards(content, profile))
+	var archers := castle_cards(content, profile)
+	var ids := HoldfastRules.best_sites(owned_spots(content, profile), data.get("spawn_arcs", []), archers + castle_mage_cards(content, profile))
+	var out := []
+	for i in ids.size():
+		out.append(ids[i] if i < archers else HoldfastRules.layout_entry(ids[i], "mage_post"))
+	return out
 
 
 ## True when the player has a valid layout of their own saved for `level` (not just the suggested one).
@@ -534,12 +554,21 @@ static func why_not_buy(content: Dictionary, profile: Dictionary, id: String) ->
 	var closed := _closed_by(nodes, profile["upgrades"], id)
 	if closed != "":
 		return "Closed by %s" % str(nodes.get(closed, {}).get("name", closed))
+	var more := nodes_still_needed(nodes[id], profile)
+	if more > 0:
+		return "Needs %d more %s owned" % [more, "node" if more == 1 else "nodes"]
 	if is_star_node(nodes[id]):
 		if stars_available(content, profile) < int(nodes[id]["cost"]):
 			return "Not enough stars"
 	elif int(profile["gold"]) < int(nodes[id]["cost"]):
 		return "Not enough gold"
 	return ""
+
+
+## How many more nodes the player must own before a gate can be taken (0 for a node with no
+## such rule or when they own enough).
+static func nodes_still_needed(node: Dictionary, profile: Dictionary) -> int:
+	return maxi(int(node.get("needs_nodes", 0)) - profile["upgrades"].size(), 0)
 
 
 ## True when every node `id` requires is bought and nothing bought closes it: one buy
@@ -554,7 +583,7 @@ static func is_near(content: Dictionary, profile: Dictionary, id: String) -> boo
 	for required in nodes[id].get("requires", []):
 		if not required in profile["upgrades"]:
 			return false
-	return true
+	return nodes_still_needed(nodes[id], profile) == 0
 
 
 ## True when the tree shows the node: the first one, any node next to one the player owns (it

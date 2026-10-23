@@ -96,7 +96,7 @@ func _plan_run() -> void:
 		_show(Screen.MAP)
 		return
 	var saved := profile.has_saved_layout(level)
-	planning.open(level, profile.get_layout(level) if saved else [], saved, profile.get_owned_spots(), profile.get_castle_cards())
+	planning.open(level, profile.get_layout(level) if saved else [], saved, profile.get_owned_spots(), profile.get_castle_cards(), profile.get_castle_mage_cards())
 	_show(Screen.PLAN)
 
 
