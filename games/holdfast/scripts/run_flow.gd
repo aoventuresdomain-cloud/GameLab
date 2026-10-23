@@ -71,15 +71,18 @@ func _level_picked(id: String) -> void:
 	_plan_run()
 
 
-## Asks for the Archer Post sites first when the level has any, else starts the run.
+## Opens the Plan page first when the level has Archer Post sites, else starts the run.
+## Slots start empty on a first visit; after a run they hold the layout last used.
 func _plan_run() -> void:
 	if source.is_running():
 		return
-	var layout := profile.get_layout(profile.get_level())
+	var level := profile.get_level()
+	var layout := profile.get_layout(level)
 	if layout.is_empty():
 		_start_run()
 		return
-	planning.open(profile.get_level(), layout)
+	var saved := profile.has_saved_layout(level)
+	planning.open(level, layout if saved else [], saved)
 	_show(Screen.PLAN)
 
 

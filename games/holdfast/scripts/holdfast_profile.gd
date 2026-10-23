@@ -141,6 +141,11 @@ func get_layout(level: String) -> Array:
 	return HoldfastMeta.layout_for(_content, data, level)
 
 
+## True when the player's own layout for `level` is saved (the one Quick start reuses).
+func has_saved_layout(level: String) -> bool:
+	return HoldfastMeta.has_saved_layout(_content, data, level)
+
+
 ## Owned gear item ids, in the order found.
 func get_gear_owned() -> Array:
 	return data["gear"]["owned"]

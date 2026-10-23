@@ -21,6 +21,9 @@ const COLOUR_GLOW := Color(0.95, 0.7, 0.25)
 const COLOUR_BOSS := Color(0.85, 0.3, 0.25)
 const COLOUR_KEEP := Color(0.85, 0.8, 0.55)
 const COLOUR_HERO := Color(0.95, 0.6, 0.2)
+## Clear of the glow ring (12 out, 4 thick), so a name never touches it.
+const LABEL_GAP := 20.0
+const HERO_FIGURE := Vector2(44, 64)
 const GLOW_TINT := Color(1.0, 0.85, 0.45)
 const DEFAULT_INFO := "Tap an open level to plan it, the Hero to change path and gear, or the skill tree to spend gold."
 
@@ -36,6 +39,8 @@ var _ids: Array = []
 var _buttons: Dictionary = {}
 var _names: Dictionary = {}
 var _hero_button: Button
+## The drawn Hero is a button too (transparent), so the figure itself can be tapped.
+var _hero_figure: Button
 var _next := ""
 
 
@@ -142,6 +147,17 @@ func _build_nodes() -> void:
 	_hero_button.mouse_entered.connect(func() -> void: _info.text = "Change the Hero's path and wear the gear you have found.")
 	_hero_button.mouse_exited.connect(func() -> void: _info.text = DEFAULT_INFO)
 	_map.add_child(_hero_button)
+	_hero_figure = Button.new()
+	for style_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		_hero_figure.add_theme_stylebox_override(style_name, StyleBoxEmpty.new())
+	_hero_figure.custom_minimum_size = HERO_FIGURE
+	_hero_figure.size = HERO_FIGURE
+	_hero_figure.focus_entered.connect(_map.queue_redraw)
+	_hero_figure.focus_exited.connect(_map.queue_redraw)
+	_hero_figure.pressed.connect(hero_requested.emit)
+	_hero_figure.mouse_entered.connect(func() -> void: _info.text = "Change the Hero's path and wear the gear you have found.")
+	_hero_figure.mouse_exited.connect(func() -> void: _info.text = DEFAULT_INFO)
+	_map.add_child(_hero_figure)
 
 
 func _level_text(id: String) -> String:
@@ -163,20 +179,12 @@ func _lighthouse_at() -> Vector2:
 	return Vector2(_map.size.x * 0.1, _map.size.y * 0.74)
 
 
-func _place() -> void:
-	if _ids.is_empty() or _hero_button == null:
-		return
-	for i in _ids.size():
-		var at := _node_at(i, _ids.size())
-		_buttons[_ids[i]].position = at - Vector2.ONE * NODE_RADIUS
-		var label: Label = _names[_ids[i]]
-		label.position = Vector2(clampf(at.x - label.size.x * 0.5, 0.0, _map.size.x - label.size.x), at.y + NODE_RADIUS + 2.0)
-	_hero_button.position = _lighthouse_at() + Vector2(-_hero_button.size.x * 0.5, 62.0)
+func _hero_at() -> Vector2:
+	return _lighthouse_at() + Vector2(46, 14)
 
 
-func _draw_map() -> void:
-	if _ids.is_empty():
-		return
+## The path from the lighthouse through every level node, as a smooth line.
+func path_points() -> PackedVector2Array:
 	var n := _ids.size()
 	var points := PackedVector2Array([_lighthouse_at()])
 	for i in n:
@@ -188,18 +196,40 @@ func _draw_map() -> void:
 		for step in PATH_STEPS:
 			curve.append(points[i].cubic_interpolate(points[i + 1], before, after, float(step) / PATH_STEPS))
 	curve.append(points[points.size() - 1])
-	_map.draw_polyline(curve, COLOUR_PATH, 6.0, true)
+	return curve
+
+
+func _place() -> void:
+	if _ids.is_empty() or _hero_button == null:
+		return
+	for i in _ids.size():
+		var at := _node_at(i, _ids.size())
+		_buttons[_ids[i]].position = at - Vector2.ONE * NODE_RADIUS
+		var label: Label = _names[_ids[i]]
+		# Below the node and clear of its glow ring, which also keeps it off the path.
+		label.position = Vector2(clampf(at.x - label.size.x * 0.5, 0.0, _map.size.x - label.size.x), at.y + NODE_RADIUS + LABEL_GAP)
+	_hero_button.position = _lighthouse_at() + Vector2(-_hero_button.size.x * 0.5, 62.0)
+	_hero_figure.position = _hero_at() - HERO_FIGURE * 0.5 + Vector2(0, -4)
+
+
+func _draw_map() -> void:
+	if _ids.is_empty():
+		return
+	var n := _ids.size()
+	_map.draw_polyline(path_points(), COLOUR_PATH, 6.0, true)
 	# The lighthouse and the Hero beside it.
 	var base := _lighthouse_at()
 	_map.draw_rect(Rect2(base - Vector2(22, 30), Vector2(44, 60)), COLOUR_KEEP)
 	_map.draw_circle(base + Vector2(0, -38), 10.0, COLOUR_GLOW)
 	# The Hero: a head and a cloaked body beside the lighthouse.
-	var hero := base + Vector2(46, 14)
+	var hero := _hero_at()
 	_map.draw_circle(hero + Vector2(0, -22), 8.0, COLOUR_HERO)
 	_map.draw_colored_polygon(PackedVector2Array([hero + Vector2(0, -14), hero + Vector2(14, 22), hero + Vector2(-14, 22)]), COLOUR_HERO)
+	if _hero_figure.has_focus():
+		_map.draw_rect(Rect2(_hero_figure.position, HERO_FIGURE), Color.WHITE, false, 3.0)
 	for i in n:
 		var id: String = _ids[i]
-		var at := points[i + 1]
+		var at := _node_at(i, n)
 		var open: bool = _profile != null and id in _profile.get_unlocked_levels()
 		var won: bool = _profile != null and _profile.is_level_won(id)
 		_map.draw_circle(at, NODE_RADIUS, COLOUR_WON if won else (COLOUR_OPEN if open else COLOUR_LOCKED))

@@ -59,25 +59,61 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 20
 autowrap_mode = 2
 
-[node name="Map" type="Control" parent="Margin/Column"]
+[node name="Body" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="Map" type="Control" parent="Margin/Column/Body"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 360)
 layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Side" type="VBoxContainer" parent="Margin/Column/Body"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TowersCaption" type="Label" parent="Margin/Column/Body/Side"]
+layout_mode = 2
+theme_type_variation = &"HudCaption"
+text = "Towers"
+
+[node name="Tray" type="VBoxContainer" parent="Margin/Column/Body/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Spacer" type="Control" parent="Margin/Column/Body/Side"]
+layout_mode = 2
 size_flags_vertical = 3
+
+[node name="AutoButton" type="Button" parent="Margin/Column/Body/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Auto-place"
+
+[node name="QuickButton" type="Button" parent="Margin/Column/Body/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Quick start"
+
+[node name="StartButton" type="Button" parent="Margin/Column/Body/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Start level"
 
 [node name="Footer" type="HBoxContainer" parent="Margin/Column"]
 layout_mode = 2
 theme_override_constants/separation = 12
-alignment = 2
 
 [node name="BackButton" type="Button" parent="Margin/Column/Footer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "Back"
-
-[node name="StartButton" type="Button" parent="Margin/Column/Footer"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "Start run"
+text = "Journey map"
