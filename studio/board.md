@@ -208,7 +208,7 @@
 
 ### HF-M2-01 Pacing bands
 - **Owner:** Gameplay Engineer (the Balance Analyst role is not woken; amended 2026-10-22 for Build 7 of 8)
-- **Status:** Ready, Build 7 of 8, parked until the CEO confirms after testing Build 6 (CEO 2026-10-22 23:02)
+- **Status:** Parked for M2b (CEO 2026-10-23 10:17): overall pacing, stat tidy-up and balancing everything happen after all the mechanics are settled. Formerly Build 7 of 8. Not part of the tree, gear and Mage slice
 - **QA:** full (pack retune changes outcomes)
 - **Done when:**
   - [ ] `games/holdfast/content/pacing-bands.json` holds first-time win-rate bands per pillar and per bot (average and poor) for levels 1-5, with a per-pillar first-time floor, from the Advisor's targets. Hero stats are not nerfed.
@@ -399,7 +399,7 @@
 
 ### HF-M2-28 Recalibrate levels and balance all pillars
 - **Owner:** Gameplay Engineer
-- **Status:** Backlog, future work (CEO 2026-10-22 23:10): the focus is the Flare Archer and getting the mechanics complete; levels and the other pillars are recalibrated later
+- **Status:** Backlog, M2b (CEO 2026-10-23 10:17): balancing every pillar and level, the stat-model unification and the overall pacing wait until all the mechanics are settled. HF-M2-35 keeps only levels 1 to 5 winnable for the Flare Archer with the new empty-castle start
 - **QA:** full (pack retune changes outcomes)
 - **Done when:**
   - [ ] Bands per pillar and per bot (average, poor) for every level, with a per-pillar first-time floor, from the Advisor's targets (pillar balance view, 2026-10-22, in the Advisor views table). Hero stats are not nerfed.
@@ -497,7 +497,7 @@
 
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 7 of 8, parked until the CEO confirms after testing Build 6; amended for the parked Recruits
+- **Status:** Parked for M2b (CEO 2026-10-23 10:17); formerly Build 7 of 8, amended for the parked Recruits. HF-M2-35 adds only the bots the tree slice needs
 - **QA:** full
 - **Depends on:** HF-M2-01
 - **Done when:**
@@ -753,3 +753,4 @@
 - 2026-10-23 08:32: CEO decision: no offline earnings in the game (it was an M5 line with an 8-hour cap in the plan). Removed from the plan, the QA-by-risk rules and this board; nothing in the code or save existed only for it, so no code change. Recruits stay parked, to be improved later.
 - 2026-10-23 09:27: CEO go to build the Advisor's tree and star logic (stars buy slots, cards, links and capstones; gold buys stat nodes; empty castle start; Level 0 stub; adjacent nodes only; respec for a small fee). Items HF-M2-32 to HF-M2-35, one PR each in that order. Not in this build: Mage, Mender, Frost, Tower Gate I, the three reserved links, walls, Recruits, Hard and Nightmare replays, blessings, full tutorial text. Stat-model unification (monsters first) is deferred: the tree does not need it and it would widen every PR. Old saves are refunded in gold and given stars rather than mapped node by node.
 - 2026-10-23 10:12: CEO go on the tree pan/zoom fix (inside HF-M2-33), Hero gear slots and inventory (HF-M2-36) and the Mage Post with the first Tower Gate (HF-M2-37). Level 0 tutorial text skipped for now (it may change). Order: HF-M2-32, 33, 34, 36, 37, then the retune HF-M2-35 last so it tunes the finished content. One PR each, then one combined handoff and a stop.
+- 2026-10-23 10:17: CEO decisions: overall pacing, stat tidy-up and balancing everything move to a later "M2b", after all mechanics are settled (this covers the old Build 7, HF-M2-01, HF-M2-05 and HF-M2-28; relabelled, no new work). M3 and M4 stay unchanged. Final art is the last step after everything else is decided; placeholder art until then, no art work now.
