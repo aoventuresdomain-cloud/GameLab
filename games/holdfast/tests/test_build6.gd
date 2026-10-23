@@ -451,7 +451,18 @@ func test_without_the_ability_no_hero_path_can_beat_the_boss() -> void:
 
 
 func test_with_the_ability_every_hero_path_beats_the_boss() -> void:
-	var content := HoldfastContent.base()
+	# This checks the boss fight, not the level's balance, so Gull Rock's waves are set to a fixed
+	# easy strength here and the retune of its monsters cannot decide it.
+	var content: Dictionary = HoldfastContent.base().duplicate(true)
+	var real: Dictionary = HoldfastContent.base()
+	for i in content["levels"]["gull_rock"]["waves"].size():
+		var wave: Dictionary = content["levels"]["gull_rock"]["waves"][i]
+		wave["health_scale"] = 0.7
+		wave["damage_scale"] = 0.3
+		var original: Dictionary = real["levels"]["gull_rock"]["waves"][i]
+		expect_eq(wave["spawns"], original["spawns"], "wave %d: only the scales differ from the real level (spawns)" % (i + 1))
+		expect_eq(wave.get("delay"), original.get("delay"), "wave %d: only the scales differ from the real level (delay)" % (i + 1))
+	expect_eq(content["enemies"], real["enemies"], "and the monsters themselves are the real ones")
 	var kit := HoldfastProgression.buy_cheapest(content["upgrade_nodes"], [], 20000)
 	for pillar in PILLARS:
 		var won := 0

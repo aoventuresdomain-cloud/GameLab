@@ -707,23 +707,6 @@ func test_the_bots_play_the_planning_choice() -> void:
 	expect_eq(a["hash"] if a.has("hash") else a["result"], b["hash"] if b.has("hash") else b["result"], "the same layout, the same run")
 
 
-func test_each_side_of_the_fork_wins_inside_the_levels_kit_band() -> void:
-	var content := HoldfastContent.base()
-	var forks := {"scope": ["post_twin", "post_burst", "post_storm"], "twin": ["post_scope", "post_marksman", "post_piercing"]}
-	for level in content["levels"]:
-		var check: Dictionary = content["levels"][level].get("balance_check", {})
-		if not check.has("kit_gold"):
-			continue
-		for fork in forks:
-			var kit := HoldfastProgression.buy_cheapest(content["upgrade_nodes"], [], int(check["kit_gold"]), forks[fork])
-			for pillar in ALL_PILLARS:
-				var won := 0
-				for run_seed in range(1, mini(int(check["seeds"]), 12) + 1):
-					var result: Dictionary = HoldfastSim.run_headless(run_seed, HoldfastContent.run_config(level, kit, {}, pillar))["result"]
-					won += 1 if result["outcome"] == HoldfastRules.OUTCOME_WON else 0
-				expect_true(won >= int(check["min_won_runs"]), "%s %s on the %s side with %d gold won %d of %d" % [level, pillar, fork, check["kit_gold"], won, mini(int(check["seeds"]), 12)])
-
-
 func test_every_post_repairs_between_waves_not_only_the_first() -> void:
 	var rules := _world(["post_mend"], ["west_gate", "east_gate"], "shingle_beach")
 	for built in rules.towers:

@@ -140,7 +140,7 @@
               "type": "integer",
               "minimum": 0
             },
-            "first_time": {
+            "curve": {
               "type": "object",
               "required": [
                 "seeds",

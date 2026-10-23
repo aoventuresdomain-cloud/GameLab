@@ -111,10 +111,11 @@ func _toggle(id: String) -> void:
 
 ## The suggested layout: the sites nearest where the enemies come from, Archers then Mages.
 func auto_place() -> void:
-	var ids := HoldfastRules.best_sites(_spots.values(), _level.get("spawn_arcs", []), _cards + _mage_cards)
+	var counts := HoldfastMeta.post_counts(_spots.size(), _cards, _mage_cards)
+	var ids := HoldfastRules.best_sites(_spots.values(), _level.get("spawn_arcs", []), counts[0] + counts[1])
 	_chosen = []
 	for i in ids.size():
-		_chosen.append(ids[i] if i < _cards else HoldfastRules.layout_entry(ids[i], MAGE_ID))
+		_chosen.append(ids[i] if i < counts[0] else HoldfastRules.layout_entry(ids[i], MAGE_ID))
 	_refresh()
 
 
@@ -154,7 +155,7 @@ func _refresh() -> void:
 		# A placed post says what it is; the dot and range circle on the map say where.
 		_site_buttons[id].text = _tower_name(_tower_of(_chosen[at])) if at >= 0 else _slot_name(id)
 		_site_buttons[id].reset_size()
-	_count.text = "Posts: %d of %d" % [_chosen.size(), _cards + _mage_cards]
+	_count.text = "Posts: %d of %d" % [_chosen.size(), mini(_spots.size(), _cards + _mage_cards)]
 	_start.disabled = _chosen.is_empty()
 	_quick.disabled = _saved.is_empty()
 	_refresh_cards()

@@ -120,8 +120,8 @@ func test_every_link_effect_is_read_by_the_rules() -> void:
 	var rules := _rules(_with_all())
 	var post: HoldfastRules.Attacker = rules.tower
 	expect_near(post.hero_haste, 0.25, 0.0001)
-	expect_eq(post.hero_radius, 150.0)
-	expect_near(post.crossfire, 0.2, 0.0001)
+	expect_eq(post.hero_radius, 75.0)
+	expect_near(post.crossfire, 0.5, 0.0001)
 	expect_eq(post.burn_dps, 2.0)
 	expect_eq(post.burn_seconds, 3.0)
 	expect_eq(post.rally_repair, 6.0)
@@ -178,6 +178,13 @@ func test_lit_post_makes_a_post_shoot_a_quarter_faster_with_the_hero_close() -> 
 	expect_near(_ready_in_after_first_shot(owned, POST + Vector2(700, 0), false), 0.75, 0.0001, "far: the plain cooldown")
 
 
+func test_lit_post_needs_the_hero_beside_the_post_not_minding_the_keep() -> void:
+	# F-067: the ring sits about 100 paces out, so a Hero at the Keep must not light every post.
+	var owned := _with("link_lit_post")
+	expect_near(_ready_in_after_first_shot(owned, Vector2.ZERO, false), 0.75, 0.0001, "at the Keep: the plain cooldown")
+	expect_near(_ready_in_after_first_shot(owned, POST + Vector2(70, 0), false), 0.6, 0.0001, "70 paces from the post: lit")
+
+
 func test_lit_post_stops_when_the_hero_is_down() -> void:
 	expect_near(_ready_in_after_first_shot(_with("link_lit_post"), POST + Vector2(60, 0), true), 0.75, 0.0001)
 
@@ -192,13 +199,13 @@ func _crossfire_loss(upgrades: Array, layout: Array) -> float:
 	return BIG - enemy.health
 
 
-func test_crossfire_adds_a_fifth_when_a_second_post_hits_the_same_enemy() -> void:
+func test_crossfire_adds_half_when_a_second_post_hits_the_same_enemy() -> void:
 	var owned := _with("link_crossfire")
 	var bare := owned.filter(func(id: String) -> bool: return id != "link_crossfire")
 	var two := ["spot_1", "spot_2"]
 	var plain := _crossfire_loss(bare, two)
-	# Both shots are the same size, so the second counts 1.2 times: 2.2 shots in all.
-	expect_near(_crossfire_loss(owned, two) / plain, 2.2 / 2.0, 0.001, "two posts")
+	# Both shots are the same size, so the second counts 1.5 times: 2.5 shots in all.
+	expect_near(_crossfire_loss(owned, two) / plain, 2.5 / 2.0, 0.001, "two posts")
 	expect_near(_crossfire_loss(owned, ["spot_1"]) / (plain / 2.0), 1.0, 0.001, "a lone post gains nothing")
 
 
@@ -215,7 +222,7 @@ func _after_another_post(by: String, ago: float) -> float:
 func test_crossfire_needs_a_different_post_and_a_recent_hit() -> void:
 	var plain := _after_another_post("tower:elsewhere", 100.0)
 	expect_true(plain > 0.0)
-	expect_near(_after_another_post("tower:elsewhere", 0.5) / plain, 1.2, 0.001, "another post, half a second ago")
+	expect_near(_after_another_post("tower:elsewhere", 0.5) / plain, 1.5, 0.001, "another post, half a second ago")
 	expect_near(_after_another_post("tower:elsewhere", 5.0) / plain, 1.0, 0.001, "five seconds ago is too old")
 	expect_near(_after_another_post("", 0.5) / plain, 1.0, 0.001, "the same post twice gains nothing")
 

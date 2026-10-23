@@ -508,12 +508,20 @@ static func layout_for(content: Dictionary, profile: Dictionary, level: String) 
 	var saved: Variant = profile.get("layouts", {}).get(level)
 	if saved != null and is_valid_layout(content, profile, saved):
 		return saved.duplicate()
-	var archers := castle_cards(content, profile)
-	var ids := HoldfastRules.best_sites(owned_spots(content, profile), data.get("spawn_arcs", []), archers + castle_mage_cards(content, profile))
+	var counts := post_counts(castle_slots(content, profile), castle_cards(content, profile), castle_mage_cards(content, profile))
+	var ids := HoldfastRules.best_sites(owned_spots(content, profile), data.get("spawn_arcs", []), counts[0] + counts[1])
 	var out := []
 	for i in ids.size():
-		out.append(ids[i] if i < archers else HoldfastRules.layout_entry(ids[i], "mage_post"))
+		out.append(ids[i] if i < counts[0] else HoldfastRules.layout_entry(ids[i], "mage_post"))
 	return out
+
+
+## How many [Archer Posts, Mage Posts] to place when the player has `slots` slots and the given
+## cards. Every Mage card is used, since the player took the Gate for it, but one slot always
+## stays an Archer's, so a full ring gives up its last Archers for the Mages, never the first.
+static func post_counts(slots: int, archer_cards: int, mage_cards: int) -> Array:
+	var mages := mini(mage_cards, maxi(slots - 1, 0))
+	return [mini(archer_cards, slots - mages), mages]
 
 
 ## True when the player has a valid layout of their own saved for `level` (not just the suggested one).
