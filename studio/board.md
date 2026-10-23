@@ -407,6 +407,17 @@
   - [ ] The simulator gates on the bands and CI fails when one is missed (HF-M2-01, HF-M2-05).
 - **Notes:** Re-scoped from Build 7 (parked). When Build 7 is proposed again it is mechanics-first and Archer-only, not a cross-pillar balance pass.
 
+### HF-M2-29 Menus and navigation rework
+- **Owner:** UI Engineer (the Gameplay Engineer changes the profile and rules only where the screens need it, on this item's PRs)
+- **Status:** Proposed (CEO feedback 2026-10-23 00:45; the Done when lines are provisional, after testing 4b, 5 and 6). Not started: the structure comes from the Advisor first, then the Done when lines below are finalised and the CEO decides the slice. Archer-only and mechanics-first still stand
+- **QA:** full (screens and the run flow change; tests that click through the flow change)
+- **Done when:**
+  - [ ] A main menu whose entries each open their own page (play, skill tree, settings). The home screen and the keep screen are no longer two screens that do the same job.
+  - [ ] Levels are a path map: available levels can be tapped to load the game, locked ones show as locked, and the page offers a way to the skill tree.
+  - [ ] The skill tree has its own page, as tabs per section (tower, Hero and later recruit) or one large tree, from the Advisor's recommendation. Buying, respec, refund and the Hero pillar choice work there as they do now.
+  - [ ] Archer Post placement has its own page, not inside the level, and the run starts only from there.
+  - [ ] Saves from before the rework load unchanged, and the win screen offers the next level, the path map and the skill tree.
+
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
 - **Status:** Ready, Build 7 of 8, parked until the CEO confirms after testing Build 6; amended for the parked Recruits
@@ -646,3 +657,4 @@
 - 2026-10-22 23:10: CEO: focus on the Flare Archer and getting the mechanics complete. Balancing the other pillars and recalibrating level difficulty across the board is future work (backlog HF-M2-28, with the Advisor's findings). Build 6 gets only the tuning the Archer needs to be playable. Build 7 stays parked and, when re-scoped, is proposed mechanics-first and Archer-only.
 
 - 2026-10-23 00:30: Run complete: 4b (#74, #76), Build 5 (#77) and Build 6 (#82) are merged, QA clear on each. The team stops and waits for the CEO to test and confirm. Build 7 is parked (notes in `studio/handoffs/2026-10-23-build7-resume.md`).
+- 2026-10-23 00:45: CEO feedback after testing 4b, 5 and 6: the upgrade screen and home screen are the same thing; rework into separate pages from a main menu, with levels as a path map (tap an available level to load it), the skill tree on its own page with tabs (tower, Hero, recruit) or one large Incrempire-style tree, and placement on its own page instead of inside the level. The long-term aim is an Incrempire-like game with the CEO's own twist (Hero and tower synergy, other ideas). Advisor asked first for the structure; board item HF-M2-29 proposed. Build 7 stays parked and this likely replaces it as the next slice (CEO decides).
