@@ -441,7 +441,7 @@
 
 ### HF-M2-33 One connected tree with stars, slots and respec (tree rework, part 2)
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, after HF-M2-32 is merged. Pan and zoom fix (below) is included only if the CEO agrees to fold it in
+- **Status:** Ready, after HF-M2-32 is merged. The CEO approved the pan and zoom fix (2026-10-23 10:12); it goes in as its own commit
 - **QA:** full
 - **Depends on:** HF-M2-32
 - **Done when:**
@@ -464,14 +464,36 @@
 
 ### HF-M2-35 Retune levels 1 to 5 for the empty-castle start (tree rework, part 4)
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, after HF-M2-34 is merged. Archer only; other pillars stay in HF-M2-28
+- **Status:** Ready, last of the tree slice: after HF-M2-37 is merged (it tunes everything the earlier items added). Archer only; other pillars stay in HF-M2-28
 - **QA:** full
-- **Depends on:** HF-M2-34
+- **Depends on:** HF-M2-37
 - **Done when:**
-  - [ ] The simulator has bots that place posts by the stars a player would have at that point (and buy gold nodes on the same curve), and the progression hash is re-pinned with the reason logged.
+  - [ ] The simulator has bots that place posts by the stars a player would have at that point, wear the gear a player would have found, place Mage Posts when the gate is taken, and buy gold nodes on the same curve, and the progression hash is re-pinned with the reason logged.
   - [ ] Levels 1 to 5 hit the Advisor's win-rate targets for the Flare Archer on that curve (about 90% on level 1 and 75% on level 2, the rest from the Advisor's table), with the numbers in the PR body.
   - [ ] A player never goes more than about three runs without being able to afford something new, checked by the same bots.
   - [ ] Any pack numbers changed are data only, and no existing test is loosened without my OK.
+
+### HF-M2-36 Hero gear: five slots, inventory and stat breakdown
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, after HF-M2-34 is merged. CEO go 2026-10-23 10:12. Design: Advisor's view (`/mnt/project-files/holdfast/m2/advisor-tree-stats-gear-ring.md`, section 3). Item numbers are placeholders for HF-M2-35
+- **QA:** full (save data and Hero stats change)
+- **Depends on:** HF-M2-34
+- **Done when:**
+  - [ ] The Hero has five slots (Weapon, Helmet, Armour, Boots, Ring), each with its own stat identity (pack data). The six existing items move to the right slots with their ids kept, and about six new items fill Helmet, Armour, Boots and Ring (about 12 in all).
+  - [ ] The Hero page shows an inventory of owned items; dragging an item into its slot wears it (same gesture as the Plan-page cards) and a tap works too; wearing and removing save, and the Hero page shows a stat breakdown (base, tree, gear) using the existing add-then-multiply rule.
+  - [ ] Items come from play: one first-clear item per level plus elite and boss drops, each given once. Old saves keep what they own and wear (the old `charm` slot maps to the item's new slot) and load without a crash.
+  - [ ] Gear stays Hero-only; no Recruit gear.
+
+### HF-M2-37 Mage Post and the first Tower Gate
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, after HF-M2-36 is merged. CEO go 2026-10-23 10:12 on the Mage Post and the first Tower Gate. Design: the Advisor's sketch (`advisor-tree-grammar-and-first-nodes.md`, Tower Gate I) and its tree view (`advisor-tree-stats-gear-ring.md`, section 1)
+- **QA:** full (new tower type, tree and Plan page change)
+- **Depends on:** HF-M2-36
+- **Done when:**
+  - [ ] Tower Gate I is a star node in the tree (2 stars, and 5 nodes owned) that says how many more nodes it needs. It offers the Mage Post; the Mender and Frost posts are not built and are not offered yet. Taking the gate opens a Mage card on the Plan page, placed in the same slots as the Archer.
+  - [ ] The Mage Post works in a run: area damage that hits hardest in the dark, from pack data (stats in `towers.json`), with its own health, range and cooldown, and monsters target it like the Archer Post.
+  - [ ] A short Mage branch in the tree (a few gold stat nodes, with one Hero link: Eclipse is wider when centred on a Mage Post), placed next to the gate.
+  - [ ] Old saves load unchanged (the gate is simply not taken). The three reserved links, the Mender and Frost posts, walls and Gate II are not built.
 
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
@@ -730,3 +752,4 @@
 - 2026-10-23 01:04: CEO go on HF-M2-29 and HF-M2-30 (build A then B, one combined handoff, then stop). Mockups approved as a guide to iterate later. Retry goes via the Plan page with the last layout kept. Still out: walls, Hero-tower synergies, Recruits, Build 7.
 - 2026-10-23 08:32: CEO decision: no offline earnings in the game (it was an M5 line with an 8-hour cap in the plan). Removed from the plan, the QA-by-risk rules and this board; nothing in the code or save existed only for it, so no code change. Recruits stay parked, to be improved later.
 - 2026-10-23 09:27: CEO go to build the Advisor's tree and star logic (stars buy slots, cards, links and capstones; gold buys stat nodes; empty castle start; Level 0 stub; adjacent nodes only; respec for a small fee). Items HF-M2-32 to HF-M2-35, one PR each in that order. Not in this build: Mage, Mender, Frost, Tower Gate I, the three reserved links, walls, Recruits, Hard and Nightmare replays, blessings, full tutorial text. Stat-model unification (monsters first) is deferred: the tree does not need it and it would widen every PR. Old saves are refunded in gold and given stars rather than mapped node by node.
+- 2026-10-23 10:12: CEO go on the tree pan/zoom fix (inside HF-M2-33), Hero gear slots and inventory (HF-M2-36) and the Mage Post with the first Tower Gate (HF-M2-37). Level 0 tutorial text skipped for now (it may change). Order: HF-M2-32, 33, 34, 36, 37, then the retune HF-M2-35 last so it tunes the finished content. One PR each, then one combined handoff and a stop.
