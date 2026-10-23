@@ -1,5 +1,5 @@
 extends Control
-## Skill tree page: spend gold on the upgrade tree, one web the player pans and zooms. Node
+## Skill tree page: spend gold and stars on the upgrade tree, one web the player pans and zooms. Node
 ## positions and the tab each section belongs to come from the pack. It shows the profile and
 ## asks for changes through signals; the run flow acts on them. Mouse only.
 
@@ -59,6 +59,7 @@ const STAT_TEXT := {
 var selected_pillar := ""
 
 @onready var _gold: Label = %GoldValue
+@onready var _stars: Label = %StarsValue
 @onready var _view: Control = %View
 @onready var _web: Control = %Web
 @onready var _tabs: HBoxContainer = %Tabs
@@ -78,7 +79,7 @@ var _tab_buttons: Dictionary = {}
 var _tab_group := ButtonGroup.new()
 var _tab := ""
 var _panning := false
-var _default_info := "Spend gold on upgrades. Point at one to read what it does."
+var _default_info := "Spend gold and stars on upgrades. Point at one to read what it does."
 
 
 func _ready() -> void:
@@ -111,6 +112,7 @@ func refresh() -> void:
 	if _profile == null:
 		return
 	_gold.text = Hud.format_number(_profile.get_gold())
+	_stars.text = str(_profile.get_stars())
 	selected_pillar = _profile.get_pillar()
 	var owned: Array = _profile.get_upgrades()
 	for id in _node_buttons:
@@ -118,7 +120,7 @@ func refresh() -> void:
 		var button: Button = _node_buttons[id]
 		var bought: bool = id in owned
 		var closed: bool = _profile.why_not_buy(id).begins_with("Closed")
-		button.text = "%s (bought)" % node["name"] if bought else ("%s (closed)" % node["name"] if closed else "%s  %d" % [node["name"], int(node["cost"])])
+		button.text = "%s (bought)" % node["name"] if bought else ("%s (closed)" % node["name"] if closed else "%s  %s" % [node["name"], _price(node)])
 		button.disabled = bought or _profile.why_not_buy(id) != ""
 		button.set_pressed_no_signal(bought)
 		# Only what is one buy away (or already bought) is drawn in full; the rest is dimmed.
@@ -130,7 +132,7 @@ func refresh() -> void:
 	_respec.disabled = owned.is_empty()
 	var next_parts: PackedStringArray = []
 	for id in _profile.get_next_unlocks():
-		next_parts.append("%s (%d): %s" % [_content["upgrade_nodes"][id]["name"], int(_content["upgrade_nodes"][id]["cost"]), _effect_text(id)])
+		next_parts.append("%s (%s): %s" % [_content["upgrade_nodes"][id]["name"], _price(_content["upgrade_nodes"][id]), _effect_text(id)])
 	_next.text = "Next: " + ("  |  ".join(next_parts) if not next_parts.is_empty() else "nothing left to buy here")
 
 
@@ -324,7 +326,21 @@ func _show_default() -> void:
 
 
 func _effect_text(id: String) -> String:
-	return _effects_text(_content["upgrade_nodes"][id].get("effects", []))
+	var node: Dictionary = _content["upgrade_nodes"][id]
+	var parts: PackedStringArray = []
+	if int(node.get("grants", {}).get("slots", 0)) > 0:
+		parts.append("+%d castle slot" % int(node["grants"]["slots"]))
+	if int(node.get("grants", {}).get("cards", 0)) > 0:
+		parts.append("+%d Archer Post card" % int(node["grants"]["cards"]))
+	var effects := _effects_text(node.get("effects", []))
+	if effects != "":
+		parts.append(effects)
+	return ", ".join(parts)
+
+
+## What a node costs as its button and the Next line say it: a gold price as a bare number.
+static func _price(node: Dictionary) -> String:
+	return HoldfastMeta.cost_text(node) if HoldfastMeta.is_star_node(node) else str(int(node["cost"]))
 
 
 static func _effects_text(effects: Array) -> String:
@@ -349,7 +365,7 @@ static func _stat_text(stat: String) -> String:
 
 func _node_text(id: String) -> String:
 	var node: Dictionary = _content["upgrade_nodes"][id]
-	var text := "%s: %s. Cost %d." % [node["name"], _effect_text(id), int(node["cost"])]
+	var text := "%s: %s. Cost %s." % [node["name"], _effect_text(id), HoldfastMeta.cost_text(node)]
 	if node.has("excludes"):
 		var names: PackedStringArray = []
 		for other in node["excludes"]:

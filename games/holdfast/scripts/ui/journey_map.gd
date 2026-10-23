@@ -8,6 +8,8 @@ signal level_requested(id: String)
 signal hero_requested
 signal tree_requested
 signal home_requested
+## A guided purchase (an upgrade node id) the player pressed.
+signal buy_requested(id: String)
 
 const Hud = preload("res://scripts/ui/hud.gd")
 const FONT_PX := 20
@@ -25,9 +27,13 @@ const COLOUR_HERO := Color(0.95, 0.6, 0.2)
 const LABEL_GAP := 20.0
 const HERO_FIGURE := Vector2(44, 64)
 const GLOW_TINT := Color(1.0, 0.85, 0.45)
-const DEFAULT_INFO := "Tap an open level to plan it, the Hero to change path and gear, or the skill tree to spend gold."
+const DEFAULT_INFO := "Tap an open level to plan it, the Hero to change path and gear, or the skill tree to spend gold and stars."
 
 @onready var _gold: Label = %GoldValue
+@onready var _stars: Label = %StarsValue
+@onready var _guide: Control = %Guide
+@onready var _guide_label: Label = %GuideLabel
+@onready var _guide_button: Button = %GuideButton
 @onready var _map: Control = %Map
 @onready var _tree: Button = %TreeButton
 @onready var _back: Button = %BackButton
@@ -42,6 +48,8 @@ var _hero_button: Button
 ## The drawn Hero is a button too (transparent), so the figure itself can be tapped.
 var _hero_figure: Button
 var _next := ""
+## The guided purchase on offer ("" when there is none).
+var _guided := ""
 
 
 func _ready() -> void:
@@ -49,6 +57,7 @@ func _ready() -> void:
 	_ids = _content["levels"].keys()
 	_back.pressed.connect(home_requested.emit)
 	_tree.pressed.connect(tree_requested.emit)
+	_guide_button.pressed.connect(func() -> void: buy_requested.emit(_guided))
 	_map.draw.connect(_draw_map)
 	_map.resized.connect(_place)
 	_build_nodes()
@@ -67,15 +76,16 @@ func refresh() -> void:
 	if _profile == null:
 		return
 	_gold.text = Hud.format_number(_profile.get_gold())
-	var unlocked: Array = _profile.get_unlocked_levels()
+	_stars.text = str(_profile.get_stars())
+	_refresh_guide()
 	_next = ""
 	for id in _ids:
-		if id in unlocked and not _profile.is_level_won(id):
+		if _is_open(id) and not _profile.is_level_won(id):
 			_next = id
 			break
 	for id in _ids:
 		var button: Button = _buttons[id]
-		var open: bool = id in unlocked
+		var open: bool = _is_open(id)
 		var won: bool = _profile.is_level_won(id)
 		button.disabled = not open
 		button.text = "" if won else str(int(_content["levels"][id].get("number", 0)))
@@ -88,6 +98,41 @@ func refresh() -> void:
 	_tree.modulate = GLOW_TINT if buyable > 0 else Color.WHITE
 	_place()
 	_map.queue_redraw()
+
+
+## True when the player can plan the level: it is unlocked and, past the tutorial, the
+## castle has a slot with an Archer Post for it.
+func _is_open(id: String) -> bool:
+	return id in _profile.get_unlocked_levels() and (_content["levels"][id].get("tutorial", false) or _profile.has_a_tower())
+
+
+## Shows the next compulsory purchase (First Slot, then the first Archer Post) once the
+## tutorial is won, until the castle has a tower.
+func _refresh_guide() -> void:
+	_guided = ""
+	var tutorial := HoldfastMeta.tutorial_level(_content)
+	if (tutorial == "" or _profile.is_level_won(tutorial)) and not _profile.has_a_tower():
+		for id in HoldfastMeta.castle_rules(_content).get("guided", []):
+			if not id in _profile.get_upgrades():
+				_guided = id
+				break
+	_guide.visible = _guided != ""
+	if _guided == "":
+		return
+	var node: Dictionary = _content["upgrade_nodes"][_guided]
+	var why: String = _profile.why_not_buy(_guided)
+	_guide_label.text = "Before the next level, spend a star on %s: %s.%s" % [node["name"], _grant_text(node), "" if why == "" else " " + why + "."]
+	_guide_button.text = "Buy %s (%s)" % [node["name"], HoldfastMeta.cost_text(node)]
+	_guide_button.disabled = why != ""
+
+
+static func _grant_text(node: Dictionary) -> String:
+	var parts: PackedStringArray = []
+	if int(node.get("grants", {}).get("slots", 0)) > 0:
+		parts.append("a place on the castle ring for a post")
+	if int(node.get("grants", {}).get("cards", 0)) > 0:
+		parts.append("an Archer Post to put in it")
+	return " and ".join(parts)
 
 
 ## How many tree nodes the player could buy right now.
@@ -116,8 +161,17 @@ func _status(id: String, open: bool, won: bool) -> String:
 	if id == _next:
 		return "Boss: %s" % boss if boss != "" else "Next"
 	if won:
-		return "Won"
+		return "Won, %s" % _stars_text(id)
 	return "Boss: %s" % boss if boss != "" else "Open"
+
+
+## "2 of 3 stars" for a level; a tutorial, which pays a fixed reward, says "2 stars".
+func _stars_text(id: String) -> String:
+	var level: Dictionary = _content["levels"][id]
+	var got: int = _profile.get_level_stars(id)
+	if level.get("tutorial", false):
+		return "%d stars" % got
+	return "%d of %d stars" % [got, HoldfastMeta.MAX_LEVEL_STARS]
 
 
 func _build_nodes() -> void:
@@ -162,8 +216,15 @@ func _build_nodes() -> void:
 
 func _level_text(id: String) -> String:
 	var level: Dictionary = _content["levels"][id]
-	var open: bool = _profile != null and id in _profile.get_unlocked_levels()
-	return "%s: %d waves. %s" % [level["name"], level["waves"].size(), "Tap to plan it." if open else "Locked. Win the previous level."]
+	var open: bool = _profile != null and _is_open(id)
+	var text := "%s: %d waves. " % [level["name"], level["waves"].size()]
+	if level.get("tutorial", false):
+		text += str(level["intro"]) + " "
+	if open:
+		return text + ("Tap to play it." if level.get("tutorial", false) else "Tap to plan it.")
+	if _profile != null and id in _profile.get_unlocked_levels():
+		return text + "Buy your First Slot and Archer Post first."
+	return text + "Locked. Win the previous level."
 
 
 ## Where level `i` of `n` sits on the map: a path rising to the right with a gentle wiggle.
@@ -171,7 +232,7 @@ func _node_at(i: int, n: int) -> Vector2:
 	var area := _map.size
 	var t := float(i) / maxf(float(n - 1), 1.0)
 	var x := lerpf(area.x * 0.24, area.x * 0.9, t)
-	var y := lerpf(area.y * 0.7, area.y * 0.3, t) + sin(float(i) * 2.0) * area.y * 0.07
+	var y := lerpf(area.y * 0.7, area.y * 0.3, t) + sin(float(i) * 1.8) * area.y * 0.07
 	return Vector2(x, y)
 
 
@@ -208,7 +269,7 @@ func _place() -> void:
 		var label: Label = _names[_ids[i]]
 		# Below the node and clear of its glow ring, which also keeps it off the path.
 		label.position = Vector2(clampf(at.x - label.size.x * 0.5, 0.0, _map.size.x - label.size.x), at.y + NODE_RADIUS + LABEL_GAP)
-	_hero_button.position = _lighthouse_at() + Vector2(-_hero_button.size.x * 0.5, 62.0)
+	_hero_button.position = _lighthouse_at() + Vector2(-_hero_button.size.x * 0.5, -125.0)
 	_hero_figure.position = _hero_at() - HERO_FIGURE * 0.5 + Vector2(0, -4)
 
 
@@ -230,7 +291,7 @@ func _draw_map() -> void:
 	for i in n:
 		var id: String = _ids[i]
 		var at := _node_at(i, n)
-		var open: bool = _profile != null and id in _profile.get_unlocked_levels()
+		var open: bool = _profile != null and _is_open(id)
 		var won: bool = _profile != null and _profile.is_level_won(id)
 		_map.draw_circle(at, NODE_RADIUS, COLOUR_WON if won else (COLOUR_OPEN if open else COLOUR_LOCKED))
 		if boss_name(id) != "":
@@ -248,4 +309,7 @@ func _on_visibility_changed() -> void:
 		refresh()
 		_info.text = DEFAULT_INFO
 		var target: Button = _buttons.get(_next)
-		(target if target != null and not target.disabled else _tree).grab_focus()
+		if _guided != "" and not _guide_button.disabled:
+			_guide_button.grab_focus()
+		else:
+			(target if target != null and not target.disabled else _tree).grab_focus()

@@ -1,0 +1,23 @@
+{
+  "castle_rules": [
+    {
+      "id": "castle",
+      "spots": [
+        {"id": "spot_1", "name": "East", "x": 100, "y": 0},
+        {"id": "spot_2", "name": "West", "x": -100, "y": 0},
+        {"id": "spot_3", "name": "South", "x": 0, "y": 100},
+        {"id": "spot_4", "name": "North", "x": 0, "y": -100},
+        {"id": "spot_5", "name": "South-east", "x": 71, "y": 71},
+        {"id": "spot_6", "name": "North-west", "x": -71, "y": -71},
+        {"id": "spot_7", "name": "South-west", "x": -71, "y": 71},
+        {"id": "spot_8", "name": "North-east", "x": 71, "y": -71}
+      ],
+      "guided": ["castle_slot_1", "castle_archer_1"],
+      "star_tiers": [
+        {"above": 0, "stars": 1},
+        {"above": 0.5, "stars": 2},
+        {"above": 0.8, "stars": 3}
+      ]
+    }
+  ]
+}

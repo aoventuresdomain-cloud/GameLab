@@ -43,6 +43,7 @@ func _ready() -> void:
 	journey.tree_requested.connect(_show.bind(Screen.TREE))
 	journey.hero_requested.connect(_show.bind(Screen.HERO))
 	journey.level_requested.connect(_level_picked)
+	journey.buy_requested.connect(profile.buy)
 	hero_page.back_requested.connect(_show.bind(Screen.MAP))
 	hero_page.tree_requested.connect(_open_tree_at.bind("Hero"))
 	hero_page.pillar_requested.connect(profile.select_pillar)
@@ -71,29 +72,36 @@ func _open_tree_at(tab: String) -> void:
 	_show(Screen.TREE)
 
 
-## A tap on an open level of the journey map plans a run on it.
+## A tap on an open level of the journey map plans a run on it; a locked level does nothing.
 func _level_picked(id: String) -> void:
+	if not id in profile.get_unlocked_levels():
+		return
 	profile.select_level(id)
 	_plan_run()
 
 
-## Opens the Plan page first when the level has Archer Post sites, else starts the run.
+## Opens the Plan page first, else starts the run when the level is a tutorial (its post is
+## fixed). A castle with no Archer Post yet plans nothing: the map asks for the first buys.
 ## Slots start empty on a first visit; after a run they hold the layout last used.
 func _plan_run() -> void:
 	if source.is_running():
 		return
 	var level := profile.get_level()
-	var layout := profile.get_layout(level)
-	if layout.is_empty():
+	if profile.is_tutorial(level):
 		_start_run()
 		return
+	if not profile.has_a_tower():
+		_show(Screen.MAP)
+		return
 	var saved := profile.has_saved_layout(level)
-	planning.open(level, layout if saved else [], saved)
+	planning.open(level, profile.get_layout(level) if saved else [], saved, profile.get_owned_spots(), profile.get_castle_cards())
 	_show(Screen.PLAN)
 
 
 ## The player's sites are saved with the profile, then the run starts on them.
 func _planned(layout: Array) -> void:
+	if layout.is_empty():
+		return
 	profile.set_layout(profile.get_level(), layout)
 	_start_run()
 
@@ -123,9 +131,14 @@ func _next_level(id: String) -> void:
 func _on_run_ended(result: Dictionary) -> void:
 	var next := ""
 	if result.has("result"):
+		var level := str(result["result"].get("level", ""))
+		var stars_before := profile.get_stars_earned()
+		var first_win: bool = result["result"].get("outcome") == HoldfastRules.OUTCOME_WON and not profile.is_level_won(level)
 		profile.bank_run(result["result"])
+		result["stars_paid"] = profile.get_stars_earned() - stars_before
+		result["reward_gold"] = profile.get_reward_gold(level) if first_win else 0
 		if result["result"].get("outcome") == HoldfastRules.OUTCOME_WON:
-			next = profile.get_next_level(str(result["result"].get("level", "")))
+			next = profile.get_next_level(level)
 	summary.show_summary(result, next)
 	_show(Screen.SUMMARY)
 

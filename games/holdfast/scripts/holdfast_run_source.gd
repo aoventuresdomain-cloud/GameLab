@@ -22,7 +22,7 @@ var controller_override: SimController = null
 var report_errors := true
 
 var upgrades: Array = []
-## The Archer Post sites to build on (null: the level's default layout).
+## The Archer Post sites or castle spots to build on (null: the level's default layout).
 var layout: Variant = null
 ## What the Hero wears ({slot: item id}) and what the player owns, so a drop is new.
 var gear: Dictionary = {}
@@ -149,13 +149,22 @@ func get_wave_banner() -> String:
 	return _rules.wave_banner() if _rules else ""
 
 
-## Where the Archer Posts stand, until the first wave starts ("" on a level with no sites).
+## Where the Archer Posts stand, until the first wave starts; a tutorial says its teaching
+## text instead ("" when there is nothing to say).
 func get_posts_note() -> String:
-	if _rules == null or _rules.wave > 0 or _rules.layout_ids.is_empty():
+	if _rules == null or _rules.wave > 0:
 		return ""
+	var content := HoldfastContent.base()
+	if _rules.tutorial:
+		return str(content["levels"][_rules.level_id].get("intro", ""))
+	if _rules.layout_ids.is_empty():
+		return ""
+	var spot_names := {}
+	for spot in HoldfastMeta.castle_rules(content).get("spots", []):
+		spot_names[str(spot["id"])] = str(spot["name"])
 	var names: PackedStringArray = []
 	for id in _rules.layout_ids:
-		names.append(str(id).replace("_", " ").capitalize())
+		names.append(str(spot_names.get(id, str(id).replace("_", " ").capitalize())))
 	return "Posts: " + ", ".join(names)
 
 

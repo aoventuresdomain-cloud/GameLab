@@ -3,9 +3,12 @@
     {"id": "flare_archer", "name": "Flare Archer", "order": 0, "tab": "Hero"},
     {"id": "archer_post", "name": "Archer Post", "order": 1, "tab": "Archer Post"},
     {"id": "keep", "name": "Keep", "order": 2, "tab": "Keep"},
-    {"id": "gold", "name": "Tithe", "order": 3, "tab": "Keep"}
+    {"id": "gold", "name": "Tithe", "order": 3, "tab": "Keep"},
+    {"id": "castle", "name": "Castle", "order": 4, "tab": "Castle"}
   ],
   "upgrade_nodes": [
+    {"id": "castle_slot_1", "name": "First Slot", "branch": "castle", "tier": 1, "at": {"x": 3600, "y": 0}, "currency": "stars", "cost": 1, "grants": {"slots": 1}},
+    {"id": "castle_archer_1", "name": "Archer Post", "branch": "castle", "tier": 2, "at": {"x": 3600, "y": 64}, "currency": "stars", "cost": 1, "requires": ["castle_slot_1"], "grants": {"cards": 1}},
     {"id": "flare_boots", "name": "Light feet", "branch": "flare_archer", "hero": "flare_archer", "tier": 1, "at": {"x": 0, "y": 0}, "cost": 90, "effects": [{"stat": "hero.move_speed", "add": 20}]},
     {"id": "flare_hide", "name": "Oilskin coat", "branch": "flare_archer", "hero": "flare_archer", "tier": 1, "at": {"x": 290, "y": 0}, "cost": 80, "effects": [{"stat": "hero.health", "add": 20}]},
     {"id": "flare_focus", "name": "Steady aim", "branch": "flare_archer", "hero": "flare_archer", "tier": 1, "at": {"x": 580, "y": 0}, "cost": 120, "effects": [{"stat": "hero.attack.damage", "add": 2}]},

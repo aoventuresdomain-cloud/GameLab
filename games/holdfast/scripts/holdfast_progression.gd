@@ -22,7 +22,7 @@ static func buy_cheapest(nodes: Dictionary, owned: Array, gold: int, avoid: Arra
 				continue
 			var node: Dictionary = nodes[id]
 			var cost := int(node["cost"])
-			if cost > gold or not _requirements_met(node, owned + bought) or _closed(nodes, owned + bought, id):
+			if HoldfastMeta.is_star_node(node) or cost > gold or not _requirements_met(node, owned + bought) or _closed(nodes, owned + bought, id):
 				continue
 			if best == "" or cost < best_cost or (cost == best_cost and str(id) < best):
 				best = id
@@ -48,6 +48,8 @@ static func _closed(nodes: Dictionary, owned: Array, id: String) -> bool:
 static func reachable_total(nodes: Dictionary, owned: Array, avoid: Array = []) -> int:
 	var reachable := {}
 	for id in nodes:
+		if HoldfastMeta.is_star_node(nodes[id]):
+			continue
 		var open: bool = id in owned or (not id in avoid and not _closed(nodes, owned, id))
 		for required in nodes[id].get("requires", []):
 			open = open and reachable.has(required)
@@ -75,6 +77,8 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 	var bank := 0
 	var owned := []
 	var profile := HoldfastMeta.new_profile(content)
+	# The bot plays as a player past the tutorial, so it starts on the first real level.
+	profile = HoldfastMeta.bank_run(content, profile, {"outcome": HoldfastRules.OUTCOME_WON, "level": HoldfastMeta.tutorial_level(content), "gold": 0})
 	var unlocks := []
 	var runs := []
 	var outcomes := {}

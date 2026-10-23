@@ -34,7 +34,7 @@ layout_mode = 2
 
 [node name="Column" type="VBoxContainer" parent="Centre/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 24
+theme_override_constants/separation = 14
 
 [node name="Title" type="Label" parent="Centre/Panel/Column"]
 unique_name_in_owner = true
@@ -72,6 +72,23 @@ layout_mode = 2
 theme_type_variation = &"HudValue"
 text = "0 / 0"
 horizontal_alignment = 2
+
+[node name="StarsCaption" type="Label" parent="Centre/Panel/Column/Stats"]
+layout_mode = 2
+text = "Stars won"
+
+[node name="StarsValue" type="Label" parent="Centre/Panel/Column/Stats"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudValue"
+text = "0"
+horizontal_alignment = 2
+
+[node name="Reward" type="Label" parent="Centre/Panel/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+horizontal_alignment = 1
 
 [node name="GearFound" type="Label" parent="Centre/Panel/Column"]
 unique_name_in_owner = true

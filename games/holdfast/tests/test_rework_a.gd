@@ -3,7 +3,7 @@ extends KitTestCase
 ## nodes and the Hero figure, the Hero page, and the links on the result screen.
 
 const Main := preload("res://scenes/main.tscn")
-const LEVELS := ["outpost", "shingle_beach", "tidewrack_cove", "old_pier", "gull_rock"]
+const LEVELS := ["first_watch", "outpost", "shingle_beach", "tidewrack_cove", "old_pier", "gull_rock"]
 
 
 func _main() -> Node:
@@ -43,22 +43,23 @@ func test_a_new_game_has_the_first_level_next_and_the_rest_locked() -> void:
 	var main := _main()
 	var map: Control = main.journey
 	map.refresh()
-	expect_eq(map._next, "outpost")
-	expect_false(map._buttons["outpost"].disabled)
+	expect_eq(map._next, "first_watch")
+	expect_false(map._buttons["first_watch"].disabled)
 	for id in LEVELS.slice(1):
 		expect_true(map._buttons[id].disabled, "%s is locked" % id)
 		expect_true(map._names[id].text.ends_with("Boss: Fog Warden (locked)" if id == "gull_rock" else "Locked"), id)
-	expect_eq(map._buttons["outpost"].text, "1", "an open level shows its number")
+	expect_eq(map._buttons["first_watch"].text, "0", "an open level shows its number")
 	main.free()
 
 
 func test_a_cleared_level_loses_its_number_and_the_next_one_opens() -> void:
 	var main := _main()
 	var map: Control = main.journey
+	ThroughLevelZero.apply(main.get_node("Profile"))
 	_win(main.get_node("Profile"), ["outpost", "shingle_beach"])
 	expect_eq(map._next, "tidewrack_cove")
 	expect_eq(map._buttons["outpost"].text, "", "a tick is drawn instead")
-	expect_true(map._names["outpost"].text.ends_with("Won"))
+	expect_true(map._names["outpost"].text.ends_with("Won, 1 of 3 stars"))
 	expect_false(map._buttons["outpost"].disabled, "a cleared level can be replayed")
 	expect_false(map._buttons["tidewrack_cove"].disabled)
 	expect_true(map._buttons["old_pier"].disabled)
@@ -69,7 +70,8 @@ func test_only_the_level_with_a_boss_is_marked() -> void:
 	var main := _main()
 	for id in LEVELS:
 		expect_eq(main.journey.boss_name(id), "Fog Warden" if id == "gull_rock" else "", id)
-	_win(main.get_node("Profile"), LEVELS.slice(0, 4))
+	ThroughLevelZero.apply(main.get_node("Profile"))
+	_win(main.get_node("Profile"), LEVELS.slice(0, 5))
 	expect_true(main.journey._names["gull_rock"].text.ends_with("Boss: Fog Warden"))
 	main.free()
 
@@ -77,9 +79,10 @@ func test_only_the_level_with_a_boss_is_marked() -> void:
 func test_tapping_an_open_level_plans_it_and_a_locked_one_does_nothing() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
+	ThroughLevelZero.apply(profile)
 	_win(profile, ["outpost"])
 	main.journey._buttons["old_pier"].pressed.emit()
-	expect_eq(profile.get_level(), "outpost", "locked: no change")
+	expect_eq(profile.get_level(), "first_watch", "locked: no change")
 	main.journey.level_requested.emit("shingle_beach")
 	expect_eq(profile.get_level(), "shingle_beach")
 	expect_true(main.planning.visible and not main.journey.visible, "the Plan page opens")
@@ -144,14 +147,16 @@ func test_the_map_and_the_summary_both_open_the_skill_tree_and_it_returns_to_the
 func test_retry_after_a_loss_goes_through_the_plan_page_with_the_last_layout_kept() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
-	profile.set_layout("outpost", ["north_gate"])
+	ThroughLevelZero.apply(profile)
+	profile.select_level("outpost")
+	profile.set_layout("outpost", ["spot_1"])
 	main.call("_on_run_ended", {"gold_earned": 5, "waves_cleared": 1, "total_waves": 5, "keep_fell": true,
 			"result": {"outcome": HoldfastRules.OUTCOME_LOST, "level": "outpost", "gold": 5}})
 	var retry: Button = main.summary.get_node("%PlayAgainButton")
 	expect_eq(retry.text, "Retry")
 	retry.pressed.emit()
 	expect_true(main.planning.visible and not main.summary.visible)
-	expect_eq(main.planning._chosen, ["north_gate"], "the last layout is kept")
+	expect_eq(main.planning._chosen, ["spot_1"], "the last layout is kept")
 	main.free()
 
 

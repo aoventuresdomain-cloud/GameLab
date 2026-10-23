@@ -151,6 +151,7 @@ func test_the_whole_arena_is_on_screen_below_the_hud_at_common_window_sizes() ->
 	var window_before := tree.root.size
 	for level in ["outpost", "gull_rock"]:
 		source.level_id = level
+		source.layout = null
 		source.start_run()
 		var rules := source.get_rules()
 		expect_eq(rules.arena_size(), SIZES[level], level + " is the level on show")

@@ -265,8 +265,10 @@ var enemies: Array[Enemy] = []
 var tower: Attacker
 ## Every Archer Post of the run (`tower` is the first); the level's layout picks them.
 var towers: Array[Attacker] = []
-## The site ids the towers stand on (empty on a level without sites).
+## The site or castle spot ids the towers stand on (empty when the level's own tower stands alone).
 var layout_ids: Array = []
+## A tutorial level: its Keep cannot fall and its one post is the level's own.
+var tutorial := false
 ## The first Recruit (M1's staff member); `recruits` holds all of them.
 var staff: Attacker
 var recruits: Array[Attacker] = []
@@ -331,6 +333,8 @@ var _wave_damage_scale: PackedFloat64Array = []
 var _wave_remaining: PackedInt32Array = []
 var _wave_leaked: PackedByteArray = []
 var _next_uid := 1
+## The castle's spots by id, for a layout that names them.
+var _castle_spots := {}
 
 
 func setup(config: Dictionary, rng: SimRng) -> void:
@@ -370,6 +374,10 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		break
 	_gear_owned = config.get("gear_owned", [])
 	_level_number = int(level.get("number", 0))
+	tutorial = bool(level.get("tutorial", false))
+	for castle in content.get("castle_rules", {}).values():
+		for spot in castle["spots"]:
+			_castle_spots[str(spot["id"])] = spot
 	for enemy_data in _enemy_types.values():
 		if str(enemy_data.get("tier", "normal")) == "boss":
 			problems.append_array(BossRules.validate(float(enemy_data["health"]), enemy_data.get("required_ability")))
@@ -443,7 +451,7 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		towers.append(built)
 		_defenders.append(built)
 	tower = towers[0]
-	if level.has("sites"):
+	if _uses_layout(level, config.get("layout", null)):
 		for at in chosen:
 			layout_ids.append(str(at["id"]))
 	for at in placements:
@@ -500,10 +508,25 @@ func _attacker(kind: String, at: Dictionary, data: Dictionary, damage: float, ex
 	return a
 
 
-## The sites the run builds an Archer Post on: a level with `sites` takes the
-## layout (site ids, at most `max_posts`, no repeats; the first site when none is
-## given), a level without keeps its one placed tower. Empty when the layout is bad.
+## True when the run builds on a layout: castle spots the layout names, or a level's own `sites`.
+func _uses_layout(level: Dictionary, layout: Variant) -> bool:
+	return not tutorial and (_names_castle_spots(layout) or level.has("sites"))
+
+
+func _names_castle_spots(layout: Variant) -> bool:
+	return layout is Array and not layout.is_empty() and _castle_spots.has(str(layout[0]))
+
+
+## The sites the run builds an Archer Post on. A tutorial keeps its one placed tower. A
+## layout that names castle spots takes them (no repeats, any of the castle's). Otherwise a
+## level with `sites` takes the layout (site ids, at most `max_posts`, no repeats; the first
+## site when none is given) and a level without keeps its one placed tower. Empty when the
+## layout is bad.
 func _chosen_sites(level: Dictionary, layout: Variant) -> Array:
+	if tutorial:
+		return [level["tower"]]
+	if _names_castle_spots(layout):
+		return _pick(layout, _castle_spots, _castle_spots.size())
 	if not level.has("sites"):
 		return [level["tower"]]
 	var by_id := {}
@@ -512,7 +535,13 @@ func _chosen_sites(level: Dictionary, layout: Variant) -> Array:
 	if layout != null and not layout is Array:
 		return []
 	var ids: Array = [str(level["sites"][0]["id"])] if layout == null else layout
-	if ids.is_empty() or ids.size() > int(level.get("max_posts", 1)):
+	return _pick(ids, by_id, int(level.get("max_posts", 1)))
+
+
+## The entries of `by_id` that `ids` name, in order; [] when there are none, more than
+## `limit`, an unknown id or a repeat.
+func _pick(ids: Array, by_id: Dictionary, limit: int) -> Array:
+	if ids.is_empty() or ids.size() > limit:
 		return []
 	var chosen := []
 	var seen := {}
@@ -528,9 +557,12 @@ func _chosen_sites(level: Dictionary, layout: Variant) -> Array:
 ## unchosen site closest in direction to its centre, until `max_posts` are chosen.
 ## Ids only; [] for a level with no sites.
 static func best_layout(level: Dictionary) -> Array:
-	var sites: Array = level.get("sites", [])
-	var arcs: Array = level.get("spawn_arcs", [])
-	var wanted := mini(int(level.get("max_posts", 1)), sites.size())
+	return best_sites(level.get("sites", []), level.get("spawn_arcs", []), int(level.get("max_posts", 1)))
+
+
+## The same for any list of sites (or castle spots) and arcs: up to `wanted` ids.
+static func best_sites(sites: Array, arcs: Array, wanted: int) -> Array:
+	wanted = mini(wanted, sites.size())
 	var chosen := []
 	if arcs.is_empty():
 		for i in wanted:
@@ -791,7 +823,7 @@ func _step_enemies(dt: float) -> void:
 		var travel := enemy.speed * (1.0 - slow) * dt
 		if dist - travel <= contact:
 			if enemy.target == "" and not enemy.besieges:
-				keep_health = maxi(keep_health - enemy.damage, 0)
+				_hurt_keep(enemy.damage)
 				_wave_gone(enemy.wave, false)
 				continue
 			if dist > contact:
@@ -800,7 +832,7 @@ func _step_enemies(dt: float) -> void:
 			if enemy.hit_in <= 0.0:
 				enemy.hit_in = enemy.hit_interval
 				if enemy.target == "":
-					keep_health = maxi(keep_health - enemy.damage, 0)
+					_hurt_keep(enemy.damage)
 				else:
 					_hit_unit(unit, enemy.damage)
 		else:
@@ -1428,6 +1460,12 @@ func _gain_xp(amount: int) -> void:
 	while staff_xp >= staff_xp_per_level * staff_level:
 		staff_xp -= staff_xp_per_level * staff_level
 		staff_level += 1
+
+
+## The Keep takes a blow; a tutorial's Keep takes none.
+func _hurt_keep(amount: int) -> void:
+	if not tutorial:
+		keep_health = maxi(keep_health - amount, 0)
 
 
 func _wave_gone(w: int, killed: bool) -> void:
