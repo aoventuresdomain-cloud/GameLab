@@ -11,6 +11,11 @@ const KITE_FRACTION := 0.75
 ## it doesn't shuffle back and forth.
 const HOLD_BAND := 15.0
 const ABILITY_MIN_ENEMIES := 3
+## A shrouded boss is worth the ability once it is this close to the keep, where the towers
+## and the Hero can all reach it, or once it is within the Hero's attack range (it may be
+## chasing them); until then the ability is kept back for it.
+const BOSS_CAST_DISTANCE := 300.0
+const BOSS_HERO_MARGIN := 60.0
 ## A downed Recruit is only worth a trip when no enemy is within this of them.
 const REVIVE_CLEARANCE := 100.0
 
@@ -44,7 +49,20 @@ func get_input(rules: SimRules, _tick: int) -> Dictionary:
 		elif nearest_dist < want - HOLD_BAND:
 			move = -towards
 	move = _stay_in_the_ring(run, move)
-	return {"move": [move.x, move.y], "ability": in_ability_reach >= ABILITY_MIN_ENEMIES}
+	var ability := in_ability_reach >= ABILITY_MIN_ENEMIES
+	var boss := _boss(run)
+	if boss != null:
+		var near := boss.position.length() <= BOSS_CAST_DISTANCE or boss.position.distance_to(run.hero_position) <= float(run.hero_attack["range"]) + BOSS_HERO_MARGIN
+		ability = boss.exposed_left <= 0.0 and near
+	return {"move": [move.x, move.y], "ability": ability}
+
+
+## The boss on the field, or null.
+static func _boss(run: HoldfastRules) -> HoldfastRules.Enemy:
+	for enemy in run.enemies:
+		if enemy.required_ability != "" and enemy.health > 0.0:
+			return enemy
+	return null
 
 
 ## The bot plays inside the fog edge, where enemies come from: a step that would

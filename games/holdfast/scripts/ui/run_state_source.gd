@@ -57,6 +57,11 @@ func get_posts_note() -> String:
 	return ""
 
 
+## What a boss on the field says about its shroud, "" when there is none.
+func get_boss_note() -> String:
+	return ""
+
+
 ## The Hero's health now and at most.
 func get_hero_health() -> int:
 	return 0

@@ -50,9 +50,12 @@ func _refresh_hero() -> void:
 	var banner: String = _source.get_wave_banner()
 	_wave_banner.text = banner
 	_wave_banner.visible = banner != ""
-	var posts: String = _source.get_posts_note()
-	_posts_note.text = posts
-	_posts_note.visible = posts != ""
+	# A boss's note outranks the posts line (that one is only up before wave 1).
+	var note: String = _source.get_boss_note()
+	if note == "":
+		note = _source.get_posts_note()
+	_posts_note.text = note
+	_posts_note.visible = note != ""
 
 
 ## Pulls the current values, for when the HUD is shown mid-run.

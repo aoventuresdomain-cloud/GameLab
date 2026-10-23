@@ -2,6 +2,10 @@
   "enemies": [
     {"id": "grunt", "name": "Grunt", "health": 10, "speed": 56, "radius": 10, "damage": 5, "engage_distance": 160, "gold": 2, "xp_chance": 0.3, "xp_value": 1},
     {"id": "runner", "name": "Runner", "health": 6, "speed": 105, "radius": 8, "damage": 3, "engage_distance": 160, "gold": 3, "xp_chance": 0.2, "xp_value": 1},
-    {"id": "brute", "name": "Brute", "health": 45, "speed": 34, "radius": 16, "damage": 15, "engage_distance": 160, "gold": 12, "xp_chance": 1.0, "xp_value": 3}
+    {"id": "brute", "name": "Brute", "health": 45, "speed": 34, "radius": 16, "damage": 15, "engage_distance": 160, "gold": 12, "xp_chance": 1.0, "xp_value": 3},
+    {"id": "sprinter", "name": "Sprinter", "health": 7, "speed": 165, "radius": 8, "damage": 4, "engage_distance": 160, "gold": 4, "xp_chance": 0.25, "xp_value": 1},
+    {"id": "bulwark", "name": "Bulwark", "health": 110, "speed": 26, "radius": 20, "damage": 22, "engage_distance": 160, "gold": 20, "xp_chance": 1.0, "xp_value": 4},
+    {"id": "tide_captain", "name": "Tide Captain", "tier": "elite", "health": 150, "speed": 40, "radius": 18, "damage": 14, "engage_distance": 160, "gold": 30, "xp_chance": 1.0, "xp_value": 5},
+    {"id": "fog_warden", "name": "Fog Warden", "tier": "boss", "health": 400, "speed": 24, "radius": 28, "damage": 30, "engage_distance": 160, "gold": 120, "xp_chance": 1.0, "xp_value": 10, "required_ability": "path_ability", "exposed_seconds": 6, "besieges": true, "hit_interval": 2.0}
   ]
 }

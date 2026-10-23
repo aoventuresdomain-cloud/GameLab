@@ -90,6 +90,11 @@ func set_layout(level: String, layout: Array) -> void:
 	_apply(HoldfastMeta.set_layout(_content, data, level, layout))
 
 
+## Wears an owned item, or takes it off when it is already worn.
+func toggle_gear(id: String) -> void:
+	_apply(HoldfastMeta.toggle_gear(_content, data, id))
+
+
 func select_level(id: String) -> void:
 	_apply(HoldfastMeta.select_level(_content, data, id))
 
@@ -134,6 +139,16 @@ func get_level() -> String:
 ## The Archer Post sites a run on `level` builds on ([] when the level has none).
 func get_layout(level: String) -> Array:
 	return HoldfastMeta.layout_for(_content, data, level)
+
+
+## Owned gear item ids, in the order found.
+func get_gear_owned() -> Array:
+	return data["gear"]["owned"]
+
+
+## {slot: item id} for what the Hero wears (empty slots left out).
+func get_gear_worn() -> Dictionary:
+	return HoldfastMeta.worn_gear(data)
 
 
 func get_pillar() -> String:

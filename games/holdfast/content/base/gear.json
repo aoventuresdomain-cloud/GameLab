@@ -1,0 +1,13 @@
+{
+  "gear_rules": [
+    {"id": "gear", "name": "Gear rules", "slots": ["weapon", "charm"], "elite_levels": [2, 3], "boss_level": 5, "elite_chance": 1.0}
+  ],
+  "gear_items": [
+    {"id": "gull_feather_fletching", "name": "Gull-feather fletching", "slot": "weapon", "effects": [{"stat": "hero.attack.damage", "add": 2}]},
+    {"id": "tarred_bowstring", "name": "Tarred bowstring", "slot": "weapon", "effects": [{"stat": "hero.attack.cooldown", "multiply": 0.9}]},
+    {"id": "driftwood_stave", "name": "Driftwood stave", "slot": "weapon", "effects": [{"stat": "hero.attack.range", "add": 40}]},
+    {"id": "lamp_oil_flask", "name": "Lamp-oil flask", "slot": "charm", "effects": [{"stat": "hero.ability.cooldown", "multiply": 0.85}]},
+    {"id": "sea_glass_charm", "name": "Sea-glass charm", "slot": "charm", "effects": [{"stat": "hero.health", "add": 20}]},
+    {"id": "wave_worn_boots", "name": "Wave-worn boots", "slot": "charm", "effects": [{"stat": "hero.move_speed", "add": 25}]}
+  ]
+}

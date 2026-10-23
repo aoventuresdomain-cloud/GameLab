@@ -24,6 +24,9 @@ var report_errors := true
 var upgrades: Array = []
 ## The Archer Post sites to build on (null: the level's default layout).
 var layout: Variant = null
+## What the Hero wears ({slot: item id}) and what the player owns, so a drop is new.
+var gear: Dictionary = {}
+var gear_owned: Array = []
 
 var _engine: SimEngine
 var _rules: HoldfastRules
@@ -63,7 +66,7 @@ func start_run() -> void:
 	var controller: SimController = controller_override
 	if controller == null:
 		controller = HoldfastHeroBot.new() if use_bot else _player
-	var engine := SimEngine.new(rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content, hero_path, layout), HoldfastRules.TICK_RATE)
+	var engine := SimEngine.new(rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content, hero_path, layout, gear, gear_owned), HoldfastRules.TICK_RATE)
 	if rules.setup_error != "":
 		if report_errors:
 			push_error("Holdfast: cannot start a run: " + rules.setup_error)
@@ -154,6 +157,19 @@ func get_posts_note() -> String:
 	for id in _rules.layout_ids:
 		names.append(str(id).replace("_", " ").capitalize())
 	return "Posts: " + ", ".join(names)
+
+
+## While a boss is on the field: whether its shroud is up and what lifts it.
+func get_boss_note() -> String:
+	if _rules == null:
+		return ""
+	for enemy in _rules.enemies:
+		if enemy.required_ability != "" and enemy.health > 0.0:
+			var name := str(HoldfastContent.base()["enemies"][enemy.type]["name"])
+			if enemy.exposed_left > 0.0:
+				return "%s exposed: %d s" % [name, ceili(enemy.exposed_left)]
+			return "%s shrouded: use your special" % name
+	return ""
 
 
 ## Read-only use: drawing and tests. Never step or change it.

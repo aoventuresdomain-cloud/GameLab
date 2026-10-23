@@ -11,6 +11,7 @@ const Hud = preload("res://scripts/ui/hud.gd")
 @onready var _title: Label = %Title
 @onready var _gold_value: Label = %GoldValue
 @onready var _waves_value: Label = %WavesValue
+@onready var _gear_found: Label = %GearFound
 @onready var _play_again_button: Button = %PlayAgainButton
 @onready var _keep_button: Button = %KeepButton
 @onready var _next_level_button: Button = %NextLevelButton
@@ -34,6 +35,12 @@ func show_summary(summary: Dictionary, next_level: String = "") -> void:
 	_title.text = "The keep has fallen" if summary.get("keep_fell", false) else "Holdfast holds!"
 	_gold_value.text = Hud.format_number(int(summary.get("gold_earned", 0)))
 	_waves_value.text = "%d / %d" % [int(summary.get("waves_cleared", 0)), int(summary.get("total_waves", 0))]
+	var found: PackedStringArray = []
+	var items: Dictionary = HoldfastContent.base().get("gear_items", {})
+	for id in summary.get("result", {}).get("gear_found", []):
+		found.append(str(items.get(id, {}).get("name", id)))
+	_gear_found.text = "Gear found: " + ", ".join(found)
+	_gear_found.visible = not found.is_empty()
 
 
 func _on_visibility_changed() -> void:
