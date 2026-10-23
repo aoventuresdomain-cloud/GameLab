@@ -47,6 +47,10 @@ const RETARGET_TICKS := 10
 const EFFECT_SECONDS := 0.25
 ## A tower or Recruit with nothing in range looks again after this long.
 const SCAN_SECONDS := 0.1
+## Crossfire: a second shot from another post counts when it lands this soon after the first.
+const CROSSFIRE_SECONDS := 1.0
+## Last Light flares when a post is down to this share of its health.
+const LAST_LIGHT_AT := 0.25
 ## How long the Hero cannot be hurt after getting up, when the Hero path does not say.
 const DEFAULT_UNTOUCHABLE_SECONDS := 2.0
 ## A time within this of a deadline counts as having reached it.
@@ -58,6 +62,9 @@ const DEFAULT_ARENA := Vector2(1920.0, 858.0)
 class Enemy:
 	extends RefCounted
 	var uid: int
+	## The post that last shot this enemy and when (Crossfire).
+	var shot_by := ""
+	var shot_at := -100.0
 	var type: String
 	var wave: int
 	var position: Vector2
@@ -191,6 +198,31 @@ class Attacker:
 	var repair := 0.0
 	var shots := 0
 	var storm_in := 0.0
+	## The links (tree stars), all zero without them. Lit Post: shoots faster by `hero_haste`
+	## with the Hero within `hero_radius`. Crossfire: `crossfire` more damage on an enemy another
+	## post hit in the last second. Pillar Echo: arrows burn. Rally: the Hero standing still
+	## within `rally_radius` repairs it and shields it (damage cut by `rally_shield`, kept for
+	## `rally_seconds`). Last Light: once in danger with the Hero within `last_light_radius`, a
+	## volley of `last_light` times its damage on everything in range. Watchtower: the Hero
+	## within `watch_radius` shoots `watch_range` further.
+	var hero_haste := 0.0
+	var hero_radius := 0.0
+	var crossfire := 0.0
+	var burn_dps := 0.0
+	var burn_seconds := 0.0
+	var rally_repair := 0.0
+	var rally_shield := 0.0
+	var rally_radius := 0.0
+	var rally_seconds := 0.0
+	var last_light := 0.0
+	var last_light_radius := 0.0
+	var watch_range := 0.0
+	var watch_radius := 0.0
+	var shield_left := 0.0
+	var last_light_spent := false
+	var last_light_due := false
+	## True when any link above is on, which is when the tower's hash carries their state.
+	var links := false
 	var pierce_width := 0.0
 
 
@@ -233,6 +265,8 @@ var hero_delays: Array = []
 ## Seconds the Hero cannot be hurt after getting up, and how many are left.
 var hero_untouchable_seconds := DEFAULT_UNTOUCHABLE_SECONDS
 var hero_grace_left := 0.0
+## True while the Hero is up and standing still (Rally).
+var hero_holding := false
 ## Where the Hero last fell, for drawing.
 var hero_fell_at := Vector2.ZERO
 ## The path's colour ("#rrggbb") for drawing.
@@ -602,6 +636,9 @@ func _build_tower(at: Dictionary, tower_id: String, data: Dictionary, stats: Dic
 	a.storm_share = _add(stats, key + "storm_share")
 	a.storm_in = a.storm_every
 	a.repair = _add(stats, key + "repair")
+	for field in ["hero_haste", "hero_radius", "crossfire", "burn_dps", "burn_seconds", "rally_repair", "rally_shield", "rally_radius", "rally_seconds", "last_light", "last_light_radius", "watch_range", "watch_radius"]:
+		a.set(field, _add(stats, key + field))
+	a.links = a.hero_haste > 0.0 or a.crossfire > 0.0 or a.burn_dps > 0.0 or a.rally_radius > 0.0 or a.last_light > 0.0 or a.watch_range > 0.0
 	return a
 
 
@@ -709,6 +746,8 @@ func step(dt: float, input: Dictionary) -> void:
 	_step_recruits(dt)
 	for built in towers:
 		_storm(built, dt)
+		_rally(built, dt)
+		_last_light_volley(built)
 		_attack(built, built.damage, dt)
 		if built.repair > 0.0 and enemies.is_empty():
 			built.health = UnitHealth.repair(built.health, built.repair * dt)
@@ -879,8 +918,12 @@ func _hit_unit(unit: Attacker, amount: float) -> void:
 				carried_xp = 0
 		return
 	if unit.kind == "tower":
+		if unit.shield_left > 0.0:
+			amount *= 1.0 - unit.rally_shield
 		unit.health = UnitHealth.damage(unit.health, amount)
 		unit.up = unit.health["alive"]
+		if unit.up:
+			_last_light(unit)
 	else:
 		unit.health = RecruitRules.damage(unit.health, amount)
 		unit.up = not unit.health["downed"]
@@ -958,6 +1001,7 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 	hero_ability_ready_in = maxf(hero_ability_ready_in - dt, 0.0)
 	hero_rapid_left = maxf(hero_rapid_left - dt, 0.0)
 	hero_rapid_ready_in = maxf(hero_rapid_ready_in - dt, 0.0)
+	hero_holding = false
 	if hero_state["downed"]:
 		hero_rapid_left = 0.0
 		hero_state = HeroKnockdown.tick(hero_state, dt)
@@ -973,6 +1017,7 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 		_step_dash(dt)
 		return
 	var move := _input_vector(input.get("move"))
+	hero_holding = move == Vector2.ZERO
 	if move != Vector2.ZERO:
 		hero_position = _in_arena(hero_position + move * hero_speed * dt)
 	var target := _nearest_enemy(hero_position)
@@ -981,7 +1026,7 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 		hero_facing = to_target.normalized()
 	elif target == null and move != Vector2.ZERO:
 		hero_facing = move.normalized()
-	if hero_attack_ready_in <= 0.0 and target != null and to_target.length() <= float(hero_attack["range"]) + target.radius:
+	if hero_attack_ready_in <= 0.0 and target != null and to_target.length() <= float(hero_attack["range"]) + _watch_bonus() + target.radius:
 		hero_attack_ready_in = float(hero_attack["cooldown"])
 		_use(hero_attack, target)
 	var ability: Variant = input.get("ability")
@@ -1133,7 +1178,7 @@ func _fire(action: Dictionary) -> void:
 		arrow.velocity = hero_facing.rotated(offset) * float(action["speed"])
 		arrow.damage = float(action["damage"])
 		arrow.radius = float(action["radius"])
-		arrow.distance_left = float(action["range"])
+		arrow.distance_left = float(action["range"]) + _watch_bonus()
 		arrow.pierce_left = int(action.get("pierce", 1))
 		arrow.burn_dps = float(action.get("burn_dps", 0.0))
 		arrow.burn_seconds = float(action.get("burn_seconds", 0.0))
@@ -1348,11 +1393,77 @@ func _attack(attacker: Attacker, damage: float, dt: float) -> void:
 	attacker.shots += 1
 	if attacker.burst_every > 0 and attacker.shots % attacker.burst_every == 0:
 		dealt *= 1.0 + attacker.burst_extra
+	if attacker.crossfire > 0.0:
+		if best.shot_by != "" and best.shot_by != attacker.key and time - best.shot_at <= CROSSFIRE_SECONDS:
+			dealt *= 1.0 + attacker.crossfire
+		best.shot_by = attacker.key
+		best.shot_at = time
 	_hurt(best, dealt, 0.0)
+	if attacker.burn_dps > 0.0:
+		best.burn_dps = maxf(best.burn_dps, attacker.burn_dps)
+		best.burn_left = maxf(best.burn_left, attacker.burn_seconds)
 	if attacker.extra_targets > 0 or attacker.pierce > 0:
 		_hit_more(attacker, best, dealt)
 	attacker.ready_in = attacker.cooldown
+	if attacker.hero_haste > 0.0 and _hero_within(attacker.position, attacker.hero_radius):
+		attacker.ready_in /= 1.0 + attacker.hero_haste
 	attacker.last_target = best.uid
+
+
+## True while the Hero is up and within `reach` of `point`.
+func _hero_within(point: Vector2, reach: float) -> bool:
+	return not hero_state["downed"] and hero_position.distance_to(point) <= reach
+
+
+## Watchtower: the furthest bonus range any standing post gives a Hero within its reach.
+func _watch_bonus() -> float:
+	var bonus := 0.0
+	for built in towers:
+		if built.up and built.watch_range > bonus and _hero_within(built.position, built.watch_radius):
+			bonus = built.watch_range
+	return bonus
+
+
+## Rally: a Hero standing still beside a post repairs it and keeps its shield up; the shield then
+## runs out `rally_seconds` after they leave.
+func _rally(attacker: Attacker, dt: float) -> void:
+	if attacker.rally_radius <= 0.0:
+		return
+	attacker.shield_left = maxf(attacker.shield_left - dt, 0.0)
+	if attacker.up and hero_holding and _hero_within(attacker.position, attacker.rally_radius):
+		attacker.shield_left = attacker.rally_seconds
+		attacker.health = UnitHealth.repair(attacker.health, attacker.rally_repair * dt)
+
+
+## Last Light: a post hurt down to a quarter of its health with the Hero close flares once and
+## shoots `last_light` times its damage at everything in range (on the towers' turn). It can flare
+## again once it has been mended past half health.
+func _last_light(attacker: Attacker) -> void:
+	if attacker.last_light <= 0.0:
+		return
+	var health := float(attacker.health["health"])
+	var full := float(attacker.health["max_health"])
+	if health > full * 0.5:
+		attacker.last_light_spent = false
+	if attacker.last_light_spent or health > full * LAST_LIGHT_AT or not _hero_within(attacker.position, attacker.last_light_radius):
+		return
+	attacker.last_light_spent = true
+	attacker.last_light_due = true
+
+
+## The volley itself, a moment after the blow that set it off: it is fired from the towers' turn so
+## that nothing is hurt while the enemies are still being walked.
+func _last_light_volley(attacker: Attacker) -> void:
+	if not attacker.last_light_due:
+		return
+	attacker.last_light_due = false
+	if not attacker.up:
+		return
+	var reach := attacker.attack_range
+	for enemy in enemies:
+		if enemy.health > 0.0 and enemy.position.distance_to(attacker.position) <= reach + enemy.radius:
+			_hurt(enemy, attacker.damage * attacker.last_light, 0.0)
+	_add_effect("burst", attacker.position, reach, Vector2.ZERO)
 
 
 ## A tower's twin and piercing shots: the next enemies nearest the keep within
@@ -1569,7 +1680,10 @@ func _projectile_states() -> Array:
 func _tower_states() -> Array:
 	var list := []
 	for built in towers:
-		list.append([built.ready_in, built.last_target, built.damage, built.health["health"], built.up, built.shots, built.storm_in])
+		var state := [built.ready_in, built.last_target, built.damage, built.health["health"], built.up, built.shots, built.storm_in]
+		if built.links:
+			state.append_array([built.shield_left, built.last_light_spent, built.last_light_due])
+		list.append(state)
 	return list
 
 

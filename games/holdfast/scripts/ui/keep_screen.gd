@@ -16,6 +16,8 @@ const HEADING_GAP := 44.0
 ## About 0.4, a power-of-two fraction so the stored scale equals the limit exactly.
 const ZOOM_MIN := 0.375
 const ZOOM_MAX := 2.5
+## How visible the sections of other tabs are while a tab is in view.
+const OTHER_TAB_ALPHA := 0.3
 const ZOOM_STEP := 1.15
 ## A press that moves further than this is a drag that pans the web, not a click that buys.
 const DRAG_PX := 6.0
@@ -56,6 +58,19 @@ const STAT_TEXT := {
 	"ability.burn_dps": "burn damage a second",
 	"ability.burn_seconds": "burn seconds",
 	"ability.cooldown": "barrage cooldown (seconds)",
+	"hero_haste": "faster shots with the Hero near",
+	"hero_radius": "how near the Hero must be",
+	"crossfire": "damage when another post hit the same enemy",
+	"burn_dps": "burn damage a second",
+	"burn_seconds": "burn seconds",
+	"rally_repair": "repair a second beside the Hero",
+	"rally_shield": "damage turned away",
+	"rally_radius": "how near the Hero must stand",
+	"rally_seconds": "shield seconds",
+	"last_light": "times its damage in the last volley",
+	"last_light_radius": "how near the Hero must be",
+	"watch_range": "Hero arrow range beside a post",
+	"watch_radius": "how near the Hero must stand",
 }
 
 ## The Hero path id the profile has picked (its section is the one the tree shows).
@@ -257,7 +272,16 @@ func show_tab(label: String, picked := true) -> void:
 	_web.scale = Vector2.ONE * zoom
 	_web.position = _view.size * 0.5 - rect.get_center() * zoom
 	_keep_in_view()
+	_fade_other_tabs(true)
 	_web.queue_redraw()
+
+
+## While a tab is in view the sections of the other tabs fade, so what shows at its edges is not
+## read as part of it; panning or zooming brings them back.
+func _fade_other_tabs(fade: bool) -> void:
+	for section in _sections_in_order():
+		var here := str(section.get("tab", section["name"])) == _tab
+		_section_columns[section["id"]].modulate.a = OTHER_TAB_ALPHA if fade and not here else 1.0
 
 
 ## The area the shown sections of a tab cover in the web, headings included.
@@ -285,6 +309,7 @@ func _holders_rect(holders: Array) -> Rect2:
 func zoom_by(factor: float, around := Vector2(-1, -1)) -> void:
 	var point := _view.size * 0.5 if around.x < 0.0 else around
 	var zoom := clampf(_web.scale.x * factor, ZOOM_MIN, ZOOM_MAX)
+	_fade_other_tabs(false)
 	_web.position = point - (point - _web.position) * (zoom / _web.scale.x)
 	_web.scale = Vector2.ONE * zoom
 	_keep_in_view()
@@ -306,12 +331,14 @@ func _on_view_input(event: InputEvent) -> void:
 			_dragged = true
 			_panning = true
 		if _panning:
+			_fade_other_tabs(false)
 			_web.position += event.relative
 			_keep_in_view()
 	elif event is InputEventMagnifyGesture:
 		zoom_by(event.factor, event.position)
 		accept_event()
 	elif event is InputEventPanGesture:
+		_fade_other_tabs(false)
 		_web.position -= event.delta * 20.0
 		_keep_in_view()
 		accept_event()
@@ -395,6 +422,8 @@ func _show_default() -> void:
 
 func _effect_text(id: String) -> String:
 	var node: Dictionary = _content["upgrade_nodes"][id]
+	if node.has("text"):
+		return str(node["text"])
 	var parts: PackedStringArray = []
 	if int(node.get("grants", {}).get("slots", 0)) > 0:
 		parts.append("+%d castle slot" % int(node["grants"]["slots"]))

@@ -37,7 +37,7 @@ func _shown(profile: Dictionary) -> Array:
 
 func test_every_node_hangs_off_first_slot_through_the_nodes_it_requires() -> void:
 	var nodes: Dictionary = _content()["upgrade_nodes"]
-	expect_eq(nodes.size(), 45)
+	expect_eq(nodes.size(), 51)
 	var roots := []
 	for id in nodes:
 		if nodes[id].get("requires", []).is_empty():
@@ -88,7 +88,7 @@ func test_a_bought_node_stays_shown_and_the_tree_grows_as_the_player_buys() -> v
 	expect_true(bought["ok"])
 	expect_true(HoldfastMeta.is_visible(content, bought["profile"], "post_sight"))
 	expect_true(HoldfastMeta.is_visible(content, bought["profile"], "post_scope"), "its child appears")
-	expect_eq(_shown(bought["profile"]).size(), before + 1)
+	expect_eq(_shown(bought["profile"]).size(), before + 2, "Scope and the Watchtower link both appear")
 
 
 # ------------------------------------------------------------------ prices and the castle chain
@@ -100,9 +100,9 @@ func test_star_nodes_cost_stars_and_gold_nodes_cost_gold() -> void:
 		if HoldfastMeta.is_star_node(nodes[id]):
 			star_nodes.append(id)
 	star_nodes.sort()
-	var expected := CASTLE_ORDER + ["flare_inferno", "post_piercing", "post_storm"]
+	var expected := CASTLE_ORDER + ["flare_inferno", "post_piercing", "post_storm", "link_lit_post", "link_pillar_echo", "link_rally", "link_last_light", "link_watchtower", "link_crossfire"]
 	expected.sort()
-	expect_eq(star_nodes, expected, "the castle chain and the three capstones are the star nodes")
+	expect_eq(star_nodes, expected, "the castle chain, the three capstones and the six links are the star nodes")
 	for id in nodes:
 		if not HoldfastMeta.is_star_node(nodes[id]):
 			expect_false(nodes[id].has("currency"), id)
