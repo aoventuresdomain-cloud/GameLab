@@ -4,7 +4,7 @@
 
 **Confidence:** high (known work, no outside dependency) · medium (some technical unknowns) · low (depends on the CEO's hands, an outside tool or a QA round).
 
-Last refreshed: 2026-10-21.
+Last refreshed: 2026-10-23 (tree and star logic added; offline earnings removed by the CEO, it was never a line here).
 
 ## Holdfast M1 → Gate 1
 
@@ -31,6 +31,10 @@ The CEO asked for a very lean M2: small changes shipped fast, quick fixes, and t
 | 6 of 8 | Monster variety, the elite drop, Hero gear, the level-5 mini-boss, new monster types, the Hero gear (hit feel and sound moved to after Build 8, CEO 2026-10-22) | HF-M2-16 | About 4 to 5 hours | Low |
 | Rework A (slot to be decided by the CEO) | Main menu, journey map, Plan page with Archer Post cards dragged into slots, Auto-place and Quick start, result screen links, Hero figure and page | HF-M2-29 | AI build time: about 2.5 to 4 hours in two PRs (includes the Hero page), plus about 45 minutes of QA per PR | Medium to low |
 | Rework B | The skill tree as one zoomable web with jump tabs (Hero, Archer Post, Keep) | HF-M2-30 | AI build time: about 2 to 3 hours, plus about 45 minutes of QA | Low |
+| Tree 1 (CEO go 2026-10-23 09:27) | Stars, empty castle, Level 0 stub, guided first buys, Plan ring of 8 spots, old-save refund | HF-M2-32 | AI build time: about 1.5 to 3 hours including QA. Worst case 5, upper bound 6 | Medium to low |
+| Tree 2 | One connected tree with gold and star nodes, castle arm, respec fee, tree drag-pan and zoom fix | HF-M2-33 | About 1.5 to 3 hours including QA. Worst case 5, upper bound 6 | Low |
+| Tree 3 | Six Hero and tower links (Lit Post, Pillar Echo, Rally, Last Light, Watchtower, Crossfire) | HF-M2-34 | About 1.5 to 3 hours including QA. Worst case 5, upper bound 6 | Low |
+| Tree 4 | Retune levels 1 to 5 for an empty-castle start, bots that place posts by stars | HF-M2-35 | About 1.5 to 3 hours including QA. Worst case 6, upper bound 8 (retune rounds) | Low |
 | 7 of 8 | Pacing bands passed in the simulator for every pillar, style guide for approval, name check (end of the core) | HF-M2-01, HF-M2-05, HF-M2-08, HF-M2-11 | About 2 to 3 hours | Medium |
 | 8 of 8 (parked) | Recruits: hiring, classes, movement, skill trees, recruitment board. Only if the CEO wants it after the core | HF-M2-03 | About 4 to 5 hours | Low |
 | End | Full QA round on one fixed commit, then the Gate 2 brief | HF-M2-12, HF-M2-13 | About 2 to 3 hours | Low |

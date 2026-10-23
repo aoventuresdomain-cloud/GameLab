@@ -429,6 +429,50 @@
   - [ ] The tree opens from the journey map, and the existing save, migration and refund rules are unchanged (no node ids lost).
   - [ ] Bridge nodes and Hero and tower synergies (the Keeper's light through towers) are NOT in this item; they follow as their own item once the web and the Plan page exist.
 
+### HF-M2-32 Stars, empty castle and Level 0 (tree rework, part 1)
+- **Owner:** Gameplay Engineer
+- **Status:** Ready. CEO go 2026-10-23 09:27 on the Advisor's tree and star logic (`/mnt/project-files/holdfast/m2/advisor-tree-grammar-and-first-nodes.md`). Costs are placeholders, tuned in HF-M2-35. Build order is HF-M2-32, 33, 34, 35, one PR each, merged in order
+- **QA:** full (save data and the run flow change)
+- **Done when:**
+  - [ ] A new game starts with an empty castle (no slots, no cards, no stars). Level 0 is on the journey map, cannot be lost (the Keep cannot fall) and pays exactly 2 stars and 150 gold once; its teaching text is a short stub (the full tutorial text follows later).
+  - [ ] A won level pays stars once per level: 1 for a win, 2 above 50% Keep health left, 3 above 80%; a replay pays only the stars not yet earned. Stars show on the journey map and in the tree.
+  - [ ] After Level 0 the map guides two compulsory purchases in order, First Slot then the first tower from the tree (Archer is the only choice for now), before any level can be started. The Plan page shows only the slots and cards owned, around the castle ring of 8 spots, and will not start a level with no tower placed.
+  - [ ] Old saves load: every bought node is refunded in full as gold, stars are granted as if the won levels had paid 3 each plus the 2 from Level 0, and layouts reset to a first visit. A null or damaged field loads as a fresh value, never a crash.
+
+### HF-M2-33 One connected tree with stars, slots and respec (tree rework, part 2)
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, after HF-M2-32 is merged. Pan and zoom fix (below) is included only if the CEO agrees to fold it in
+- **QA:** full
+- **Depends on:** HF-M2-32
+- **Done when:**
+  - [ ] The tree is one connected graph (castle arm, Keeper ring, Flare Archer arm, Archer Post arm, Tithe and Stone walls) that starts at First Slot; only nodes next to an owned node are shown; positions and links come from the packs (data only).
+  - [ ] Gold nodes cost gold, star nodes cost stars; castle nodes grant the slots and cards the Plan page uses (cards stay two behind slots); forks exclude each other; both Archer capstones can be bought with enough stars; the two new stat nodes (Steady hands, Lamp oil) work in a run.
+  - [ ] Respec refunds a node's price minus a fee (about 10% of a gold node's price, at least 20 gold; a flat 50 gold for a star node; stars back in full) and is refused mid-run.
+  - [ ] Dragging pans the web from anywhere including over nodes (a click without movement still buys), wheel and trackpad zoom at the cursor between about 0.4x and 2.5x, and the page does not scroll or zoom over the tree.
+  - [ ] Mage, Mender and Frost posts, Tower Gate I, walls, Recruits and Hard and Nightmare replays are not built (they need the CEO's go).
+
+### HF-M2-34 Six Hero and tower links (tree rework, part 3)
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, after HF-M2-33 is merged
+- **QA:** full (core rules change)
+- **Depends on:** HF-M2-33
+- **Done when:**
+  - [ ] Lit Post and Crossfire work in a run: a post with the Hero within about 150px fires 25% faster; two posts shooting the same enemy deal 20% more.
+  - [ ] Pillar Echo and Last Light work: Flare Archer arrows from the post burn; a post about to fall flares and fires one big volley when the Hero is close.
+  - [ ] Rally and Watchtower work: holding next to a post repairs and shields it for 3 seconds; standing near an Archer Post gives the Hero more range.
+  - [ ] Each link is a star node placed next to the nodes it needs in the tree, has a test of its effect and of its absence, and the Hero is not nerfed.
+
+### HF-M2-35 Retune levels 1 to 5 for the empty-castle start (tree rework, part 4)
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, after HF-M2-34 is merged. Archer only; other pillars stay in HF-M2-28
+- **QA:** full
+- **Depends on:** HF-M2-34
+- **Done when:**
+  - [ ] The simulator has bots that place posts by the stars a player would have at that point (and buy gold nodes on the same curve), and the progression hash is re-pinned with the reason logged.
+  - [ ] Levels 1 to 5 hit the Advisor's win-rate targets for the Flare Archer on that curve (about 90% on level 1 and 75% on level 2, the rest from the Advisor's table), with the numbers in the PR body.
+  - [ ] A player never goes more than about three runs without being able to afford something new, checked by the same bots.
+  - [ ] Any pack numbers changed are data only, and no existing test is loosened without my OK.
+
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
 - **Status:** Ready, Build 7 of 8, parked until the CEO confirms after testing Build 6; amended for the parked Recruits
@@ -685,3 +729,4 @@
 - 2026-10-23 00:57: CEO idea: show the Hero (and later Recruits) on the journey map, tappable for gear selection. Advisor agreed; folded into HF-M2-29 as a Hero figure and Hero page (existing pillar picker and Gear row move there, no new gear, Recruits later). No separate item. Nothing starts until the CEO says go.
 - 2026-10-23 01:04: CEO go on HF-M2-29 and HF-M2-30 (build A then B, one combined handoff, then stop). Mockups approved as a guide to iterate later. Retry goes via the Plan page with the last layout kept. Still out: walls, Hero-tower synergies, Recruits, Build 7.
 - 2026-10-23 08:32: CEO decision: no offline earnings in the game (it was an M5 line with an 8-hour cap in the plan). Removed from the plan, the QA-by-risk rules and this board; nothing in the code or save existed only for it, so no code change. Recruits stay parked, to be improved later.
+- 2026-10-23 09:27: CEO go to build the Advisor's tree and star logic (stars buy slots, cards, links and capstones; gold buys stat nodes; empty castle start; Level 0 stub; adjacent nodes only; respec for a small fee). Items HF-M2-32 to HF-M2-35, one PR each in that order. Not in this build: Mage, Mender, Frost, Tower Gate I, the three reserved links, walls, Recruits, Hard and Nightmare replays, blessings, full tutorial text. Stat-model unification (monsters first) is deferred: the tree does not need it and it would widen every PR. Old saves are refunded in gold and given stars rather than mapped node by node.
