@@ -47,6 +47,9 @@ const RETARGET_TICKS := 10
 const EFFECT_SECONDS := 0.25
 ## A tower or Recruit with nothing in range looks again after this long.
 const SCAN_SECONDS := 0.1
+## The most damage armour can turn away, and the shortest a get-up wait can become (a share of base).
+const HERO_ARMOUR_CAP := 0.7
+const HERO_GETUP_MIN := 0.5
 ## Crossfire: a second shot from another post counts when it lands this soon after the first.
 const CROSSFIRE_SECONDS := 1.0
 ## Last Light flares when a post is down to this share of its health.
@@ -259,6 +262,8 @@ var hero_position := Vector2.ZERO
 var hero_start := Vector2.ZERO
 var hero_radius := 0.0
 var hero_pickup_radius := 0.0
+## The share (0 to 1) of damage the Hero turns away (gear), at most HERO_ARMOUR_CAP.
+var hero_armour := 0.0
 ## HeroKnockdown state: health, whether they are down and for how much longer.
 var hero_state: Dictionary = {}
 var hero_delays: Array = []
@@ -358,6 +363,9 @@ var _gear_items: Dictionary = {}
 var _gear_rules: Dictionary = {}
 var _gear_owned: Array = []
 var _level_number := 0
+## The item a first win of this level gives ("" for none).
+var _first_clear_gear := ""
+var _levels_data: Dictionary = {}
 ## Spawn schedule, sorted by time: [time, wave index, enemy id].
 var _schedule: Array = []
 var _next_spawn := 0
@@ -408,6 +416,8 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		break
 	_gear_owned = config.get("gear_owned", [])
 	_level_number = int(level.get("number", 0))
+	_first_clear_gear = str(level.get("first_clear_gear", ""))
+	_levels_data = content.get("levels", {})
 	tutorial = bool(level.get("tutorial", false))
 	for castle in content.get("castle_rules", {}).values():
 		for spot in castle["spots"]:
@@ -460,10 +470,14 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	hero_speed = _apply(stats, hero_key + "move_speed", float(hero_data["move_speed"]))
 	hero_radius = float(hero_data["radius"])
 	hero_colour = str(hero_data.get("colour", hero_colour))
-	hero_pickup_radius = float(hero_data["pickup_radius"])
+	hero_pickup_radius = _apply(stats, hero_key + "pickup_radius", float(hero_data["pickup_radius"]))
+	hero_armour = clampf(_add(stats, hero_key + "armour") / 100.0, 0.0, HERO_ARMOUR_CAP)
 	hero_attack = _tuned(hero_data["attack"], hero_key + "attack.", stats)
 	hero_ability = _tuned(hero_data["ability"], hero_key + "ability.", stats)
 	hero_delays = hero_data["knockdown_delays"]
+	var getup := maxf(_apply(stats, hero_key + "getup_time", 1.0), HERO_GETUP_MIN)
+	if getup != 1.0:
+		hero_delays = hero_delays.map(func(wait: Variant) -> float: return float(wait) * getup)
 	hero_untouchable_seconds = float(hero_data.get("untouchable_seconds", DEFAULT_UNTOUCHABLE_SECONDS))
 	hero_state = HeroKnockdown.new_state(_apply(stats, hero_key + "health", float(hero_data["health"])))
 	var arena: Dictionary = level.get("arena", {})
@@ -905,7 +919,7 @@ func _hit_unit(unit: Attacker, amount: float) -> void:
 		if hero_untouchable():
 			return
 		var before := int(hero_state["knockdowns"])
-		hero_state = HeroGetUp.take_damage(hero_state, amount, hero_delays, hero_grace_left)
+		hero_state = HeroGetUp.take_damage(hero_state, amount * (1.0 - hero_armour), hero_delays, hero_grace_left)
 		if int(hero_state["knockdowns"]) > before:
 			_targets_dirty = true
 			var fall := HeroGetUp.start_fall(hero_position, carried_xp)
@@ -1550,11 +1564,19 @@ func _drop_gear(enemy: Enemy) -> void:
 		return
 	var pool := []
 	for id in _gear_items:
-		if not id in _gear_owned and not id in gear_found:
+		if not id in _gear_owned and not id in gear_found and not _is_first_clear_gear(id):
 			pool.append(id)
 	var item := HeroGear.pick_item(pool, pick)
 	if item != "":
 		gear_found.append(item)
+
+
+## True when some level hands this item out for a first win, so a drop never takes it.
+func _is_first_clear_gear(id: String) -> bool:
+	for level in _levels_data.values():
+		if str(level.get("first_clear_gear", "")) == id:
+			return true
+	return false
 
 
 ## The Hero's carried XP counts (and levels the Recruits) once banked: when the
@@ -1601,6 +1623,10 @@ func wave_banner() -> String:
 func _finish(result_outcome: String) -> void:
 	_bank_xp()
 	outcome = result_outcome
+	# The level's own piece of gear, once: a win while the player does not own it yet.
+	if outcome == OUTCOME_WON and _first_clear_gear != "" and _gear_items.has(_first_clear_gear):
+		if not _first_clear_gear in _gear_owned and not _first_clear_gear in gear_found:
+			gear_found.append(_first_clear_gear)
 
 
 func is_finished() -> bool:

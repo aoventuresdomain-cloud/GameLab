@@ -35,6 +35,20 @@ extends RefCounted
 
 const SAVE_VERSION := 5
 
+## The rows of the Hero page's breakdown: the stat the pack and the rules know it by, where its
+## base sits in the Hero's pack entry, and how it is shown.
+const HERO_ROWS := [
+	{"label": "Health", "stat": "health", "field": "health", "unit": ""},
+	{"label": "Move speed", "stat": "move_speed", "field": "move_speed", "unit": ""},
+	{"label": "Arrow damage", "stat": "attack.damage", "field": "attack.damage", "unit": ""},
+	{"label": "Time between arrows", "stat": "attack.cooldown", "field": "attack.cooldown", "unit": "s"},
+	{"label": "Arrow range", "stat": "attack.range", "field": "attack.range", "unit": ""},
+	{"label": "Ability cooldown", "stat": "ability.cooldown", "field": "ability.cooldown", "unit": "s"},
+	{"label": "Armour", "stat": "armour", "base": 0.0, "unit": "%", "cap": HoldfastRules.HERO_ARMOUR_CAP * 100.0},
+	{"label": "Get-up wait", "stat": "getup_time", "field": "knockdown_delays", "unit": "s", "floor_share": HoldfastRules.HERO_GETUP_MIN},
+	{"label": "Pickup reach", "stat": "pickup_radius", "field": "pickup_radius", "unit": ""},
+]
+
 ## The most stars one level can pay; the pack's star tiers never go above it.
 const MAX_LEVEL_STARS := 3
 ## The castle's own id in the pack's `castle_rules`.
@@ -125,11 +139,18 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 		for id in _list(saved_gear.get("owned")):
 			if items.has(id) and not id in profile["gear"]["owned"]:
 				profile["gear"]["owned"].append(id)
+		# A piece is worn in its own slot. A save from before the five slots names the old
+		# "charm" slot for pieces that now sit in armour, boots or ring, so a slot name the pack no
+		# longer has does not stop one being worn where it belongs; a known slot must match.
 		var worn: Variant = saved_gear.get("equipped", {})
 		if worn is Dictionary:
-			for slot in profile["gear"]["equipped"]:
-				var id: Variant = worn.get(slot, "")
-				if id in profile["gear"]["owned"] and str(items[id]["slot"]) == slot:
+			for saved_slot in worn:
+				var id: Variant = worn[saved_slot]
+				if not id is String or not id in profile["gear"]["owned"]:
+					continue
+				var slot := str(items[id]["slot"])
+				var known: bool = profile["gear"]["equipped"].has(str(saved_slot))
+				if profile["gear"]["equipped"].has(slot) and profile["gear"]["equipped"][slot] == "" and (not known or str(saved_slot) == slot):
 					profile["gear"]["equipped"][slot] = id
 	var unlocked := unlocked_levels(content, profile)
 	if str(data.get("level", "")) in unlocked:
@@ -168,6 +189,68 @@ static func toggle_gear(content: Dictionary, profile: Dictionary, id: String) ->
 	var unit := {"kind": "hero", "slots": profile["gear"]["equipped"]}
 	out["gear"]["equipped"] = HeroGear.equip(unit, str(item["slot"]), id)["unit"]["slots"]
 	return out
+
+
+## Wears an owned piece in its slot (the piece it replaces stays owned); already worn changes
+## nothing. An item the profile does not own changes nothing.
+static func wear_gear(content: Dictionary, profile: Dictionary, id: String) -> Dictionary:
+	var item: Dictionary = content.get("gear_items", {}).get(id, {})
+	if item.is_empty() or profile["gear"]["equipped"].get(item["slot"], "x") == id:
+		return profile
+	return toggle_gear(content, profile, id)
+
+
+## Takes off whatever a slot holds; an empty or unknown slot changes nothing.
+static func take_off_gear(profile: Dictionary, slot: String) -> Dictionary:
+	if profile["gear"]["equipped"].get(slot, "") == "":
+		return profile
+	var out := profile.duplicate(true)
+	out["gear"]["equipped"][slot] = ""
+	return out
+
+
+## The numbers the Hero page shows for the Hero path the profile plays, one row each:
+## {label, unit, base, tree, gear, final}. `tree` and `gear` are what each source adds to `base`
+## by the rules' own sum (every add first, then every multiply); `final` is what a run starts
+## with. Armour is in percent (capped) and the get-up wait cannot fall below half its base.
+static func hero_breakdown(content: Dictionary, profile: Dictionary) -> Array:
+	var path_id := str(profile["pillar"])
+	var data: Dictionary = content["hero_paths"][path_id]
+	var tree := HoldfastRules.upgrade_stats(content["upgrade_nodes"], profile["upgrades"])
+	var items: Dictionary = content.get("gear_items", {})
+	var gear_nodes := {}
+	var gear_ids := []
+	var worn := worn_gear(profile)
+	for slot in worn:
+		if items.has(worn[slot]) and str(items[worn[slot]]["slot"]) == str(slot):
+			gear_nodes[str(worn[slot])] = {"hero": path_id, "effects": items[worn[slot]]["effects"]}
+			gear_ids.append(str(worn[slot]))
+	var gear := HoldfastRules.upgrade_stats(gear_nodes, gear_ids)
+	var rows := []
+	for spec in HERO_ROWS:
+		var key := "hero.%s.%s" % [path_id, spec["stat"]]
+		var base := _hero_base(data, spec)
+		var t: Dictionary = tree.get(key, {"add": 0.0, "multiply": 1.0})
+		var g: Dictionary = gear.get(key, {"add": 0.0, "multiply": 1.0})
+		var after_tree := (base + float(t["add"])) * float(t["multiply"])
+		var final := (base + float(t["add"]) + float(g["add"])) * float(t["multiply"]) * float(g["multiply"])
+		if spec.has("cap"):
+			final = clampf(final, 0.0, float(spec["cap"]))
+			after_tree = clampf(after_tree, 0.0, float(spec["cap"]))
+		if spec.has("floor_share"):
+			final = maxf(final, base * float(spec["floor_share"]))
+			after_tree = maxf(after_tree, base * float(spec["floor_share"]))
+		rows.append({"label": spec["label"], "unit": spec["unit"], "base": base, "tree": after_tree - base, "gear": final - after_tree, "final": final})
+	return rows
+
+
+static func _hero_base(data: Dictionary, spec: Dictionary) -> float:
+	if not spec.has("field"):
+		return float(spec["base"])
+	var node: Variant = data
+	for part in str(spec["field"]).split("."):
+		node = node[part]
+	return float(node[0]) if node is Array else float(node)
 
 
 ## Level ids the player can play, in pack order: the first level, and each level

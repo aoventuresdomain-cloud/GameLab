@@ -204,6 +204,10 @@
           "type": "string",
           "minLength": 1
         },
+        "first_clear_gear": {
+          "type": "string",
+          "x-ref": "gear_items"
+        },
         "reward": {
           "type": "object",
           "required": [
@@ -976,6 +980,26 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        },
+        "slot_info": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "name",
+              "identity"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "$ref": "#/$defs/name"
+              },
+              "identity": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
         }
       }
     },
@@ -1010,7 +1034,7 @@
             "properties": {
               "stat": {
                 "type": "string",
-                "pattern": "^hero\\.[a-z_]+(\\.[a-z_]+)?$"
+                "pattern": "^(beam_reach|hero\\.[a-z_]+(\\.[a-z_]+)?)$"
               },
               "add": {
                 "type": "number"

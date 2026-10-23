@@ -111,6 +111,21 @@ func toggle_gear(id: String) -> void:
 	_apply(HoldfastMeta.toggle_gear(_content, data, id))
 
 
+## The Hero page's numbers for the path and gear the profile has (HoldfastMeta.hero_breakdown).
+func get_hero_breakdown() -> Array:
+	return HoldfastMeta.hero_breakdown(_content, data)
+
+
+## Wears an owned piece in its slot (no change when it is already worn).
+func wear_gear(id: String) -> void:
+	_apply(HoldfastMeta.wear_gear(_content, data, id))
+
+
+## Takes off whatever the slot holds.
+func take_off_gear(slot: String) -> void:
+	_apply(HoldfastMeta.take_off_gear(data, slot))
+
+
 func select_level(id: String) -> void:
 	_apply(HoldfastMeta.select_level(_content, data, id))
 

@@ -8,7 +8,9 @@ const SAVE_DIR := "user://build6_tests"
 const DT := 1.0 / HoldfastRules.TICK_RATE
 const SCHEMA := HoldfastContent.SCHEMA
 const PILLARS := ["flare_archer", "dusk_mage", "tideblade"]
-const ITEMS := ["gull_feather_fletching", "tarred_bowstring", "driftwood_stave", "lamp_oil_flask", "sea_glass_charm", "wave_worn_boots"]
+const ITEMS := ["gull_feather_fletching", "tarred_bowstring", "driftwood_stave", "storm_cap", "beacon_visor", "sea_glass_charm", "oilskin_vest", "barnacle_plate", "wave_worn_boots", "kelp_sandals", "lamp_oil_flask", "tide_band"]
+## The pieces elites and bosses drop: every piece a level does not hand out for a first win.
+const DROPS := ["tarred_bowstring", "driftwood_stave", "beacon_visor", "sea_glass_charm", "barnacle_plate", "kelp_sandals", "lamp_oil_flask"]
 
 
 # ------------------------------------------------------------------ helpers
@@ -223,7 +225,7 @@ func test_an_elite_on_level_two_always_drops_one_gear_item() -> void:
 		rules._rng = SimRng.new(seed_value + 1)
 		_kill(rules, _enemy(rules, "tide_captain", Vector2(300, 0)))
 		expect_eq(rules.gear_found.size(), 1, "seed %d" % seed_value)
-		expect_true(rules.gear_found[0] in ITEMS)
+		expect_true(rules.gear_found[0] in DROPS)
 
 
 func test_an_elite_drops_on_level_three_but_not_on_levels_one_four_or_five() -> void:
@@ -284,12 +286,12 @@ func test_gear_drops_read_the_pack_numbers_as_floats() -> void:
 
 
 func test_a_drop_is_an_item_the_player_does_not_own_and_never_a_second_of_the_same() -> void:
-	var rules := _world("tidewrack_cove", "flare_archer", {}, ITEMS.slice(0, 5))
+	var rules := _world("tidewrack_cove", "flare_archer", {}, DROPS.slice(0, 6))
 	_kill(rules, _enemy(rules, "tide_captain", Vector2(300, 0)))
-	expect_eq(rules.gear_found, ["wave_worn_boots"], "the only one left to find")
+	expect_eq(rules.gear_found, ["lamp_oil_flask"], "the only one left to find")
 	_kill(rules, _enemy(rules, "tide_captain", Vector2(300, 0)))
-	expect_eq(rules.gear_found, ["wave_worn_boots"], "and not twice in a run")
-	var full := _world("tidewrack_cove", "flare_archer", {}, ITEMS)
+	expect_eq(rules.gear_found, ["lamp_oil_flask"], "and not twice in a run")
+	var full := _world("tidewrack_cove", "flare_archer", {}, DROPS)
 	_kill(full, _enemy(full, "tide_captain", Vector2(300, 0)))
 	expect_eq(full.gear_found, [], "nothing new to find")
 
@@ -311,7 +313,7 @@ func test_the_drops_cover_the_whole_pool() -> void:
 		rules._rng = SimRng.new(seed_value + 1)
 		_kill(rules, _enemy(rules, "tide_captain", Vector2(300, 0)))
 		seen[rules.gear_found[0]] = true
-	expect_eq(seen.size(), ITEMS.size(), "every item can drop: %s" % [seen.keys()])
+	expect_eq(seen.size(), DROPS.size(), "every dropped item can drop: %s" % [seen.keys()])
 
 
 func test_the_result_carries_the_gear_found() -> void:
@@ -328,22 +330,24 @@ func test_a_won_run_on_level_two_has_met_its_elite_and_found_gear() -> void:
 		var report := HoldfastSim.run_headless(seed_value, HoldfastContent.run_config("shingle_beach", kit, content, "flare_archer"))
 		if report["result"]["outcome"] == HoldfastRules.OUTCOME_WON:
 			won += 1
-			expect_eq(report["result"]["gear_found"].size(), 1, "seed %d: the win found a piece of gear" % seed_value)
+			# The elite's drop, and the level's own piece for a first win.
+			expect_eq(report["result"]["gear_found"].size(), 2, "seed %d: the win found two pieces of gear" % seed_value)
+			expect_true("gull_feather_fletching" in report["result"]["gear_found"], "one of them the level's first-clear piece")
 	expect_true(won >= 1, "at least one win to check")
 
 
 # ------------------------------------------------------------------ what gear does
 
-func test_the_pool_has_six_items_two_slots_and_gear_rules_from_the_pack() -> void:
+func test_the_pool_has_twelve_items_five_slots_and_gear_rules_from_the_pack() -> void:
 	var content := HoldfastContent.base()
-	expect_eq(content["gear_items"].size(), 6)
-	expect_eq(content["gear_rules"]["gear"]["slots"], ["weapon", "charm"])
+	expect_eq(content["gear_items"].size(), 12)
+	expect_eq(content["gear_rules"]["gear"]["slots"], ["weapon", "helmet", "armour", "boots", "ring"])
 	var per_slot := {}
 	for id in content["gear_items"]:
 		var slot: String = content["gear_items"][id]["slot"]
 		per_slot[slot] = int(per_slot.get(slot, 0)) + 1
 		expect_true(slot in content["gear_rules"]["gear"]["slots"], "%s fits a slot" % id)
-	expect_eq(per_slot, {"weapon": 3, "charm": 3})
+	expect_eq(per_slot, {"weapon": 3, "helmet": 2, "armour": 3, "boots": 2, "ring": 2})
 	expect_eq(content["gear_rules"]["gear"]["elite_levels"], [2.0, 3.0])
 	expect_eq(int(content["gear_rules"]["gear"]["boss_level"]), 5)
 	expect_eq(float(content["gear_rules"]["gear"]["elite_chance"]), 1.0, "an elite always drops")
@@ -357,9 +361,9 @@ func test_each_item_changes_the_hero_by_its_pack_numbers() -> void:
 		"weapon:gull_feather_fletching": [func(r: HoldfastRules) -> float: return r.hero_attack["damage"], 9.0],
 		"weapon:tarred_bowstring": [func(r: HoldfastRules) -> float: return r.hero_attack["cooldown"], 0.45],
 		"weapon:driftwood_stave": [func(r: HoldfastRules) -> float: return r.hero_attack["range"], 250.0],
-		"charm:lamp_oil_flask": [func(r: HoldfastRules) -> float: return r.hero_ability["cooldown"], 11.9],
-		"charm:sea_glass_charm": [func(r: HoldfastRules) -> float: return r.hero_state["max_health"], 80.0],
-		"charm:wave_worn_boots": [func(r: HoldfastRules) -> float: return r.hero_speed, 195.0],
+		"ring:lamp_oil_flask": [func(r: HoldfastRules) -> float: return r.hero_ability["cooldown"], 11.9],
+		"armour:sea_glass_charm": [func(r: HoldfastRules) -> float: return r.hero_state["max_health"], 80.0],
+		"boots:wave_worn_boots": [func(r: HoldfastRules) -> float: return r.hero_speed, 195.0],
 	}
 	expect_eq(base.hero_attack["damage"], 7.0)
 	for key in expectations:
@@ -371,16 +375,16 @@ func test_each_item_changes_the_hero_by_its_pack_numbers() -> void:
 func test_gear_applies_to_whichever_hero_path_is_played() -> void:
 	var dusk := _world("gull_rock", "dusk_mage", {"weapon": "gull_feather_fletching"})
 	expect_eq(dusk.hero_attack["damage"], 7.0, "Dusk Mage 5 + 2")
-	var tide := _world("gull_rock", "tideblade", {"charm": "sea_glass_charm"})
+	var tide := _world("gull_rock", "tideblade", {"armour": "sea_glass_charm"})
 	expect_eq(tide.hero_state["max_health"], 100.0, "Tideblade 80 + 20")
 
 
 func test_two_pieces_stack_and_a_wrong_slot_or_unknown_item_is_ignored() -> void:
-	var both := _world("gull_rock", "flare_archer", {"weapon": "driftwood_stave", "charm": "wave_worn_boots"})
+	var both := _world("gull_rock", "flare_archer", {"weapon": "driftwood_stave", "boots": "wave_worn_boots"})
 	expect_eq(both.hero_attack["range"], 250.0)
 	expect_eq(both.hero_speed, 195.0)
-	var wrong := _world("gull_rock", "flare_archer", {"charm": "driftwood_stave"})
-	expect_eq(wrong.hero_attack["range"], 210.0, "a weapon in the charm slot does nothing")
+	var wrong := _world("gull_rock", "flare_archer", {"armour": "driftwood_stave"})
+	expect_eq(wrong.hero_attack["range"], 210.0, "a weapon in the armour slot does nothing")
 	var unknown := _world("gull_rock", "flare_archer", {"weapon": "cursed_cutlass"})
 	expect_eq(unknown.hero_attack["damage"], 7.0)
 	expect_eq(unknown.setup_error, "")
@@ -388,7 +392,7 @@ func test_two_pieces_stack_and_a_wrong_slot_or_unknown_item_is_ignored() -> void
 
 func test_gear_never_touches_the_recruits_or_the_towers() -> void:
 	var plain := _world("gull_rock")
-	var worn := _world("gull_rock", "flare_archer", {"weapon": "gull_feather_fletching", "charm": "sea_glass_charm"})
+	var worn := _world("gull_rock", "flare_archer", {"weapon": "gull_feather_fletching", "armour": "sea_glass_charm"})
 	expect_eq(worn.tower.attack_range, plain.tower.attack_range)
 	expect_eq(worn.tower.health["max_health"], plain.tower.health["max_health"])
 	for i in plain.recruits.size():
@@ -397,15 +401,15 @@ func test_gear_never_touches_the_recruits_or_the_towers() -> void:
 
 
 func test_recruits_have_no_gear_slots() -> void:
-	var unit := HeroGear.new_unit("recruit", ["weapon", "charm"])
+	var unit := HeroGear.new_unit("recruit", ["weapon", "armour"])
 	expect_eq(unit["slots"].size(), 0)
 	var hero := HeroGear.new_unit("hero", HoldfastContent.base()["gear_rules"]["gear"]["slots"])
-	expect_eq(hero["slots"].keys(), ["weapon", "charm"])
+	expect_eq(hero["slots"].keys(), ["weapon", "helmet", "armour", "boots", "ring"])
 
 
 func test_gear_in_a_run_changes_the_hash_and_is_replayable() -> void:
 	var plain := SimBotRunner.run(HoldfastRules.new(), HoldfastHeroBot.new(), 3, HoldfastContent.run_config("outpost"), 100000, HoldfastRules.TICK_RATE)
-	var gear := {"weapon": "gull_feather_fletching", "charm": "wave_worn_boots"}
+	var gear := {"weapon": "gull_feather_fletching", "boots": "wave_worn_boots"}
 	var a := SimBotRunner.run(HoldfastRules.new(), HoldfastHeroBot.new(), 3, HoldfastContent.run_config("outpost", [], {}, "", null, gear), 100000, HoldfastRules.TICK_RATE)
 	var b := SimBotRunner.run(HoldfastRules.new(), HoldfastHeroBot.new(), 3, HoldfastContent.run_config("outpost", [], {}, "", null, gear), 100000, HoldfastRules.TICK_RATE)
 	expect_eq(a["hash"], b["hash"], "same gear, same run")
@@ -413,7 +417,7 @@ func test_gear_in_a_run_changes_the_hash_and_is_replayable() -> void:
 
 
 func test_headless_and_playable_build_match_with_gear_worn() -> void:
-	var gear := {"weapon": "tarred_bowstring", "charm": "lamp_oil_flask"}
+	var gear := {"weapon": "tarred_bowstring", "ring": "lamp_oil_flask"}
 	for level in ["shingle_beach", "gull_rock"]:
 		var config := HoldfastContent.run_config(level, ["keep_walls_1"], {}, "dusk_mage", null, gear, [])
 		var headless := SimBotRunner.run(HoldfastRules.new(), HoldfastHeroBot.new(), 6, config, 100000, HoldfastRules.TICK_RATE)
@@ -503,18 +507,18 @@ func test_the_summary_names_the_gear_a_run_found() -> void:
 func test_the_hero_page_lists_owned_gear_and_toggles_it() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
-	var row: HBoxContainer = main.hero_page.get_node("%GearRow")
-	expect_eq(row.get_child_count(), 1, "just the hint while there is no gear")
-	expect_true((row.get_child(0) as Label).text.begins_with("Gear: none yet"))
+	var bag: HFlowContainer = main.hero_page.get_node("%Bag")
+	expect_eq(bag.get_child_count(), 0, "an empty bag while there is no gear")
+	expect_true((main.hero_page.get_node("%BagHint") as Label).text.begins_with("Gear: none yet"))
 	profile.bank_run({"outcome": "won", "level": "shingle_beach", "gold": 0, "gear_found": ["driftwood_stave", "sea_glass_charm"]})
 	await tree.process_frame
-	expect_eq(row.get_child_count(), 3, "caption and two items")
-	expect_eq(profile.get_gear_worn(), {"weapon": "driftwood_stave", "charm": "sea_glass_charm"}, "worn as found")
-	var stave: Button = row.get_child(1)
+	expect_eq(bag.get_child_count(), 2, "the two pieces")
+	expect_eq(profile.get_gear_worn(), {"weapon": "driftwood_stave", "armour": "sea_glass_charm"}, "worn as found")
+	var stave: Button = bag.get_child(0)
 	expect_eq(stave.text, "Driftwood stave")
 	expect_true(stave.button_pressed, "lit while worn")
 	stave.pressed.emit()
-	expect_eq(profile.get_gear_worn(), {"charm": "sea_glass_charm"}, "pressing takes it off")
+	expect_eq(profile.get_gear_worn(), {"armour": "sea_glass_charm"}, "pressing takes it off")
 	main.free()
 
 
@@ -536,9 +540,9 @@ func test_the_run_flow_sends_the_worn_gear_and_the_owned_list_to_the_run() -> vo
 
 # ------------------------------------------------------------------ the profile and its save
 
-func test_a_new_profile_has_two_empty_gear_slots() -> void:
+func test_a_new_profile_has_five_empty_gear_slots() -> void:
 	var profile := HoldfastMeta.new_profile(HoldfastContent.base())
-	expect_eq(profile["gear"], {"owned": [], "equipped": {"weapon": "", "charm": ""}})
+	expect_eq(profile["gear"], {"owned": [], "equipped": {"weapon": "", "helmet": "", "armour": "", "boots": "", "ring": ""}})
 	expect_eq(HoldfastMeta.worn_gear(profile), {})
 
 
@@ -550,7 +554,7 @@ func test_banking_a_run_keeps_its_gear_won_or_lost_and_wears_it_in_a_free_slot()
 	expect_eq(profile["gear"]["equipped"]["weapon"], "driftwood_stave", "worn at once")
 	profile = HoldfastMeta.bank_run(content, profile, {"outcome": "won", "level": "tidewrack_cove", "gold": 5, "gear_found": ["tarred_bowstring", "lamp_oil_flask"]})
 	expect_eq(profile["gear"]["owned"], ["driftwood_stave", "tarred_bowstring", "lamp_oil_flask"])
-	expect_eq(profile["gear"]["equipped"], {"weapon": "driftwood_stave", "charm": "lamp_oil_flask"}, "a worn slot is not taken over")
+	expect_eq(profile["gear"]["equipped"], {"weapon": "driftwood_stave", "helmet": "", "armour": "", "boots": "", "ring": "lamp_oil_flask"}, "a worn slot is not taken over")
 
 
 func test_banking_ignores_unknown_and_repeated_gear() -> void:
@@ -586,17 +590,17 @@ func test_wearing_what_you_do_not_own_changes_nothing() -> void:
 func test_a_save_with_no_gear_loads_and_a_damaged_one_is_repaired() -> void:
 	var content := HoldfastContent.base()
 	var old := HoldfastMeta.from_save(content, {"gold": 7, "upgrades": ["keep_walls_1"]})
-	expect_eq(old["gear"], {"owned": [], "equipped": {"weapon": "", "charm": ""}}, "a Build 5 save has no gear")
+	expect_eq(old["gear"], {"owned": [], "equipped": {"weapon": "", "helmet": "", "armour": "", "boots": "", "ring": ""}}, "a Build 5 save has no gear")
 	expect_eq(old["gold"], 7)
 	var damaged := HoldfastMeta.from_save(content, {"gear": {
 		"owned": ["driftwood_stave", "driftwood_stave", "cursed_cutlass", 7],
-		"equipped": {"weapon": "tarred_bowstring", "charm": "driftwood_stave", "hat": "driftwood_stave"}}})
+		"equipped": {"weapon": "tarred_bowstring", "armour": "driftwood_stave", "hat": "cursed_cutlass"}}})
 	expect_eq(damaged["gear"]["owned"], ["driftwood_stave"], "unknown and repeated entries go")
-	expect_eq(damaged["gear"]["equipped"], {"weapon": "", "charm": ""}, "not owned or in the wrong slot: not worn")
+	expect_eq(damaged["gear"]["equipped"], {"weapon": "", "helmet": "", "armour": "", "boots": "", "ring": ""}, "not owned or in the wrong slot: not worn")
 	var weird := HoldfastMeta.from_save(content, {"gear": "all of it"})
 	expect_eq(weird["gear"]["owned"], [])
-	var ok := HoldfastMeta.from_save(content, {"gear": {"owned": ["driftwood_stave", "sea_glass_charm"], "equipped": {"weapon": "driftwood_stave", "charm": "sea_glass_charm"}}})
-	expect_eq(ok["gear"]["equipped"], {"weapon": "driftwood_stave", "charm": "sea_glass_charm"})
+	var ok := HoldfastMeta.from_save(content, {"gear": {"owned": ["driftwood_stave", "sea_glass_charm"], "equipped": {"weapon": "driftwood_stave", "armour": "sea_glass_charm"}}})
+	expect_eq(ok["gear"]["equipped"], {"weapon": "driftwood_stave", "helmet": "", "armour": "sea_glass_charm", "boots": "", "ring": ""})
 
 
 func test_gear_survives_a_save_and_a_reload() -> void:
@@ -609,7 +613,7 @@ func test_gear_survives_a_save_and_a_reload() -> void:
 	var again := _main(path)
 	var loaded: HoldfastProfile = again.get_node("Profile")
 	expect_eq(loaded.get_gear_owned(), ["wave_worn_boots", "tarred_bowstring"])
-	expect_eq(loaded.get_gear_worn(), {"charm": "wave_worn_boots"})
+	expect_eq(loaded.get_gear_worn(), {"boots": "wave_worn_boots"})
 	again.free()
 
 

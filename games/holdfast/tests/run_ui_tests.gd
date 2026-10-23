@@ -136,6 +136,10 @@ func _test_readable_layout() -> void:
 	# The map at its fullest: Level 0 won, and the guide asks for a star that is not there yet.
 	_main.get_node("Profile").new_game()
 	_main.get_node("Profile").data["levels_won"].append("first_watch")
+	# The Hero page at its fullest: all twelve pieces in the bag, one worn in every slot.
+	_main.get_node("Profile").data["gear"]["owned"] = HoldfastContent.base()["gear_items"].keys()
+	for id in ["gull_feather_fletching", "beacon_visor", "oilskin_vest", "kelp_sandals", "lamp_oil_flask"]:
+		_main.get_node("Profile").wear_gear(id)
 	_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": true})
 	var hud: Control = _main.hud
 	hud._on_gold_changed(9_999_999)
