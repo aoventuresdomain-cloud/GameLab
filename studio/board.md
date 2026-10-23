@@ -449,8 +449,7 @@
   - [ ] Gold nodes cost gold, star nodes cost stars; castle nodes grant the slots and cards the Plan page uses (cards stay two behind slots); forks exclude each other; both Archer capstones can be bought with enough stars; the two new stat nodes (Steady hands, Lamp oil) work in a run.
   - [ ] Respec refunds a node's price minus a fee (about 10% of a gold node's price, at least 20 gold; a flat 50 gold for a star node; stars back in full) and is refused mid-run.
   - [ ] Dragging pans the web from anywhere including over nodes (a click without movement still buys), wheel and trackpad zoom at the cursor between about 0.4x and 2.5x, and the page does not scroll or zoom over the tree.
-  - [ ] The Plan page's slot buttons and tray do not overlap with all 8 spots and 8 cards at 1280x720 and 1920x1080 (F-063); the journey map header spaces Gold and Stars cleanly and the map does not shift when the guide strip goes (F-062).
-  - [ ] Mage, Mender and Frost posts, Tower Gate I, walls, Recruits and Hard and Nightmare replays are not built (they need the CEO's go).
+  - [ ] The Plan page's slot buttons and tray do not overlap with all 8 spots and 8 cards at 1280x720 and 1920x1080 (F-063); the journey map header spaces Gold and Stars cleanly and the map does not shift when the guide strip goes (F-062). Mage, Mender and Frost posts, Tower Gate I, walls, Recruits and Hard and Nightmare replays are not built (they need the CEO's go).
 
 ### HF-M2-34 Six Hero and tower links (tree rework, part 3)
 - **Owner:** Gameplay Engineer
