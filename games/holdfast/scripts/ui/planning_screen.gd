@@ -14,7 +14,9 @@ const COLOUR_KEEP := Color(0.85, 0.8, 0.55)
 const COLOUR_ARC := Color(0.9, 0.3, 0.25)
 const COLOUR_RANGE := Color(0.55, 0.75, 0.95, 0.25)
 const ARC_STEPS := 24
-const SITE_FILL := 0.55
+## How far out the ring's spots sit on the map (of the way to its edge): far enough that the
+## buttons of neighbouring spots clear each other.
+const SITE_FILL := 0.78
 const ARC_FILL := 0.92
 const COLOUR_SLOT := Color(0.95, 0.85, 0.5)
 
@@ -106,7 +108,8 @@ func _refresh() -> void:
 	for id in _site_buttons:
 		var placed: bool = id in _chosen
 		_site_buttons[id].set_pressed_no_signal(placed)
-		_site_buttons[id].text = "%s: %s" % [_tower_name(), _slot_name(id)] if placed else _slot_name(id)
+		# A placed post says what it is; the dot and range circle on the map say where.
+		_site_buttons[id].text = _tower_name() if placed else _slot_name(id)
 		_site_buttons[id].reset_size()
 	_count.text = "Posts: %d of %d" % [_chosen.size(), _cards]
 	_start.disabled = _chosen.is_empty()

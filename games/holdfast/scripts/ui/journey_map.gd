@@ -232,7 +232,7 @@ func _node_at(i: int, n: int) -> Vector2:
 	var area := _map.size
 	var t := float(i) / maxf(float(n - 1), 1.0)
 	var x := lerpf(area.x * 0.24, area.x * 0.9, t)
-	var y := lerpf(area.y * 0.7, area.y * 0.3, t) + sin(float(i) * 1.8) * area.y * 0.07
+	var y := lerpf(area.y * 0.7, area.y * 0.3, t) + sin(float(i) * 1.835) * area.y * 0.07
 	return Vector2(x, y)
 
 
