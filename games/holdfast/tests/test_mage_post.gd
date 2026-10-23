@@ -176,6 +176,39 @@ func test_the_suggested_layout_puts_the_archer_first_and_the_mage_on_the_next_si
 	expect_true(HoldfastMeta.is_valid_layout(content, gated, layout))
 
 
+func test_post_counts_use_every_mage_card_and_keep_one_slot_for_an_archer() -> void:
+	expect_eq(HoldfastMeta.post_counts(4, 2, 1), [2, 1], "room for all: nothing given up")
+	expect_eq(HoldfastMeta.post_counts(3, 3, 1), [2, 1], "a full ring: the last Archer makes way for the Mage")
+	expect_eq(HoldfastMeta.post_counts(2, 2, 2), [1, 1], "never every slot to Mages")
+	expect_eq(HoldfastMeta.post_counts(1, 1, 1), [1, 0], "one slot stays an Archer's")
+	expect_eq(HoldfastMeta.post_counts(3, 1, 0), [1, 0], "no Mage card, no Mage")
+	expect_eq(HoldfastMeta.post_counts(0, 0, 0), [0, 0])
+
+
+func test_the_suggested_layout_still_has_a_mage_when_every_slot_has_an_archer_card() -> void:
+	var content := _content()
+	var full := _profile(FIVE + ["gate_mage", "castle_slot_3", "castle_archer_2", "castle_archer_3"])
+	expect_eq(HoldfastMeta.castle_slots(content, full), 3)
+	expect_eq(HoldfastMeta.castle_cards(content, full), 3)
+	var layout := HoldfastMeta.layout_for(content, full, "shingle_beach")
+	expect_eq(layout.size(), 3)
+	var mages := 0
+	for entry in layout:
+		mages += 1 if ":" in str(entry) else 0
+	expect_eq(mages, 1, "one Mage in a ring of three Archer cards")
+	expect_true(HoldfastMeta.is_valid_layout(content, full, layout))
+
+
+func test_auto_place_uses_the_mage_card_when_the_ring_is_full_and_the_count_shows_slots() -> void:
+	var plan := _plan([], 3, 3, 1)
+	plan.auto_place()
+	expect_eq(plan._chosen.size(), 3)
+	expect_eq(plan._placed("mage_post"), 1, "the Mage card is used")
+	expect_eq(plan._placed("archer_post"), 2)
+	expect_eq(plan.get_node("%Count").text, "Posts: 3 of 3", "three slots, not four cards")
+	plan.get_parent().get_parent().free()
+
+
 func test_a_saved_layout_with_a_mage_loads_only_when_the_card_is_there() -> void:
 	var content := _content()
 	var save := _profile(FIVE + ["gate_mage"])

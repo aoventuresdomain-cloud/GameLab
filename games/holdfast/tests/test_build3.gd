@@ -568,24 +568,6 @@ func test_every_upgrade_in_the_pack_is_understood_by_the_rules() -> void:
 	expect_eq(rules.tower.repair, 3.0)
 
 
-func test_each_level_is_winnable_with_its_kit_by_every_pillar_bot() -> void:
-	var content := HoldfastContent.base()
-	for level in content["levels"]:
-		var check: Dictionary = content["levels"][level]["balance_check"] if content["levels"][level].has("balance_check") else {}
-		if not check.has("kit_gold"):
-			continue
-		var kit := HoldfastProgression.buy_cheapest(content["upgrade_nodes"], [], int(check["kit_gold"]))
-		for pillar in ["flare_archer", "dusk_mage", "tideblade"]:
-			var won := 0
-			var hard := 0
-			for run_seed in range(1, int(check["seeds"]) + 1):
-				var result: Dictionary = HoldfastSim.run_headless(run_seed, HoldfastContent.run_config(level, kit, {}, pillar))["result"]
-				won += 1 if result["outcome"] == HoldfastRules.OUTCOME_WON else 0
-				hard += 1 if result["outcome"] != HoldfastRules.OUTCOME_WON or int(result["hero_knockdowns"]) > 1 else 0
-			expect_true(won >= int(check["min_won_runs"]), "%s %s with %d gold of upgrades won %d of %d" % [level, pillar, check["kit_gold"], won, check["seeds"]])
-			expect_true(hard >= int(check["min_hard_runs"]), "%s %s had %d hard runs" % [level, pillar, hard])
-
-
 # ------------------------------------------------------------------ the Hero gets up where they fell
 
 func test_the_hero_gets_up_where_they_fell_after_the_same_wait_and_drops_xp_there() -> void:

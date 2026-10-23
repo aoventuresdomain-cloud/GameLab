@@ -83,20 +83,11 @@ static func _gold_nodes(nodes: Dictionary, owned: Array) -> int:
 	return count
 
 
-## The stars the star nodes in `owned` cost.
-static func _stars_spent(nodes: Dictionary, owned: Array) -> int:
-	var total := 0
-	for id in owned:
-		if HoldfastMeta.is_star_node(nodes[id]):
-			total += int(nodes[id]["cost"])
-	return total
-
-
 static func _requirements_met(node: Dictionary, owned: Array) -> bool:
 	for required in node.get("requires", []):
 		if not required in owned:
 			return false
-	return true
+	return owned.size() >= int(node.get("needs_nodes", 0))
 
 
 ## Plays up to `sim_hours` of progression from `p_seed` and returns the report. It
@@ -108,9 +99,8 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	var budget := sim_hours * 3600.0
 	var sim_time := 0.0
-	var bank := 0
-	var owned := []
 	var profile := HoldfastMeta.new_profile(content)
+	avoid = avoid + other_hero_nodes(nodes, str(profile["pillar"]))
 	# The bot plays as a player past the tutorial, so it starts on the first real level.
 	profile = HoldfastMeta.bank_run(content, profile, {"outcome": HoldfastRules.OUTCOME_WON, "level": HoldfastMeta.tutorial_level(content), "gold": 0})
 	var unlocks := []
@@ -118,12 +108,19 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 	var runs := []
 	var outcomes := {}
 	while sim_time < budget:
+		# Between runs, as a player does: spend the stars and the gold, then plan and play.
+		for bought in buy_for_profile(content, profile, avoid):
+			profile = bought["profile"]
+			var entry := {"id": bought["id"], "cost": int(nodes[bought["id"]]["cost"]), "at_seconds": sim_time, "after_run": runs.size()}
+			(star_unlocks if HoldfastMeta.is_star_node(nodes[bought["id"]]) else unlocks).append(entry)
+		if _gold_nodes(nodes, profile["upgrades"]) == reachable_total(nodes, profile["upgrades"], avoid):
+			break
 		var run_seed := p_seed * 100003 + runs.size()
 		var run_level := level if level != "" else str(HoldfastMeta.unlocked_levels(content, profile)[-1])
-		var report := HoldfastSim.run_headless(run_seed, HoldfastContent.run_config(run_level, owned, content, "", null, HoldfastMeta.worn_gear(profile), profile["gear"]["owned"]))
+		var layout := HoldfastMeta.layout_for(content, profile, run_level)
+		var report := HoldfastSim.run_headless(run_seed, HoldfastContent.run_config(run_level, profile["upgrades"], content, "", layout, HoldfastMeta.worn_gear(profile), profile["gear"]["owned"]))
 		var result: Dictionary = report["result"]
 		sim_time += float(report["seconds"]) + BETWEEN_RUNS_SECONDS
-		bank += int(result["gold"])
 		profile = HoldfastMeta.bank_run(content, profile, result)
 		var outcome := str(result["outcome"])
 		outcomes[outcome] = int(outcomes.get(outcome, 0)) + 1
@@ -135,16 +132,6 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 			"waves_cleared": result["waves_cleared"],
 			"seconds": report["seconds"],
 		})
-		for id in buy_cheapest(nodes, owned, bank, avoid, HoldfastMeta.stars_earned(profile) - _stars_spent(nodes, owned)):
-			owned.append(id)
-			var bought := {"id": id, "cost": int(nodes[id]["cost"]), "at_seconds": sim_time, "after_run": runs.size()}
-			if HoldfastMeta.is_star_node(nodes[id]):
-				star_unlocks.append(bought)
-			else:
-				bank -= int(nodes[id]["cost"])
-				unlocks.append(bought)
-		if _gold_nodes(nodes, owned) == reachable_total(nodes, owned, avoid):
-			break
 	var gold_per_run := []
 	for run in runs:
 		gold_per_run.append(run["gold"])
@@ -157,11 +144,35 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 		"outcomes": outcomes,
 		"unlocks": unlocks,
 		"star_unlocks": star_unlocks,
-		"upgrades_owned": _gold_nodes(nodes, owned),
-		"upgrades_total": reachable_total(nodes, owned, avoid),
+		"upgrades_owned": _gold_nodes(nodes, profile["upgrades"]),
+		"upgrades_total": reachable_total(nodes, profile["upgrades"], avoid),
 		"gold_per_run": gold_per_run,
-		"bank": bank,
+		"bank": int(profile["gold"]),
 		"runs": runs,
 	}
 	report["hash"] = SimEngine.hash_data(report)
 	return report
+
+
+## The nodes that belong to another Hero than `pillar`, which the bot never buys.
+static func other_hero_nodes(nodes: Dictionary, pillar: String) -> Array:
+	var out := []
+	for id in nodes:
+		if nodes[id].has("hero") and str(nodes[id]["hero"]) != pillar:
+			out.append(id)
+	return out
+
+
+## What the bot buys with the stars and gold the profile has: [{id, profile}] in the order
+## bought, each bought through the same rules the Keep screen uses.
+static func buy_for_profile(content: Dictionary, profile: Dictionary, avoid: Array) -> Array:
+	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	var out := []
+	for id in buy_cheapest(nodes, profile["upgrades"], int(profile["gold"]), avoid, HoldfastMeta.stars_available(content, profile)):
+		var bought := HoldfastMeta.buy(content, profile, id)
+		if not bought["ok"]:
+			push_error("progression: the bot could not buy %s: %s" % [id, bought["reason"]])
+			break
+		profile = bought["profile"]
+		out.append({"id": id, "profile": profile})
+	return out
