@@ -408,8 +408,8 @@ func test_the_post_section_has_seventeen_nodes_and_no_fork() -> void:
 	expect_eq(flare, 12, "the Flare Archer's twelve nodes")
 	for id in nodes:
 		if nodes[id].has("tower"):
-			expect_eq(nodes[id]["branch"], "archer_post", id)
-		if nodes[id].has("hero"):
+			expect_eq(nodes[id]["branch"], nodes[id]["tower"], id)
+		if nodes[id].has("hero") and not nodes[id].has("tower"):
 			expect_eq(nodes[id]["branch"], nodes[id]["hero"], id)
 
 
@@ -638,7 +638,7 @@ func test_the_keep_screen_shows_sections_dims_the_far_nodes_and_lists_the_next_u
 	keep.visible = true
 	expect_true(keep.get_node("%RespecButton").disabled, "nothing to respec yet")
 	ThroughLevelZero.apply_castle(profile)
-	expect_eq(keep._section_columns.keys().size(), 5, "Flare Archer, Archer Post, Keep, Tithe, Castle")
+	expect_eq(keep._section_columns.keys().size(), 6, "Flare Archer, Archer Post, Keep, Tithe, Castle, Mage Post")
 	expect_true(keep._section_columns["flare_archer"].visible)
 	expect_eq(keep._node_buttons["post_timbers"].modulate, Color.WHITE, "one buy away: in full")
 	expect_eq(keep._node_buttons["post_burst"].modulate, keep.DIMMED, "far: dimmed")
@@ -688,13 +688,13 @@ func test_the_progression_bot_never_buys_both_sides_of_a_fork_and_can_avoid_one(
 	var twin := HoldfastProgression.buy_cheapest(nodes, castle, 999999, ["post_scope"])
 	expect_true("post_twin" in twin and "post_burst" in twin and not "post_scope" in twin, "avoiding Scope takes the Volley side")
 	expect_true("post_storm" in HoldfastProgression.buy_cheapest(nodes, castle + twin, 0, ["post_scope"], 99), "and its star capstone with the stars")
-	expect_eq(HoldfastProgression.reachable_total(nodes, [], []), 34 - 0, "an empty profile can still reach every gold node")
-	expect_eq(HoldfastProgression.reachable_total(nodes, ["post_scope"]), 34 - 2, "Scope closes Twin and Burst fire (Arrow storm is a star node, not counted)")
-	expect_eq(HoldfastProgression.reachable_total(nodes, [], ["post_scope"]), 34 - 2, "avoiding it does the same")
+	expect_eq(HoldfastProgression.reachable_total(nodes, [], []), 37 - 0, "an empty profile can still reach every gold node")
+	expect_eq(HoldfastProgression.reachable_total(nodes, ["post_scope"]), 37 - 2, "Scope closes Twin and Burst fire (Arrow storm is a star node, not counted)")
+	expect_eq(HoldfastProgression.reachable_total(nodes, [], ["post_scope"]), 37 - 2, "avoiding it does the same")
 	var real: Dictionary = HoldfastContent.base()["upgrade_nodes"]
 	var both := HoldfastProgression.buy_cheapest(real, castle, 999999)
 	expect_true("post_scope" in both and "post_twin" in both, "the real tree has no fork: the bot buys both sides")
-	expect_eq(HoldfastProgression.reachable_total(real, ["post_scope"]), 34, "and Scope closes nothing")
+	expect_eq(HoldfastProgression.reachable_total(real, ["post_scope"]), 37, "and Scope closes nothing")
 
 
 func test_the_bots_play_the_planning_choice() -> void:

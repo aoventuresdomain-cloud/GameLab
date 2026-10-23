@@ -1,5 +1,6 @@
 {
   "towers": [
-    {"id": "archer_post", "name": "Archer post", "damage": 4, "range": 170, "cooldown": 1.0, "health": 60, "radius": 14, "pierce_width": 8, "recruit_bonus": {}, "flare_bonus": {}}
+    {"id": "archer_post", "name": "Archer post", "damage": 4, "range": 170, "cooldown": 1.0, "health": 60, "radius": 14, "pierce_width": 8, "recruit_bonus": {}, "flare_bonus": {}},
+    {"id": "mage_post", "name": "Mage post", "damage": 5, "range": 150, "cooldown": 1.6, "health": 50, "radius": 14, "splash_radius": 45, "unlit_bonus": 0.6, "colour": "#9b7be0", "recruit_bonus": {}, "flare_bonus": {}}
   ]
 }

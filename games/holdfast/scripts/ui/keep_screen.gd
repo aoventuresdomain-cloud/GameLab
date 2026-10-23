@@ -30,6 +30,8 @@ const LINK_FORK := Color(0.9, 0.4, 0.35, 0.8)
 ## What a stat means to the player, by the stat's own name without its tower or Hero scope.
 const STAT_TEXT := {
 	"keep_health": "keep health",
+	"eclipse_widen": "wider Eclipse near a Mage Post",
+	"eclipse_radius": "reach of a Mage Post's Eclipse bonus",
 	"beam_reach": "beam reach: enemies start further out",
 	"gold_multiplier": "gold from kills",
 	"aura_dps": "aura damage",
