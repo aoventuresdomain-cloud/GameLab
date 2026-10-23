@@ -453,14 +453,14 @@
 
 ### HF-M2-34 Six Hero and tower links (tree rework, part 3)
 - **Owner:** Gameplay Engineer
-- **Status:** Building (HF-M2-33 merged)
+- **Status:** Merged (#104, QA clear at 55701ab). Originally: Building
 - **QA:** full (core rules change)
 - **Depends on:** HF-M2-33
 - **Done when:**
-  - [ ] Lit Post and Crossfire work in a run: a post with the Hero within about 150px fires 25% faster; two posts shooting the same enemy deal 20% more.
-  - [ ] Pillar Echo and Last Light work: Flare Archer arrows from the post burn; a post about to fall flares and fires one big volley when the Hero is close.
-  - [ ] Rally and Watchtower work: holding next to a post repairs and shields it for 3 seconds; standing near an Archer Post gives the Hero more range.
-  - [ ] Each link is a star node placed next to the nodes it needs in the tree, has a test of its effect and of its absence, and the Hero is not nerfed.
+  - [x] Lit Post and Crossfire work in a run: a post with the Hero within about 150px fires 25% faster; two posts shooting the same enemy deal 20% more.
+  - [x] Pillar Echo and Last Light work: Flare Archer arrows from the post burn; a post about to fall flares and fires one big volley when the Hero is close.
+  - [x] Rally and Watchtower work: holding next to a post repairs and shields it for 3 seconds; standing near an Archer Post gives the Hero more range.
+  - [x] Each link is a star node placed next to the nodes it needs in the tree, has a test of its effect and of its absence, and the Hero is not nerfed.
 
 ### HF-M2-35 Retune levels 1 to 5 for the empty-castle start (tree rework, part 4)
 - **Owner:** Gameplay Engineer
@@ -475,7 +475,7 @@
 
 ### HF-M2-36 Hero gear: five slots, inventory and stat breakdown
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, after HF-M2-34 is merged. CEO go 2026-10-23 10:12. Design: Advisor's view (`/mnt/project-files/holdfast/m2/advisor-tree-stats-gear-ring.md`, section 3). Item numbers are placeholders for HF-M2-35
+- **Status:** Building (HF-M2-34 merged). CEO go 2026-10-23 10:12. Design: Advisor's view (`/mnt/project-files/holdfast/m2/advisor-tree-stats-gear-ring.md`, section 3). Item numbers are placeholders for HF-M2-35
 - **QA:** full (save data and Hero stats change)
 - **Depends on:** HF-M2-34
 - **Done when:**
@@ -650,8 +650,11 @@
 | F-061 | HF-M2-32 | FOLLOW-UP from QA (#100, 8ca3388): the Level 0 teaching text is one unwrapped line, clipped at both screen edges, and vanishes about 2 s into Wave 1. Waits for the full tutorial text, which the CEO skipped for now | Minor | Gameplay Engineer | Backlog, with the tutorial text |
 | F-062 | HF-M2-32 | FOLLOW-UP from QA (#100, 8ca3388), cosmetic: the map header separates the Gold caption from its value and the value sits against Stars; the map shifts vertically when the guide strip disappears | Minor | Gameplay Engineer | Closed in #102 (QA checked) |
 | F-063 | HF-M2-33 | FOLLOW-UP from QA (#100, 8ca3388): with 8 spots and 8 cards the Plan slot buttons overlap in pairs (3/5/7, 4/6/8) at both sizes. Not reachable in the real pack yet (1 slot, 1 card) | Minor | Gameplay Engineer | Closed in #102 (QA checked) |
-| F-064 | HF-M2-33 | FOLLOW-UP from QA (#102, c5353ed): Second Archer and Third Archer can be bought before the slots they need; Third Archer costs 3 stars and does nothing at 1 slot (cards are capped at slots). Nothing is lost, but it looks wasted | Minor | Gameplay Engineer | In HF-M2-34 |
-| F-065 | HF-M2-33 | FOLLOW-UP from QA (#102, c5353ed), cosmetic: the Hero tab shows the Castle heading and a clipped "Second Slot" node at its right edge because all sections share one web | Minor | Gameplay Engineer | In HF-M2-34 if a few lines, else backlog |
+| F-064 | HF-M2-33 | FOLLOW-UP from QA (#102, c5353ed): Second Archer and Third Archer can be bought before the slots they need; Third Archer costs 3 stars and does nothing at 1 slot (cards are capped at slots). Nothing is lost, but it looks wasted | Minor | Gameplay Engineer | Closed in #104 (QA checked) |
+| F-065 | HF-M2-33 | FOLLOW-UP from QA (#102, c5353ed), cosmetic: the Hero tab shows the Castle heading and a clipped "Second Slot" node at its right edge because all sections share one web | Minor | Gameplay Engineer | Closed in #104 (QA checked) |
+| F-066 | HF-M2-34 | FOLLOW-UP from QA (#104, 55701ab): Crossfire rarely triggers. With posts on East and West it never did on levels 1 to 3; adjacent posts trigger it on about 5 of 38 enemies per level, three posts about 14 of 43. Tune in the retune | Minor | Gameplay Engineer | In HF-M2-35 |
+| F-067 | HF-M2-34 | FOLLOW-UP from QA (#104, 55701ab): Lit Post's 150 px radius is wider than the ring's 100 px radius, so a Hero minding the Keep keeps every post lit. Tune in the retune | Minor | Gameplay Engineer | In HF-M2-35 |
+| F-068 | HF-M2-34 | FOLLOW-UP from QA (#104, 55701ab): Pillar Echo's burn lands on the post's first target only; Twin arrows and piercing extra hits do not burn. A second pillar needs its own flavour nodes | Minor | Gameplay Engineer | In HF-M2-35 |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -695,6 +698,7 @@
 | 2026-10-23 | `games/holdfast/tests/run_ui_tests.gd::_check_layout` (and `_texts` gains an optional skip argument) | Approved for #92: the general layout loop skips the web's panned nodes and a per-tab check, after jumping to each tab, asserts every node of the tab is in view, not clipped and at least 20 px on screen including zoom. Nodes are checked as strictly as before; section heading labels are no longer size- or clip-checked (F-059). No other existing test changed | HF-M2-30 tree web (CEO change). Intent kept | Head of Engineering |
 | 2026-10-23 | `test_build3.gd`, `test_build4.gd`, `test_build4b.gd`, `test_build5.gd`, `test_build6.gd`, `test_rework_a.gd`, `test_rework_a_plan.gd`, `test_rework_b.gd`, `test_arena.gd`, `run_ui_tests.gd` (#100, listed old to new in its description) | First level, section count, node count, spot ids and start flow updated; `test_arena.gd` sets `source.layout = null` | New first level (Level 0), empty castle, Castle tab and spot ring; no assertion loosened (QA checked the diff) | Head of Engineering |
 | 2026-10-23 | `test_build3.gd`, `test_build5.gd`, `test_build6.gd`, `test_rework_a.gd`, `test_rework_b.gd`, `test_stars_and_castle.gd`, `through_level_zero.gd` (#102, listed old to new in its description) | Node-count bound `<= 40` to `<= 50` (loosened, the tree has 45 nodes); castle buys applied before tree tests; fork tests run on a forked pack copy; respec gold expectations include fees; tab node lists show only visible nodes; progression hash re-pinned `d71d47e4...` to `97bb407b...` | The tree is one connected graph with prerequisites, no real fork, a respec fee and hidden far nodes; QA checked the diff and found nothing else loosened | Head of Engineering |
+| 2026-10-23 | `test_build3.gd` (node-count bound), `test_rework_b.gd`, `test_tree_connected.gd`, known tower stat list, post section count, star-node list, Longer sight buy text (#104, listed old to new in its description) | Node-count bound `<= 50` to `<= 60` (loosened, the tree has 51 nodes); NODE_COUNT 45 to 51; tower stat list +13; post section 11 to 17; star-node list +6; "+2 shown" for the Watchtower link; progression hash re-pinned `97bb407b...` to `3c95f7b0...` | Six Hero and tower links add nodes, tower stats and a longer post section; QA found only additions apart from the bound | Head of Engineering |
 
 ## Advisor views
 
