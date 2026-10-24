@@ -38,7 +38,7 @@
       "spawn_radius": 420,
       "arena": {"width": 1920, "height": 858},
       "first_wave_delay": 2,
-      "balance_check": {"seeds": 12, "min_won_runs": 1, "min_hard_runs": 0, "curve": {"seeds": 24, "min_win_rate": 0.78, "max_win_rate": 1.0, "poor_min_win_rate": 0.35}},
+      "balance_check": {"seeds": 12, "min_won_runs": 1, "min_hard_runs": 0, "curve": {"seeds": 48, "min_win_rate": 0.78, "max_win_rate": 1.0, "poor_min_win_rate": 0.35}},
       "aura": {"radius": 70, "dps": 12, "cursor_speed": 1800},
       "light": {"radius": 90, "bonus": 0.5},
       "posts": [
@@ -74,7 +74,7 @@
       "spawn_radius": 440,
       "arena": {"width": 1920, "height": 920},
       "first_wave_delay": 2,
-      "balance_check": {"seeds": 12, "min_won_runs": 1, "min_hard_runs": 0, "kit_gold": 500, "curve": {"seeds": 24, "min_win_rate": 0.63, "max_win_rate": 0.87, "poor_min_win_rate": 0.25}},
+      "balance_check": {"seeds": 12, "min_won_runs": 1, "min_hard_runs": 0, "kit_gold": 500, "curve": {"seeds": 48, "min_win_rate": 0.63, "max_win_rate": 0.87, "poor_min_win_rate": 0.25}},
       "aura": {"radius": 70, "dps": 12, "cursor_speed": 1800},
       "light": {"radius": 90, "bonus": 0.5},
       "posts": [
@@ -112,7 +112,7 @@
       "spawn_radius": 460,
       "arena": {"width": 1920, "height": 960},
       "first_wave_delay": 2,
-      "balance_check": {"seeds": 40, "min_won_runs": 1, "min_hard_runs": 0, "kit_gold": 2500, "curve": {"seeds": 24, "min_win_rate": 0.48, "max_win_rate": 0.72, "poor_min_win_rate": 0.2}},
+      "balance_check": {"seeds": 40, "min_won_runs": 1, "min_hard_runs": 0, "kit_gold": 2500, "curve": {"seeds": 48, "min_win_rate": 0.48, "max_win_rate": 0.72, "poor_min_win_rate": 0.2}},
       "aura": {"radius": 70, "dps": 12, "cursor_speed": 1800},
       "light": {"radius": 90, "bonus": 0.5},
       "posts": [
@@ -143,7 +143,7 @@
       "spawn_radius": 480,
       "arena": {"width": 1920, "height": 1000},
       "first_wave_delay": 2,
-      "balance_check": {"seeds": 12, "min_won_runs": 1, "min_hard_runs": 0, "kit_gold": 5000, "curve": {"seeds": 24, "min_win_rate": 0.38, "max_win_rate": 0.62, "poor_min_win_rate": 0.05}},
+      "balance_check": {"seeds": 12, "min_won_runs": 1, "min_hard_runs": 0, "kit_gold": 5000, "curve": {"seeds": 48, "min_win_rate": 0.38, "max_win_rate": 0.62, "poor_min_win_rate": 0.05}},
       "aura": {"radius": 70, "dps": 12, "cursor_speed": 1800},
       "light": {"radius": 90, "bonus": 0.5},
       "posts": [
@@ -174,7 +174,7 @@
       "spawn_radius": 500,
       "arena": {"width": 1920, "height": 1040},
       "first_wave_delay": 2,
-      "balance_check": {"seeds": 12, "min_won_runs": 1, "min_hard_runs": 0, "kit_gold": 2000, "curve": {"seeds": 24, "min_win_rate": 0.38, "max_win_rate": 0.62, "poor_min_win_rate": 0.25}},
+      "balance_check": {"seeds": 12, "min_won_runs": 1, "min_hard_runs": 0, "kit_gold": 2000, "curve": {"seeds": 48, "min_win_rate": 0.38, "max_win_rate": 0.62, "poor_min_win_rate": 0.25}},
       "aura": {"radius": 70, "dps": 12, "cursor_speed": 1800},
       "light": {"radius": 90, "bonus": 0.5},
       "posts": [

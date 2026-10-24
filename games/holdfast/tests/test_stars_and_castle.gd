@@ -46,7 +46,7 @@ func test_a_new_game_has_no_stars_slots_cards_or_spots_and_starts_on_level_zero(
 	expect_eq(HoldfastMeta.stars_earned(profile), 0)
 	expect_eq(HoldfastMeta.castle_slots(content, profile), 0)
 	expect_eq(HoldfastMeta.castle_cards(content, profile), 0)
-	expect_eq(HoldfastMeta.owned_spots(content, profile), [])
+	expect_false(HoldfastMeta.is_valid_layout(content, profile, ["spot_1"]), "no slot, no post")
 	expect_false(HoldfastMeta.has_a_tower(content, profile))
 	expect_eq(profile["level"], "first_watch")
 	expect_eq(HoldfastMeta.layout_for(content, profile, "outpost"), [], "no tower, no layout")
@@ -81,7 +81,7 @@ func test_slots_and_cards_come_from_the_nodes_bought_and_cards_never_outnumber_s
 	profile = HoldfastMeta.buy(content, profile, "castle_archer_1")["profile"]
 	expect_eq(HoldfastMeta.castle_cards(content, profile), 1)
 	expect_true(HoldfastMeta.has_a_tower(content, profile))
-	expect_eq(HoldfastMeta.owned_spots(content, profile).map(func(spot: Dictionary) -> String: return spot["id"]), ["spot_1"])
+	expect_true(HoldfastMeta.is_valid_layout(content, profile, ["spot_1"]), "one slot and a card: one post")
 	var wide := content.duplicate(true)
 	wide["upgrade_nodes"]["castle_archer_1"]["grants"]["cards"] = 5
 	expect_eq(HoldfastMeta.castle_cards(wide, profile), 1, "cards are held to the slots")
@@ -422,7 +422,7 @@ func test_a_level_cannot_be_planned_or_started_without_a_tower_even_if_asked_dir
 	main.free()
 
 
-func test_a_saved_layout_must_name_owned_spots_once_each_and_no_more_than_the_cards_held() -> void:
+func test_a_saved_layout_must_name_ring_spots_once_each_and_no_more_than_the_cards_held() -> void:
 	var content := _content().duplicate(true)
 	content["upgrade_nodes"]["castle_slot_1"]["grants"]["slots"] = 3
 	var profile := _fresh()
@@ -432,7 +432,6 @@ func test_a_saved_layout_must_name_owned_spots_once_each_and_no_more_than_the_ca
 	expect_eq(HoldfastMeta.castle_cards(content, profile), 1, "three slots, one card")
 	var refused := {
 		"more posts than cards": ["spot_1", "spot_2"],
-		"a spot not owned": ["spot_4"],
 		"a spot that does not exist": ["moat"],
 		"no spots": [],
 		"a repeat": ["spot_1", "spot_1"],
@@ -495,7 +494,7 @@ func test_the_plan_page_shows_only_the_owned_slots_and_cards() -> void:
 	expect_eq(plan._site_buttons.keys(), ["spot_1", "spot_2", "spot_3"], "three slots, not eight")
 	expect_eq(plan._tray.get_child_count(), 2)
 	expect_eq(plan.get_node("%Count").text, "Posts: 0 of 2")
-	expect_eq(plan._site_buttons["spot_2"].text, "West", "slots are named by where they stand")
+	expect_eq(plan._site_buttons["spot_2"].text, "Empty", "spots carry no compass names")
 	plan.open("outpost", [], false, spots.slice(0, 1), 0)
 	expect_eq(plan._tray.get_child_count(), 0)
 	expect_true(plan.get_node("%StartButton").disabled)

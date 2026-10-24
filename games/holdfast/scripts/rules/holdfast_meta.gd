@@ -462,10 +462,22 @@ static func _granted(content: Dictionary, profile: Dictionary, what: String) -> 
 	return total
 
 
-## The castle spots the player can use, in the pack's order (the first `slots` of the ring).
-static func owned_spots(content: Dictionary, profile: Dictionary) -> Array:
-	var spots: Array = castle_rules(content).get("spots", [])
-	return spots.slice(0, castle_slots(content, profile))
+## The ring's spots in the pack's order. Any of them can hold a post: the slots the player has
+## bought say how many posts they may place, not where.
+static func ring_spots(content: Dictionary) -> Array:
+	return castle_rules(content).get("spots", [])
+
+
+## The upgrade "+ Tower" on the Plan page buys ("" when there is none left): the next Archer Post
+## card when a slot has none, else the next slot. Whether the player can afford it is `why_not_buy`.
+static func next_tower_node(content: Dictionary, profile: Dictionary) -> String:
+	var wanted := "cards" if castle_cards(content, profile) < castle_slots(content, profile) else "slots"
+	for pass_wanted in [wanted, "slots"]:
+		for id in content.get("upgrade_nodes", {}):
+			var node: Dictionary = content["upgrade_nodes"][id]
+			if int(node.get("grants", {}).get(pass_wanted, 0)) > 0 and not id in profile["upgrades"]:
+				return str(id)
+	return ""
 
 
 ## The castle's next guided node ("" when there is none): once Level 0 is won, the first of the
@@ -494,14 +506,14 @@ static func has_a_tower(content: Dictionary, profile: Dictionary) -> bool:
 	return castle_cards(content, profile) >= 1
 
 
-## What a layout may hold: owned spot ids (each at most once) as Archer Posts or, written
+## What a layout may hold: ring spot ids (each at most once) as Archer Posts or, written
 ## "mage:<spot id>", as Mage Posts, at least one, no more Archers than Archer cards, no more Mages
 ## than Mage cards and no more posts than slots.
 static func is_valid_layout(content: Dictionary, profile: Dictionary, layout: Variant) -> bool:
 	if not layout is Array or layout.is_empty() or layout.size() > castle_slots(content, profile):
 		return false
 	var known := []
-	for spot in owned_spots(content, profile):
+	for spot in ring_spots(content):
 		known.append(str(spot["id"]))
 	var seen := []
 	var mages := 0
@@ -530,7 +542,7 @@ static func layout_for(content: Dictionary, profile: Dictionary, level: String) 
 	if saved != null and is_valid_layout(content, profile, saved):
 		return saved.duplicate()
 	var counts := post_counts(castle_slots(content, profile), castle_cards(content, profile), castle_mage_cards(content, profile))
-	var ids := HoldfastRules.best_sites(owned_spots(content, profile), data.get("spawn_arcs", []), counts[0] + counts[1])
+	var ids := HoldfastRules.best_sites(ring_spots(content), data.get("spawn_arcs", []), counts[0] + counts[1])
 	var out := []
 	for i in ids.size():
 		out.append(ids[i] if i < counts[0] else HoldfastRules.layout_entry(ids[i], "mage_post"))

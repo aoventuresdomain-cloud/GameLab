@@ -1,12 +1,15 @@
 extends Control
 ## Plan page, shown before a run: a map of the level with the places enemies come from, the
-## castle's ring of spots around the keep (only the slots the player owns), and the tower cards
-## the player owns, which they drag into the slots, or press a slot to place and lift one.
+## castle's ring of spots around the keep (any of them can hold a post, as many as the slots the
+## player has bought), and the tower cards the player owns, which they drag onto a spot, or
+## press a spot to place and lift one.
 ## Auto-place suggests a layout and Quick start reuses the last one. It shows the choice and
 ## asks for the run through signals; the run flow acts. Mouse only.
 
 signal start_requested(layout: Array)
 signal back_requested
+## "+ Tower" was pressed: the player wants the next slot or Archer Post bought.
+signal tower_requested
 
 const FONT_PX := 20
 const COLOUR_ARENA := Color(0.35, 0.4, 0.5)
@@ -21,6 +24,7 @@ const SITE_FILL := 0.78
 const ARC_FILL := 0.92
 const COLOUR_SLOT := Color(0.95, 0.85, 0.5)
 const MAGE_ID := "mage_post"
+const EMPTY_SPOT := "Empty"
 
 @onready var _title: Label = %Title
 @onready var _hint: Label = %Hint
@@ -28,6 +32,7 @@ const MAGE_ID := "mage_post"
 @onready var _map: Control = %Map
 @onready var _back: Button = %BackButton
 @onready var _start: Button = %StartButton
+@onready var _tower: Button = %TowerButton
 @onready var _auto: Button = %AutoButton
 @onready var _quick: Button = %QuickButton
 @onready var _side: Control = %Side
@@ -37,8 +42,10 @@ var _content: Dictionary
 var _level_id := ""
 var _level: Dictionary = {}
 var _chosen: Array = []
-## The castle spots the player owns ({id, name, x, y}, by id) and the Archer Post cards they hold.
+## The castle's ring of spots ({id, name, x, y}, by id), the slots bought (how many posts may stand
+## on it) and the Archer Post cards held.
 var _spots: Dictionary = {}
+var _slots := 0
 var _cards := 0
 ## The Mage Post cards the player holds, on top of the Archer cards.
 var _mage_cards := 0
@@ -53,6 +60,7 @@ func _ready() -> void:
 	_start.pressed.connect(func() -> void: start_requested.emit(_chosen.duplicate()))
 	_auto.pressed.connect(auto_place)
 	_quick.pressed.connect(func() -> void: start_requested.emit(_saved.duplicate()))
+	_tower.pressed.connect(tower_requested.emit)
 	# A lifted post goes back to the tray when let go anywhere that is not a free slot.
 	for target in [self, _map, _side, _auto, _quick, _start, _back]:
 		target.set_drag_forwarding(Callable(), _side_can_drop, _side_drop)
@@ -62,35 +70,56 @@ func _ready() -> void:
 
 
 ## Shows the level's map with `layout` (entries: a spot id, or "mage:<spot id>") already placed.
-## `spots` are the castle spots the player owns, `cards` the Archer Posts they hold and
-## `mage_cards` the Mage Posts. `saved` says the layout is the player's own from an earlier run,
-## which Quick start can then reuse.
-func open(level_id: String, layout: Array, saved: bool, spots: Array, cards: int, mage_cards := 0) -> void:
+## `saved` says the layout is the player's own from an earlier run, which Quick start can then
+## reuse. The castle is set by `set_castle`.
+func open(level_id: String, layout: Array, saved: bool, spots: Array, cards: int, mage_cards := 0, slots := -1) -> void:
 	_level_id = level_id
 	_level = _content["levels"][level_id]
+	_chosen = layout.duplicate()
+	_saved = layout.duplicate() if saved else []
+	_title.text = "Plan your defence: %s" % _level["name"]
+	_hint.text = "Enemies come from the red edges. Drag a post card onto a spot, or press a spot, before the first wave."
+	set_castle(spots, cards, mage_cards, slots)
+
+
+## Sets what the player has: the ring's `spots`, the Archer Post `cards` and Mage Post
+## `mage_cards` they hold and the `slots` they have bought (a post on every spot of `spots` when
+## -1). Posts already placed stay, to the new limit, so buying a slot here keeps the plan.
+func set_castle(spots: Array, cards: int, mage_cards := 0, slots := -1) -> void:
 	_cards = cards
 	_mage_cards = mage_cards
 	_spots.clear()
 	for spot in spots:
 		_spots[str(spot["id"])] = spot
-	_chosen = layout.duplicate()
-	_saved = layout.duplicate() if saved else []
+	_slots = _spots.size() if slots < 0 else slots
+	while _chosen.size() > _slots:
+		_chosen.pop_back()
 	for button in _site_buttons.values():
 		button.queue_free()
 	_site_buttons.clear()
 	for id in _spots:
 		var button := Button.new()
-		button.tooltip_text = _slot_name(id)
 		button.toggle_mode = true
 		button.add_theme_font_size_override("font_size", FONT_PX)
 		button.pressed.connect(_toggle.bind(id))
 		button.set_drag_forwarding(_slot_drag.bind(id, button), _slot_can_drop.bind(id), _slot_drop.bind(id))
 		_map.add_child(button)
 		_site_buttons[id] = button
-	_title.text = "Plan your defence: %s" % _level["name"]
-	_hint.text = "Enemies come from the red edges. Drag a post card onto a slot, or press a slot, before the first wave."
 	_place_buttons()
 	_refresh()
+
+
+## The "+ Tower" button: `text` ("" hides it) and, when it cannot be pressed, why not.
+func set_tower_offer(text: String, why_not := "") -> void:
+	_tower.visible = text != ""
+	_tower.text = text
+	_tower.disabled = why_not != ""
+	_tower.tooltip_text = why_not
+
+
+## The posts placed now, as layout entries.
+func chosen() -> Array:
+	return _chosen.duplicate()
 
 
 ## Chooses or drops a site: an Archer while there is an Archer card left, then a Mage. At the
@@ -99,9 +128,9 @@ func _toggle(id: String) -> void:
 	var at := _index_of(id)
 	if at >= 0:
 		_chosen.remove_at(at)
-	elif _placed(_archer_id()) < _cards:
+	elif _chosen.size() < _slots and _placed(_archer_id()) < _cards:
 		_chosen.append(id)
-	elif _placed(MAGE_ID) < _mage_cards:
+	elif _chosen.size() < _slots and _placed(MAGE_ID) < _mage_cards:
 		_chosen.append(HoldfastRules.layout_entry(id, MAGE_ID))
 	elif not _chosen.is_empty():
 		var oldest: String = _chosen.pop_front()
@@ -111,7 +140,7 @@ func _toggle(id: String) -> void:
 
 ## The suggested layout: the sites nearest where the enemies come from, Archers then Mages.
 func auto_place() -> void:
-	var counts := HoldfastMeta.post_counts(_spots.size(), _cards, _mage_cards)
+	var counts := HoldfastMeta.post_counts(_slots, _cards, _mage_cards)
 	var ids := HoldfastRules.best_sites(_spots.values(), _level.get("spawn_arcs", []), counts[0] + counts[1])
 	_chosen = []
 	for i in ids.size():
@@ -153,9 +182,9 @@ func _refresh() -> void:
 		var at := _index_of(id)
 		_site_buttons[id].set_pressed_no_signal(at >= 0)
 		# A placed post says what it is; the dot and range circle on the map say where.
-		_site_buttons[id].text = _tower_name(_tower_of(_chosen[at])) if at >= 0 else _slot_name(id)
+		_site_buttons[id].text = _tower_name(_tower_of(_chosen[at])) if at >= 0 else EMPTY_SPOT
 		_site_buttons[id].reset_size()
-	_count.text = "Posts: %d of %d" % [_chosen.size(), mini(_spots.size(), _cards + _mage_cards)]
+	_count.text = "Posts: %d of %d" % [_chosen.size(), mini(_slots, _cards + _mage_cards)]
 	_start.disabled = _chosen.is_empty()
 	_quick.disabled = _saved.is_empty()
 	_refresh_cards()
@@ -165,10 +194,6 @@ func _refresh() -> void:
 
 func _tower_name(tower_id: String) -> String:
 	return "Mage" if tower_id == MAGE_ID else "Archer"
-
-
-func _slot_name(id: String) -> String:
-	return str(_spots[id]["name"])
 
 
 ## One card for each post the level allows, Archers then Mages: the ones in hand can be dragged,
@@ -232,7 +257,7 @@ func _slot_can_drop(_at: Vector2, data: Variant, id: String) -> bool:
 	if from != "":
 		return _index_of(from) >= 0
 	var tower_id := str(data.get("tower", ""))
-	return tower_id in [_archer_id(), MAGE_ID] and _placed(tower_id) < _cards_of(tower_id)
+	return _chosen.size() < _slots and tower_id in [_archer_id(), MAGE_ID] and _placed(tower_id) < _cards_of(tower_id)
 
 
 func _slot_drop(_at: Vector2, data: Variant, id: String) -> void:

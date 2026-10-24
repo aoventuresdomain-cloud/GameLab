@@ -50,7 +50,7 @@ func test_each_early_level_is_won_first_time_at_the_rate_the_pack_sets() -> void
 func test_a_poor_player_keeps_the_floor_the_pack_sets() -> void:
 	# The poor bot reacts about a third as fast and holds its ability back; half the seeds is enough for a floor.
 	var levels: Dictionary = HoldfastContent.base()["levels"]
-	var poor := _rates(HoldfastSkilledBot.POOR, 12)
+	var poor := _rates(HoldfastSkilledBot.POOR, 24)
 	for id in _levels():
 		var rate := float(poor["won"].get(id, 0)) / maxf(float(poor["reached"].get(id, 0)), 1.0)
 		expect_true(poor["reached"].get(id, 0) > 0, "%s: no poor player got this far" % id)
