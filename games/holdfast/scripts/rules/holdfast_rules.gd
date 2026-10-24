@@ -318,6 +318,9 @@ var towers: Array[Attacker] = []
 var layout_ids: Array = []
 ## A tutorial level: its Keep cannot fall and its one post is the level's own.
 var tutorial := false
+## The short fight that follows the two guided buys: the tutorial's own Keep, its `stand` waves,
+## and the posts the player's castle holds, not the level's placed one.
+var stand := false
 ## The first Recruit (M1's staff member); `recruits` holds all of them.
 var staff: Attacker
 var recruits: Array[Attacker] = []
@@ -429,6 +432,7 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	_first_clear_gear = str(level.get("first_clear_gear", ""))
 	_levels_data = content.get("levels", {})
 	tutorial = bool(level.get("tutorial", false))
+	stand = tutorial and bool(config.get("stand", false)) and level.has("stand")
 	for castle in content.get("castle_rules", {}).values():
 		for spot in castle["spots"]:
 			_castle_spots[str(spot["id"])] = spot
@@ -568,7 +572,7 @@ func _attacker(kind: String, at: Dictionary, data: Dictionary, damage: float, ex
 
 ## True when the run builds on a layout: castle spots the layout names, or a level's own `sites`.
 func _uses_layout(level: Dictionary, layout: Variant) -> bool:
-	return not tutorial and (_names_castle_spots(layout) or level.has("sites"))
+	return (not tutorial or stand) and (_names_castle_spots(layout) or level.has("sites"))
 
 
 ## A layout entry is a spot id ("spot_3", an Archer Post) or a tower kind and a spot id
@@ -608,13 +612,14 @@ func _names_castle_spots(layout: Variant) -> bool:
 	return layout is Array and not layout.is_empty() and _castle_spots.has(str(layout[0]))
 
 
-## The sites the run builds an Archer Post on. A tutorial keeps its one placed tower. A
+## The sites the run builds an Archer Post on. A tutorial keeps its one placed tower (its stand
+## builds on the castle's spots like any level). A
 ## layout that names castle spots takes them (no repeats, any of the castle's). Otherwise a
 ## level with `sites` takes the layout (site ids, at most `max_posts`, no repeats; the first
 ## site when none is given) and a level without keeps its one placed tower. Empty when the
 ## layout is bad.
 func _chosen_sites(level: Dictionary, layout: Variant, kinds := {}) -> Array:
-	if tutorial:
+	if tutorial and not stand:
 		return [level["tower"]]
 	if _names_castle_spots(layout):
 		# Archers first, so the first post (the tower's own key) is an Archer when there is one.
@@ -728,7 +733,7 @@ static func _tuned(action: Dictionary, prefix: String, stats: Dictionary) -> Dic
 ## Wave i starts `delay` seconds after wave i-1 has spawned its last enemy.
 ## Spawn groups within a wave run side by side.
 func _build_schedule(level: Dictionary) -> void:
-	var waves: Array = level["waves"]
+	var waves: Array = level["stand"]["waves"] if stand else level["waves"]
 	total_waves = waves.size()
 	var start := float(level.get("first_wave_delay", DEFAULT_WAVE_DELAY))
 	wave_pause = float(level.get("wave_pause", DEFAULT_WAVE_PAUSE))

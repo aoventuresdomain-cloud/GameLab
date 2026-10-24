@@ -24,6 +24,8 @@ var report_errors := true
 var upgrades: Array = []
 ## The Archer Post sites or castle spots to build on (null: the level's default layout).
 var layout: Variant = null
+## True for the tutorial's stand: a short fight on the castle's own posts after the two guided buys.
+var stand := false
 ## What the Hero wears ({slot: item id}) and what the player owns, so a drop is new.
 var gear: Dictionary = {}
 var gear_owned: Array = []
@@ -66,7 +68,7 @@ func start_run() -> void:
 	var controller: SimController = controller_override
 	if controller == null:
 		controller = HoldfastHeroBot.new() if use_bot else _player
-	var engine := SimEngine.new(rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content, hero_path, layout, gear, gear_owned), HoldfastRules.TICK_RATE)
+	var engine := SimEngine.new(rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content, hero_path, layout, gear, gear_owned, stand), HoldfastRules.TICK_RATE)
 	if rules.setup_error != "":
 		if report_errors:
 			push_error("Holdfast: cannot start a run: " + rules.setup_error)
@@ -155,6 +157,8 @@ func get_posts_note() -> String:
 	if _rules == null or _rules.wave > 0:
 		return ""
 	var content := HoldfastContent.base()
+	if _rules.stand:
+		return str(content["levels"][_rules.level_id]["stand"]["intro"])
 	if _rules.tutorial:
 		return str(content["levels"][_rules.level_id].get("intro", ""))
 	if _rules.layout_ids.is_empty():

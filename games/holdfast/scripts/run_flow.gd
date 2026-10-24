@@ -27,6 +27,9 @@ enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY }
 @onready var summary: Control = get_node(summary_path)
 @onready var planning: Control = get_node(planning_path)
 
+## Shown once, on the summary that first pays stars.
+const STARS_LINE := "Stars buy slots and towers. Gold buys upgrades."
+
 var screen := Screen.HOME
 
 
@@ -43,7 +46,7 @@ func _ready() -> void:
 	journey.tree_requested.connect(_show.bind(Screen.TREE))
 	journey.hero_requested.connect(_show.bind(Screen.HERO))
 	journey.level_requested.connect(_level_picked)
-	journey.buy_requested.connect(profile.buy)
+	journey.buy_requested.connect(_bought)
 	hero_page.back_requested.connect(_show.bind(Screen.MAP))
 	hero_page.tree_requested.connect(_open_tree_at.bind("Hero"))
 	hero_page.pillar_requested.connect(profile.select_pillar)
@@ -51,7 +54,7 @@ func _ready() -> void:
 	hero_page.gear_wear_requested.connect(profile.wear_gear)
 	hero_page.gear_off_requested.connect(profile.take_off_gear)
 	keep_screen.back_requested.connect(_show.bind(Screen.MAP))
-	keep_screen.buy_requested.connect(profile.buy)
+	keep_screen.buy_requested.connect(_bought)
 	keep_screen.respec_requested.connect(_respec_requested)
 	keep_screen.refund_requested.connect(_refund_requested)
 	summary.play_again_requested.connect(_plan_run)
@@ -142,15 +145,28 @@ func _planned(layout: Array) -> void:
 	_start_run()
 
 
-## Starts a run on the profile's level, upgrades and Hero pillar.
-func _start_run() -> void:
+## A buy from the map's guide or the tree. The second guided buy, and only a guided one, goes
+## straight into the stand, the short fight with the post just bought.
+func _bought(id: String) -> void:
+	var guided := profile.get_guided_step() == id
+	if not profile.buy(id) or not guided or source.is_running() or not profile.is_stand_due():
+		return
+	profile.begin_stand()
+	profile.select_level(profile.get_tutorial_level())
+	_start_run(true)
+
+
+## Starts a run on the profile's level, upgrades and Hero pillar; `stand` fights the tutorial's
+## stand on the castle's own posts.
+func _start_run(stand := false) -> void:
 	if source.is_running():
 		return
 	if "hero_path" in source:
 		source.hero_path = profile.get_pillar()
 		source.level_id = profile.get_level()
 		source.upgrades = profile.get_upgrades().duplicate()
-		source.layout = profile.get_layout(profile.get_level())
+		source.stand = stand
+		source.layout = profile.get_stand_layout() if stand else profile.get_layout(profile.get_level())
 		source.gear = profile.get_gear_worn()
 		source.gear_owned = profile.get_gear_owned().duplicate()
 	_show(Screen.RUN)
@@ -173,6 +189,9 @@ func _on_run_ended(result: Dictionary) -> void:
 		profile.bank_run(result["result"])
 		result["stars_paid"] = profile.get_stars_earned() - stars_before
 		result["reward_gold"] = profile.get_reward_gold(level) if first_win else 0
+		if int(result["stars_paid"]) > 0 and not profile.has_seen_stars_line():
+			result["stars_note"] = STARS_LINE
+			profile.show_stars_line()
 		if result["result"].get("outcome") == HoldfastRules.OUTCOME_WON:
 			next = profile.get_next_level(level)
 	summary.show_summary(result, next)

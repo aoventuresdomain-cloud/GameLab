@@ -17,6 +17,8 @@ extends RefCounted
 ##   layouts: {level: [entries]}   the castle spots the player put posts on, per level: "spot_3" for
 ##                         an Archer Post, "mage:spot_3" for a Mage Post
 ##   gear: {owned: [item ids], equipped: {slot: item id or ""}}   the Hero's gear (the Hero only)
+##   stand_done: bool      the tutorial's short fight after the two guided buys has begun (once only)
+##   stars_line_seen: bool the one line on what stars buy has been shown (once only)
 ## }
 ## The save format version is SAVE_VERSION; bump it with a migration when the shape changes.
 ## Version 2: levels open by winning the previous one (`unlocked`), no longer by buying a
@@ -91,6 +93,8 @@ static func new_profile(content: Dictionary) -> Dictionary:
 		"runs": 0,
 		"layouts": {},
 		"gear": {"owned": [], "equipped": HeroGear.new_unit("hero", gear_slots(content))["slots"]},
+		"stand_done": false,
+		"stars_line_seen": false,
 	}
 
 
@@ -153,6 +157,11 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 				var known: bool = profile["gear"]["equipped"].has(str(saved_slot))
 				if profile["gear"]["equipped"].has(slot) and profile["gear"]["equipped"][slot] == "" and (not known or str(saved_slot) == slot):
 					profile["gear"]["equipped"][slot] = id
+	# A save from before these two firsts has been through them, so it never sees them: only a save
+	# that says so (or no save at all) has them still to come.
+	for key in ["stand_done", "stars_line_seen"]:
+		var saved_flag: Variant = data.get(key)
+		profile[key] = saved_flag if saved_flag is bool else not data.is_empty()
 	var unlocked := unlocked_levels(content, profile)
 	if str(data.get("level", "")) in unlocked:
 		profile["level"] = str(data["level"])
@@ -499,6 +508,39 @@ static func guide_node(content: Dictionary, profile: Dictionary) -> String:
 static func guided_step(content: Dictionary, profile: Dictionary) -> String:
 	var id := guide_node(content, profile)
 	return id if id != "" and _why_not_buy_node(content, profile, id) == "" else ""
+
+
+## True when the tutorial's stand is due: Level 0 won, both guided buys made and the stand not
+## begun yet. It follows the second buy at once, and a profile that has begun it never meets it again.
+static func stand_due(content: Dictionary, profile: Dictionary) -> bool:
+	var first := tutorial_level(content)
+	return first != "" and content["levels"][first].has("stand") and first in profile["levels_won"] and not profile["stand_done"] and guide_node(content, profile) == "" and has_a_tower(content, profile)
+
+
+## The posts the stand is fought with: the castle spot nearest where the first spawn arc comes
+## from, one for each slot the player holds with an Archer Post card for it (Mage Posts and the
+## rest of the slots are the Plan page's, later).
+static func stand_layout(content: Dictionary, profile: Dictionary) -> Array:
+	var first := tutorial_level(content)
+	if first == "":
+		return []
+	var arcs: Array = content["levels"][first].get("spawn_arcs", [])
+	return HoldfastRules.best_sites(ring_spots(content), arcs, mini(castle_cards(content, profile), castle_slots(content, profile)))
+
+
+## The profile with the stand begun, so it is offered once: leaving it half-fought, or a refund
+## that makes the guide due again, never brings it back.
+static func begin_stand(profile: Dictionary) -> Dictionary:
+	var out := profile.duplicate(true)
+	out["stand_done"] = true
+	return out
+
+
+## The profile with the one line on what stars buy marked as shown.
+static func show_stars_line(profile: Dictionary) -> Dictionary:
+	var out := profile.duplicate(true)
+	out["stars_line_seen"] = true
+	return out
 
 
 ## True when the player has what a first run needs: a slot and an Archer Post to put in it.

@@ -69,6 +69,12 @@ func _test_flow_with_mouse() -> void:
 	await _click(start.get_node("%GuideButton"))
 	await _click(start.get_node("%GuideButton"))
 	_check(not start.get_node("%Guide").visible and not start._buttons["outpost"].disabled, "two clicks buy the First Slot and the first Archer Post and open Level 1")
+	_check(hud.visible and _source.is_running() and _source.get_rules().stand, "the second click starts the stand, the short fight on the post just bought")
+	_source.step(1000.0)
+	await process_frame
+	_check(summary.visible and not summary.get_node("%Reward").visible, "the stand ends on the summary and pays no second Level 0 reward")
+	await _click(summary.get_node("%MapButton"))
+	_check(start.visible, "and the map is back")
 
 	await _click(start._buttons["outpost"])
 	_check(_main.planning.visible and not start.visible, "Tapping the first level opens the planning screen (it has Archer Post sites)")
@@ -160,7 +166,7 @@ func _test_readable_layout() -> void:
 		await _check_layout(hud, window, scale, view)
 		hud.get_node("%PostsNote").visible = false
 		# The summary after a win, with Next level and the Upgrade screen as well.
-		_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": false}, "shingle_beach")
+		_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": false, "stars_paid": 2, "reward_gold": 150, "stars_note": "Stars buy slots and towers. Gold buys upgrades."}, "shingle_beach")
 		await _check_layout(_main.summary, window, scale, view)
 		_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": true})
 

@@ -14,6 +14,7 @@ const Hud = preload("res://scripts/ui/hud.gd")
 @onready var _stars_value: Label = %StarsValue
 @onready var _reward: Label = %Reward
 @onready var _waves_value: Label = %WavesValue
+@onready var _stars_note: Label = %StarsNote
 @onready var _gear_found: Label = %GearFound
 @onready var _play_again_button: Button = %PlayAgainButton
 @onready var _map_button: Button = %MapButton
@@ -32,7 +33,8 @@ func _ready() -> void:
 
 
 ## summary is the run_ended payload of a RunStateSource, with the run flow's `stars_paid` and
-## `reward_gold` (what banking it gave that the level had not given before). `next_level` is the level
+## `reward_gold` (what banking it gave that the level had not given before) and, once, `stars_note`
+## (the line on what stars buy). `next_level` is the level
 ## to offer after a win ("" offers none: a loss, or the last level).
 func show_summary(summary: Dictionary, next_level: String = "") -> void:
 	_next_level = next_level
@@ -43,6 +45,8 @@ func show_summary(summary: Dictionary, next_level: String = "") -> void:
 	_stars_value.text = "+%d" % int(summary.get("stars_paid", 0))
 	_reward.text = "First win reward: +%s gold" % Hud.format_number(int(summary.get("reward_gold", 0)))
 	_reward.visible = int(summary.get("reward_gold", 0)) > 0
+	_stars_note.text = str(summary.get("stars_note", ""))
+	_stars_note.visible = _stars_note.text != ""
 	_waves_value.text = "%d / %d" % [int(summary.get("waves_cleared", 0)), int(summary.get("total_waves", 0))]
 	var found: PackedStringArray = []
 	var items: Dictionary = HoldfastContent.base().get("gear_items", {})

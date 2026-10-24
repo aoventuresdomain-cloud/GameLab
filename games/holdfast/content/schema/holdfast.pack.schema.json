@@ -204,6 +204,24 @@
           "type": "string",
           "minLength": 1
         },
+        "stand": {
+          "type": "object",
+          "required": [
+            "intro",
+            "waves"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "intro": {
+              "type": "string",
+              "minLength": 1
+            },
+            "waves": {
+              "type": "array",
+              "minItems": 1
+            }
+          }
+        },
         "first_clear_gear": {
           "type": "string",
           "x-ref": "gear_items"
