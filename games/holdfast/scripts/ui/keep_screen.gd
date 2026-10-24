@@ -426,6 +426,23 @@ func _keep_in_view() -> void:
 	var low := Vector2.ONE * KEEP_IN_VIEW - rect.end * zoom
 	var high := _view.size - Vector2.ONE * KEEP_IN_VIEW - rect.position * zoom
 	_web.position = _web.position.clamp(low, high)
+	_follow_view_tab()
+
+
+## The tab lit is the one whose sections are centred nearest the middle of the view.
+func _follow_view_tab() -> void:
+	if _view.size == Vector2.ZERO or _web.scale.x <= 0.0:
+		return
+	var middle := (_view.size * 0.5 - _web.position) / _web.scale.x
+	var best := ""
+	var best_gap := INF
+	for label in tab_names():
+		var gap := _tab_rect(label).get_center().distance_to(middle)
+		if gap < best_gap:
+			best = label
+			best_gap = gap
+	for label in _tab_buttons:
+		_tab_buttons[label].set_pressed_no_signal(label == best)
 
 
 ## A line from each node to the nodes it needs; a dashed one between the two sides of a fork.

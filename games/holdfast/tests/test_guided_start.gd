@@ -147,13 +147,63 @@ func test_a_save_that_lost_its_stars_can_replay_level_zero_to_be_paid_again() ->
 	var profile := _after_level_zero()
 	profile["stars"] = {}
 	profile = HoldfastMeta.from_save(content, profile)
-	expect_eq(HoldfastMeta.guided_step(content, profile), "castle_slot_1")
+	expect_eq(HoldfastMeta.guided_step(content, profile), "", "a step that cannot be paid is not due: nobody is locked out")
 	expect_eq(HoldfastMeta.why_not_buy(content, profile, "castle_slot_1"), "Not enough stars", "short of stars")
 	var tutorial := HoldfastMeta.tutorial_level(content)
 	expect_true(tutorial in HoldfastMeta.unlocked_levels(content, profile), "Level 0 is still open")
 	profile = HoldfastMeta.bank_run(content, profile, {"outcome": "won", "level": tutorial, "gold": 0})
 	expect_eq(HoldfastMeta.stars_available(content, profile), 2, "winning it pays the stars the guide needs")
+	expect_eq(HoldfastMeta.guided_step(content, profile), "castle_slot_1", "and the guide is due again")
 	expect_eq(HoldfastMeta.why_not_buy(content, profile, "castle_slot_1"), "")
+
+
+## QA's save: Level 0 won, both stars spent on First Slot and Second Slot, the Archer Post (the
+## guide's next step) out of reach.
+func _stuck_save(gold: int) -> Dictionary:
+	var content := _content()
+	var profile := _after_level_zero(gold)
+	for id in ["castle_slot_1", "castle_slot_2"]:
+		profile = HoldfastMeta.buy(content, profile, id)["profile"]
+	profile["upgrades"] = ["castle_slot_1", "castle_slot_2"]
+	return HoldfastMeta.from_save(content, profile)
+
+
+func test_a_save_with_the_stars_spent_on_slots_is_not_locked_out_and_can_refund() -> void:
+	var content := _content()
+	var profile := _stuck_save(150)
+	expect_eq(HoldfastMeta.stars_available(content, profile), 0, "set-up: no star for the Archer Post")
+	expect_eq(HoldfastMeta.guided_step(content, profile), "", "the guide cannot be paid, so it is not due")
+	expect_eq(HoldfastMeta.why_not_buy(content, profile, "castle_archer_1"), "Not enough stars")
+	expect_eq(HoldfastMeta.why_not_respec(content, profile), "", "the refund is open")
+	var refunded := HoldfastMeta.respec(content, profile)
+	expect_eq(HoldfastMeta.guided_step(content, refunded), "castle_slot_1", "after it the guide runs again with the stars to finish it")
+	expect_eq(HoldfastMeta.stars_available(content, refunded), 2)
+	# Without the gold for the fee the refund waits, and the gold a Level 0 replay collects pays for it.
+	var poor := _stuck_save(0)
+	expect_false(HoldfastMeta.why_not_respec(content, poor) == "", "no gold, no refund yet")
+	var tutorial := HoldfastMeta.tutorial_level(content)
+	poor = HoldfastMeta.bank_run(content, poor, {"outcome": "won", "level": tutorial, "gold": 100})
+	expect_eq(HoldfastMeta.why_not_respec(content, poor), "", "a replay of Level 0 pays the fee")
+
+
+func test_a_step_that_cannot_be_bought_for_any_reason_is_not_due() -> void:
+	var content: Dictionary = _content().duplicate(true)
+	content["castle_rules"]["castle"]["guided"] = ["castle_archer_1"]
+	var profile := _after_level_zero()
+	expect_eq(HoldfastMeta.why_not_buy(content, profile, "castle_archer_1"), "Needs First Slot first")
+	expect_eq(HoldfastMeta.guided_step(content, profile), "", "needs a node the player does not have")
+	expect_eq(HoldfastMeta.why_not_buy(content, profile, "castle_slot_1"), "", "so nothing else is held back")
+
+
+func test_a_save_with_the_stars_spent_on_slots_can_open_the_tree_and_the_hero_page() -> void:
+	var main := _main()
+	var profile: HoldfastProfile = main.get_node("Profile")
+	profile.data = _stuck_save(150)
+	profile.changed.emit()
+	expect_false(main.journey.get_node("%TreeButton").disabled, "the tree is reachable")
+	expect_false(main.journey._hero_button.disabled, "so is the Hero page")
+	expect_true(main.journey.get_node("%Guide").visible and main.journey.get_node("%GuideButton").disabled, "the guide still names the step it is waiting on")
+	main.free()
 
 
 func test_a_respec_sends_the_player_back_through_the_guide_with_the_stars_to_finish_it() -> void:
@@ -248,6 +298,9 @@ func test_when_the_tree_is_too_wide_it_opens_at_the_floor_centred_on_what_the_pl
 		expect_true(_on_screen(page, id), "%s, which the player owns, is in view" % id)
 	var view_centre: Vector2 = page.get_node("%View").get_global_rect().get_center()
 	expect_true(owned.get_center().distance_to(view_centre) < 30.0, "and sits in the middle of the view")
+	expect_true(page._tab_buttons["Castle"].button_pressed and not page._tab_buttons["Hero"].button_pressed, "the lit tab is the one the view is centred on")
+	page._tab_buttons["Hero"].pressed.emit()
+	expect_true(page._tab_buttons["Hero"].button_pressed and not page._tab_buttons["Castle"].button_pressed, "and follows a tab that is picked")
 	main.free()
 
 

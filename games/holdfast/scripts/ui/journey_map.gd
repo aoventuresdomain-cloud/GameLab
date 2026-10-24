@@ -97,9 +97,10 @@ func refresh() -> void:
 	_tree.text = "Skill tree: %d to buy" % buyable if buyable > 0 else "Skill tree"
 	_tree.modulate = GLOW_TINT if buyable > 0 else Color.WHITE
 	# The guided buy comes first: until it is made the tree and the Hero page stay shut.
-	_tree.disabled = _guided != ""
-	_hero_button.disabled = _guided != ""
-	_hero_figure.disabled = _guided != ""
+	var locked: bool = _profile.get_guided_step() != ""
+	_tree.disabled = locked
+	_hero_button.disabled = locked
+	_hero_figure.disabled = locked
 	_place()
 	_map.queue_redraw()
 
@@ -113,7 +114,7 @@ func _is_open(id: String) -> bool:
 ## Shows the next compulsory purchase (First Slot, then the first Archer Post) once the
 ## tutorial is won, until the castle has a tower.
 func _refresh_guide() -> void:
-	_guided = _profile.get_guided_step()
+	_guided = _profile.get_guide_node()
 	_guide.visible = _guided != ""
 	if _guided == "":
 		return
