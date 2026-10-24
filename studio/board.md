@@ -507,25 +507,25 @@
 
 ### HF-M2-39 Place towers in any of the spots you have slots for
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (CEO feedback point 4). Design pass result: slots stay in the tree and the Plan page gets a "+ Tower" shortcut that buys the same node at the same price and shows the new spot at once (Advisor accepted; CEO has not answered it yet, so build on this recommendation)
+- **Status:** Merged (#119, QA clear at fda1e9d, ec6aad3). Towers go in any of the ring spots for the slots owned; "+ Tower" on the Plan page.
 - **QA:** full (layouts and save data change)
 - **Depends on:** HF-M2-38, HF-M2-41
 - **Done when:**
-  - [ ] The Plan page shows no compass labels (East, West and so on). With N slots bought the player may put towers in any N of the ring's spots, and a slot is a count, not a fixed place.
-  - [ ] Old saved layouts load unchanged (spot ids stay as data), and auto-place, Quick start and retry still work with any chosen spots.
-  - [ ] The Plan page has a "+ Tower" shortcut that buys the next slot node at the same price as in the tree, shows the new spot at once, and is refused when it cannot be afforded.
-  - [ ] Rules that read a post's place (Crossfire, Lit Post, Rally and the like) use the real position, with a test that the same count in different spots behaves by geometry only.
+  - [x] The Plan page shows no compass labels (East, West and so on). With N slots bought the player may put towers in any N of the ring's spots, and a slot is a count, not a fixed place.
+  - [x] Old saved layouts load unchanged (spot ids stay as data), and auto-place, Quick start and retry still work with any chosen spots.
+  - [x] The Plan page has a "+ Tower" shortcut that buys the next slot node at the same price as in the tree, shows the new spot at once, and is refused when it cannot be afforded.
+  - [x] Rules that read a post's place (Crossfire, Lit Post, Rally and the like) use the real position, with a test that the same count in different spots behaves by geometry only.
 
 ### HF-M2-40 Interface tidy: short names, glow not words, Hero page layout
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (design pass done, hold released 2026-10-24; CEO approved the Hero page and chose "Refund" on 2026-10-24). Follows HF-M2-39. CEO feedback points 1, 3, 6 and the general note
+- **Status:** Merged (#120, QA clear at 922c0f1, 0a6b125). Interface tidy with Refund and the new Hero page.
 - **QA:** screens (interface only; a full round if the design moves any purchase between screens)
 - **Depends on:** HF-M2-39, HF-M2-41
 - **Done when:**
-  - [ ] The journey page has no "locked" or "next" comments; state is shown by look only.
-  - [ ] Menu and button names are short ("Skill tree", not "Open the Flare Archer skill tree"); owned nodes, slots and gear glow or turn green with no "Bought" word; explanatory text is cut to what a first-time player needs. "Respec" is renamed "Refund" (CEO decision 2026-10-24) everywhere it shows, and the red arrows on the Plan page are removed (CEO: redundant).
-  - [ ] The Hero page has the Hero graphic (placeholder art) in the centre and the gear slots on the right, with the inventory used to equip and unequip.
-  - [ ] The layout follows the accepted design from HF-M2-41, checked at 1280x720 and 1920x1080.
+  - [x] The journey page has no "locked" or "next" comments; state is shown by look only.
+  - [x] Menu and button names are short ("Skill tree", not "Open the Flare Archer skill tree"); owned nodes, slots and gear glow or turn green with no "Bought" word; explanatory text is cut to what a first-time player needs. "Respec" is renamed "Refund" (CEO decision 2026-10-24) everywhere it shows, and the red arrows on the Plan page are removed (CEO: redundant).
+  - [x] The Hero page has the Hero graphic (placeholder art) in the centre and the gear slots on the right, with the inventory used to equip and unequip.
+  - [x] The layout follows the accepted design from HF-M2-41, checked at 1280x720 and 1920x1080.
 
 ### HF-M2-41 Design pass for the feedback slice (Designer, then Advisor critique)
 - **Owner:** Designer (screen mockups)
@@ -549,37 +549,37 @@
 
 ### HF-M2-43 Skill detail card replaces the bottom strip of the tree
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (CEO accepted the mockup 2026-10-24: `holdfast/m2/design-pass-feedback-slice.html`, sections 3 and 3b); builds after HF-M2-40. Tower Gate I keeps its three cards as mocked (CEO). CEO request 2026-10-24: remove the bottom strip of skills, click a node to see details and buy there
+- **Status:** Merged (#121, QA clear at 86d75ec, 981c3f4). Detail card replaces the strip; per-node Refund; tutorial buys not refundable.
 - **QA:** full (purchases move to a new place)
 - **Depends on:** HF-M2-40
 - **Done when:**
-  - [ ] The bottom strip is gone. Clicking a node opens a detail card centred over the dimmed tree, closed by clicking outside, Esc or the controller B button; the card shows only that node (name, one effect line with before and after numbers, price) and nothing about nodes further ahead.
-  - [ ] The card buys, refuses when unaffordable (dimmed button, price marked) and shows the owned state with a Refund button; forks, Tower Gate and link nodes show their special states as in the mockup.
-  - [ ] After a purchase the card stays with a tick and brief glow, and neighbouring buyable nodes light up behind it; hover shows a small name-and-effect tooltip on desktop; controller A opens and buys, B closes, with a focus outline different from the act and done colours.
-  - [ ] "Can't afford" shows a non-colour cue as well (a small lock or "need N" beside the dimmed price), and Refund shows the amount it gives back in bold; the two guided tutorial buys cannot be refunded.
-  - [ ] The old strip's tests change only with my OK, each logged; old saves and the guided first buys still work.
+  - [x] The bottom strip is gone. Clicking a node opens a detail card centred over the dimmed tree, closed by clicking outside, Esc or the controller B button; the card shows only that node (name, one effect line with before and after numbers, price) and nothing about nodes further ahead.
+  - [x] The card buys, refuses when unaffordable (dimmed button, price marked) and shows the owned state with a Refund button; forks, Tower Gate and link nodes show their special states as in the mockup.
+  - [x] After a purchase the card stays with a tick and brief glow, and neighbouring buyable nodes light up behind it; hover shows a small name-and-effect tooltip on desktop; controller A opens and buys, B closes, with a focus outline different from the act and done colours.
+  - [x] "Can't afford" shows a non-colour cue as well (a small lock or "need N" beside the dimmed price), and Refund shows the amount it gives back in bold; the two guided tutorial buys cannot be refunded.
+  - [x] The old strip's tests change only with my OK, each logged; old saves and the guided first buys still work.
 
 ### HF-M2-44 The first minutes: a real fight early, a two-tap guide, one line on stars
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (CEO accepted research points 1 to 4 on 2026-10-24: `studio/research/holdfast-ui-and-journey-research.html` in the project files). Builds after HF-M2-43; touches the Level 0 flow and the guide, so it follows #116
+- **Status:** Merged (#122, QA clear at ff7ce29, 1fa9a92). A real fight about 40 s after pressing Start, two-tap guide, one stars line.
 - **QA:** full (Level 0 flow and save data)
 - **Depends on:** HF-M2-38
 - **Done when:**
-  - [ ] After the two guided buys the player gets a short real fight with the tower they just bought (Level 0 still cannot be lost); a timed bot walk reaches that fight within about two minutes of pressing Start.
-  - [ ] The compulsory guide is exactly two taps (first slot, first tower) and never blocks a normal screen afterwards; nothing else is guided.
-  - [ ] When stars first appear (after Level 0) one line is shown once: "Stars buy slots and towers. Gold buys upgrades."
-  - [ ] Old saves that already passed Level 0 never see the line or the fight again.
+  - [x] After the two guided buys the player gets a short real fight with the tower they just bought (Level 0 still cannot be lost); a timed bot walk reaches that fight within about two minutes of pressing Start.
+  - [x] The compulsory guide is exactly two taps (first slot, first tower) and never blocks a normal screen afterwards; nothing else is guided.
+  - [x] When stars first appear (after Level 0) one line is shown once: "Stars buy slots and towers. Gold buys upgrades."
+  - [x] Old saves that already passed Level 0 never see the line or the fight again.
 
 ### HF-M2-45 Always something to buy, and a first gear drop that is certain
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (CEO accepted research points 2 and 8 on 2026-10-24). Builds after HF-M2-44; the dots sit in the top bar from HF-M2-40
+- **Status:** Merged (#123, QA clear at 8f6cce2, 403b25f). Skill tree and Hero tab dots; simulator gap list empty; first gear drop certain.
 - **QA:** full (progression and gear drops change)
 - **Depends on:** HF-M2-40, HF-M2-44
 - **Done when:**
-  - [ ] The simulator checks that every return to the skill tree, on the curve bot's path through levels 1 to 5, has at least one node the player can afford; a gap is a finding, not a pass.
-  - [ ] A small dot shows on the Skill tree tab when something is affordable, and clears when looked at.
-  - [ ] The first gear piece always drops in the first levels (not a chance), and a dot shows on the Hero tab until the player has looked at the new piece.
-  - [ ] Existing gear drops stay as they are after the first one, with a test that the first drop is certain on every seed.
+  - [x] The simulator checks that every return to the skill tree, on the curve bot's path through levels 1 to 5, has at least one node the player can afford; a gap is a finding, not a pass.
+  - [x] A small dot shows on the Skill tree tab when something is affordable, and clears when looked at.
+  - [x] The first gear piece always drops in the first levels (not a chance), and a dot shows on the Hero tab until the player has looked at the new piece.
+  - [x] Existing gear drops stay as they are after the first one, with a test that the first drop is certain on every seed.
 
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
@@ -761,8 +761,24 @@
 | F-086 | HF-M2-36 | CEO feedback 2026-10-24: Hero page should show the Hero in the centre and gear slots on the right, with the inventory to equip | Minor | Gameplay Engineer | In HF-M2-40 |
 | F-087 | HF-M2-33 | CEO feedback 2026-10-24: menu names too long, "Bought" shown as a word, too much explanatory text; wants glow or green and good design practice | Minor | Gameplay Engineer | In HF-M2-40 |
 | F-088 | HF-M2-37 | CEO question 2026-10-24: how other heroes and recruit types are chosen is unclear; Advisor to propose | Minor | Game Design Advisor | In HF-M2-42 |
-| F-089 | HF-M2-38 | MUST FIX from QA (#116, 20cb68e): an old Level 0 save with First Slot and Second Slot bought but not the Archer Post is stuck (guide step unaffordable, tree and Hero disabled, Level 1 locked). Fix: the lock releases when the guided step cannot be afforded, with a test for that save | Major | Gameplay Engineer | Closed in #116 || F-090 | HF-M2-38 | FOLLOW-UP from QA (#116, 20cb68e): the whole tree does not fit at the readable 0.5 floor at 1280x720 (about 55% of the width, labels about 10 px). Decision: readable wins; the CEO commented on the zoomed-out start and it stays | Minor | Head of Engineering | Closed, decision (readable wins) || F-091 | HF-M2-38 | FOLLOW-UP from QA (#116, 20cb68e): the Hero tab stays highlighted while the view is centred on Castle and Archer | Minor | Gameplay Engineer | Closed in #116 || F-092 | HF-M2-32 | FOLLOW-UP from QA (#116, 20cb68e): a Level 0 replay pays 24 gold each time, so it can be farmed; it predates #116 (bank_run adds the run's gold every run, on every level) and is normal replay income | Minor | Gameplay Engineer | Closed, as designed |
+| F-089 | HF-M2-38 | MUST FIX from QA (#116, 20cb68e): an old Level 0 save with First Slot and Second Slot bought but not the Archer Post is stuck (guide step unaffordable, tree and Hero disabled, Level 1 locked). Fix: the lock releases when the guided step cannot be afforded, with a test for that save | Major | Gameplay Engineer | Closed in #116 |
+| F-090 | HF-M2-38 | FOLLOW-UP from QA (#116, 20cb68e): the whole tree does not fit at the readable 0.5 floor at 1280x720 (about 55% of the width, labels about 10 px). Decision: readable wins; the CEO commented on the zoomed-out start and it stays | Minor | Head of Engineering | Closed, decision (readable wins) |
+| F-091 | HF-M2-38 | FOLLOW-UP from QA (#116, 20cb68e): the Hero tab stays highlighted while the view is centred on Castle and Archer | Minor | Gameplay Engineer | Closed in #116 |
+| F-092 | HF-M2-32 | FOLLOW-UP from QA (#116, 20cb68e): a Level 0 replay pays 24 gold each time, so it can be farmed; it predates #116 (bank_run adds the run's gold every run, on every level) and is normal replay income | Minor | Gameplay Engineer | Closed, as designed |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
+| F-093 | HF-M2-39 | MUST FIX from QA (#119, fda1e9d): "+ Tower" ignored Mage cards when choosing a card or a slot | Major | Gameplay Engineer | Closed in #119 |
+| F-094 | HF-M2-39 | FOLLOW-UP from QA (#119): the first "+ Tower" press with 1 slot and 1 card buys a slot and nothing visible changes | Minor | Gameplay Engineer | Open (backlog) |
+| F-095 | HF-M2-39 | FOLLOW-UP from QA (#119): the unaffordable reason showed only on hover | Minor | Gameplay Engineer | Closed in #120 (reason in the Plan hint line) |
+| F-096 | HF-M2-35 | FOLLOW-UP from QA (#119): levels 3 and 4 sit near the tops of their win-rate bands | Minor | Head of Engineering | Open, M2b balance |
+| F-097 | HF-M2-40 | FOLLOW-UP from QA (#120, 922c0f1): the journey guide said "Replay First Watch for more stars" when the stars were spent elsewhere; a replay pays nothing then | Minor | Gameplay Engineer | Closed in #121 ("Refund a node to free a star") |
+| F-098 | HF-M2-40 | FOLLOW-UP from QA (#120): a worn gear slot's text is slightly misaligned against an empty slot | Minor | Gameplay Engineer | Open (cosmetic) |
+| F-099 | HF-M2-40 | FOLLOW-UP from QA (#120): the Hero figure shifts about 90 px sideways when the "i" breakdown widens the stats column | Minor | Gameplay Engineer | Open (cosmetic) |
+| F-100 | HF-M2-43 | FOLLOW-UP from QA (#121, 86d75ec): the gate refund rule counted the gate itself, so a refund could leave a gate standing on four nodes | Minor | Gameplay Engineer | Closed in #122 |
+| F-101 | HF-M2-43 | FOLLOW-UP from QA (#121): an owned card opened with focus on Refund, so Enter or a double A refunded at once | Minor | Gameplay Engineer | Closed in #122 (focus on the close cross) |
+| F-102 | HF-M2-43 | FOLLOW-UP from QA (#121): "Refund all" has no confirmation and also takes back the two tutorial buys; the mockup's "Reset all" in a menu with confirmation is not built | Minor | Gameplay Engineer | Open (backlog) |
+| F-103 | HF-M2-43 | The mockup's hollow amber ring on buyable nodes is not built (not in the Done when lines) | Minor | Gameplay Engineer | Open (backlog) |
+| F-104 | HF-M2-44 | FOLLOW-UP from QA (#122, ff7ce29): `from_save` marks the intro flags seen for any non-empty save, so an old save that had not yet won Level 0 never sees the line or the fight | Minor | Gameplay Engineer | Open, accepted (spec covers saves past Level 0) |
+| F-105 | HF-M2-45 | FOLLOW-UP from QA (#123, 8f6cce2): the tree dot's seen list is kept in memory only, so after a reload the dot returns for nodes looked at last session | Minor | Gameplay Engineer | Open (backlog) |
 
 ## Test changes
 
@@ -812,6 +828,12 @@
 | 2026-10-23 | `test_links.gd` (#110) | `test_crossfire_adds_a_fifth_...` to `..._adds_half_...`; Lit Post test now needs the Hero beside the post | Retune of F-066 and F-067 (Crossfire trigger and Lit Post radius). Intent kept | Head of Engineering |
 | 2026-10-23 | Progression hash | Re-pinned in #110: `08cb412c` to `47bc1402` (HF-M2-35 retune of levels 1 to 5, Crossfire, Lit Post and Pillar Echo; pack data only) | The retune changes every run. Parity passes; QA confirmed the hash at c158f97 | Head of Engineering |
 | 2026-10-24 | `test_rework_b.gd`: `test_the_tabs_are_hero_archer_post_keep_and_castle_and_opening_lands_on_the_hero`, `test_dragging_the_background_pans_and_the_wheel_zooms` (#116) | Opening view: Hero section at real size with flare_boots and flare_focus in view and the Archer Post section out of view, to zoom between 0.5 and 1.0 with castle_slot_1 in view; wheel test: scale above 1.0 after one wheel-up, to larger than the scale recorded before it | HF-M2-38 opens the tree zoomed out and centred on what the player owns; the per-tab jump test (each tab at real size, its nodes in view) is untouched | Head of Engineering |
+| 2026-10-24 | `test_build3.gd`, `test_build5.gd`, `test_rework_b.gd`, `test_stars_and_castle.gd`, `test_mage_post.gd`, curve test seeds (#119, listed old to new in its description) | Compass-named spots to any ring spot with a count; saved layout `["spot_6"]` to `["spot_99"]`; HUD "Posts: East" to "Posts: 1"; a refusal for `["mage:nowhere"]` added; pack curve seeds 24 to 48 and poor-player seeds 12 to 24 | HF-M2-39 makes slots a count and measures early win-rate bands on more seeds; every check keeps its intent | Head of Engineering |
+| 2026-10-24 | Progression hash | Re-pinned in #119: `47bc1402` to `21a15385` (any-spot placement and auto-place choose from the whole ring) | Placement changes every run; unchanged since (#120 to #123) | Head of Engineering |
+| 2026-10-24 | 14 tests across the suite (#120, listed old to new in its description) | Journey comments, "Respec" to "Refund", "Bought" word to glow, Hero page layout, red arrows removed; one check now expects the worn piece to leave the bag | HF-M2-40 Done when lines; QA confirmed each keeps its intent | Head of Engineering |
+| 2026-10-24 | `test_build3.gd`, `test_build5.gd`, `test_guided_start.gd`, `test_stars_and_castle.gd`, `test_mage_post.gd`, `test_rework_b.gd`, `test_tree_pan_zoom.gd`, `test_interface_tidy.gd` (#121, nine changes listed old to new in its description) | Checks on the bottom strip become checks on the detail card through a shared `TreeCard` helper; two strip-only asserts dropped; the journey guide text now says "Refund a node to free a star" | The strip is gone (HF-M2-43); QA confirmed each keeps its intent | Head of Engineering |
+| 2026-10-24 | `test_build3.gd::test_a_new_profile_starts_empty...`, `run_ui_tests.gd`, `test_detail_card.gd` (#122) | New profile gains `"stand_done": false, "stars_line_seen": false`; the clicked walk gains the stand checks and one map click; the gate fixture gains one node (six owned) to match the corrected gate rule | HF-M2-44 flags and flow; HF-M2-43 follow-up F-100 | Head of Engineering |
+| 2026-10-24 | `test_build3.gd` profile shape, `test_rework_a.gd::test_the_skill_tree_button_says_how_many_upgrades_can_be_bought` (#123) | Profile gains `"gear_seen": []`; button text assert `"Skill tree: %d to buy" % affordable` to `"Skill tree"` plus the dot visible | The dot replaces the count (HF-M2-45) | Head of Engineering |
 
 ## Advisor views
 
@@ -883,3 +905,4 @@
 - 2026-10-24: CEO feedback on the tree build (points 1 to 6 plus general interface notes) logged as F-082 to F-088 and items HF-M2-38 to HF-M2-42. Design pass first (Designer, then Advisor critique, two rounds at most), HF-M2-38 can start now, HF-M2-39 and HF-M2-40 follow the accepted design. Open design question for the CEO: buy extra slots on the Plan page with the skill tree as a separate tab (recommendation comes from HF-M2-41). Then stop for the CEO's test.
 - 2026-10-24: CEO decisions on the design pass: taking a node back is called "Refund"; the red arrows on the Plan page go; the Hero page design is approved. Slots in the tree with a "+ Tower" shortcut on the Plan page and the boss unlocks for other heroes are not answered yet; HF-M2-39 and HF-M2-40 build on the recommendations unless told otherwise. The CEO asked what the bottom two skills on the tree are; the mockup must make them self-explanatory.
 - 2026-10-24: CEO decisions on the UI and journey research (`holdfast-ui-and-journey-research.html`): adopted points 1 to 4 (real fight within two minutes, always something to buy with a tab dot, guide capped at two taps, one line on stars), points 7 to 9 (non-colour can't-afford cue, certain first gear drop with a Hero tab dot, clear Refund amount with the tutorial buys not refundable). Kept as agreed: the zoomed-out tree start (point 5) and Tower Gate I's three cards as mocked (point 6). Dropped: the accessibility pass (10), step timings (11) and hints-only guide (12). Items HF-M2-43 (extended), HF-M2-44 and HF-M2-45. The hold on HF-M2-39, 40 and 43 is released.
+- 2026-10-24: Feedback slice HF-M2-38 to HF-M2-45 merged (#116, #119, #120, #121, #122, #123), all QA clear at named commits. Open follow-ups F-094, F-096, F-098, F-099, F-102 to F-105. Boss-unlocked pillars wait for the M2b balance floors. One combined handoff to the CEO, then stop for the CEO's test.
