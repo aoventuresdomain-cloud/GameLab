@@ -10,6 +10,9 @@ func test_hud_never_covers_the_keep_or_the_attack_ranges() -> void:
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	source.auto_step = false
 	tree.root.add_child(main)
+	var profile: HoldfastProfile = main.get_node("Profile")
+	ThroughLevelZero.apply(profile)
+	profile.select_level("outpost")
 	main.call("_start_run")
 	var world: Node2D = main.get_node("World")
 	var rules := source.get_rules()

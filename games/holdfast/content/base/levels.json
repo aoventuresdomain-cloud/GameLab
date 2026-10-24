@@ -5,7 +5,7 @@
       "name": "First Watch",
       "number": 0,
       "tutorial": true,
-      "intro": "Move with W, A, S and D. Press Space for your special. Stand in the lamplight and the post does the rest. The Keep cannot fall here.",
+      "intro": "Move with W, A, S and D. Space is your special. The Keep cannot fall here.",
       "reward": {"stars": 2, "gold": 150},
       "keep_health": 100,
       "keep_radius": 36,
@@ -19,7 +19,6 @@
         {"id": "west_post", "x": -130, "y": 70}
       ],
       "hero": {"path": "flare_archer", "x": 0, "y": 80},
-      "tower": {"id": "archer_post", "x": -90, "y": 30},
       "spawn_arcs": [{"centre": 200, "width": 80}, {"centre": 20, "width": 80}],
       "staff": {"id": "bryn", "x": 112, "y": -48},
       "recruits": [{"id": "wren", "x": -118, "y": 58, "post": "west_post"}],
@@ -28,7 +27,7 @@
         {"delay": 4, "health_scale": 1, "damage_scale": 1, "spawns": [{"enemy": "grunt", "count": 7, "interval": 1}]}
       ],
       "stand": {
-        "intro": "Your new post is up. Stand in the lamplight and hold the line. The Keep cannot fall here.",
+        "intro": "Your post is up. Hold the line beside it.",
         "waves": [
           {"health_scale": 1, "damage_scale": 1, "spawns": [{"enemy": "grunt", "count": 6, "interval": 1}]},
           {"delay": 3, "health_scale": 1, "damage_scale": 1, "spawns": [{"enemy": "grunt", "count": 6, "interval": 0.9}, {"enemy": "runner", "count": 3, "interval": 1.2}]}

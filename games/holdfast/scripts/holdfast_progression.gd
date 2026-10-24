@@ -122,6 +122,7 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 		var result: Dictionary = report["result"]
 		sim_time += float(report["seconds"]) + BETWEEN_RUNS_SECONDS
 		profile = HoldfastMeta.bank_run(content, profile, result)
+		profile = HoldfastMeta.wear_free_slots(content, profile)
 		var outcome := str(result["outcome"])
 		outcomes[outcome] = int(outcomes.get(outcome, 0)) + 1
 		runs.append({

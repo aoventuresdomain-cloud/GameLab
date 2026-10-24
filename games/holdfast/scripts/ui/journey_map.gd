@@ -11,6 +11,8 @@ signal tree_requested
 signal home_requested
 ## A guided purchase (an upgrade node id) the player pressed.
 signal buy_requested(id: String)
+## The Start button the guide shows once both guided buys are made: the short fight with the new post.
+signal stand_requested
 
 const Hud = preload("res://scripts/ui/hud.gd")
 const FONT_PX := 20
@@ -30,6 +32,7 @@ const HERO_FIGURE := Vector2(44, 64)
 ## The small dot on the Skill tree and Hero tabs: something new to look at.
 const COLOUR_DOT := Color(0.95, 0.7, 0.25)
 const DOT_PX := 16.0
+const STAND_LINE := "Your post is up. Try it out."
 const DEFAULT_INFO := ""
 const HERO_INFO := "Hero and gear"
 
@@ -66,7 +69,7 @@ func _ready() -> void:
 	_ids = _content["levels"].keys()
 	_back.pressed.connect(home_requested.emit)
 	_tree.pressed.connect(tree_requested.emit)
-	_guide_button.pressed.connect(func() -> void: buy_requested.emit(_guided))
+	_guide_button.pressed.connect(_on_guide_pressed)
 	_map.draw.connect(_draw_map)
 	_map.resized.connect(_place)
 	_build_nodes()
@@ -74,6 +77,14 @@ func _ready() -> void:
 	_hero_dot = _make_dot(_hero_button)
 	_info.text = DEFAULT_INFO
 	visibility_changed.connect(_on_visibility_changed)
+
+
+## The guide's one button: buy the guided node, or start the fight once both buys are made.
+func _on_guide_pressed() -> void:
+	if _guided == "":
+		stand_requested.emit()
+	else:
+		buy_requested.emit(_guided)
 
 
 func bind(profile: Node) -> void:
@@ -123,10 +134,17 @@ func _is_open(id: String) -> bool:
 
 
 ## Shows the next compulsory purchase (First Slot, then the first Archer Post) once the
-## tutorial is won, until the castle has a tower.
+## tutorial is won, until the castle has a tower; then one Start button for the short fight,
+## which waits for a press.
 func _refresh_guide() -> void:
 	_guided = _profile.get_guide_node()
-	_guide.visible = _guided != ""
+	var stand: bool = _guided == "" and _profile.is_stand_due()
+	_guide.visible = _guided != "" or stand
+	if stand:
+		_guide_label.text = STAND_LINE
+		_guide_button.text = "Start"
+		_guide_button.disabled = false
+		return
 	if _guided == "":
 		return
 	var node: Dictionary = _content["upgrade_nodes"][_guided]
@@ -333,7 +351,7 @@ func _on_visibility_changed() -> void:
 		refresh()
 		_info.text = DEFAULT_INFO
 		var target: Button = _buttons.get(_next)
-		if _guided != "" and not _guide_button.disabled:
+		if _guide.visible and not _guide_button.disabled:
 			_guide_button.grab_focus()
 		else:
 			(target if target != null and not target.disabled else _tree).grab_focus()

@@ -1,8 +1,8 @@
 extends KitTestCase
-## HF-M2-44: the first minutes. The second guided buy goes straight into a short real fight on
-## the post just bought (Level 0's Keep still cannot fall), the guide is two taps and nothing
-## else, one line on what stars buy shows once, and a save that is past Level 0 never meets
-## either again.
+## HF-M2-44: the first minutes. After the second guided buy the map offers one Start button for a
+## short real fight on the post just bought (Level 0's Keep still cannot fall; HF-M2-49: nothing
+## starts without a press), the guide is two taps and nothing else, one line on what stars buy
+## shows once, and a save that is past Level 0 never meets either again.
 
 const Main := preload("res://scenes/main.tscn")
 ## What a player needs per tap of a button or a level (a generous guess, not a measure).
@@ -92,8 +92,8 @@ func test_the_stand_is_fought_on_the_castle_post_with_its_own_short_waves() -> v
 	expect_eq(rules.layout_ids, ["spot_3"])
 	var plain := HoldfastRules.new()
 	plain.setup(HoldfastContent.run_config(first, [], content, "flare_archer", layout), SimRng.new(1))
-	expect_false(plain.stand, "without the flag Level 0 is the Level 0 it was")
-	expect_eq(plain.tower.position, Vector2(-90, 30))
+	expect_false(plain.stand, "without the flag Level 0 is the Level 0 it was, with no tower")
+	expect_eq(plain.towers.size(), 0)
 	expect_eq(plain.total_waves, content["levels"][first]["waves"].size())
 
 
@@ -122,16 +122,25 @@ func test_the_stand_data_names_real_enemies_and_says_its_line() -> void:
 
 # ------------------------------------------------------------------ the flow
 
-func test_the_second_guided_buy_on_the_map_starts_the_stand_at_once() -> void:
+func test_the_second_guided_buy_on_the_map_offers_start_and_only_a_press_begins_the_stand() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	profile.data = _after_level_zero()
 	profile.changed.emit()
+	main.call("_show", main.Screen.MAP)
 	main.journey.buy_requested.emit("castle_slot_1")
 	expect_false(source.is_running(), "the slot alone starts nothing")
 	main.journey.buy_requested.emit("castle_archer_1")
-	expect_true(source.is_running(), "the post starts the fight")
+	expect_false(source.is_running(), "nor does the post")
+	expect_eq(main.screen, main.Screen.MAP)
+	var button: Button = main.journey.get_node("%GuideButton")
+	expect_true(main.journey.get_node("%Guide").visible, "one strip is left")
+	expect_eq(button.text, "Start")
+	expect_false(profile.data["stand_done"], "not begun yet")
+	button.pressed.emit()
+	expect_true(source.is_running(), "the press starts the fight")
+	expect_true(source.is_held(), "which waits for a press of its own")
 	expect_eq(main.screen, main.Screen.RUN)
 	expect_true(source.get_rules().stand)
 	expect_eq(source.get_rules().level_id, "first_watch")
@@ -141,7 +150,7 @@ func test_the_second_guided_buy_on_the_map_starts_the_stand_at_once() -> void:
 	main.free()
 
 
-func test_the_second_guided_buy_from_the_tree_starts_it_too_and_closes_the_card() -> void:
+func test_the_second_guided_buy_from_the_tree_starts_nothing() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var source: HoldfastRunSource = main.get_node("RunSource")
@@ -152,8 +161,8 @@ func test_the_second_guided_buy_from_the_tree_starts_it_too_and_closes_the_card(
 	TreeCard.buy(page, "castle_slot_1")
 	expect_false(source.is_running())
 	TreeCard.buy(page, "castle_archer_1")
-	expect_true(source.is_running() and source.get_rules().stand)
-	expect_false(page._card.visible, "no card is left open behind the fight")
+	expect_false(source.is_running(), "a buy never starts a fight; the map's Start does")
+	expect_true(HoldfastMeta.stand_due(_content(), profile.data))
 	main.free()
 
 
@@ -166,6 +175,7 @@ func test_the_finished_stand_banks_its_gold_only_and_offers_level_one() -> void:
 	var before: Dictionary = profile.data.duplicate(true)
 	main.journey.buy_requested.emit("castle_slot_1")
 	main.journey.buy_requested.emit("castle_archer_1")
+	main.journey.stand_requested.emit()
 	_play_out(source)
 	expect_false(source.is_running())
 	expect_eq(source.get_rules().outcome, HoldfastRules.OUTCOME_WON)
@@ -191,13 +201,16 @@ func test_the_stand_is_not_offered_again_after_a_refund_and_the_same_two_buys() 
 	profile.changed.emit()
 	main.journey.buy_requested.emit("castle_slot_1")
 	main.journey.buy_requested.emit("castle_archer_1")
+	main.journey.stand_requested.emit()
 	_play_out(source)
 	main.call("_show", main.Screen.MAP)
 	profile.respec()
 	expect_eq(profile.get_guided_step(), "castle_slot_1", "a refund brings the two buys back")
 	main.journey.buy_requested.emit("castle_slot_1")
 	main.journey.buy_requested.emit("castle_archer_1")
-	expect_false(source.is_running(), "but not the fight")
+	expect_false(main.journey.get_node("%Guide").visible, "but not the Start strip")
+	main.journey.stand_requested.emit()
+	expect_false(source.is_running(), "and a stray press does not start the fight")
 	expect_eq(main.screen, main.Screen.MAP)
 	main.free()
 
@@ -245,6 +258,7 @@ func test_an_old_save_walks_the_two_buys_on_the_map_without_a_fight() -> void:
 	main.journey.buy_requested.emit("castle_slot_1")
 	main.journey.buy_requested.emit("castle_archer_1")
 	expect_false(main.get_node("RunSource").is_running())
+	expect_false(main.journey.get_node("%Guide").visible, "and no Start strip is offered")
 	expect_eq(main.screen, main.Screen.HOME, "the screen is where it was")
 	main.free()
 
@@ -272,6 +286,7 @@ func test_after_the_stand_every_screen_opens_freely() -> void:
 	profile.changed.emit()
 	main.journey.buy_requested.emit("castle_slot_1")
 	main.journey.buy_requested.emit("castle_archer_1")
+	main.journey.stand_requested.emit()
 	_play_out(main.get_node("RunSource"))
 	main.call("_show", main.Screen.MAP)
 	for screen in [main.Screen.TREE, main.Screen.HERO, main.Screen.PLAN, main.Screen.MAP]:
@@ -300,6 +315,7 @@ func test_the_first_summary_that_pays_stars_says_what_they_buy_and_never_again()
 	# The stand pays no stars, and a replay of Level 0 pays none either: the line is not shown again.
 	main.journey.buy_requested.emit("castle_slot_1")
 	main.journey.buy_requested.emit("castle_archer_1")
+	main.journey.stand_requested.emit()
 	_play_out(source)
 	expect_false(note.visible, "the stand's summary has no line")
 	profile.data["stars"].erase("outpost")
@@ -335,16 +351,20 @@ func test_a_timed_bot_walk_reaches_the_stand_within_about_two_minutes_of_start()
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	source.rng_seed = 1
-	# Five taps: Start (a new game), Level 0, the summary's map button, and the two guided buys.
-	# The fight in the middle is the bot's, in game seconds.
+	# Eight taps: Start (a new game), Level 0, the press that lets Level 0 begin, the summary's map
+	# button, the two guided buys, the map's Start and the press that lets the stand begin. The
+	# fight in the middle is the bot's, in game seconds.
 	main.call("_new_game")
 	main.call("_level_picked", "first_watch")
+	expect_true(source.is_held(), "Level 0 waits for its press")
+	source.release_hold()
 	var fight := _play_out(source)
 	main.summary.get_node("%MapButton").pressed.emit()
 	main.journey.buy_requested.emit("castle_slot_1")
 	main.journey.buy_requested.emit("castle_archer_1")
+	main.journey.get_node("%GuideButton").pressed.emit()
 	expect_true(source.is_running() and source.get_rules().stand, "the stand has begun")
-	var clock := 5.0 * TAP_SECONDS + fight
+	var clock := 8.0 * TAP_SECONDS + fight
 	print("[first stand] reached the stand at about %.0f s (Level 0 took %.0f s of it)" % [clock, fight])
 	expect_true(clock <= TWO_MINUTES, "reached at about %.0f s" % clock)
 	main.free()

@@ -10,6 +10,10 @@ func _start(seed_value: int) -> Node:
 	source.auto_step = false
 	source.rng_seed = seed_value
 	tree.root.add_child(main)
+	# Level 1: Level 0 has no tower, and these runs are about the tower and the staff.
+	var profile: HoldfastProfile = main.get_node("Profile")
+	ThroughLevelZero.apply(profile)
+	profile.select_level("outpost")
 	main.call("_start_run")
 	return main
 

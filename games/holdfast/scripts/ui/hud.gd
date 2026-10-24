@@ -12,6 +12,12 @@ extends Control
 @onready var _wave_banner: Label = %WaveBanner
 @onready var _posts_note: Label = %PostsNote
 
+## The player pressed while a teaching run waited; the run flow lifts the hold.
+signal begin_requested
+
+## Under a teaching note while the run waits.
+const HOLD_HINT := "Click, tap or press a key to begin."
+
 var _source: Node
 
 
@@ -36,6 +42,18 @@ func _process(_delta: float) -> void:
 		_refresh_hero()
 
 
+## A click, tap or key asks to lift a teaching run's hold; the press is spent on that and nothing else.
+func _input(event: InputEvent) -> void:
+	if not visible or _source == null or not _source.is_held():
+		return
+	var pressed: bool = (event is InputEventKey and event.pressed and not event.echo) \
+		or (event is InputEventMouseButton and event.pressed) \
+		or (event is InputEventScreenTouch and event.pressed)
+	if pressed:
+		begin_requested.emit()
+		get_viewport().set_input_as_handled()
+
+
 ## The Hero's health, ability wait and knock-down timer, and what has been lost
 ## so far. Read every frame: the run changes them every tick.
 func _refresh_hero() -> void:
@@ -54,6 +72,8 @@ func _refresh_hero() -> void:
 	var note: String = _source.get_boss_note()
 	if note == "":
 		note = _source.get_posts_note()
+		if note != "" and _source.is_held():
+			note += "\n" + HOLD_HINT
 	_posts_note.text = note
 	_posts_note.visible = note != ""
 

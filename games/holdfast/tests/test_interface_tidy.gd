@@ -19,6 +19,8 @@ func _main() -> Node:
 func _page_with(main: Node, owned: Array) -> Control:
 	var profile: HoldfastProfile = main.get_node("Profile")
 	profile.bank_run({"outcome": "lost", "level": "outpost", "gold": 0, "gear_found": owned})
+	for id in owned:
+		profile.wear_gear(id) # a drop lands in the bag; the player puts it on
 	profile.take_off_gear("weapon")
 	return main.hero_page
 

@@ -274,6 +274,8 @@ func test_a_damaged_save_wears_the_first_entry_for_a_slot_and_an_unknown_name_we
 func _page_with(main: Node, owned: Array) -> Control:
 	var profile: HoldfastProfile = main.get_node("Profile")
 	profile.bank_run({"outcome": "lost", "level": "outpost", "gold": 0, "gear_found": owned})
+	for id in owned:
+		profile.wear_gear(id) # a drop lands in the bag; the player puts it on
 	profile.take_off_gear("weapon")
 	return main.hero_page
 
@@ -360,7 +362,7 @@ func test_the_hero_page_shows_the_breakdown_of_the_numbers() -> void:
 	main.free()
 
 
-func test_a_first_win_in_the_flow_puts_the_piece_in_the_bag_and_wears_it() -> void:
+func test_a_first_win_in_the_flow_puts_the_piece_in_the_bag_and_leaves_it_there() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
 	ThroughLevelZero.apply(profile)
@@ -368,5 +370,7 @@ func test_a_first_win_in_the_flow_puts_the_piece_in_the_bag_and_wears_it() -> vo
 	rules._finish(HoldfastRules.OUTCOME_WON)
 	profile.bank_run(rules.result())
 	expect_eq(profile.get_gear_owned(), ["wave_worn_boots"])
-	expect_eq(profile.get_gear_worn(), {"boots": "wave_worn_boots"}, "worn at once in its free slot")
+	expect_eq(profile.get_gear_worn(), {}, "unequipped: the player puts it on")
+	profile.wear_gear("wave_worn_boots")
+	expect_eq(profile.get_gear_worn(), {"boots": "wave_worn_boots"}, "and equips it from the Hero page")
 	main.free()

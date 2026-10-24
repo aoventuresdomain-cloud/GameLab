@@ -46,6 +46,7 @@ static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", leve
 			var config := HoldfastContent.run_config(level, profile["upgrades"], content, pillar, HoldfastMeta.layout_for(content, profile, level), HoldfastMeta.worn_gear(profile), profile["gear"]["owned"])
 			var result: Dictionary = SimBotRunner.run(HoldfastRules.new(), HoldfastSkilledBot.new(model), p_seed * 100003 + runs, config, MAX_TICKS, HoldfastRules.TICK_RATE)["result"]
 			profile = HoldfastMeta.bank_run(content, profile, result)
+			profile = HoldfastMeta.wear_free_slots(content, profile)
 			won = result["outcome"] == HoldfastRules.OUTCOME_WON
 			if attempts == 0:
 				levels[level] = {"first": won}

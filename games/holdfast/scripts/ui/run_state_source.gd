@@ -57,6 +57,16 @@ func get_posts_note() -> String:
 	return ""
 
 
+## True while a teaching run stands still, its note up, waiting for the player's press.
+func is_held() -> bool:
+	return false
+
+
+## The player's click, tap or key: a held run starts moving.
+func release_hold() -> void:
+	pass
+
+
 ## What a boss on the field says about its shroud, "" when there is none.
 func get_boss_note() -> String:
 	return ""
