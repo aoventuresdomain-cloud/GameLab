@@ -63,21 +63,19 @@ func test_wasd_moves_the_hero_and_its_arrow_hits_an_enemy_in_the_playable_build(
 	main.free()
 
 
-func test_tower_and_staff_attack_on_their_own_and_the_run_ends() -> void:
+func test_the_tower_attacks_on_its_own_and_the_run_ends() -> void:
 	var main := _start(3)
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	var rules := source.get_rules()
 	var tower_fired := false
-	var staff_fired := false
 	var guard := 0
-	# No mouse at all: only the tower and the staff fight.
+	# No mouse at all: only the tower fights (the staff are parked).
 	while source.is_running() and guard < 20000:
 		source.step(0.1)
 		tower_fired = tower_fired or rules.tower.last_target >= 0
-		staff_fired = staff_fired or rules.staff.last_target >= 0
 		guard += 1
 	expect_true(tower_fired, "the tower attacked")
-	expect_true(staff_fired, "the staff member attacked")
+	expect_eq(rules.staff, null, "the staff member is parked")
 	expect_false(source.is_running(), "the run ended")
 	expect_true(rules.gold > 0, "kills dropped gold")
 	expect_true(rules.outcome in [HoldfastRules.OUTCOME_WON, HoldfastRules.OUTCOME_LOST], "won or lost")

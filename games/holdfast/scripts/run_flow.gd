@@ -167,6 +167,7 @@ func _start_run(stand := false) -> void:
 		source.level_id = profile.get_level()
 		source.upgrades = profile.get_upgrades().duplicate()
 		source.stand = stand
+		source.parked = true
 		source.wait_for_press = true
 		source.layout = profile.get_stand_layout() if stand else profile.get_layout(profile.get_level())
 		source.gear = profile.get_gear_worn()

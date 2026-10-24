@@ -80,8 +80,10 @@ func test_a_click_a_tap_or_a_key_lifts_the_hold_and_nothing_else_does() -> void:
 	up.pressed = false
 	var touch := InputEventScreenTouch.new()
 	touch.pressed = true
+	var lift := InputEventScreenTouch.new()
+	lift.pressed = false
 	var motion := InputEventMouseMotion.new()
-	for event in [_key(false), _key(true, true), up, motion]:
+	for event in [_key(false), _key(true, true), up, lift, motion]:
 		hud._input(event)
 		expect_true(source.is_held(), "%s does not begin it" % event.get_class())
 	for event in [_key(), down, touch]:
@@ -222,3 +224,40 @@ func test_the_bots_wear_what_they_find_so_the_simulator_is_unchanged() -> void:
 	profile = HoldfastMeta.wear_free_slots(content, profile)
 	expect_eq(HoldfastMeta.worn_gear(profile), {"boots": "wave_worn_boots"})
 	expect_eq(HoldfastMeta.wear_free_slots(content, profile), profile, "wearing twice changes nothing")
+
+
+# ------------------------------------------------------------------ 50: the parked Recruits and light posts
+
+func _rules_for(level: String, parked: bool) -> HoldfastRules:
+	var rules := HoldfastRules.new()
+	rules.setup(HoldfastContent.run_config(level, [], _content(), "", null, {}, [], false, parked), SimRng.new(1))
+	return rules
+
+
+func test_a_parked_run_has_no_recruits_no_staff_and_no_light_posts_on_any_level() -> void:
+	for id in _content()["levels"]:
+		var rules := _rules_for(id, true)
+		expect_eq(rules.setup_error, "", "%s sets up" % id)
+		expect_eq(rules.recruits.size(), 0, "%s: no Recruits" % id)
+		expect_eq(rules.staff, null, "%s: no staff" % id)
+		expect_eq(rules.posts.size(), 0, "%s: no light posts" % id)
+
+
+func test_the_flag_is_off_by_default_and_turning_it_off_brings_them_back() -> void:
+	var rules := _rules_for("outpost", false)
+	expect_true(rules.recruits.size() > 0 or rules.staff != null, "Recruits stand when not parked")
+	expect_true(rules.posts.size() > 0, "and so do the light posts")
+	expect_false("parked" in HoldfastContent.run_config("outpost"), "an ordinary config does not carry the flag")
+
+
+func test_the_game_parks_them_in_every_run_it_starts() -> void:
+	var main := _main()
+	var source: HoldfastRunSource = main.get_node("RunSource")
+	ThroughLevelZero.apply(main.get_node("Profile"))
+	main.get_node("Profile").select_level("outpost")
+	main.call("_start_run")
+	expect_true(source.is_running())
+	expect_eq(source.get_rules().recruits.size(), 0, "no Recruits in the game")
+	expect_eq(source.get_rules().posts.size(), 0, "no light posts in the game")
+	source.step(1000.0)
+	main.free()
