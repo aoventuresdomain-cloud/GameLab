@@ -76,8 +76,9 @@ func test_the_tabs_are_hero_archer_post_keep_and_castle_and_opening_lands_on_the
 	expect_eq(page.tab_names(), PackedStringArray(["Hero", "Archer Post", "Keep", "Castle", "Mage Post"]))
 	expect_eq(page.get_node("%Tabs").get_child_count(), 5)
 	expect_eq(page._tab, "Hero")
-	expect_true(_in_view(page, "flare_boots") and _in_view(page, "flare_focus"), "the Hero section is on show")
-	expect_false(_in_view(page, "post_timbers"), "the other sections are out of view")
+	var zoom: float = page.get_node("%Web").scale.x
+	expect_true(zoom >= page.OVERVIEW_ZOOM_MIN and zoom < 1.0, "the tree opens zoomed out, not at real size")
+	expect_true(_in_view(page, "castle_slot_1"), "and shows what the player owns")
 	main.free()
 
 
@@ -158,8 +159,9 @@ func test_dragging_the_background_pans_and_the_wheel_zooms() -> void:
 	wheel.button_index = MOUSE_BUTTON_WHEEL_UP
 	wheel.pressed = true
 	wheel.position = view.size * 0.5
+	var before := web.scale.x
 	page._on_view_input(wheel)
-	expect_true(web.scale.x > 1.0, "wheel up zooms in")
+	expect_true(web.scale.x > before, "wheel up zooms in")
 	wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
 	page._on_view_input(wheel)
 	page._on_view_input(wheel)

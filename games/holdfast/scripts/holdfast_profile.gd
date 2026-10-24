@@ -267,5 +267,10 @@ func get_next_unlocks() -> Array:
 	return HoldfastMeta.next_unlocks(_content, data, 2)
 
 
+## The compulsory purchase due ("" when none): the player can buy nothing else until it is made.
+func get_guided_step() -> String:
+	return HoldfastMeta.guided_step(_content, data)
+
+
 func why_not_buy(id: String) -> String:
 	return HoldfastMeta.why_not_buy(_content, data, id)

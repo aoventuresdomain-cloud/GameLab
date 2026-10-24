@@ -468,6 +468,18 @@ static func owned_spots(content: Dictionary, profile: Dictionary) -> Array:
 	return spots.slice(0, castle_slots(content, profile))
 
 
+## The next compulsory purchase ("" when there is none): once Level 0 is won, the first of the
+## castle's guided nodes not yet owned. While one is due, nothing else in the tree can be bought.
+static func guided_step(content: Dictionary, profile: Dictionary) -> String:
+	var tutorial := tutorial_level(content)
+	if tutorial != "" and not tutorial in profile["levels_won"]:
+		return ""
+	for id in castle_rules(content).get("guided", []):
+		if not id in profile["upgrades"]:
+			return str(id)
+	return ""
+
+
 ## True when the player has what a first run needs: a slot and an Archer Post to put in it.
 static func has_a_tower(content: Dictionary, profile: Dictionary) -> bool:
 	return castle_cards(content, profile) >= 1
@@ -554,6 +566,9 @@ static func why_not_buy(content: Dictionary, profile: Dictionary, id: String) ->
 		return "No such upgrade"
 	if id in profile["upgrades"]:
 		return "Already bought"
+	var guided := guided_step(content, profile)
+	if guided != "" and id != guided:
+		return "Buy %s first" % str(nodes.get(guided, {}).get("name", guided))
 	if nodes[id].has("hero") and str(nodes[id]["hero"]) != str(profile["pillar"]):
 		return "Belongs to another Hero"
 	for required in nodes[id].get("requires", []):
