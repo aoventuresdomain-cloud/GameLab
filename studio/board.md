@@ -730,6 +730,36 @@
   - [ ] The Mage Post and Tower Gate I descriptions fit their cards on the tree and the Plan page at 1280x720 and 1920x1080, with no overflow or jump (a layout check on the longest text).
   - [ ] The cause is found and named in the pull request.
 
+### HF-M2-53 Open the Plan page from the journey map
+- **Owner:** Gameplay Engineer
+- **Status:** Ready (CEO request 2026-10-24: planning reachable between levels)
+- **QA:** full (new route into a core screen)
+- **Depends on:** none
+- **Done when:**
+  - [ ] The journey map has a clear way to open the Plan page (short name, same look as the other entries), and the Plan page returns to the map.
+  - [ ] It is hidden or inert during the compulsory guide and while a run is on; it never starts a level by itself.
+  - [ ] A test and a layout check at 1280x720 and 1920x1080 cover the new entry.
+
+### HF-M2-54 Design: the skill tree as a web from a central place (Designer, then Advisor critique)
+- **Owner:** Designer (screen mockups)
+- **Status:** Ready (CEO request 2026-10-24: "a web from a central place rather than an actual tree, spacing is weird")
+- **QA:** none (mockups; no code)
+- **Depends on:** none
+- **Done when:**
+  - [ ] A mockup of a radial layout: the start in the centre, rings or spokes outward, even spacing, adjacent-only reveal, a zoomed-out first view that shows its size, and the detail card unchanged, at 1280x720 and 1920x1080, in `/mnt/project-files/holdfast/m2/`.
+  - [ ] A short note on how the existing nodes and links map onto it and what would change in spacing (one round of the Advisor's critique, logged unedited under Advisor views).
+  - [ ] The Chief of Staff shows the CEO one version with only its open taste decisions.
+
+### HF-M2-55 Build the radial skill tree
+- **Owner:** Gameplay Engineer
+- **Status:** On hold (waits for the CEO to accept HF-M2-54)
+- **QA:** full (tree layout, pan and zoom)
+- **Depends on:** HF-M2-54
+- **Done when:**
+  - [ ] The tree draws as in the accepted mockup with the same nodes, prices, links and adjacent-only reveal; old saves are unaffected.
+  - [ ] Pan, zoom, the zoomed-out first view, the detail card and the guide still work; labels stay readable at 1280x720.
+  - [ ] Any existing test change is OK'd by the Head of Engineering and logged.
+
 ## Findings
 
 *Every finding from review, QA, CI or the Advisor goes here with an owner before anyone fixes it. Closed findings stay, marked Fixed with the PR. Grading (from 20 Oct 2026): Blocker and Major findings are MUST FIX and block the merge; Minor ones are FOLLOW-UP and don't, unless the row says otherwise. New findings put MUST FIX or FOLLOW-UP in the Severity cell. A finding counts only if it reproduces without test-only helpers.*
@@ -849,6 +879,8 @@
 | F-110 | HF-M2-30 | CEO test 2026-10-24: yellow markers next to recruits and two recruits already in Levels 0 and 1, though recruits are parked | Major | Gameplay Engineer | In HF-M2-50 |
 | F-111 | HF-M2-45 | CEO test 2026-10-24: the first gear piece was auto-allocated instead of landing in the inventory | Minor | Gameplay Engineer | In HF-M2-51 |
 | F-112 | HF-M2-37 | CEO test 2026-10-24: the Mage description makes the screen act strangely | Major | Gameplay Engineer | In HF-M2-52 |
+| F-113 | HF-M2-33 | CEO request 2026-10-24: no way to open the Plan page from the journey map | Minor | Gameplay Engineer | In HF-M2-53 |
+| F-114 | HF-M2-33 | CEO request 2026-10-24: the skill tree should read as a web from a central place, not a tree, and its spacing feels wrong | Major | Designer (screen mockups) | In HF-M2-54, build in HF-M2-55 |
 
 ## Test changes
 
@@ -977,3 +1009,4 @@
 - 2026-10-24: CEO decisions on the UI and journey research (`holdfast-ui-and-journey-research.html`): adopted points 1 to 4 (real fight within two minutes, always something to buy with a tab dot, guide capped at two taps, one line on stars), points 7 to 9 (non-colour can't-afford cue, certain first gear drop with a Hero tab dot, clear Refund amount with the tutorial buys not refundable). Kept as agreed: the zoomed-out tree start (point 5) and Tower Gate I's three cards as mocked (point 6). Dropped: the accessibility pass (10), step timings (11) and hints-only guide (12). Items HF-M2-43 (extended), HF-M2-44 and HF-M2-45. The hold on HF-M2-39, 40 and 43 is released.
 - 2026-10-24: Feedback slice HF-M2-38 to HF-M2-45 merged (#116, #119, #120, #121, #122, #123), all QA clear at named commits. Open follow-ups F-094, F-096, F-098, F-099, F-102 to F-105. Boss-unlocked pillars wait for the M2b balance floors. One combined handoff to the CEO, then stop for the CEO's test.
 - 2026-10-24: CEO tested the feedback build: seven comments logged as F-106 to F-112 and items HF-M2-46 to 52. Standing go: the engineer opens each PR at once and the Head of Engineering merges on green CI. Before the CEO sees the next build Head of QA plays a fresh game end to end at 1280x720 and 1920x1080 and the handoff carries a written pass list. Recruits stay parked.
+- 2026-10-24: CEO asks added after the test: a Plan entry on the journey map (HF-M2-53, folded into the fix batch) and a radial skill tree (design HF-M2-54 with one Advisor round, build HF-M2-55 only after the CEO accepts the mockup). The other fixes do not wait for the redesign.
