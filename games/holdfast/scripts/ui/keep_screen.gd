@@ -810,15 +810,15 @@ static func _num(value: float) -> String:
 	return _trim(snappedf(value, 0.01))
 
 
-## Buying from the card: the card stays, with a tick and a brief glow, and the nodes the buy made
-## buyable light up behind it.
+## Buying from the card closes it, and the nodes the buy made buyable light up on the tree behind
+## it. A refused buy leaves the card open with its reason.
 func _card_buy_pressed() -> void:
 	var id := _card_id
 	var before := _buyable_ids()
 	buy_requested.emit(id)
 	if id in _profile.get_upgrades():
+		close_card()
 		_light_up(before, id)
-		_glow_card()
 
 
 func _buyable_ids() -> Array:
@@ -832,15 +832,6 @@ func _light_up(before: Array, bought: String) -> void:
 		button.modulate = COLOUR_ACT.lightened(0.5)
 		create_tween().tween_property(button, "modulate", Color.WHITE, GLOW_SECONDS)
 	get_tree().create_timer(GLOW_SECONDS).timeout.connect(_glowing.clear)
-
-
-func _glow_card() -> void:
-	_card_style.border_color = COLOUR_ACT
-	_card_tick.scale = Vector2.ONE * 1.4
-	_card_tick.pivot_offset = Vector2(18, 18)
-	var tween := create_tween().set_parallel()
-	tween.tween_property(_card_style, "border_color", CARD_EDGE, GLOW_SECONDS)
-	tween.tween_property(_card_tick, "scale", Vector2.ONE, GLOW_SECONDS)
 
 
 func _effect_text(id: String) -> String:

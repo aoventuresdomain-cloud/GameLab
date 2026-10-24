@@ -134,7 +134,7 @@ func test_the_card_writes_the_change_and_an_owned_node_just_its_value() -> void:
 
 # ------------------------------------------------------------------ buying
 
-func test_the_card_buys_and_stays_with_a_tick_a_glow_and_the_neighbours_lit() -> void:
+func test_the_card_buys_and_closes_with_the_neighbours_lit() -> void:
 	var made := _tree(5000)
 	var page: Control = made[1]
 	var profile: HoldfastProfile = made[2]
@@ -144,11 +144,11 @@ func test_the_card_buys_and_stays_with_a_tick_a_glow_and_the_neighbours_lit() ->
 	page._card_buy.pressed.emit()
 	expect_true("post_sight" in profile.get_upgrades(), "bought")
 	expect_eq(profile.get_gold(), 5000 - 120)
-	expect_true(page._card.visible, "the card stays")
-	expect_true(page._card_tick.visible and page._card_refund.visible and not page._card_buy.visible, "with a tick and a Refund")
-	expect_eq(page._card_style.border_color, page.COLOUR_ACT, "and a brief glow")
-	expect_true("post_scope" in page._glowing, "the node it opened lights up behind it")
+	expect_false(page._card.visible, "the card closes")
+	expect_eq(page._card_id, "")
+	expect_true("post_scope" in page._glowing, "the node it opened lights up on the tree behind it")
 	expect_false("post_sight" in page._glowing)
+	expect_true(page._node_buttons["post_scope"].modulate != Color.WHITE, "and it is drawn lit")
 	made[0].free()
 
 
@@ -162,6 +162,7 @@ func test_an_unaffordable_node_has_a_dimmed_buy_and_a_cue_besides_the_colour() -
 	expect_eq(page._card_price.get_theme_color("font_color"), page.COLOUR_SHORT, "price in red")
 	page._card_buy.pressed.emit()
 	expect_false("post_sight" in profile.get_upgrades())
+	expect_true(page._card.visible, "a refused buy leaves the card open")
 	expect_false(page._card_note.visible and page._card_note.text != "", "no sentence for a want of gold")
 	made[0].free()
 
@@ -225,6 +226,7 @@ func test_an_owned_card_shows_what_comes_back_in_bold_and_refunds_it() -> void:
 	var page: Control = made[1]
 	var profile: HoldfastProfile = made[2]
 	TreeCard.buy(page, "post_sight")
+	page.open_card("post_sight")
 	expect_true(page._card_price.text == "+100 gold", page._card_price.text)
 	expect_true(page._card_price.get_theme_font("font") is FontVariation, "in bold")
 	page._card_refund.pressed.emit()
