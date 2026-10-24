@@ -723,6 +723,94 @@ static func respec(content: Dictionary, profile: Dictionary) -> Dictionary:
 	return out
 
 
+## What taking one bought node back does: {"gold": the change to the purse (a gold node's price less
+## its fee, or minus the fee of a star node), "stars": the stars it frees}.
+static func refund_gain(content: Dictionary, id: String) -> Dictionary:
+	var node: Dictionary = content.get("upgrade_nodes", {}).get(id, {})
+	if node.is_empty():
+		return {"gold": 0, "stars": 0}
+	if is_star_node(node):
+		return {"gold": -respec_fee(node), "stars": int(node["cost"])}
+	return {"gold": int(node["cost"]) - respec_fee(node), "stars": 0}
+
+
+## "" when the bought node `id` can be taken back on its own, else why not: it is not bought, it
+## is one of the two guided first buys, another bought node needs it, or the fee is more than the
+## gold held.
+static func why_not_refund_node(content: Dictionary, profile: Dictionary, id: String) -> String:
+	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	if not nodes.has(id) or not id in profile["upgrades"]:
+		return "Not bought"
+	if id in castle_rules(content).get("guided", []):
+		return "Needed to start"
+	for other in profile["upgrades"]:
+		if other == id or not nodes.has(other):
+			continue
+		if id in nodes[other].get("requires", []) or int(nodes[other].get("needs_nodes", 0)) > profile["upgrades"].size() - 1:
+			return "Needed by %s" % str(nodes[other]["name"])
+	if int(profile["gold"]) + int(refund_gain(content, id)["gold"]) < 0:
+		return "Not enough gold for the refund fee"
+	return ""
+
+
+## The profile with the bought node `id` taken back; unchanged when `why_not_refund_node` says no.
+static func refund_node(content: Dictionary, profile: Dictionary, id: String) -> Dictionary:
+	if why_not_refund_node(content, profile, id) != "":
+		return profile
+	var out := profile.duplicate(true)
+	out["gold"] = int(out["gold"]) + int(refund_gain(content, id)["gold"])
+	out["upgrades"].erase(id)
+	return out
+
+
+## What a node's effects do to the stats they change, for its detail card: one entry
+## {"stat": the pack's stat name, "before", "after"} for each effect, with the stat's value from the
+## tree without the node and with it. A stat with a base (a tower's range, the Hero's health) counts
+## it; one with none starts at 0, or at 1 when the node only multiplies it.
+static func effect_lines(content: Dictionary, profile: Dictionary, id: String) -> Array:
+	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	var node: Dictionary = nodes.get(id, {})
+	var others: Array = profile["upgrades"].filter(func(other: String) -> bool: return other != id)
+	var without := HoldfastRules.upgrade_stats(nodes, others)
+	var with := HoldfastRules.upgrade_stats(nodes, others + [id])
+	var out := []
+	for effect in node.get("effects", []):
+		var stat := str(effect["stat"])
+		var key := HoldfastRules._scoped_stat(node, stat)
+		var base := _stat_base(content, node, stat, not effect.has("add") and effect.has("multiply"))
+		out.append({"stat": stat, "before": _stat_value(without, key, base), "after": _stat_value(with, key, base)})
+	return out
+
+
+static func _stat_value(stats: Dictionary, key: String, base: float) -> float:
+	var entry: Dictionary = stats.get(key, {"add": 0.0, "multiply": 1.0})
+	return (base + float(entry["add"])) * float(entry["multiply"])
+
+
+## The value a node's stat starts from before any upgrade: a tower's own number, a Hero's own number
+## or, for a stat the pack gives no base (the keep's health, a bonus that starts at nothing), 0 (1 for
+## a stat that is only ever multiplied).
+static func _stat_base(content: Dictionary, node: Dictionary, stat: String, multiplied: bool) -> float:
+	var field := ""
+	var source: Variant = null
+	if stat.begins_with("tower.") and node.has("tower"):
+		field = stat.substr(6)
+		source = content.get("towers", {}).get(str(node["tower"]))
+	elif stat.begins_with("hero.") and node.has("hero"):
+		field = stat.substr(5)
+		source = content.get("hero_paths", {}).get(str(node["hero"]))
+		for spec in HERO_ROWS:
+			if spec["stat"] == field and source != null:
+				return _hero_base(source, spec)
+	if source is Dictionary:
+		var value: Variant = source
+		for part in field.split("."):
+			value = value.get(part) if value is Dictionary else null
+		if value is float or value is int:
+			return float(value)
+	return 1.0 if multiplied else 0.0
+
+
 ## {ok, profile, reason}: the profile with the upgrade bought and its cost paid,
 ## or the same profile and the reason it was refused.
 static func buy(content: Dictionary, profile: Dictionary, id: String) -> Dictionary:

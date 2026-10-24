@@ -779,15 +779,15 @@ func test_the_keep_screen_buys_through_the_flow_and_the_profile_saves() -> void:
 	keep.visible = true
 	var drills: Button = keep._node_buttons["post_drills"]
 	var walls: Button = keep._node_buttons["keep_walls_1"]
-	expect_true(drills.disabled == false and walls.disabled == false, "both affordable (110, 60)")
-	expect_true(keep._node_buttons["post_twin"].disabled, "needs the first drill")
-	walls.pressed.emit()
+	expect_true(TreeCard.can_buy(keep, "post_drills") and TreeCard.can_buy(keep, "keep_walls_1"), "both affordable (110, 60)")
+	expect_false(TreeCard.can_buy(keep, "post_twin"), "needs the first drill")
+	TreeCard.buy(keep, "keep_walls_1")
 	expect_eq(profile.get_gold(), 140)
-	expect_true(walls.disabled and not walls.text.contains("bought") and walls.get_theme_stylebox("disabled") == keep._owned_style)
+	expect_true(not TreeCard.can_buy(keep, "keep_walls_1") and not walls.text.contains("bought") and walls.get_theme_stylebox("disabled") == keep._owned_style)
 	expect_eq(keep.get_node("%GoldValue").text, "140")
-	drills.pressed.emit()
+	TreeCard.buy(keep, "post_drills")
 	expect_eq(profile.get_gold(), 30)
-	expect_true(keep._node_buttons["post_twin"].disabled, "600 is out of reach")
+	expect_false(TreeCard.can_buy(keep, "post_twin"), "600 is out of reach")
 	main.free()
 	var reloaded: Dictionary = SaveService.new(path, HoldfastMeta.SAVE_VERSION).load_save()["data"]
 	expect_eq(reloaded["gold"], 30)
@@ -805,8 +805,8 @@ func test_level_and_pillar_picks_start_the_next_run_with_the_bought_upgrades() -
 	expect_true(map._buttons["shingle_beach"].disabled, "locked until the first level is won")
 	expect_true(map._level_text("shingle_beach").contains("Shingle Beach") and not map._level_text("shingle_beach").contains("Locked"), "and it does not say so")
 	profile.bank_run({"gold": 0, "outcome": "won", "level": "outpost"})
-	keep._node_buttons["keep_beam_1"].pressed.emit()             # 200
-	keep._node_buttons["post_timbers"].pressed.emit()            # 70
+	TreeCard.buy(keep, "keep_beam_1")             # 200
+	TreeCard.buy(keep, "post_timbers")            # 70
 	expect_false(map._buttons["shingle_beach"].disabled, "open now")
 	main.hero_page.select_pillar("dusk_mage")
 	main.hero_page.select_pillar("not_a_pillar")

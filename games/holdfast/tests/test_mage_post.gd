@@ -415,8 +415,9 @@ func test_the_tree_names_the_gate_with_its_shortfall_and_shows_the_mage_tab() ->
 	keep.visible = true
 	expect_true(keep._node_buttons["gate_mage"].visible, "next to the first Archer Post")
 	expect_true("Mage Post" in keep.tab_names())
-	expect_true(keep._node_text("gate_mage").contains("Needs 3 more nodes owned"), keep._node_text("gate_mage"))
-	expect_true(keep._node_text("gate_mage").contains("Cost"), "and still says what it costs")
+	keep.open_card("gate_mage")
+	expect_true(keep._card_note.text.contains("Needs 3 more nodes owned"), keep._card_note.text)
+	expect_true(keep._card_price.text.contains("2 stars"), "and still says what it costs")
 	main.free()
 
 

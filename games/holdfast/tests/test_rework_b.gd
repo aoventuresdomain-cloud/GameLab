@@ -204,7 +204,7 @@ func test_every_node_is_on_the_web_and_buying_and_respec_work_from_it() -> void:
 		expect_true(page._node_buttons.has(id), id)
 		expect_eq(page._node_buttons[id].get_parent().get_parent(), page.get_node("%Web"), "%s is a child of the web" % id)
 	profile.bank_run({"gold": 500, "outcome": "lost", "level": "outpost"})
-	page._node_buttons["flare_focus"].pressed.emit()
+	TreeCard.buy(page, "flare_focus")
 	expect_true("flare_focus" in profile.get_upgrades(), "buying works")
 	expect_eq(page._node_buttons["flare_focus"].text, "Steady aim")
 	expect_true(page._node_buttons["flare_focus"].get_theme_stylebox("disabled") == page._owned_style, "an owned node glows green")

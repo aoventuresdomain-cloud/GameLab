@@ -1,11 +1,16 @@
 extends Control
 ## Skill tree page: spend gold and stars on the upgrade tree, one web the player pans and zooms. Node
-## positions and the tab each section belongs to come from the pack. It shows the profile and
-## asks for changes through signals; the run flow acts on them. Mouse only.
+## positions and the tab each section belongs to come from the pack. Pressing a node opens its
+## detail card over the dimmed tree: the card shows only that node and is where it is bought or
+## taken back. The page shows the profile and asks for changes through signals; the run flow acts
+## on them.
 
 signal back_requested
 signal buy_requested(id: String)
+## The whole tree taken back.
 signal respec_requested
+## One bought node taken back, from its card.
+signal refund_requested(id: String)
 
 const Hud = preload("res://scripts/ui/hud.gd")
 const FONT_PX := 20
@@ -32,6 +37,14 @@ const KEEP_IN_VIEW := 120.0
 const LINK_BOUGHT := Color(0.95, 0.75, 0.3, 0.9)
 const LINK_OPEN := Color(0.55, 0.62, 0.72, 0.6)
 const LINK_FORK := Color(0.9, 0.4, 0.35, 0.8)
+const COLOUR_ACT := Color(0.95, 0.7, 0.25)
+const COLOUR_SHORT := Color(0.95, 0.4, 0.35)
+## The outline that shows where a controller or the keyboard is, apart from the act and done colours.
+const COLOUR_FOCUS := Color(0.35, 0.6, 1.0)
+const CARD_WIDTH := 480.0
+const CARD_EDGE := Color(0.45, 0.5, 0.6)
+## How long a node that a purchase made buyable glows, and the card's glow after a purchase.
+const GLOW_SECONDS := 0.9
 ## What a stat means to the player, by the stat's own name without its tower or Hero scope.
 const STAT_TEXT := {
 	"keep_health": "keep health",
@@ -94,13 +107,13 @@ var selected_pillar := ""
 @onready var _zoom_out: Button = %ZoomOut
 @onready var _zoom_in: Button = %ZoomIn
 @onready var _info: Label = %Info
-@onready var _next: Label = %NextUnlocks
 @onready var _respec: Button = %RespecButton
 @onready var _back: Button = %BackButton
 
 var _profile: Node
 ## The look of an owned node.
 var _owned_style := _make_owned_style()
+var _owned_focus_style := _make_owned_style(COLOUR_FOCUS)
 var _content: Dictionary
 var _node_buttons: Dictionary = {}
 ## Each section's holder in the web: hiding it hides its nodes and their links.
@@ -120,7 +133,23 @@ var _panning := false
 var _held := false
 var _moved := 0.0
 var _dragged := false
-var _default_info := "Spend gold and stars on upgrades. Point at one to read what it does."
+var _card: Control
+var _card_id := ""
+var _card_title: Label
+var _card_close: Button
+var _card_lines: VBoxContainer
+var _card_extra: VBoxContainer
+var _card_tick: Control
+var _card_price: Label
+var _card_buy: Button
+var _card_refund: Button
+var _card_note: Label
+var _card_panel: PanelContainer
+var _card_style: StyleBoxFlat
+## The node whose button had the focus when its card opened, which gets it back on close.
+var _card_from: Button
+## Nodes glowing because the last purchase made them buyable.
+var _glowing: Array = []
 
 
 func _ready() -> void:
@@ -134,7 +163,7 @@ func _ready() -> void:
 	_web.draw.connect(_draw_links)
 	visibility_changed.connect(_on_visibility_changed)
 	_build_tree()
-	_info.text = _default_info
+	_build_card()
 
 
 func bind(profile: Node) -> void:
@@ -144,6 +173,7 @@ func bind(profile: Node) -> void:
 	refresh()
 
 
+## A line at the foot of the page: why something was refused.
 func show_info(text: String) -> void:
 	_info.text = text
 
@@ -162,9 +192,10 @@ func refresh() -> void:
 		var bought: bool = id in owned
 		var closed: bool = _profile.why_not_buy(id).begins_with("Closed")
 		button.visible = _profile.is_visible(id)
+		button.tooltip_text = _tip_text(id)
 		button.text = str(node["name"]) if bought else ("%s (closed)" % node["name"] if closed else "%s  %s" % [node["name"], _price(node)])
 		_light(button, bought)
-		button.disabled = bought or _profile.why_not_buy(id) != ""
+		# Every node can be pressed: its card says what is open to the player, and what is not.
 		button.set_pressed_no_signal(bought)
 		# Only what is one buy away (or already bought) is drawn in full; the rest is dimmed.
 		button.modulate = Color.WHITE if bought or _profile.is_near(id) else DIMMED
@@ -175,17 +206,16 @@ func refresh() -> void:
 	_web.queue_redraw()
 	_respec.disabled = owned.is_empty()
 	var change: int = _profile.get_respec_gold_change()
-	_respec.text = "Refund: %s%s gold" % ["+" if change >= 0 else "-", Hud.format_number(absi(change))] if not owned.is_empty() else "Refund"
-	var next_parts: PackedStringArray = []
-	for id in _profile.get_next_unlocks():
-		next_parts.append("%s (%s): %s" % [_content["upgrade_nodes"][id]["name"], _price(_content["upgrade_nodes"][id]), _effect_text(id)])
-	_next.text = "Next: " + ("  |  ".join(next_parts) if not next_parts.is_empty() else "nothing left to buy here")
+	_respec.text = "Refund all: %s%s gold" % ["+" if change >= 0 else "-", Hud.format_number(absi(change))] if not owned.is_empty() else "Refund all"
+	_info.text = ""
+	if _card.visible:
+		_fill_card()
 
 
-static func _make_owned_style() -> StyleBoxFlat:
+static func _make_owned_style(edge := OWNED_EDGE) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
 	box.bg_color = OWNED_FILL
-	box.border_color = OWNED_EDGE
+	box.border_color = edge
 	box.set_border_width_all(3)
 	box.set_corner_radius_all(6)
 	box.content_margin_left = 6.0
@@ -195,11 +225,12 @@ static func _make_owned_style() -> StyleBoxFlat:
 
 ## An owned node glows green, with no word to say so; any other keeps the theme's look.
 func _light(button: Button, owned: bool) -> void:
-	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
+	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
 		if owned:
 			button.add_theme_stylebox_override(state, _owned_style)
 		else:
 			button.remove_theme_stylebox_override(state)
+	button.add_theme_stylebox_override("focus", _owned_focus_style if owned else _focus_style())
 	if owned:
 		button.add_theme_color_override("font_disabled_color", Color.WHITE)
 	else:
@@ -226,8 +257,7 @@ func _build_tree() -> void:
 			button.button_down.connect(_node_pressed)
 			button.button_up.connect(_node_released)
 			button.pressed.connect(_node_clicked.bind(id))
-			button.mouse_entered.connect(func() -> void: show_info(_node_text(id)))
-			button.mouse_exited.connect(_show_default)
+			button.add_theme_stylebox_override("focus", _focus_style())
 			holder.add_child(button)
 			_node_buttons[id] = button
 		var heading := Label.new()
@@ -442,7 +472,7 @@ func _node_clicked(id: String) -> void:
 	if _dragged:
 		_dragged = false
 		return
-	buy_requested.emit(id)
+	open_card(id)
 
 
 ## Never lets the shown sections be panned out of sight altogether.
@@ -515,8 +545,301 @@ func _button(text: String, font_px := FONT_PX, margin := 3) -> Button:
 	return button
 
 
-func _show_default() -> void:
-	_info.text = _default_info
+## A transparent box with a blue outline: where a controller or the keyboard is.
+static func _focus_style() -> StyleBoxFlat:
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(0, 0, 0, 0)
+	box.border_color = COLOUR_FOCUS
+	box.set_border_width_all(3)
+	box.set_corner_radius_all(6)
+	return box
+
+
+# ------------------------------------------------------------------ the detail card
+
+## The card is built here, hidden, over the whole page: a dim backdrop (a press on it closes the
+## card) and a panel in the middle that shows one node.
+func _build_card() -> void:
+	_card = Control.new()
+	_card.name = "Card"
+	_card.visible = false
+	_card.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_card)
+	_card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_card.gui_input.connect(_on_card_backdrop_input)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.6)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_card.add_child(dim)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var centre := CenterContainer.new()
+	centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_card.add_child(centre)
+	centre.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_card_panel = PanelContainer.new()
+	_card_panel.name = "Panel"
+	_card_panel.custom_minimum_size = Vector2(CARD_WIDTH, 0)
+	_card_style = StyleBoxFlat.new()
+	_card_style.bg_color = Color(0.14, 0.16, 0.21)
+	_card_style.border_color = CARD_EDGE
+	_card_style.set_border_width_all(3)
+	_card_style.set_corner_radius_all(10)
+	_card_style.set_content_margin_all(16.0)
+	_card_panel.add_theme_stylebox_override("panel", _card_style)
+	centre.add_child(_card_panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 10)
+	_card_panel.add_child(column)
+	var header := HBoxContainer.new()
+	column.add_child(header)
+	_card_title = Label.new()
+	_card_title.add_theme_font_size_override("font_size", 28)
+	_card_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_card_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	header.add_child(_card_title)
+	_card_close = _button("\u00d7", 28, 0)
+	_card_close.name = "Close"
+	_card_close.add_theme_stylebox_override("focus", _focus_style())
+	_card_close.pressed.connect(close_card)
+	header.add_child(_card_close)
+	_card_lines = VBoxContainer.new()
+	column.add_child(_card_lines)
+	_card_extra = VBoxContainer.new()
+	_card_extra.add_theme_constant_override("separation", 6)
+	column.add_child(_card_extra)
+	_card_note = _card_label("")
+	_card_note.modulate = Color(1, 1, 1, 0.75)
+	column.add_child(_card_note)
+	var footer := HBoxContainer.new()
+	footer.add_theme_constant_override("separation", 12)
+	column.add_child(footer)
+	_card_tick = Control.new()
+	_card_tick.custom_minimum_size = Vector2(36, 36)
+	_card_tick.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_card_tick.draw.connect(_draw_tick)
+	footer.add_child(_card_tick)
+	_card_price = _card_label("")
+	_card_price.add_theme_font_size_override("font_size", 24)
+	_card_price.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_card_price.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	footer.add_child(_card_price)
+	_card_buy = _act_button("Buy")
+	_card_buy.pressed.connect(_card_buy_pressed)
+	footer.add_child(_card_buy)
+	_card_refund = _button("Refund", 24, 3)
+	_card_refund.add_theme_stylebox_override("focus", _focus_style())
+	_card_refund.pressed.connect(func() -> void: refund_requested.emit(_card_id))
+	footer.add_child(_card_refund)
+
+
+func _card_label(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 22)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	return label
+
+
+## The one amber button of a card.
+func _act_button(text: String) -> Button:
+	var button := _button(text, 24, 3)
+	for state in ["normal", "hover", "pressed"]:
+		var box := StyleBoxFlat.new()
+		box.bg_color = COLOUR_ACT if state != "hover" else COLOUR_ACT.lightened(0.2)
+		box.set_corner_radius_all(6)
+		box.content_margin_left = 24.0
+		box.content_margin_right = 24.0
+		box.content_margin_top = 4.0
+		box.content_margin_bottom = 4.0
+		button.add_theme_stylebox_override(state, box)
+		button.add_theme_color_override("font_color" if state == "normal" else "font_%s_color" % state, Color(0.1, 0.1, 0.12))
+	button.add_theme_color_override("font_focus_color", Color(0.1, 0.1, 0.12))
+	button.add_theme_stylebox_override("focus", _focus_style())
+	return button
+
+
+func _draw_tick() -> void:
+	_card_tick.draw_circle(Vector2(18, 18), 17.0, OWNED_FILL)
+	_card_tick.draw_arc(Vector2(18, 18), 17.0, 0.0, TAU, 32, OWNED_EDGE, 2.0, true)
+	_card_tick.draw_polyline(PackedVector2Array([Vector2(9, 18), Vector2(16, 25), Vector2(27, 11)]), Color.WHITE, 4.0, true)
+
+
+## Shows the card of one node over the dimmed tree. The focus goes to what the player most likely
+## wants: Buy, else Refund, else the close button.
+func open_card(id: String) -> void:
+	if _profile == null or not _content["upgrade_nodes"].has(id):
+		return
+	_card_id = id
+	_card_from = _node_buttons.get(id)
+	_fill_card()
+	_card.visible = true
+	_set_tree_focus(false)
+	for control in [_card_buy, _card_refund, _card_close]:
+		if control.visible and not control.disabled:
+			control.grab_focus()
+			break
+
+
+func close_card() -> void:
+	if not _card.visible:
+		return
+	_card.visible = false
+	_card_id = ""
+	_set_tree_focus(true)
+	if _card_from != null and _card_from.is_visible_in_tree():
+		_card_from.grab_focus()
+	_card_from = null
+
+
+## While the card is open the page behind it cannot take the focus.
+func _set_tree_focus(on: bool) -> void:
+	$Margin.focus_behavior_recursive = Control.FOCUS_BEHAVIOR_INHERITED if on else Control.FOCUS_BEHAVIOR_DISABLED
+
+
+func _on_card_backdrop_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		close_card()
+
+
+## Escape on the keyboard, B on a controller.
+func _input(event: InputEvent) -> void:
+	if _card != null and _card.visible and event.is_action_pressed("ui_cancel"):
+		close_card()
+		get_viewport().set_input_as_handled()
+
+
+## Fills the card from the profile: only this node, never one further on.
+func _fill_card() -> void:
+	var id := _card_id
+	var node: Dictionary = _content["upgrade_nodes"][id]
+	var owned: bool = id in _profile.get_upgrades()
+	_card_title.text = str(node["name"])
+	_clear(_card_lines)
+	_clear(_card_extra)
+	var lines: Array = _profile.get_effect_lines(id)
+	for line in lines:
+		var change := _num(float(line["after"])) if owned else "%s -> %s" % [_num(float(line["before"])), _num(float(line["after"]))]
+		_card_lines.add_child(_card_label("%s %s" % [_capital(_stat_text(str(line["stat"]))), change]))
+	if lines.is_empty() or node.has("text"):
+		var text := _effect_text(id)
+		if text != "":
+			_card_lines.add_child(_card_label(text))
+	if node.has("excludes"):
+		var names: PackedStringArray = []
+		for other in node["excludes"]:
+			names.append(str(_content["upgrade_nodes"][other]["name"]))
+		_card_extra.add_child(_card_label("Replaces %s" % ", ".join(names)))
+	if node.has("hero") and node.has("tower"):
+		_card_extra.add_child(_card_label("Joins %s and %s" % [_content["hero_paths"][node["hero"]]["name"], _content["towers"][node["tower"]]["name"]]))
+	if int(node.get("grants", {}).get("mage_cards", 0)) > 0:
+		_card_extra.add_child(_gate_cards())
+	_card_tick.visible = owned
+	_card_buy.visible = not owned
+	_card_refund.visible = owned
+	_card_price.remove_theme_font_override("font")
+	_card_price.remove_theme_color_override("font_color")
+	var reason: String = _profile.why_not_refund(id) if owned else _profile.why_not_buy(id)
+	var shortfall := _shortfall(node, reason)
+	_card_note.text = "" if reason == "" or shortfall > 0 else reason
+	if owned:
+		var gain: Dictionary = _profile.get_refund_gain(id)
+		_card_price.text = "+%d gold" % int(gain["gold"]) if int(gain["stars"]) == 0 else "+%d %s, fee %d gold" % [int(gain["stars"]), "star" if int(gain["stars"]) == 1 else "stars", -int(gain["gold"])]
+		_card_price.add_theme_font_override("font", _bold_font())
+		_card_refund.disabled = reason != ""
+	else:
+		_card_price.text = _price(node) + (" gold" if not HoldfastMeta.is_star_node(node) else "")
+		if shortfall > 0:
+			# A cue besides the red: the words say how much is missing.
+			_card_price.text += "  (need %d more)" % shortfall
+			_card_price.add_theme_color_override("font_color", COLOUR_SHORT)
+		_card_buy.disabled = reason != ""
+
+
+## How much gold or stars short the player is for a node refused only for want of them (else 0).
+func _shortfall(node: Dictionary, reason: String) -> int:
+	if reason == "Not enough gold":
+		return int(node["cost"]) - _profile.get_gold()
+	if reason == "Not enough stars":
+		return int(node["cost"]) - _profile.get_stars()
+	return 0
+
+
+## The Tower Gate shows its towers to pick one from: the Mage Post, built, and two dark
+## silhouettes for the towers still to come.
+func _gate_cards() -> Control:
+	var row := HBoxContainer.new()
+	row.name = "GateCards"
+	row.add_theme_constant_override("separation", 10)
+	for i in 3:
+		var panel := PanelContainer.new()
+		panel.custom_minimum_size = Vector2(130, 64)
+		var box := StyleBoxFlat.new()
+		box.bg_color = Color(0.3, 0.2, 0.5) if i == 0 else Color(0.08, 0.09, 0.11)
+		box.border_color = Color(0.6, 0.48, 0.88) if i == 0 else Color(0.2, 0.22, 0.27)
+		box.set_border_width_all(2)
+		box.set_corner_radius_all(6)
+		panel.add_theme_stylebox_override("panel", box)
+		if i == 0:
+			var label := _card_label(str(_content["towers"]["mage_post"]["name"]))
+			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			panel.add_child(label)
+		row.add_child(panel)
+	return row
+
+
+func _clear(box: Control) -> void:
+	for child in box.get_children():
+		box.remove_child(child)
+		child.queue_free()
+
+
+func _bold_font() -> Font:
+	var font := FontVariation.new()
+	font.base_font = get_theme_default_font()
+	font.variation_embolden = 0.9
+	return font
+
+
+static func _capital(text: String) -> String:
+	return text.substr(0, 1).to_upper() + text.substr(1)
+
+
+static func _num(value: float) -> String:
+	return _trim(snappedf(value, 0.01))
+
+
+## Buying from the card: the card stays, with a tick and a brief glow, and the nodes the buy made
+## buyable light up behind it.
+func _card_buy_pressed() -> void:
+	var id := _card_id
+	var before := _buyable_ids()
+	buy_requested.emit(id)
+	if id in _profile.get_upgrades():
+		_light_up(before, id)
+		_glow_card()
+
+
+func _buyable_ids() -> Array:
+	return _node_buttons.keys().filter(func(id: String) -> bool: return _profile.is_visible(id) and _profile.why_not_buy(id) == "")
+
+
+func _light_up(before: Array, bought: String) -> void:
+	_glowing = _buyable_ids().filter(func(id: String) -> bool: return not id in before and id != bought)
+	for id in _glowing:
+		var button: Button = _node_buttons[id]
+		button.modulate = COLOUR_ACT.lightened(0.5)
+		create_tween().tween_property(button, "modulate", Color.WHITE, GLOW_SECONDS)
+	get_tree().create_timer(GLOW_SECONDS).timeout.connect(_glowing.clear)
+
+
+func _glow_card() -> void:
+	_card_style.border_color = COLOUR_ACT
+	_card_tick.scale = Vector2.ONE * 1.4
+	_card_tick.pivot_offset = Vector2(18, 18)
+	var tween := create_tween().set_parallel()
+	tween.tween_property(_card_style, "border_color", CARD_EDGE, GLOW_SECONDS)
+	tween.tween_property(_card_tick, "scale", Vector2.ONE, GLOW_SECONDS)
 
 
 func _effect_text(id: String) -> String:
@@ -559,20 +882,10 @@ static func _stat_text(stat: String) -> String:
 	return STAT_TEXT.get(field, field)
 
 
-func _node_text(id: String) -> String:
+## The hover tooltip: the node's name and what it does, nothing more.
+func _tip_text(id: String) -> String:
 	var node: Dictionary = _content["upgrade_nodes"][id]
-	var text := "%s: %s. Cost %s." % [node["name"], _effect_text(id), HoldfastMeta.cost_text(node)]
-	if node.has("excludes"):
-		var names: PackedStringArray = []
-		for other in node["excludes"]:
-			names.append(str(_content["upgrade_nodes"][other]["name"]))
-		text += " Choosing it closes %s." % ", ".join(names)
-	if _profile == null:
-		return text
-	if id in _profile.get_upgrades():
-		return text
-	var reason: String = _profile.why_not_buy(id)
-	return text if reason == "" else "%s %s." % [text, reason]
+	return "%s: %s" % [node["name"], _effect_text(id)]
 
 
 static func _trim(value: float) -> String:
@@ -585,5 +898,7 @@ func _on_visibility_changed() -> void:
 		if not _tab_picked and not _moved_view and not tab_names().is_empty():
 			show_tab(tab_names()[0], false)
 			show_overview()
-		_show_default()
+		_info.text = ""
 		_back.grab_focus()
+	else:
+		close_card()

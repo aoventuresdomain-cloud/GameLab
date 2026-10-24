@@ -53,6 +53,7 @@ func _ready() -> void:
 	keep_screen.back_requested.connect(_show.bind(Screen.MAP))
 	keep_screen.buy_requested.connect(profile.buy)
 	keep_screen.respec_requested.connect(_respec_requested)
+	keep_screen.refund_requested.connect(_refund_requested)
 	summary.play_again_requested.connect(_plan_run)
 	planning.start_requested.connect(_planned)
 	planning.back_requested.connect(_show.bind(Screen.MAP))
@@ -115,6 +116,14 @@ func _tower_requested() -> void:
 	if id != "" and profile.buy(id):
 		planning.set_castle(profile.get_ring_spots(), profile.get_castle_cards(), profile.get_castle_mage_cards(), profile.get_castle_slots())
 	_offer_tower()
+
+
+## Taking one node back changes what the next run is built on too, so it waits as well.
+func _refund_requested(id: String) -> void:
+	if source.is_running():
+		profile.notice.emit("A refund waits until the run is over.")
+		return
+	profile.refund(id)
 
 
 ## A respec changes what the next run is built on, so it waits until the run is over.
