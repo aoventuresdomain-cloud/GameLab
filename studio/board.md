@@ -547,6 +547,17 @@
   - [ ] The proposal says what to build first, what waits for the Recruits decision, and any open taste decision for the CEO.
   - [ ] The CEO sees the Advisor's view unedited, and it is logged under Advisor views.
 
+### HF-M2-43 Skill detail card replaces the bottom strip of the tree
+- **Owner:** Gameplay Engineer
+- **Status:** Ready once the CEO has seen the mockup (`holdfast/m2/design-pass-feedback-slice.html`, sections 3 and 3b); builds after HF-M2-40. CEO request 2026-10-24: remove the bottom strip of skills, click a node to see details and buy there
+- **QA:** full (purchases move to a new place)
+- **Depends on:** HF-M2-40
+- **Done when:**
+  - [ ] The bottom strip is gone. Clicking a node opens a detail card centred over the dimmed tree, closed by clicking outside, Esc or the controller B button; the card shows only that node (name, one effect line with before and after numbers, price) and nothing about nodes further ahead.
+  - [ ] The card buys, refuses when unaffordable (dimmed button, price marked) and shows the owned state with a Refund button; forks, Tower Gate and link nodes show their special states as in the mockup.
+  - [ ] After a purchase the card stays with a tick and brief glow, and neighbouring buyable nodes light up behind it; hover shows a small name-and-effect tooltip on desktop; controller A opens and buys, B closes, with a focus outline different from the act and done colours.
+  - [ ] The old strip's tests change only with my OK, each logged; old saves and the guided first buys still work.
+
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
 - **Status:** Parked for M2b (CEO 2026-10-23 10:17); formerly Build 7 of 8, amended for the parked Recruits. HF-M2-35 adds only the bots the tree slice needs
