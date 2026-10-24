@@ -158,6 +158,35 @@ func select_pillar(id: String) -> void:
 	_apply(HoldfastMeta.select_pillar(_content, data, id))
 
 
+## The tutorial level's id (Level 0).
+func get_tutorial_level() -> String:
+	return HoldfastMeta.tutorial_level(_content)
+
+
+## True when the stand (the short fight after the two guided buys) is due.
+func is_stand_due() -> bool:
+	return HoldfastMeta.stand_due(_content, data)
+
+
+## The castle spots the stand is fought from.
+func get_stand_layout() -> Array:
+	return HoldfastMeta.stand_layout(_content, data)
+
+
+## Marks the stand as begun, so it is offered once.
+func begin_stand() -> void:
+	_apply(HoldfastMeta.begin_stand(data))
+
+
+## True once the line on what stars buy has been shown.
+func has_seen_stars_line() -> bool:
+	return bool(data["stars_line_seen"])
+
+
+func show_stars_line() -> void:
+	_apply(HoldfastMeta.show_stars_line(data))
+
+
 func bank_run(result: Dictionary) -> void:
 	_apply(HoldfastMeta.bank_run(_content, data, result))
 

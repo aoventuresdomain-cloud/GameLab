@@ -29,7 +29,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="Centre"]
-custom_minimum_size = Vector2(560, 0)
+custom_minimum_size = Vector2(680, 0)
 layout_mode = 2
 
 [node name="Column" type="VBoxContainer" parent="Centre/Panel"]
@@ -85,6 +85,12 @@ text = "0"
 horizontal_alignment = 2
 
 [node name="Reward" type="Label" parent="Centre/Panel/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="StarsNote" type="Label" parent="Centre/Panel/Column"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2

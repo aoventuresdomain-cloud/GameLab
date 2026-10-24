@@ -26,7 +26,14 @@
       "waves": [
         {"health_scale": 1, "damage_scale": 1, "spawns": [{"enemy": "grunt", "count": 5, "interval": 1.2}]},
         {"delay": 4, "health_scale": 1, "damage_scale": 1, "spawns": [{"enemy": "grunt", "count": 7, "interval": 1}]}
-      ]
+      ],
+      "stand": {
+        "intro": "Your new post is up. Stand in the lamplight and hold the line. The Keep cannot fall here.",
+        "waves": [
+          {"health_scale": 1, "damage_scale": 1, "spawns": [{"enemy": "grunt", "count": 6, "interval": 1}]},
+          {"delay": 3, "health_scale": 1, "damage_scale": 1, "spawns": [{"enemy": "grunt", "count": 6, "interval": 0.9}, {"enemy": "runner", "count": 3, "interval": 1.2}]}
+        ]
+      }
     },
     {
       "id": "outpost",
