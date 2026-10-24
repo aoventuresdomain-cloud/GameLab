@@ -377,7 +377,7 @@ func test_after_level_zero_the_map_guides_the_first_slot_then_the_first_post_bef
 	expect_true(map.get_node("%GuideButton").text.contains("First Slot"), map.get_node("%GuideButton").text)
 	expect_true(map.get_node("%GuideButton").text.contains("1 star"))
 	expect_true(map._buttons["outpost"].disabled, "Level 1 waits for both buys")
-	expect_true(map._names["first_watch"].text.ends_with("Won, 2 stars"), map._names["first_watch"].text)
+	expect_true(map._names["first_watch"].text.ends_with("2 stars"), map._names["first_watch"].text)
 	map.level_requested.emit("outpost")
 	expect_true(main.journey.visible and not main.planning.visible and not main.get_node("RunSource").is_running(), "a locked tap does nothing")
 	map.get_node("%GuideButton").pressed.emit()
@@ -402,7 +402,7 @@ func test_the_guide_waits_for_a_star_it_cannot_afford_and_says_so() -> void:
 	profile.changed.emit()
 	expect_true(map.get_node("%Guide").visible)
 	expect_true(map.get_node("%GuideButton").disabled)
-	expect_true(map.get_node("%GuideLabel").text.contains("Not enough stars"), map.get_node("%GuideLabel").text)
+	expect_true(map.get_node("%GuideLabel").text.contains("Replay First Watch for more stars"), map.get_node("%GuideLabel").text)
 	main.free()
 
 
@@ -521,7 +521,8 @@ func test_the_tree_prices_star_nodes_in_stars_shows_the_stars_and_buys_with_them
 	expect_eq(tree_page.get_node("%StarsValue").text, "2")
 	tree_page._node_buttons["castle_slot_1"].pressed.emit()
 	expect_eq(profile.get_castle_slots(), 1)
-	expect_eq(tree_page._node_buttons["castle_slot_1"].text, "First Slot (bought)")
+	expect_eq(tree_page._node_buttons["castle_slot_1"].text, "First Slot")
+	expect_true(tree_page._node_buttons["castle_slot_1"].get_theme_stylebox("disabled") == tree_page._owned_style, "an owned node glows green")
 	expect_eq(tree_page.get_node("%StarsValue").text, "1")
 	expect_false(tree_page.get_node("%NextUnlocks").text.contains("star"), "the Next line lists gold upgrades only")
 	main.free()

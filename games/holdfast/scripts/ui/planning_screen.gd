@@ -1,5 +1,5 @@
 extends Control
-## Plan page, shown before a run: a map of the level with the places enemies come from, the
+## Plan page, shown before a run: a map of the level, the
 ## castle's ring of spots around the keep (any of them can hold a post, as many as the slots the
 ## player has bought), and the tower cards the player owns, which they drag onto a spot, or
 ## press a spot to place and lift one.
@@ -14,17 +14,15 @@ signal tower_requested
 const FONT_PX := 20
 const COLOUR_ARENA := Color(0.35, 0.4, 0.5)
 const COLOUR_KEEP := Color(0.85, 0.8, 0.55)
-const COLOUR_ARC := Color(0.9, 0.3, 0.25)
 const COLOUR_RANGE := Color(0.55, 0.75, 0.95, 0.25)
 const COLOUR_MAGE_RANGE := Color(0.6, 0.48, 0.88, 0.25)
-const ARC_STEPS := 24
 ## How far out the ring's spots sit on the map (of the way to its edge): far enough that the
 ## buttons of neighbouring spots clear each other.
 const SITE_FILL := 0.78
-const ARC_FILL := 0.92
 const COLOUR_SLOT := Color(0.95, 0.85, 0.5)
 const MAGE_ID := "mage_post"
 const EMPTY_SPOT := "Empty"
+const HINT := "Drag a post onto a spot, or press a spot."
 
 @onready var _title: Label = %Title
 @onready var _hint: Label = %Hint
@@ -78,7 +76,7 @@ func open(level_id: String, layout: Array, saved: bool, spots: Array, cards: int
 	_chosen = layout.duplicate()
 	_saved = layout.duplicate() if saved else []
 	_title.text = "Plan your defence: %s" % _level["name"]
-	_hint.text = "Enemies come from the red edges. Drag a post card onto a spot, or press a spot, before the first wave."
+	_hint.text = HINT
 	set_castle(spots, cards, mage_cards, slots)
 
 
@@ -115,6 +113,8 @@ func set_tower_offer(text: String, why_not := "") -> void:
 	_tower.text = text
 	_tower.disabled = why_not != ""
 	_tower.tooltip_text = why_not
+	# The reason shows where the player looks, not only on hover.
+	_hint.text = why_not if why_not != "" else HINT
 
 
 ## The posts placed now, as layout entries.
@@ -318,14 +318,6 @@ func _draw_map() -> void:
 		if placed >= 0:
 			var tower_id := _tower_of(_chosen[placed])
 			_map.draw_circle(at, float(_content["towers"][tower_id]["range"]) * scale, COLOUR_MAGE_RANGE if tower_id == MAGE_ID else COLOUR_RANGE)
-	# The red arcs show which way the enemies come from, drawn at the edge of the map.
-	var edge := minf(_map.size.x, _map.size.y) * 0.5 * ARC_FILL
-	for arc in _level.get("spawn_arcs", []):
-		var points := PackedVector2Array()
-		for i in ARC_STEPS + 1:
-			var angle := deg_to_rad(float(arc["centre"]) + (float(i) / ARC_STEPS - 0.5) * float(arc["width"]))
-			points.append(centre + Vector2(cos(angle), sin(angle)) * edge)
-		_map.draw_polyline(points, COLOUR_ARC, 5.0)
 
 
 func _on_visibility_changed() -> void:

@@ -705,9 +705,9 @@ static func respec_gold_change(content: Dictionary, profile: Dictionary) -> int:
 ## "" when a respec can go ahead, else why not.
 static func why_not_respec(content: Dictionary, profile: Dictionary) -> String:
 	if profile["upgrades"].is_empty():
-		return "Nothing to respec"
+		return "Nothing to refund"
 	if int(profile["gold"]) + respec_gold_change(content, profile) < 0:
-		return "Not enough gold for the respec fee"
+		return "Not enough gold for the refund fee"
 	return ""
 
 

@@ -214,6 +214,7 @@ func test_plus_tower_is_refused_when_it_cannot_be_afforded_and_goes_when_nothing
 	var button: Button = plan.get_node("%TowerButton")
 	expect_true(button.disabled, "no stars")
 	expect_eq(button.tooltip_text, "Not enough stars")
+	expect_eq(plan.get_node("%Hint").text, "Not enough stars", "the reason is on the page, not only on hover")
 	plan.tower_requested.emit()
 	expect_eq(profile.get_castle_slots(), 1, "a press that gets through buys nothing either")
 	main.free()

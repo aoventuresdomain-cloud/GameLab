@@ -10,6 +10,8 @@ signal respec_requested
 const Hud = preload("res://scripts/ui/hud.gd")
 const FONT_PX := 20
 const DIMMED := Color(1, 1, 1, 0.45)
+const OWNED_FILL := Color(0.2, 0.5, 0.3)
+const OWNED_EDGE := Color(0.45, 0.85, 0.55)
 const NODE_SIZE := Vector2(260, 48)
 ## A section's heading sits this far above its first row.
 const HEADING_GAP := 44.0
@@ -97,6 +99,8 @@ var selected_pillar := ""
 @onready var _back: Button = %BackButton
 
 var _profile: Node
+## The look of an owned node.
+var _owned_style := _make_owned_style()
 var _content: Dictionary
 var _node_buttons: Dictionary = {}
 ## Each section's holder in the web: hiding it hides its nodes and their links.
@@ -158,7 +162,8 @@ func refresh() -> void:
 		var bought: bool = id in owned
 		var closed: bool = _profile.why_not_buy(id).begins_with("Closed")
 		button.visible = _profile.is_visible(id)
-		button.text = "%s (bought)" % node["name"] if bought else ("%s (closed)" % node["name"] if closed else "%s  %s" % [node["name"], _price(node)])
+		button.text = str(node["name"]) if bought else ("%s (closed)" % node["name"] if closed else "%s  %s" % [node["name"], _price(node)])
+		_light(button, bought)
 		button.disabled = bought or _profile.why_not_buy(id) != ""
 		button.set_pressed_no_signal(bought)
 		# Only what is one buy away (or already bought) is drawn in full; the rest is dimmed.
@@ -170,11 +175,35 @@ func refresh() -> void:
 	_web.queue_redraw()
 	_respec.disabled = owned.is_empty()
 	var change: int = _profile.get_respec_gold_change()
-	_respec.text = "Respec: %s%s gold" % ["+" if change >= 0 else "-", Hud.format_number(absi(change))] if not owned.is_empty() else "Respec"
+	_respec.text = "Refund: %s%s gold" % ["+" if change >= 0 else "-", Hud.format_number(absi(change))] if not owned.is_empty() else "Refund"
 	var next_parts: PackedStringArray = []
 	for id in _profile.get_next_unlocks():
 		next_parts.append("%s (%s): %s" % [_content["upgrade_nodes"][id]["name"], _price(_content["upgrade_nodes"][id]), _effect_text(id)])
 	_next.text = "Next: " + ("  |  ".join(next_parts) if not next_parts.is_empty() else "nothing left to buy here")
+
+
+static func _make_owned_style() -> StyleBoxFlat:
+	var box := StyleBoxFlat.new()
+	box.bg_color = OWNED_FILL
+	box.border_color = OWNED_EDGE
+	box.set_border_width_all(3)
+	box.set_corner_radius_all(6)
+	box.content_margin_left = 6.0
+	box.content_margin_right = 6.0
+	return box
+
+
+## An owned node glows green, with no word to say so; any other keeps the theme's look.
+func _light(button: Button, owned: bool) -> void:
+	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
+		if owned:
+			button.add_theme_stylebox_override(state, _owned_style)
+		else:
+			button.remove_theme_stylebox_override(state)
+	if owned:
+		button.add_theme_color_override("font_disabled_color", Color.WHITE)
+	else:
+		button.remove_theme_color_override("font_disabled_color")
 
 
 func _build_tree() -> void:
@@ -541,7 +570,7 @@ func _node_text(id: String) -> String:
 	if _profile == null:
 		return text
 	if id in _profile.get_upgrades():
-		return text + " Bought."
+		return text
 	var reason: String = _profile.why_not_buy(id)
 	return text if reason == "" else "%s %s." % [text, reason]
 

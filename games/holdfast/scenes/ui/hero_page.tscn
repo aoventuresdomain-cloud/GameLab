@@ -56,6 +56,7 @@ text = "Hero"
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
+text = "Skill tree"
 
 [node name="PillarRow" type="HBoxContainer" parent="Margin/Column"]
 unique_name_in_owner = true
@@ -75,46 +76,60 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 24
 
-[node name="GearColumn" type="VBoxContainer" parent="Margin/Column/Main"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 6
-
-[node name="BagHint" type="Label" parent="Margin/Column/Main/GearColumn"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"HudCaption"
-autowrap_mode = 2
-
-[node name="SlotColumn" type="VBoxContainer" parent="Margin/Column/Main/GearColumn"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Bag" type="HFlowContainer" parent="Margin/Column/Main/GearColumn"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 6
-
 [node name="StatColumn" type="VBoxContainer" parent="Margin/Column/Main"]
+custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="StatCaption" type="Label" parent="Margin/Column/Main/StatColumn"]
+[node name="StatHeader" type="HBoxContainer" parent="Margin/Column/Main/StatColumn"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StatCaption" type="Label" parent="Margin/Column/Main/StatColumn/StatHeader"]
 layout_mode = 2
 theme_type_variation = &"HudCaption"
-text = "Hero numbers"
+text = "Hero"
+
+[node name="StatsInfoButton" type="Button" parent="Margin/Column/Main/StatColumn/StatHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+toggle_mode = true
+text = "i"
 
 [node name="Stats" type="Label" parent="Margin/Column/Main/StatColumn"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 
+[node name="HeroFigure" type="Control" parent="Margin/Column/Main"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SlotColumn" type="VBoxContainer" parent="Margin/Column/Main"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BagHint" type="Label" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudCaption"
+autowrap_mode = 2
+
+[node name="Bag" type="HFlowContainer" parent="Margin/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 76)
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 6
+
 [node name="Info" type="Label" parent="Margin/Column"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 autowrap_mode = 2

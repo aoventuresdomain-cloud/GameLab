@@ -47,7 +47,8 @@ func test_a_new_game_has_the_first_level_next_and_the_rest_locked() -> void:
 	expect_false(map._buttons["first_watch"].disabled)
 	for id in LEVELS.slice(1):
 		expect_true(map._buttons[id].disabled, "%s is locked" % id)
-		expect_true(map._names[id].text.ends_with("Boss: Fog Warden (locked)" if id == "gull_rock" else "Locked"), id)
+		var level_name: String = HoldfastContent.base()["levels"][id]["name"]
+		expect_eq(map._names[id].text, level_name + "\nBoss: Fog Warden" if id == "gull_rock" else level_name, id)
 	expect_eq(map._buttons["first_watch"].text, "0", "an open level shows its number")
 	main.free()
 
@@ -59,7 +60,8 @@ func test_a_cleared_level_loses_its_number_and_the_next_one_opens() -> void:
 	_win(main.get_node("Profile"), ["outpost", "shingle_beach"])
 	expect_eq(map._next, "tidewrack_cove")
 	expect_eq(map._buttons["outpost"].text, "", "a tick is drawn instead")
-	expect_true(map._names["outpost"].text.ends_with("Won, 1 of 3 stars"))
+	expect_true(map._names["outpost"].text.ends_with("\n1 of 3 stars"))
+	expect_false(map._names["outpost"].text.contains("Won"), "cleared is shown by the tick, not a word")
 	expect_false(map._buttons["outpost"].disabled, "a cleared level can be replayed")
 	expect_false(map._buttons["tidewrack_cove"].disabled)
 	expect_true(map._buttons["old_pier"].disabled)
@@ -125,10 +127,10 @@ func test_the_hero_page_shows_the_slots_and_links_to_the_heros_tree_section() ->
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var page: Control = main.hero_page
 	var weapon: Label = page.get_node("%SlotColumn").get_child(0).get_node("Row/Item")
-	expect_eq(weapon.text, "empty")
+	expect_eq(weapon.text, "")
 	profile.bank_run({"outcome": "won", "level": "shingle_beach", "gold": 0, "gear_found": ["tarred_bowstring"]})
 	expect_eq(weapon.text, "Tarred bowstring")
-	expect_eq(page.get_node("%TreeButton").text, "Open the Flare Archer section of the skill tree")
+	expect_eq(page.get_node("%TreeButton").text, "Skill tree")
 	page.visible = true
 	page.get_node("%TreeButton").pressed.emit()
 	expect_true(main.keep_screen.visible and not page.visible)

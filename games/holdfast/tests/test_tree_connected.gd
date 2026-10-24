@@ -206,12 +206,12 @@ func test_a_respec_is_refused_when_the_fees_are_more_than_the_gold_held() -> voi
 	var content := _content()
 	var owned := ["castle_slot_1", "castle_archer_1"]
 	var short := _holding(owned, 99, 3)
-	expect_eq(HoldfastMeta.why_not_respec(content, short), "Not enough gold for the respec fee")
+	expect_eq(HoldfastMeta.why_not_respec(content, short), "Not enough gold for the refund fee")
 	expect_eq(HoldfastMeta.respec(content, short), short, "nothing changes")
 	var enough := _holding(owned, 100, 3)
 	expect_eq(HoldfastMeta.why_not_respec(content, enough), "")
 	expect_eq(HoldfastMeta.respec(content, enough)["gold"], 0, "the fees take the last of it")
-	expect_eq(HoldfastMeta.why_not_respec(content, _fresh()), "Nothing to respec")
+	expect_eq(HoldfastMeta.why_not_respec(content, _fresh()), "Nothing to refund")
 	# A gold node's refund can pay its own fee.
 	var covered := _holding(["flare_boots"], 0, 3)
 	expect_eq(HoldfastMeta.why_not_respec(content, covered), "")
@@ -226,10 +226,10 @@ func test_the_profile_tells_the_player_why_a_respec_was_refused() -> void:
 	var notices := []
 	profile.notice.connect(func(text: String) -> void: notices.append(text))
 	profile.respec()
-	expect_eq(notices, ["Nothing to respec"])
+	expect_eq(notices, ["Nothing to refund"])
 	profile.data = _holding(["castle_slot_1", "castle_archer_1"], 10, 3)
 	profile.respec()
-	expect_eq(notices[-1], "Not enough gold for the respec fee")
+	expect_eq(notices[-1], "Not enough gold for the refund fee")
 	expect_eq(profile.get_upgrades().size(), 2, "nothing was taken back")
 	expect_eq(profile.get_respec_gold_change(), -100)
 	main.free()
@@ -251,7 +251,7 @@ func test_a_respec_waits_until_the_run_is_over() -> void:
 	main.keep_screen.respec_requested.emit()
 	expect_eq(profile.get_upgrades(), owned, "nothing is taken back mid-run")
 	expect_eq(profile.get_gold(), 500)
-	expect_eq(notes, ["A respec waits until the run is over."])
+	expect_eq(notes, ["A refund waits until the run is over."])
 	main.free()
 
 
