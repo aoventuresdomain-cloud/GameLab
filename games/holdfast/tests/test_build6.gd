@@ -523,13 +523,13 @@ func test_the_hero_page_lists_owned_gear_and_toggles_it() -> void:
 	expect_true((main.hero_page.get_node("%BagHint") as Label).text.begins_with("Gear: none yet"))
 	profile.bank_run({"outcome": "won", "level": "shingle_beach", "gold": 0, "gear_found": ["driftwood_stave", "sea_glass_charm"]})
 	await tree.process_frame
-	expect_eq(bag.get_child_count(), 2, "the two pieces")
 	expect_eq(profile.get_gear_worn(), {"weapon": "driftwood_stave", "armour": "sea_glass_charm"}, "worn as found")
+	expect_eq(bag.get_child_count(), 0, "both pieces are on their slots, so the bag is empty")
+	main.hero_page.gear_off_requested.emit("weapon")
+	expect_eq(profile.get_gear_worn(), {"armour": "sea_glass_charm"}, "taking the slot's piece off")
+	expect_eq(bag.get_child_count(), 1, "puts it in the bag")
 	var stave: Button = bag.get_child(0)
 	expect_eq(stave.text, "Driftwood stave")
-	expect_true(stave.button_pressed, "lit while worn")
-	stave.pressed.emit()
-	expect_eq(profile.get_gear_worn(), {"armour": "sea_glass_charm"}, "pressing takes it off")
 	main.free()
 
 

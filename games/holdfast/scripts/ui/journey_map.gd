@@ -1,8 +1,9 @@
 extends Control
-## Journey map, the hub between runs: a path of level nodes (cleared ones ticked, the next
-## one glowing, locked ones dimmed, a boss level ringed), the Hero as a figure at the
-## lighthouse, and a button to the skill tree. It shows the profile and asks for what the
-## player taps through signals; the run flow acts. Mouse only.
+## Journey map, the hub between runs: a path of level nodes (cleared ones green and ticked, the
+## next one glowing, the rest dimmed, a boss level ringed in red), the Hero as a figure at the
+## lighthouse, and a button to the skill tree. State is shown by look alone, never in words. It
+## shows the profile and asks for what the player taps through signals; the run flow acts. Mouse
+## only.
 
 signal level_requested(id: String)
 signal hero_requested
@@ -27,7 +28,8 @@ const COLOUR_HERO := Color(0.95, 0.6, 0.2)
 const LABEL_GAP := 20.0
 const HERO_FIGURE := Vector2(44, 64)
 const GLOW_TINT := Color(1.0, 0.85, 0.45)
-const DEFAULT_INFO := "Tap an open level to plan it, the Hero to change path and gear, or the skill tree to spend gold and stars."
+const DEFAULT_INFO := ""
+const HERO_INFO := "Hero and gear"
 
 @onready var _gold: Label = %GoldValue
 @onready var _stars: Label = %StarsValue
@@ -89,7 +91,8 @@ func refresh() -> void:
 		var won: bool = _profile.is_level_won(id)
 		button.disabled = not open
 		button.text = "" if won else str(int(_content["levels"][id].get("number", 0)))
-		_names[id].text = "%s\n%s" % [_content["levels"][id]["name"], _status(id, open, won)]
+		var status := _status(id, won)
+		_names[id].text = "%s\n%s" % [_content["levels"][id]["name"], status] if status != "" else str(_content["levels"][id]["name"])
 		_names[id].size = _names[id].get_minimum_size()
 	_hero_button.text = "Hero: %s" % _content["hero_paths"][_profile.get_pillar()]["name"]
 	_hero_button.reset_size()
@@ -120,9 +123,19 @@ func _refresh_guide() -> void:
 		return
 	var node: Dictionary = _content["upgrade_nodes"][_guided]
 	var why: String = _profile.why_not_buy(_guided)
-	_guide_label.text = "Before the next level, spend a star on %s: %s.%s" % [node["name"], _grant_text(node), "" if why == "" else " " + why + "."]
+	if why == "Not enough stars":
+		why = "Replay %s for more stars" % _tutorial_name()
+	_guide_label.text = "Spend a star on %s: %s.%s" % [node["name"], _grant_text(node), "" if why == "" else " " + why + "."]
 	_guide_button.text = "Buy %s (%s)" % [node["name"], HoldfastMeta.cost_text(node)]
 	_guide_button.disabled = why != ""
+
+
+## The tutorial level, which can always be replayed to earn its stars again.
+func _tutorial_name() -> String:
+	for level in _content["levels"].values():
+		if level.get("tutorial", false):
+			return str(level["name"])
+	return "the first level"
 
 
 static func _grant_text(node: Dictionary) -> String:
@@ -153,15 +166,13 @@ func boss_name(level_id: String) -> String:
 	return ""
 
 
-func _status(id: String, open: bool, won: bool) -> String:
-	var boss := boss_name(id)
-	if not open:
-		return "Boss: %s (locked)" % boss if boss != "" else "Locked"
-	if id == _next:
-		return "Boss: %s" % boss if boss != "" else "Next"
+## The line under a level's name: the stars a cleared level earned, else the boss it ends on.
+## Whether a level is cleared, next or out of reach is shown by how it is drawn, not said.
+func _status(id: String, won: bool) -> String:
 	if won:
-		return "Won, %s" % _stars_text(id)
-	return "Boss: %s" % boss if boss != "" else "Open"
+		return _stars_text(id)
+	var boss := boss_name(id)
+	return "Boss: %s" % boss if boss != "" else ""
 
 
 ## "2 of 3 stars" for a level; a tutorial, which pays a fixed reward, says "2 stars".
@@ -197,7 +208,7 @@ func _build_nodes() -> void:
 	_hero_button = Button.new()
 	_hero_button.add_theme_font_size_override("font_size", FONT_PX)
 	_hero_button.pressed.connect(hero_requested.emit)
-	_hero_button.mouse_entered.connect(func() -> void: _info.text = "Change the Hero's path and wear the gear you have found.")
+	_hero_button.mouse_entered.connect(func() -> void: _info.text = HERO_INFO)
 	_hero_button.mouse_exited.connect(func() -> void: _info.text = DEFAULT_INFO)
 	_map.add_child(_hero_button)
 	_hero_figure = Button.new()
@@ -208,22 +219,17 @@ func _build_nodes() -> void:
 	_hero_figure.focus_entered.connect(_map.queue_redraw)
 	_hero_figure.focus_exited.connect(_map.queue_redraw)
 	_hero_figure.pressed.connect(hero_requested.emit)
-	_hero_figure.mouse_entered.connect(func() -> void: _info.text = "Change the Hero's path and wear the gear you have found.")
+	_hero_figure.mouse_entered.connect(func() -> void: _info.text = HERO_INFO)
 	_hero_figure.mouse_exited.connect(func() -> void: _info.text = DEFAULT_INFO)
 	_map.add_child(_hero_figure)
 
 
 func _level_text(id: String) -> String:
 	var level: Dictionary = _content["levels"][id]
-	var open: bool = _profile != null and _is_open(id)
-	var text := "%s: %d waves. " % [level["name"], level["waves"].size()]
+	var text := "%s: %d waves." % [level["name"], level["waves"].size()]
 	if level.get("tutorial", false):
-		text += str(level["intro"]) + " "
-	if open:
-		return text + ("Tap to play it." if level.get("tutorial", false) else "Tap to plan it.")
-	if _profile != null and id in _profile.get_unlocked_levels():
-		return text + "Buy your First Slot and Archer Post first."
-	return text + "Locked. Win the previous level."
+		text += " " + str(level["intro"])
+	return text
 
 
 ## Where level `i` of `n` sits on the map: a path rising to the right with a gentle wiggle.

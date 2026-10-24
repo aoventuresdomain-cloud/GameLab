@@ -1,9 +1,10 @@
 extends Control
-## Hero page: choose the Hero's path, wear the gear found so far (five slots, each with its own
-## stat identity) and read what the Hero's numbers come to. Gear is worn by dragging a piece from
-## the bag onto its slot (the same gesture as the Plan page's cards) or by pressing it, and taken
-## off by dragging it back or pressing its slot. It shows the profile and asks for changes through
-## signals; the run flow acts. Mouse only.
+## Hero page: choose the Hero's path, wear the gear found so far and read what the Hero's numbers
+## come to. The Hero stands in the middle (placeholder art), the numbers on the left and the five
+## gear slots on the right, each with its own stat identity (shown on hover); the bag of pieces not
+## worn is below. A piece is worn by dragging it from the bag onto its slot (the same gesture as the
+## Plan page's cards) or by pressing it, and taken off by dragging it back or pressing its slot.
+## It shows the profile and asks for changes through signals; the run flow acts. Mouse only.
 
 signal back_requested
 signal tree_requested
@@ -14,7 +15,10 @@ signal gear_off_requested(slot: String)
 
 const Keep = preload("res://scripts/ui/keep_screen.gd")
 const FONT_PX := 20
-const DEFAULT_INFO := "Pick a path. Gear is the Hero's alone: drag a piece onto its slot or press it to wear it; drag it back or press its slot to take it off."
+const DEFAULT_INFO := ""
+const COLOUR_HERO := Color(0.95, 0.6, 0.2)
+const COLOUR_WORN := Color(0.2, 0.5, 0.3)
+const COLOUR_WORN_EDGE := Color(0.45, 0.85, 0.55)
 
 ## The Hero path id the profile has picked.
 var selected_pillar := ""
@@ -26,6 +30,8 @@ var selected_pillar := ""
 @onready var _bag_hint: Label = %BagHint
 @onready var _main: Control = %Main
 @onready var _stats: Label = %Stats
+@onready var _stats_info: Button = %StatsInfoButton
+@onready var _figure: Control = %HeroFigure
 @onready var _info: Label = %Info
 @onready var _tree: Button = %TreeButton
 @onready var _back: Button = %BackButton
@@ -41,6 +47,9 @@ func _ready() -> void:
 	_content = HoldfastContent.base()
 	_back.pressed.connect(back_requested.emit)
 	_tree.pressed.connect(tree_requested.emit)
+	_stats_info.pressed.connect(func() -> void: _stats.text = _stats_text(_stats_info.button_pressed))
+	_figure.draw.connect(_draw_figure)
+	_figure.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	visibility_changed.connect(_on_visibility_changed)
 	_build_pillars()
 	_build_slots()
@@ -70,7 +79,6 @@ func refresh() -> void:
 		_pillar_buttons[id].set_pressed_no_signal(id == selected_pillar)
 	var path: Dictionary = _content["hero_paths"][selected_pillar]
 	_pillar_info.text = "%s: %s" % [path["name"], path.get("blurb", "")]
-	_tree.text = "Open the %s section of the skill tree" % path["name"]
 	_refresh_gear()
 
 
@@ -79,36 +87,69 @@ func _refresh_gear() -> void:
 	var worn: Dictionary = _profile.get_gear_worn()
 	for slot in _slot_panels:
 		var id: String = worn.get(slot, "")
-		_slot_panels[slot].get_node("Row/Item").text = _content["gear_items"][id]["name"] if id != "" else "empty"
+		_slot_panels[slot].get_node("Row/Item").text = _content["gear_items"][id]["name"] if id != "" else ""
 		_slot_panels[slot].mouse_default_cursor_shape = Control.CURSOR_DRAG if id != "" else Control.CURSOR_ARROW
+		_light(_slot_panels[slot], id != "")
 	for child in _bag.get_children():
 		_bag.remove_child(child)
 		child.queue_free()
 	var owned: Array = _profile.get_gear_owned()
-	_bag_hint.text = "Gear: none yet. Each level's first win gives a piece, and elites and bosses may drop more." if owned.is_empty() else "Gear (the bag is below the slots): drag a piece onto its slot, or press it."
+	_bag_hint.text = "Gear: none yet. Each level's first win gives a piece, and elites and bosses may drop more." if owned.is_empty() else "Bag"
 	for id in owned:
 		var item: Dictionary = _content["gear_items"][id]
+		# A worn piece is on its slot, not in the bag.
+		if worn.get(item["slot"], "") == id:
+			continue
 		var button := Button.new()
 		button.text = str(item["name"])
 		button.add_theme_font_size_override("font_size", FONT_PX)
 		_compact(button)
-		button.toggle_mode = true
-		button.set_pressed_no_signal(worn.get(item["slot"], "") == id)
 		button.pressed.connect(func() -> void: gear_requested.emit(id))
 		button.set_drag_forwarding(_bag_drag.bind(id, button), _off_can_drop, _off_drop)
-		button.mouse_entered.connect(func() -> void: _info.text = _gear_text(id, worn.get(item["slot"], "") == id))
+		button.mouse_entered.connect(func() -> void: _info.text = _gear_text(id))
 		button.mouse_exited.connect(func() -> void: _info.text = DEFAULT_INFO)
 		_bag.add_child(button)
-	_stats.text = _stats_text()
+	_stats.text = _stats_text(_stats_info.button_pressed)
+	_figure.queue_redraw()
 
 
-## What the Hero's numbers come to with the tree and the gear worn: "Health 80 (base 60, tree +0, gear +20)".
-func _stats_text() -> String:
+## A slot with a piece on it glows green; an empty one is plain.
+static func _light(panel: PanelContainer, worn: bool) -> void:
+	if not worn:
+		panel.remove_theme_stylebox_override("panel")
+		_compact(panel)
+		return
+	var box := StyleBoxFlat.new()
+	box.bg_color = COLOUR_WORN
+	box.border_color = COLOUR_WORN_EDGE
+	box.set_border_width_all(2)
+	box.set_corner_radius_all(4)
+	box.content_margin_left = 8.0
+	box.content_margin_right = 8.0
+	box.content_margin_top = 2.0
+	box.content_margin_bottom = 2.0
+	panel.add_theme_stylebox_override("panel", box)
+
+
+## The Hero's numbers with the tree and the gear worn: "Health 80", or with `breakdown` "Health 80
+## (base 60, tree +0, gear +20)".
+func _stats_text(breakdown := false) -> String:
 	var lines: PackedStringArray = []
 	for row in _profile.get_hero_breakdown():
 		var unit: String = row["unit"] if row["unit"] == "%" else ""
-		lines.append("%s %s%s (base %s, tree %s, gear %s)" % [row["label"], _num(float(row["final"])), unit, _num(float(row["base"])), _num(float(row["tree"]), true), _num(float(row["gear"]), true)])
+		var line := "%s %s%s" % [row["label"], _num(float(row["final"])), unit]
+		if breakdown:
+			line += " (base %s, tree %s, gear %s)" % [_num(float(row["base"])), _num(float(row["tree"]), true), _num(float(row["gear"]), true)]
+		lines.append(line)
 	return "\n".join(lines)
+
+
+## The placeholder Hero: a head and a cloaked body, until the final art.
+func _draw_figure() -> void:
+	var centre := _figure.size * 0.5
+	var unit := minf(_figure.size.x, _figure.size.y) * 0.5
+	_figure.draw_circle(centre + Vector2(0, -unit * 0.45), unit * 0.22, COLOUR_HERO)
+	_figure.draw_colored_polygon(PackedVector2Array([centre + Vector2(0, -unit * 0.2), centre + Vector2(unit * 0.4, unit * 0.65), centre + Vector2(-unit * 0.4, unit * 0.65)]), COLOUR_HERO)
 
 
 ## A number to two places without trailing zeros; `signed` puts a + on a positive one.
@@ -135,10 +176,11 @@ func _build_slots() -> void:
 		var title := Label.new()
 		title.name = "Title"
 		var data: Dictionary = info.get(slot, {"name": str(slot).capitalize(), "identity": ""})
-		title.text = "%s: %s" % [data["name"], data["identity"]] if str(data["identity"]) != "" else str(data["name"])
+		title.text = str(data["name"])
+		panel.tooltip_text = "%s: %s" % [data["name"], data["identity"]] if str(data["identity"]) != "" else str(data["name"])
 		title.add_theme_font_size_override("font_size", FONT_PX)
 		title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		title.custom_minimum_size = Vector2(380, 0)
+		title.custom_minimum_size = Vector2(110, 0)
 		var item := Label.new()
 		item.name = "Item"
 		item.add_theme_font_size_override("font_size", FONT_PX)
@@ -236,9 +278,9 @@ func _build_pillars() -> void:
 		_pillar_buttons[id] = button
 
 
-func _gear_text(id: String, worn: bool) -> String:
+func _gear_text(id: String) -> String:
 	var item: Dictionary = _content["gear_items"][id]
-	return "%s (%s): %s. %s." % [item["name"], item["slot"], Keep._effects_text(item["effects"]), "Worn, press to take off" if worn else "Not worn, drag it to its slot or press to wear"]
+	return "%s: %s" % [item["name"], Keep._effects_text(item["effects"])]
 
 
 func _on_visibility_changed() -> void:

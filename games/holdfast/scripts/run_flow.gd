@@ -120,7 +120,7 @@ func _tower_requested() -> void:
 ## A respec changes what the next run is built on, so it waits until the run is over.
 func _respec_requested() -> void:
 	if source.is_running():
-		profile.notice.emit("A respec waits until the run is over.")
+		profile.notice.emit("A refund waits until the run is over.")
 		return
 	profile.respec()
 

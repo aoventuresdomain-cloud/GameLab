@@ -129,7 +129,7 @@ autowrap_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "Respec (free)"
+text = "Refund"
 
 [node name="BackButton" type="Button" parent="Margin/Column/Footer"]
 unique_name_in_owner = true

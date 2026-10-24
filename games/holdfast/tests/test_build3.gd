@@ -783,7 +783,7 @@ func test_the_keep_screen_buys_through_the_flow_and_the_profile_saves() -> void:
 	expect_true(keep._node_buttons["post_twin"].disabled, "needs the first drill")
 	walls.pressed.emit()
 	expect_eq(profile.get_gold(), 140)
-	expect_true(walls.disabled and walls.text.contains("bought"))
+	expect_true(walls.disabled and not walls.text.contains("bought") and walls.get_theme_stylebox("disabled") == keep._owned_style)
 	expect_eq(keep.get_node("%GoldValue").text, "140")
 	drills.pressed.emit()
 	expect_eq(profile.get_gold(), 30)
@@ -803,7 +803,7 @@ func test_level_and_pillar_picks_start_the_next_run_with_the_bought_upgrades() -
 	var map: Control = main.journey
 	keep.visible = true
 	expect_true(map._buttons["shingle_beach"].disabled, "locked until the first level is won")
-	expect_true(map._level_text("shingle_beach").contains("Win the previous level"), "and it says why")
+	expect_true(map._level_text("shingle_beach").contains("Shingle Beach") and not map._level_text("shingle_beach").contains("Locked"), "and it does not say so")
 	profile.bank_run({"gold": 0, "outcome": "won", "level": "outpost"})
 	keep._node_buttons["keep_beam_1"].pressed.emit()             # 200
 	keep._node_buttons["post_timbers"].pressed.emit()            # 70

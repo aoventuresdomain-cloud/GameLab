@@ -287,8 +287,9 @@ func test_the_hero_page_shows_five_slots_with_what_each_is_for() -> void:
 	var page: Control = main.hero_page
 	expect_eq(page.get_node("%SlotColumn").get_child_count(), 5)
 	var title: Label = _slot(page, "boots").get_node("Row/Title")
-	expect_eq(title.text, "Boots: move speed, faster get-up")
-	expect_eq(_slot(page, "weapon").get_node("Row/Item").text, "empty")
+	expect_eq(title.text, "Boots")
+	expect_eq(_slot(page, "boots").tooltip_text, "Boots: move speed, faster get-up")
+	expect_eq(_slot(page, "weapon").get_node("Row/Item").text, "")
 	main.free()
 
 
@@ -336,14 +337,21 @@ func test_pressing_a_piece_in_the_bag_still_wears_and_removes_it() -> void:
 	var button: Button = page.get_node("%Bag").get_child(0)
 	button.pressed.emit()
 	expect_eq(profile.get_gear_worn(), {"weapon": "driftwood_stave"})
-	(page.get_node("%Bag").get_child(0) as Button).pressed.emit()
+	expect_eq(page.get_node("%Bag").get_child_count(), 0, "a worn piece leaves the bag")
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = false
+	page._slot_input(press, "weapon")
 	expect_eq(profile.get_gear_worn(), {})
+	expect_eq(page.get_node("%Bag").get_child_count(), 1, "taken off, it is back in the bag")
 	main.free()
 
 
 func test_the_hero_page_shows_the_breakdown_of_the_numbers() -> void:
 	var main := _main()
 	var page := _page_with(main, ["wave_worn_boots"])
+	page.get_node("%StatsInfoButton").button_pressed = true
+	page.get_node("%StatsInfoButton").pressed.emit()
 	var text: String = page.get_node("%Stats").text
 	expect_true(text.contains("Move speed 195 (base 170, tree 0, gear +25)"), text)
 	expect_true(text.contains("Health 60 (base 60, tree 0, gear 0)"), text)
