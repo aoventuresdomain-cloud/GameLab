@@ -495,6 +495,57 @@
   - [x] A short Mage branch in the tree (a few gold stat nodes, with one Hero link: Eclipse is wider when centred on a Mage Post), placed next to the gate.
   - [x] Old saves load unchanged (the gate is simply not taken). The three reserved links, the Mender and Frost posts, walls and Gate II are not built.
 
+### HF-M2-38 Guided buys are compulsory and the tree opens zoomed out
+- **Owner:** Gameplay Engineer
+- **Status:** Ready (CEO feedback 2026-10-24 on the tree build, point 2). Builds first of the feedback slice; touches the map guide and the tree view only
+- **QA:** full (save and progression flow change)
+- **Depends on:** HF-M2-37
+- **Done when:**
+  - [ ] During the guided buys (first slot, then first tower) the only thing the player can buy or open is the guided step, reached through the guide itself; the rest of the tree and the other screens cannot be used to buy anything else until the guide is done.
+  - [ ] An old save, a respec and a new game never leave the player stuck mid-guide (a test per case).
+  - [ ] The tree opens zoomed out far enough to show its whole size, with node labels still readable at 1280x720; the player's zoom and pan still work and are not reset on every visit within a session.
+
+### HF-M2-39 Place towers in any of the spots you have slots for
+- **Owner:** Gameplay Engineer
+- **Status:** Ready (CEO feedback point 4). Plan-page rule only; whether slots are bought on the Plan page is decided by the design pass (HF-M2-41), not here
+- **QA:** full (layouts and save data change)
+- **Depends on:** HF-M2-38, HF-M2-41
+- **Done when:**
+  - [ ] The Plan page shows no compass labels (East, West and so on). With N slots bought the player may put towers in any N of the ring's spots, and a slot is a count, not a fixed place.
+  - [ ] Old saved layouts load unchanged (spot ids stay as data), and auto-place, Quick start and retry still work with any chosen spots.
+  - [ ] Rules that read a post's place (Crossfire, Lit Post, Rally and the like) use the real position, with a test that the same count in different spots behaves by geometry only.
+
+### HF-M2-40 Interface tidy: short names, glow not words, Hero page layout
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, starts after the design pass (HF-M2-41) is accepted. CEO feedback points 1, 3, 6 and the general note
+- **QA:** screens (interface only; a full round if the design moves any purchase between screens)
+- **Depends on:** HF-M2-39, HF-M2-41
+- **Done when:**
+  - [ ] The journey page has no "locked" or "next" comments; state is shown by look only.
+  - [ ] Menu and button names are short ("Skill tree", not "Open the Flare Archer skill tree"); owned nodes, slots and gear glow or turn green with no "Bought" word; explanatory text is cut to what a first-time player needs. "Respec" is renamed with a plain word (default "Refresh") everywhere it shows.
+  - [ ] The Hero page has the Hero graphic (placeholder art) in the centre and the gear slots on the right, with the inventory used to equip and unequip.
+  - [ ] The layout follows the accepted design from HF-M2-41, checked at 1280x720 and 1920x1080.
+
+### HF-M2-41 Design pass for the feedback slice (Designer, then Advisor critique)
+- **Owner:** Designer (screen mockups)
+- **Status:** Ready. Max two rounds of Designer then Advisor critique; the CEO sees one version with only the open taste decisions
+- **QA:** none (mockups and notes; no code)
+- **Depends on:** none
+- **Done when:**
+  - [ ] Mockups of the journey page, Plan page, skill tree entry and Hero page with short names and glow states, researched against good game-UI practice, in `/mnt/project-files/holdfast/m2/`.
+  - [ ] A clear recommendation on the CEO's idea to buy extra slots on the Plan page with the skill tree as a separate tab, with the trade-off in a few lines.
+  - [ ] The Advisor's critique after each round is logged on the board unedited; the CEO sees one version and its open taste decisions only.
+
+### HF-M2-42 How other heroes and recruit types are chosen and unlocked
+- **Owner:** Game Design Advisor
+- **Status:** Ready (CEO feedback point 5). A proposal only; no build until the CEO decides
+- **QA:** none (design note)
+- **Depends on:** none
+- **Done when:**
+  - [ ] A one-page proposal on how a player gets Dusk Mage and Tideblade (and later recruit classes): what unlocks them, what it costs in stars or gold, and how it fits the tree and the star rules already set.
+  - [ ] The proposal says what to build first, what waits for the Recruits decision, and any open taste decision for the CEO.
+  - [ ] The CEO sees the Advisor's view unedited, and it is logged under Advisor views.
+
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
 - **Status:** Parked for M2b (CEO 2026-10-23 10:17); formerly Build 7 of 8, amended for the parked Recruits. HF-M2-35 adds only the bots the tree slice needs
@@ -668,6 +719,13 @@
 | F-079 | HF-M2-35 | FOLLOW-UP from QA (#110, c158f97): the result panel is tight at 1280x720 | Minor | UI Engineer | Open, Gate 2 round |
 | F-080 | HF-M2-35 | FOLLOW-UP from QA (#110, c158f97), note only: Space on a result panel activates the focused button | Minor | UI Engineer | Open, Gate 2 round |
 | F-081 | HF-M2-35 | FOLLOW-UP (my note from the QA round): level tuning is sensitive, not a cliff (Level 5 drops 51% to 30% for +5% enemy health). Re-run the curve test on any Hero, gear or node change | Minor | Head of Engineering | Standing |
+| F-082 | HF-M2-29 | CEO feedback 2026-10-24: the journey page shows "locked" and "next" comments; remove them | Minor | Gameplay Engineer | In HF-M2-40 |
+| F-083 | HF-M2-32 | CEO feedback 2026-10-24: guided buys are not compulsory (other things can be bought during the guide) and the tree opens too zoomed in | Major | Gameplay Engineer | In HF-M2-38 |
+| F-084 | HF-M2-33 | CEO feedback 2026-10-24: "respec" is too hard a word; use a plain word such as Refresh | Minor | Gameplay Engineer | In HF-M2-40 |
+| F-085 | HF-M2-32 | CEO feedback 2026-10-24: Plan page slots still show compass names; N slots bought must mean any N spots | Major | Gameplay Engineer | In HF-M2-39 |
+| F-086 | HF-M2-36 | CEO feedback 2026-10-24: Hero page should show the Hero in the centre and gear slots on the right, with the inventory to equip | Minor | Gameplay Engineer | In HF-M2-40 |
+| F-087 | HF-M2-33 | CEO feedback 2026-10-24: menu names too long, "Bought" shown as a word, too much explanatory text; wants glow or green and good design practice | Minor | Gameplay Engineer | In HF-M2-40 |
+| F-088 | HF-M2-37 | CEO question 2026-10-24: how other heroes and recruit types are chosen is unclear; Advisor to propose | Minor | Game Design Advisor | In HF-M2-42 |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -783,3 +841,4 @@
 - 2026-10-23 09:27: CEO go to build the Advisor's tree and star logic (stars buy slots, cards, links and capstones; gold buys stat nodes; empty castle start; Level 0 stub; adjacent nodes only; respec for a small fee). Items HF-M2-32 to HF-M2-35, one PR each in that order. Not in this build: Mage, Mender, Frost, Tower Gate I, the three reserved links, walls, Recruits, Hard and Nightmare replays, blessings, full tutorial text. Stat-model unification (monsters first) is deferred: the tree does not need it and it would widen every PR. Old saves are refunded in gold and given stars rather than mapped node by node.
 - 2026-10-23 10:12: CEO go on the tree pan/zoom fix (inside HF-M2-33), Hero gear slots and inventory (HF-M2-36) and the Mage Post with the first Tower Gate (HF-M2-37). Level 0 tutorial text skipped for now (it may change). Order: HF-M2-32, 33, 34, 36, 37, then the retune HF-M2-35 last so it tunes the finished content. One PR each, then one combined handoff and a stop.
 - 2026-10-23 10:17: CEO decisions: overall pacing, stat tidy-up and balancing everything move to a later "M2b", after all mechanics are settled (this covers the old Build 7, HF-M2-01, HF-M2-05 and HF-M2-28; relabelled, no new work). M3 and M4 stay unchanged. Final art is the last step after everything else is decided; placeholder art until then, no art work now.
+- 2026-10-24: CEO feedback on the tree build (points 1 to 6 plus general interface notes) logged as F-082 to F-088 and items HF-M2-38 to HF-M2-42. Design pass first (Designer, then Advisor critique, two rounds at most), HF-M2-38 can start now, HF-M2-39 and HF-M2-40 follow the accepted design. Open design question for the CEO: buy extra slots on the Plan page with the skill tree as a separate tab (recommendation comes from HF-M2-41). Then stop for the CEO's test.
