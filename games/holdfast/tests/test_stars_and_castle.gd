@@ -402,7 +402,7 @@ func test_the_guide_waits_for_a_star_it_cannot_afford_and_says_so() -> void:
 	profile.changed.emit()
 	expect_true(map.get_node("%Guide").visible)
 	expect_true(map.get_node("%GuideButton").disabled)
-	expect_true(map.get_node("%GuideLabel").text.contains("Replay First Watch for more stars"), map.get_node("%GuideLabel").text)
+	expect_true(map.get_node("%GuideLabel").text.contains("Refund a node to free a star"), map.get_node("%GuideLabel").text)
 	main.free()
 
 
