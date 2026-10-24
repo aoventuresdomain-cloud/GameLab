@@ -69,7 +69,7 @@ func _test_flow_with_mouse() -> void:
 	await _click(start.get_node("%GuideButton"))
 	await _click(start.get_node("%GuideButton"))
 	_check(not start.get_node("%Guide").visible and not start._buttons["outpost"].disabled, "two clicks buy the First Slot and the first Archer Post and open Level 1")
-	_check(hud.visible and _source.is_running() and _source.get_rules().stand, "the second click starts the stand, the short fight on the post just bought")
+	_check(hud.visible and _source.is_running() and _main.get_node("Profile").data["stand_done"], "the second click starts the stand, the short fight on the post just bought")
 	_source.step(1000.0)
 	await process_frame
 	_check(summary.visible and not summary.get_node("%Reward").visible, "the stand ends on the summary and pays no second Level 0 reward")

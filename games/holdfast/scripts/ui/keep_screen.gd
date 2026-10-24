@@ -665,7 +665,8 @@ func _draw_tick() -> void:
 
 
 ## Shows the card of one node over the dimmed tree. The focus goes to what the player most likely
-## wants: Buy, else Refund, else the close button.
+## wants: Buy, else the close button. Never Refund, so that Enter or a second A cannot take back what
+## was just looked at.
 func open_card(id: String) -> void:
 	if _profile == null or not _content["upgrade_nodes"].has(id):
 		return
@@ -674,7 +675,7 @@ func open_card(id: String) -> void:
 	_fill_card()
 	_card.visible = true
 	_set_tree_focus(false)
-	for control in [_card_buy, _card_refund, _card_close]:
+	for control in [_card_buy, _card_close]:
 		if control.visible and not control.disabled:
 			control.grab_focus()
 			break

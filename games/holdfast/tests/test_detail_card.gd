@@ -201,12 +201,12 @@ func test_the_two_guided_buys_and_a_node_something_needs_cannot_be_taken_back() 
 	expect_eq(HoldfastMeta.why_not_refund_node(content, profile, "post_sight"), "Needed by %s" % content["upgrade_nodes"]["post_scope"]["name"])
 	expect_eq(HoldfastMeta.why_not_refund_node(content, profile, "post_drills"), "Not bought")
 	expect_eq(HoldfastMeta.refund_node(content, profile, "castle_slot_1"), profile, "refused: unchanged")
-	# A gate that needs five nodes owned cannot be left standing on four.
+	# A gate that needs five nodes owned apart from itself cannot be left standing on four.
 	var gated := HoldfastMeta.new_profile(content)
-	gated["upgrades"] = ["castle_slot_1", "castle_archer_1", "post_sight", "keep_walls_1", "gate_mage"]
+	gated["upgrades"] = ["castle_slot_1", "castle_archer_1", "post_sight", "keep_walls_1", "post_timbers", "gate_mage"]
 	gated["gold"] = 1000
 	expect_eq(HoldfastMeta.why_not_refund_node(content, gated, "keep_walls_1"), "Needed by %s" % content["upgrade_nodes"]["gate_mage"]["name"], "the gate counts the nodes owned")
-	gated["upgrades"].append("post_timbers")
+	gated["upgrades"].append("post_drills")
 	expect_eq(HoldfastMeta.why_not_refund_node(content, gated, "keep_walls_1"), "", "with a node to spare it can go")
 
 
@@ -307,6 +307,27 @@ func test_the_focus_goes_to_buy_on_open_and_back_to_the_node_on_close() -> void:
 	expect_true(node.has_focus(), "B closes it and the focus is back where it was")
 	page.open_card("gate_mage")
 	expect_true(page._card_close.has_focus(), "with nothing to press, the cross")
+	made[0].free()
+
+
+func test_an_owned_card_opens_on_the_cross_never_on_refund() -> void:
+	var made := _tree(5000)
+	var page: Control = made[1]
+	var profile: HoldfastProfile = made[2]
+	profile.data["stars"]["outpost"] = 3
+	for id in ["post_sight", "keep_walls_1", "post_timbers", "post_drills", "post_rate"]:
+		profile.buy(id)
+	expect_true(profile.buy("gate_mage"), "the Tower Gate is owned too")
+	var refunds: Array = []
+	page.refund_requested.connect(func(id: String) -> void: refunds.append(id))
+	for id in ["post_sight", "gate_mage"]:
+		page.open_card(id)
+		expect_true(page._card_refund.visible, "%s is owned and can be taken back" % id)
+		expect_true(page._card_close.has_focus(), "%s: the cross has the focus" % id)
+		expect_false(page._card_refund.has_focus(), "%s: Refund does not, so Enter or a second A cannot take it back" % id)
+		page._card_close.pressed.emit()
+		expect_false(page._card.visible, "and the press closes it")
+	expect_eq(refunds, [], "nothing was taken back")
 	made[0].free()
 
 

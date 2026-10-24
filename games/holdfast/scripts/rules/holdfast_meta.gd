@@ -788,7 +788,8 @@ static func why_not_refund_node(content: Dictionary, profile: Dictionary, id: St
 	for other in profile["upgrades"]:
 		if other == id or not nodes.has(other):
 			continue
-		if id in nodes[other].get("requires", []) or int(nodes[other].get("needs_nodes", 0)) > profile["upgrades"].size() - 1:
+		# A gate stands on the nodes owned apart from itself, and this one would be one fewer.
+		if id in nodes[other].get("requires", []) or int(nodes[other].get("needs_nodes", 0)) > profile["upgrades"].size() - 2:
 			return "Needed by %s" % str(nodes[other]["name"])
 	if int(profile["gold"]) + int(refund_gain(content, id)["gold"]) < 0:
 		return "Not enough gold for the refund fee"
