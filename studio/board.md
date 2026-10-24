@@ -507,34 +507,35 @@
 
 ### HF-M2-39 Place towers in any of the spots you have slots for
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (CEO feedback point 4). Plan-page rule only; whether slots are bought on the Plan page is decided by the design pass (HF-M2-41), not here
+- **Status:** Ready (CEO feedback point 4). Design pass result: slots stay in the tree and the Plan page gets a "+ Tower" shortcut that buys the same node at the same price and shows the new spot at once (Advisor accepted; CEO has not answered it yet, so build on this recommendation)
 - **QA:** full (layouts and save data change)
 - **Depends on:** HF-M2-38, HF-M2-41
 - **Done when:**
   - [ ] The Plan page shows no compass labels (East, West and so on). With N slots bought the player may put towers in any N of the ring's spots, and a slot is a count, not a fixed place.
   - [ ] Old saved layouts load unchanged (spot ids stay as data), and auto-place, Quick start and retry still work with any chosen spots.
+  - [ ] The Plan page has a "+ Tower" shortcut that buys the next slot node at the same price as in the tree, shows the new spot at once, and is refused when it cannot be afforded.
   - [ ] Rules that read a post's place (Crossfire, Lit Post, Rally and the like) use the real position, with a test that the same count in different spots behaves by geometry only.
 
 ### HF-M2-40 Interface tidy: short names, glow not words, Hero page layout
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, starts after the design pass (HF-M2-41) is accepted. CEO feedback points 1, 3, 6 and the general note
+- **Status:** Ready (design pass done, CEO approved the Hero page and chose "Refund" on 2026-10-24). Follows HF-M2-39. CEO feedback points 1, 3, 6 and the general note
 - **QA:** screens (interface only; a full round if the design moves any purchase between screens)
 - **Depends on:** HF-M2-39, HF-M2-41
 - **Done when:**
   - [ ] The journey page has no "locked" or "next" comments; state is shown by look only.
-  - [ ] Menu and button names are short ("Skill tree", not "Open the Flare Archer skill tree"); owned nodes, slots and gear glow or turn green with no "Bought" word; explanatory text is cut to what a first-time player needs. "Respec" is renamed with a plain word (default "Refresh") everywhere it shows.
+  - [ ] Menu and button names are short ("Skill tree", not "Open the Flare Archer skill tree"); owned nodes, slots and gear glow or turn green with no "Bought" word; explanatory text is cut to what a first-time player needs. "Respec" is renamed "Refund" (CEO decision 2026-10-24) everywhere it shows, and the red arrows on the Plan page are removed (CEO: redundant).
   - [ ] The Hero page has the Hero graphic (placeholder art) in the centre and the gear slots on the right, with the inventory used to equip and unequip.
   - [ ] The layout follows the accepted design from HF-M2-41, checked at 1280x720 and 1920x1080.
 
 ### HF-M2-41 Design pass for the feedback slice (Designer, then Advisor critique)
 - **Owner:** Designer (screen mockups)
-- **Status:** Ready. Max two rounds of Designer then Advisor critique; the CEO sees one version with only the open taste decisions
+- **Status:** Done 2026-10-24 (round 2 accepted; Advisor critique logged). Max two rounds of Designer then Advisor critique; the CEO sees one version with only the open taste decisions
 - **QA:** none (mockups and notes; no code)
 - **Depends on:** none
 - **Done when:**
-  - [ ] Mockups of the journey page, Plan page, skill tree entry and Hero page with short names and glow states, researched against good game-UI practice, in `/mnt/project-files/holdfast/m2/`.
-  - [ ] A clear recommendation on the CEO's idea to buy extra slots on the Plan page with the skill tree as a separate tab, with the trade-off in a few lines.
-  - [ ] The Advisor's critique after each round is logged on the board unedited; the CEO sees one version and its open taste decisions only.
+  - [x] Mockups of the journey page, Plan page, skill tree entry and Hero page with short names and glow states, researched against good game-UI practice, in `/mnt/project-files/holdfast/m2/`.
+  - [x] A clear recommendation on the CEO's idea to buy extra slots on the Plan page with the skill tree as a separate tab, with the trade-off in a few lines.
+  - [x] The Advisor's critique after each round is logged on the board unedited; the CEO sees one version and its open taste decisions only.
 
 ### HF-M2-42 How other heroes and recruit types are chosen and unlocked
 - **Owner:** Game Design Advisor
@@ -844,3 +845,4 @@
 - 2026-10-23 10:12: CEO go on the tree pan/zoom fix (inside HF-M2-33), Hero gear slots and inventory (HF-M2-36) and the Mage Post with the first Tower Gate (HF-M2-37). Level 0 tutorial text skipped for now (it may change). Order: HF-M2-32, 33, 34, 36, 37, then the retune HF-M2-35 last so it tunes the finished content. One PR each, then one combined handoff and a stop.
 - 2026-10-23 10:17: CEO decisions: overall pacing, stat tidy-up and balancing everything move to a later "M2b", after all mechanics are settled (this covers the old Build 7, HF-M2-01, HF-M2-05 and HF-M2-28; relabelled, no new work). M3 and M4 stay unchanged. Final art is the last step after everything else is decided; placeholder art until then, no art work now.
 - 2026-10-24: CEO feedback on the tree build (points 1 to 6 plus general interface notes) logged as F-082 to F-088 and items HF-M2-38 to HF-M2-42. Design pass first (Designer, then Advisor critique, two rounds at most), HF-M2-38 can start now, HF-M2-39 and HF-M2-40 follow the accepted design. Open design question for the CEO: buy extra slots on the Plan page with the skill tree as a separate tab (recommendation comes from HF-M2-41). Then stop for the CEO's test.
+- 2026-10-24: CEO decisions on the design pass: taking a node back is called "Refund"; the red arrows on the Plan page go; the Hero page design is approved. Slots in the tree with a "+ Tower" shortcut on the Plan page and the boss unlocks for other heroes are not answered yet; HF-M2-39 and HF-M2-40 build on the recommendations unless told otherwise. The CEO asked what the bottom two skills on the tree are; the mockup must make them self-explanatory.
