@@ -469,9 +469,9 @@ static func ring_spots(content: Dictionary) -> Array:
 
 
 ## The upgrade "+ Tower" on the Plan page buys ("" when there is none left): the next Archer Post
-## card when a slot has none, else the next slot. Whether the player can afford it is `why_not_buy`.
+## card when a slot has no post card (Archer or Mage) to fill it, else the next slot. Whether the player can afford it is `why_not_buy`.
 static func next_tower_node(content: Dictionary, profile: Dictionary) -> String:
-	var wanted := "cards" if castle_cards(content, profile) < castle_slots(content, profile) else "slots"
+	var wanted := "cards" if castle_cards(content, profile) + castle_mage_cards(content, profile) < castle_slots(content, profile) else "slots"
 	for pass_wanted in [wanted, "slots"]:
 		for id in content.get("upgrade_nodes", {}):
 			var node: Dictionary = content["upgrade_nodes"][id]

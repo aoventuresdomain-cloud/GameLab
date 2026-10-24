@@ -103,6 +103,16 @@ func test_the_button_for_the_next_tower_follows_slots_then_cards() -> void:
 	expect_eq(HoldfastMeta.next_tower_node(content, everything), "", "nothing left to buy")
 
 
+func test_a_mage_card_fills_a_slot_so_the_button_offers_the_next_slot_not_another_archer() -> void:
+	var content := _content()
+	# QA's save: two slots, one Archer card, one Mage card. Both slots can hold a post already.
+	var save := _owning(["castle_slot_1", "castle_archer_1", "castle_slot_2"])
+	expect_eq(HoldfastMeta.next_tower_node(content, save), "castle_archer_2", "set-up: without the Mage card the second slot wants an Archer")
+	save["upgrades"].append("gate_mage")
+	expect_eq(HoldfastMeta.castle_mage_cards(content, save), 1, "set-up: the Mage card is held")
+	expect_eq(HoldfastMeta.next_tower_node(content, save), "castle_slot_3", "a Mage card fills the second slot, so the next tower is a slot")
+
+
 # ------------------------------------------------------------------ the Plan page
 
 func test_the_plan_page_shows_the_whole_ring_with_no_compass_names() -> void:
