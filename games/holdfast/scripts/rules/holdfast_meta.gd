@@ -19,6 +19,7 @@ extends RefCounted
 ##   gear: {owned: [item ids], equipped: {slot: item id or ""}}   the Hero's gear (the Hero only)
 ##   stand_done: bool      the tutorial's short fight after the two guided buys has begun (once only)
 ##   stars_line_seen: bool the one line on what stars buy has been shown (once only)
+##   gear_seen: [item ids] the gear pieces the player has looked at on the Hero page
 ## }
 ## The save format version is SAVE_VERSION; bump it with a migration when the shape changes.
 ## Version 2: levels open by winning the previous one (`unlocked`), no longer by buying a
@@ -95,6 +96,7 @@ static func new_profile(content: Dictionary) -> Dictionary:
 		"gear": {"owned": [], "equipped": HeroGear.new_unit("hero", gear_slots(content))["slots"]},
 		"stand_done": false,
 		"stars_line_seen": false,
+		"gear_seen": [],
 	}
 
 
@@ -157,6 +159,12 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 				var known: bool = profile["gear"]["equipped"].has(str(saved_slot))
 				if profile["gear"]["equipped"].has(slot) and profile["gear"]["equipped"][slot] == "" and (not known or str(saved_slot) == slot):
 					profile["gear"]["equipped"][slot] = id
+	# A save from before the Hero page's dot has seen all the gear it owns.
+	var saved_seen: Variant = data.get("gear_seen")
+	profile["gear_seen"] = []
+	for id in (saved_seen if saved_seen is Array else (profile["gear"]["owned"] if not data.is_empty() else [])):
+		if id in profile["gear"]["owned"] and not id in profile["gear_seen"]:
+			profile["gear_seen"].append(id)
 	# A save from before these two firsts has been through them, so it never sees them: only a save
 	# that says so (or no save at all) has them still to come.
 	for key in ["stand_done", "stars_line_seen"]:
@@ -508,6 +516,30 @@ static func guide_node(content: Dictionary, profile: Dictionary) -> String:
 static func guided_step(content: Dictionary, profile: Dictionary) -> String:
 	var id := guide_node(content, profile)
 	return id if id != "" and _why_not_buy_node(content, profile, id) == "" else ""
+
+
+## The nodes the player can buy right now.
+static func buyable_nodes(content: Dictionary, profile: Dictionary) -> Array:
+	var out := []
+	for id in content.get("upgrade_nodes", {}):
+		if why_not_buy(content, profile, id) == "":
+			out.append(str(id))
+	return out
+
+
+## True when the profile owns a gear piece the player has not looked at on the Hero page.
+static func has_unseen_gear(profile: Dictionary) -> bool:
+	for id in profile["gear"]["owned"]:
+		if not id in profile.get("gear_seen", []):
+			return true
+	return false
+
+
+## The profile with every gear piece it owns marked as looked at.
+static func see_gear(profile: Dictionary) -> Dictionary:
+	var out := profile.duplicate(true)
+	out["gear_seen"] = out["gear"]["owned"].duplicate()
+	return out
 
 
 ## True when the tutorial's stand is due: Level 0 won, both guided buys made and the stand not

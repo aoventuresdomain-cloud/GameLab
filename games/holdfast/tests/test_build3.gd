@@ -139,7 +139,7 @@ func test_the_pack_schema_refuses_a_node_that_sells_a_level() -> void:
 
 func test_a_new_profile_starts_empty_on_the_first_level_and_pillar() -> void:
 	var profile := HoldfastMeta.new_profile(_meta_content())
-	expect_eq(profile, {"gold": 0, "upgrades": [], "stars": {}, "levels_won": [], "unlocked": [], "level": "first_watch", "pillar": "flare_archer", "runs": 0, "layouts": {}, "gear": {"owned": [], "equipped": {"weapon": "", "helmet": "", "armour": "", "boots": "", "ring": ""}}, "stand_done": false, "stars_line_seen": false})
+	expect_eq(profile, {"gold": 0, "upgrades": [], "stars": {}, "levels_won": [], "unlocked": [], "level": "first_watch", "pillar": "flare_archer", "runs": 0, "layouts": {}, "gear": {"owned": [], "equipped": {"weapon": "", "helmet": "", "armour": "", "boots": "", "ring": ""}}, "stand_done": false, "stars_line_seen": false, "gear_seen": []})
 
 
 func test_buying_pays_the_cost_and_records_the_upgrade_without_changing_the_old_profile() -> void:

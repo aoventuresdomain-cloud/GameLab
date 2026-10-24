@@ -158,6 +158,20 @@ func select_pillar(id: String) -> void:
 	_apply(HoldfastMeta.select_pillar(_content, data, id))
 
 
+## The nodes that can be bought now.
+func get_buyable_nodes() -> Array:
+	return HoldfastMeta.buyable_nodes(_content, data)
+
+
+## True while a gear piece has not been looked at on the Hero page.
+func has_unseen_gear() -> bool:
+	return HoldfastMeta.has_unseen_gear(data)
+
+
+func see_gear() -> void:
+	_apply(HoldfastMeta.see_gear(data))
+
+
 ## The tutorial level's id (Level 0).
 func get_tutorial_level() -> String:
 	return HoldfastMeta.tutorial_level(_content)

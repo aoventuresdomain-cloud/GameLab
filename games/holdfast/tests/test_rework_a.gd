@@ -91,12 +91,13 @@ func test_tapping_an_open_level_plans_it_and_a_locked_one_does_nothing() -> void
 	main.free()
 
 
-func test_the_skill_tree_button_says_how_many_upgrades_can_be_bought() -> void:
+func test_the_skill_tree_button_has_a_dot_when_upgrades_can_be_bought() -> void:
 	var main := _main()
 	var map: Control = main.journey
 	var profile: HoldfastProfile = main.get_node("Profile")
 	expect_eq(map.upgrades_available(), 0)
 	expect_eq(map.get_node("%TreeButton").text, "Skill tree")
+	expect_false(map._tree_dot.visible, "nothing to buy, no dot")
 	ThroughLevelZero.apply_castle(profile)
 	profile.bank_run({"gold": 100, "outcome": "lost", "level": "outpost"})
 	var affordable := 0
@@ -105,7 +106,8 @@ func test_the_skill_tree_button_says_how_many_upgrades_can_be_bought() -> void:
 			affordable += 1
 	expect_true(affordable > 0, "100 gold buys something")
 	expect_eq(map.upgrades_available(), affordable)
-	expect_eq(map.get_node("%TreeButton").text, "Skill tree: %d to buy" % affordable)
+	expect_eq(map.get_node("%TreeButton").text, "Skill tree")
+	expect_true(map._tree_dot.visible, "the dot says there is something to buy")
 	main.free()
 
 

@@ -199,7 +199,13 @@ func _on_run_ended(result: Dictionary) -> void:
 
 
 func _show(next: Screen) -> void:
+	var from := screen
 	screen = next
+	# Looking at the tree (opening or leaving it) or the Hero page clears the dot on its tab.
+	if next == Screen.TREE or from == Screen.TREE:
+		journey.mark_tree_seen()
+	if next == Screen.HERO:
+		profile.see_gear()
 	home.visible = next == Screen.HOME
 	journey.visible = next == Screen.MAP
 	hero_page.visible = next == Screen.HERO
