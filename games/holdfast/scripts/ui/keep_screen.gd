@@ -16,6 +16,9 @@ const HEADING_GAP := 44.0
 ## About 0.4, a power-of-two fraction so the stored scale equals the limit exactly.
 const ZOOM_MIN := 0.375
 const ZOOM_MAX := 2.5
+## The tree opens zoomed out to show everything on show, but no smaller than this, so a node's
+## name stays legible (20 px type at this scale is 10 px on screen).
+const OVERVIEW_ZOOM_MIN := 0.5
 ## How visible the sections of other tabs are while a tab is in view.
 const OTHER_TAB_ALPHA := 0.3
 const ZOOM_STEP := 1.15
@@ -105,6 +108,8 @@ var _tab_group := ButtonGroup.new()
 var _tab := ""
 ## True once the player (or the Hero page) has picked a tab, so opening the tree keeps it.
 var _tab_picked := false
+## True once the player has panned or zoomed, so opening the tree again keeps their view.
+var _moved_view := false
 var _panning := false
 ## A mouse button is down on a node, how far the pointer has moved since, and whether that made
 ## it a drag (the press then pans the web and buys nothing).
@@ -121,7 +126,7 @@ func _ready() -> void:
 	_zoom_out.pressed.connect(zoom_by.bind(1.0 / ZOOM_STEP))
 	_zoom_in.pressed.connect(zoom_by.bind(ZOOM_STEP))
 	_view.gui_input.connect(_on_view_input)
-	_view.resized.connect(func() -> void: show_tab(_tab, false))
+	_view.resized.connect(_fit_view)
 	_web.draw.connect(_draw_links)
 	visibility_changed.connect(_on_visibility_changed)
 	_build_tree()
@@ -266,6 +271,7 @@ func show_tab(label: String, picked := true) -> void:
 		return
 	_tab = label
 	_tab_picked = _tab_picked or picked
+	_moved_view = false
 	if _tab_buttons.has(label):
 		_tab_buttons[label].set_pressed_no_signal(true)
 	var rect := _tab_rect(label)
@@ -279,6 +285,45 @@ func show_tab(label: String, picked := true) -> void:
 	_keep_in_view()
 	_fade_other_tabs(true)
 	_web.queue_redraw()
+
+
+## Opening the tree: everything on show in one view, as large as fits down to OVERVIEW_ZOOM_MIN.
+## When it cannot all fit at that size the view is centred on what the player owns (or on the
+## middle of what is shown, when they own nothing yet) and they pan from there.
+func show_overview() -> void:
+	var holders := _section_columns.values().filter(func(holder: Control) -> bool: return holder.visible)
+	var rect := _holders_rect(holders)
+	if rect.size == Vector2.ZERO or _view.size == Vector2.ZERO:
+		return
+	var room := _view.size - Vector2.ONE * FIT_PAD * 2.0
+	var fit := minf(room.x / rect.size.x, room.y / rect.size.y)
+	var zoom := clampf(fit, OVERVIEW_ZOOM_MIN, 1.0)
+	var centre := rect.get_center()
+	if fit < OVERVIEW_ZOOM_MIN:
+		var owned_rect := Rect2()
+		var found := false
+		for id in (_profile.get_upgrades() if _profile != null else []):
+			if _node_buttons.has(id) and _node_buttons[id].visible:
+				var node_rect := Rect2(_node_buttons[id].position, _node_buttons[id].size.max(NODE_SIZE))
+				owned_rect = node_rect if not found else owned_rect.merge(node_rect)
+				found = true
+		if found:
+			centre = owned_rect.get_center()
+	_web.scale = Vector2.ONE * zoom
+	_web.position = _view.size * 0.5 - centre * zoom
+	_keep_in_view()
+	_fade_other_tabs(false)
+	_web.queue_redraw()
+
+
+## The view settles again when the page is resized: the tab the player picked, or the overview.
+func _fit_view() -> void:
+	if _moved_view:
+		return
+	if _tab_picked:
+		show_tab(_tab, false)
+	else:
+		show_overview()
 
 
 ## While a tab is in view the sections of the other tabs fade, so what shows at its edges is not
@@ -314,6 +359,7 @@ func _holders_rect(holders: Array) -> Rect2:
 func zoom_by(factor: float, around := Vector2(-1, -1)) -> void:
 	var point := _view.size * 0.5 if around.x < 0.0 else around
 	var zoom := clampf(_web.scale.x * factor, ZOOM_MIN, ZOOM_MAX)
+	_moved_view = true
 	_fade_other_tabs(false)
 	_web.position = point - (point - _web.position) * (zoom / _web.scale.x)
 	_web.scale = Vector2.ONE * zoom
@@ -336,6 +382,7 @@ func _on_view_input(event: InputEvent) -> void:
 			_dragged = true
 			_panning = true
 		if _panning:
+			_moved_view = true
 			_fade_other_tabs(false)
 			_web.position += event.relative
 			_keep_in_view()
@@ -343,6 +390,7 @@ func _on_view_input(event: InputEvent) -> void:
 		zoom_by(event.factor, event.position)
 		accept_event()
 	elif event is InputEventPanGesture:
+		_moved_view = true
 		_fade_other_tabs(false)
 		_web.position -= event.delta * 20.0
 		_keep_in_view()
@@ -378,6 +426,23 @@ func _keep_in_view() -> void:
 	var low := Vector2.ONE * KEEP_IN_VIEW - rect.end * zoom
 	var high := _view.size - Vector2.ONE * KEEP_IN_VIEW - rect.position * zoom
 	_web.position = _web.position.clamp(low, high)
+	_follow_view_tab()
+
+
+## The tab lit is the one whose sections are centred nearest the middle of the view.
+func _follow_view_tab() -> void:
+	if _view.size == Vector2.ZERO or _web.scale.x <= 0.0:
+		return
+	var middle := (_view.size * 0.5 - _web.position) / _web.scale.x
+	var best := ""
+	var best_gap := INF
+	for label in tab_names():
+		var gap := _tab_rect(label).get_center().distance_to(middle)
+		if gap < best_gap:
+			best = label
+			best_gap = gap
+	for label in _tab_buttons:
+		_tab_buttons[label].set_pressed_no_signal(label == best)
 
 
 ## A line from each node to the nodes it needs; a dashed one between the two sides of a fork.
@@ -488,7 +553,8 @@ static func _trim(value: float) -> String:
 func _on_visibility_changed() -> void:
 	if is_visible_in_tree():
 		refresh()
-		if not _tab_picked and not tab_names().is_empty():
+		if not _tab_picked and not _moved_view and not tab_names().is_empty():
 			show_tab(tab_names()[0], false)
+			show_overview()
 		_show_default()
 		_back.grab_focus()

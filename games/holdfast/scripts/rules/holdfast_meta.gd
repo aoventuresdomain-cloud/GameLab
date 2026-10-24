@@ -468,6 +468,27 @@ static func owned_spots(content: Dictionary, profile: Dictionary) -> Array:
 	return spots.slice(0, castle_slots(content, profile))
 
 
+## The castle's next guided node ("" when there is none): once Level 0 is won, the first of the
+## guided nodes not yet owned. The map offers it whether or not it can be paid for.
+static func guide_node(content: Dictionary, profile: Dictionary) -> String:
+	var tutorial := tutorial_level(content)
+	if tutorial != "" and not tutorial in profile["levels_won"]:
+		return ""
+	for id in castle_rules(content).get("guided", []):
+		if not id in profile["upgrades"]:
+			return str(id)
+	return ""
+
+
+## The next compulsory purchase ("" when there is none): the guide's node when the player can
+## buy it. While one is due, nothing else in the tree can be bought. A step the player cannot
+## pay for (an old save that spent its stars elsewhere) is not due: the lock lifts, so the tree
+## and the refund stay reachable.
+static func guided_step(content: Dictionary, profile: Dictionary) -> String:
+	var id := guide_node(content, profile)
+	return id if id != "" and _why_not_buy_node(content, profile, id) == "" else ""
+
+
 ## True when the player has what a first run needs: a slot and an Archer Post to put in it.
 static func has_a_tower(content: Dictionary, profile: Dictionary) -> bool:
 	return castle_cards(content, profile) >= 1
@@ -549,6 +570,16 @@ static func next_level(content: Dictionary, id: String) -> String:
 
 ## "" when `id` can be bought now, else why not.
 static func why_not_buy(content: Dictionary, profile: Dictionary, id: String) -> String:
+	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	if nodes.has(id) and not id in profile["upgrades"]:
+		var guided := guided_step(content, profile)
+		if guided != "" and id != guided:
+			return "Buy %s first" % str(nodes.get(guided, {}).get("name", guided))
+	return _why_not_buy_node(content, profile, id)
+
+
+## `why_not_buy` without the guide: whether the node itself can be bought.
+static func _why_not_buy_node(content: Dictionary, profile: Dictionary, id: String) -> String:
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	if not nodes.has(id):
 		return "No such upgrade"
