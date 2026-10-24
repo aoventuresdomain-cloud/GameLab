@@ -101,6 +101,30 @@ func get_respec_gold_change() -> int:
 	return HoldfastMeta.respec_gold_change(_content, data)
 
 
+## Takes one bought node back (see HoldfastMeta.refund_node); refused with a notice when it cannot go.
+func refund(id: String) -> void:
+	var reason := why_not_refund(id)
+	if reason != "":
+		notice.emit(reason)
+		return
+	_apply(HoldfastMeta.refund_node(_content, data, id))
+
+
+## "" when the bought node can be taken back on its own, else why not.
+func why_not_refund(id: String) -> String:
+	return HoldfastMeta.why_not_refund_node(_content, data, id)
+
+
+## What taking the node back gives: {"gold", "stars"}.
+func get_refund_gain(id: String) -> Dictionary:
+	return HoldfastMeta.refund_gain(_content, id)
+
+
+## A node's effects with the stat before and after it (HoldfastMeta.effect_lines).
+func get_effect_lines(id: String) -> Array:
+	return HoldfastMeta.effect_lines(_content, data, id)
+
+
 ## Sets the Archer Post sites for a level (ignored when they are not valid for it).
 func set_layout(level: String, layout: Array) -> void:
 	_apply(HoldfastMeta.set_layout(_content, data, level, layout))

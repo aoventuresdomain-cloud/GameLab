@@ -65,6 +65,8 @@ func test_a_click_without_movement_still_buys_and_a_wobble_under_the_threshold_t
 	boots.button_down.emit()
 	boots.button_up.emit()
 	boots.pressed.emit()
+	expect_true(page._card.visible and page._card_id == "flare_boots", "a plain click opens its card")
+	page._card_buy.pressed.emit()
 	expect_true("flare_boots" in profile.get_upgrades(), "a plain click buys")
 	var hide: Button = page._node_buttons["flare_hide"]
 	hide.button_down.emit()
@@ -72,6 +74,8 @@ func test_a_click_without_movement_still_buys_and_a_wobble_under_the_threshold_t
 	_motion(page, Vector2(-1, 2))
 	hide.button_up.emit()
 	hide.pressed.emit()
+	expect_true(page._card.visible and page._card_id == "flare_hide", "a hand that shakes a few pixels still opens the card")
+	page._card_buy.pressed.emit()
 	expect_true("flare_hide" in profile.get_upgrades(), "a hand that shakes a few pixels still buys")
 	expect_eq(web.position, start, "without moving the tree")
 	main.free()
@@ -90,6 +94,7 @@ func test_a_drag_does_not_leave_the_next_click_unable_to_buy() -> void:
 	focus.button_down.emit()
 	focus.button_up.emit()
 	focus.pressed.emit()
+	page._card_buy.pressed.emit()
 	expect_true("flare_focus" in profile.get_upgrades(), "the click after a drag buys")
 	main.free()
 

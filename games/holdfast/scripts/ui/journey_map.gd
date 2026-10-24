@@ -124,18 +124,10 @@ func _refresh_guide() -> void:
 	var node: Dictionary = _content["upgrade_nodes"][_guided]
 	var why: String = _profile.why_not_buy(_guided)
 	if why == "Not enough stars":
-		why = "Replay %s for more stars" % _tutorial_name()
+		why = "Refund a node to free a star"
 	_guide_label.text = "Spend a star on %s: %s.%s" % [node["name"], _grant_text(node), "" if why == "" else " " + why + "."]
 	_guide_button.text = "Buy %s (%s)" % [node["name"], HoldfastMeta.cost_text(node)]
 	_guide_button.disabled = why != ""
-
-
-## The tutorial level, which can always be replayed to earn its stars again.
-func _tutorial_name() -> String:
-	for level in _content["levels"].values():
-		if level.get("tutorial", false):
-			return str(level["name"])
-	return "the first level"
 
 
 static func _grant_text(node: Dictionary) -> String:

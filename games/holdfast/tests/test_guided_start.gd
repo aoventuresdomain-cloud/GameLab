@@ -98,10 +98,10 @@ func test_the_tree_page_offers_only_the_guided_step_while_one_is_due() -> void:
 	profile.changed.emit()
 	var page: Control = main.keep_screen
 	for id in page._node_buttons:
-		expect_eq(page._node_buttons[id].disabled, id != "castle_slot_1", id)
-	page._node_buttons["castle_slot_2"].pressed.emit()
+		expect_eq(TreeCard.can_buy(page, id), id == "castle_slot_1", id)
+	TreeCard.buy(page, "castle_slot_2")
 	expect_eq(profile.get_upgrades(), [], "pressing another node buys nothing")
-	page._node_buttons["castle_slot_1"].pressed.emit()
+	TreeCard.buy(page, "castle_slot_1")
 	expect_eq(profile.get_upgrades(), ["castle_slot_1"], "the step can be bought here too, so it is never out of reach")
 	main.free()
 
@@ -236,9 +236,9 @@ func test_respec_from_the_tree_page_leaves_the_guided_step_buyable_there() -> vo
 	profile.respec()
 	var page: Control = main.keep_screen
 	expect_eq(profile.get_guided_step(), "castle_slot_1")
-	expect_false(page._node_buttons["castle_slot_1"].disabled, "the step is open on the tree page")
-	page._node_buttons["castle_slot_1"].pressed.emit()
-	page._node_buttons["castle_archer_1"].pressed.emit()
+	expect_true(TreeCard.can_buy(page, "castle_slot_1"), "the step is open on the tree page")
+	TreeCard.buy(page, "castle_slot_1")
+	TreeCard.buy(page, "castle_archer_1")
 	expect_true(profile.has_a_tower(), "and finishes there")
 	main.free()
 
