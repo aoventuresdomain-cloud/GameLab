@@ -518,7 +518,7 @@
 
 ### HF-M2-40 Interface tidy: short names, glow not words, Hero page layout
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (design pass done, CEO approved the Hero page and chose "Refund" on 2026-10-24). Follows HF-M2-39. CEO feedback points 1, 3, 6 and the general note
+- **Status:** Ready (design pass done, hold released 2026-10-24; CEO approved the Hero page and chose "Refund" on 2026-10-24). Follows HF-M2-39. CEO feedback points 1, 3, 6 and the general note
 - **QA:** screens (interface only; a full round if the design moves any purchase between screens)
 - **Depends on:** HF-M2-39, HF-M2-41
 - **Done when:**
@@ -549,14 +549,37 @@
 
 ### HF-M2-43 Skill detail card replaces the bottom strip of the tree
 - **Owner:** Gameplay Engineer
-- **Status:** Ready once the CEO has seen the mockup (`holdfast/m2/design-pass-feedback-slice.html`, sections 3 and 3b); builds after HF-M2-40. CEO request 2026-10-24: remove the bottom strip of skills, click a node to see details and buy there
+- **Status:** Ready (CEO accepted the mockup 2026-10-24: `holdfast/m2/design-pass-feedback-slice.html`, sections 3 and 3b); builds after HF-M2-40. Tower Gate I keeps its three cards as mocked (CEO). CEO request 2026-10-24: remove the bottom strip of skills, click a node to see details and buy there
 - **QA:** full (purchases move to a new place)
 - **Depends on:** HF-M2-40
 - **Done when:**
   - [ ] The bottom strip is gone. Clicking a node opens a detail card centred over the dimmed tree, closed by clicking outside, Esc or the controller B button; the card shows only that node (name, one effect line with before and after numbers, price) and nothing about nodes further ahead.
   - [ ] The card buys, refuses when unaffordable (dimmed button, price marked) and shows the owned state with a Refund button; forks, Tower Gate and link nodes show their special states as in the mockup.
   - [ ] After a purchase the card stays with a tick and brief glow, and neighbouring buyable nodes light up behind it; hover shows a small name-and-effect tooltip on desktop; controller A opens and buys, B closes, with a focus outline different from the act and done colours.
+  - [ ] "Can't afford" shows a non-colour cue as well (a small lock or "need N" beside the dimmed price), and Refund shows the amount it gives back in bold; the two guided tutorial buys cannot be refunded.
   - [ ] The old strip's tests change only with my OK, each logged; old saves and the guided first buys still work.
+
+### HF-M2-44 The first minutes: a real fight early, a two-tap guide, one line on stars
+- **Owner:** Gameplay Engineer
+- **Status:** Ready (CEO accepted research points 1 to 4 on 2026-10-24: `studio/research/holdfast-ui-and-journey-research.html` in the project files). Builds after HF-M2-43; touches the Level 0 flow and the guide, so it follows #116
+- **QA:** full (Level 0 flow and save data)
+- **Depends on:** HF-M2-38
+- **Done when:**
+  - [ ] After the two guided buys the player gets a short real fight with the tower they just bought (Level 0 still cannot be lost); a timed bot walk reaches that fight within about two minutes of pressing Start.
+  - [ ] The compulsory guide is exactly two taps (first slot, first tower) and never blocks a normal screen afterwards; nothing else is guided.
+  - [ ] When stars first appear (after Level 0) one line is shown once: "Stars buy slots and towers. Gold buys upgrades."
+  - [ ] Old saves that already passed Level 0 never see the line or the fight again.
+
+### HF-M2-45 Always something to buy, and a first gear drop that is certain
+- **Owner:** Gameplay Engineer
+- **Status:** Ready (CEO accepted research points 2 and 8 on 2026-10-24). Builds after HF-M2-44; the dots sit in the top bar from HF-M2-40
+- **QA:** full (progression and gear drops change)
+- **Depends on:** HF-M2-40, HF-M2-44
+- **Done when:**
+  - [ ] The simulator checks that every return to the skill tree, on the curve bot's path through levels 1 to 5, has at least one node the player can afford; a gap is a finding, not a pass.
+  - [ ] A small dot shows on the Skill tree tab when something is affordable, and clears when looked at.
+  - [ ] The first gear piece always drops in the first levels (not a chance), and a dot shows on the Hero tab until the player has looked at the new piece.
+  - [ ] Existing gear drops stay as they are after the first one, with a test that the first drop is certain on every seed.
 
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
@@ -738,6 +761,7 @@
 | F-086 | HF-M2-36 | CEO feedback 2026-10-24: Hero page should show the Hero in the centre and gear slots on the right, with the inventory to equip | Minor | Gameplay Engineer | In HF-M2-40 |
 | F-087 | HF-M2-33 | CEO feedback 2026-10-24: menu names too long, "Bought" shown as a word, too much explanatory text; wants glow or green and good design practice | Minor | Gameplay Engineer | In HF-M2-40 |
 | F-088 | HF-M2-37 | CEO question 2026-10-24: how other heroes and recruit types are chosen is unclear; Advisor to propose | Minor | Game Design Advisor | In HF-M2-42 |
+| F-089 | HF-M2-38 | MUST FIX from QA (#116, 20cb68e): an old Level 0 save with First Slot and Second Slot bought but not the Archer Post is stuck (guide step unaffordable, tree and Hero disabled, Level 1 locked). Fix: the lock releases when the guided step cannot be afforded, with a test for that save | Major | Gameplay Engineer | In #116 || F-090 | HF-M2-38 | FOLLOW-UP from QA (#116, 20cb68e): the whole tree does not fit at the readable 0.5 floor at 1280x720 (about 55% of the width, labels about 10 px). Decision: readable wins; the CEO commented on the zoomed-out start and it stays | Minor | Head of Engineering | Closed, decision || F-091 | HF-M2-38 | FOLLOW-UP from QA (#116, 20cb68e): the Hero tab stays highlighted while the view is centred on Castle and Archer | Minor | Gameplay Engineer | In #116 || F-092 | HF-M2-32 | FOLLOW-UP from QA (#116, 20cb68e): a Level 0 replay pays 24 gold each time, so it can be farmed; checking whether it predates #116 | Minor | Gameplay Engineer | Open, checking |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -857,3 +881,4 @@
 - 2026-10-23 10:17: CEO decisions: overall pacing, stat tidy-up and balancing everything move to a later "M2b", after all mechanics are settled (this covers the old Build 7, HF-M2-01, HF-M2-05 and HF-M2-28; relabelled, no new work). M3 and M4 stay unchanged. Final art is the last step after everything else is decided; placeholder art until then, no art work now.
 - 2026-10-24: CEO feedback on the tree build (points 1 to 6 plus general interface notes) logged as F-082 to F-088 and items HF-M2-38 to HF-M2-42. Design pass first (Designer, then Advisor critique, two rounds at most), HF-M2-38 can start now, HF-M2-39 and HF-M2-40 follow the accepted design. Open design question for the CEO: buy extra slots on the Plan page with the skill tree as a separate tab (recommendation comes from HF-M2-41). Then stop for the CEO's test.
 - 2026-10-24: CEO decisions on the design pass: taking a node back is called "Refund"; the red arrows on the Plan page go; the Hero page design is approved. Slots in the tree with a "+ Tower" shortcut on the Plan page and the boss unlocks for other heroes are not answered yet; HF-M2-39 and HF-M2-40 build on the recommendations unless told otherwise. The CEO asked what the bottom two skills on the tree are; the mockup must make them self-explanatory.
+- 2026-10-24: CEO decisions on the UI and journey research (`holdfast-ui-and-journey-research.html`): adopted points 1 to 4 (real fight within two minutes, always something to buy with a tab dot, guide capped at two taps, one line on stars), points 7 to 9 (non-colour can't-afford cue, certain first gear drop with a Hero tab dot, clear Refund amount with the tutorial buys not refundable). Kept as agreed: the zoomed-out tree start (point 5) and Tower Gate I's three cards as mocked (point 6). Dropped: the accessibility pass (10), step timings (11) and hints-only guide (12). Items HF-M2-43 (extended), HF-M2-44 and HF-M2-45. The hold on HF-M2-39, 40 and 43 is released.
