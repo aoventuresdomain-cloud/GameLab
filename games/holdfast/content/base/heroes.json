@@ -74,7 +74,7 @@
         "zone_radius": 255,
         "pull": 60
       },
-      "blurb": "Shadow pulses that hit hardest in the dark. Space: Eclipse, a zone that drags enemies in, slows them and then collapses.",
+      "blurb": "Shadow pulses that hit hardest in the dark. Space: Eclipse pulls enemies in and slows them.",
       "colour": "#9b7be0"
     },
     {

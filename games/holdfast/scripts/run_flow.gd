@@ -49,6 +49,7 @@ func _ready() -> void:
 	journey.level_requested.connect(_level_picked)
 	journey.buy_requested.connect(profile.buy)
 	journey.stand_requested.connect(_begin_stand)
+	journey.plan_requested.connect(_plan_from_map)
 	hero_page.back_requested.connect(_show.bind(Screen.MAP))
 	hero_page.tree_requested.connect(_open_tree_at.bind("Hero"))
 	hero_page.pillar_requested.connect(profile.select_pillar)
@@ -102,6 +103,24 @@ func _plan_run() -> void:
 	if not profile.has_a_tower():
 		_show(Screen.MAP)
 		return
+	_open_plan()
+
+
+## The map's Plan button: opens the Plan page on a level without starting it. Only the map can
+## ask (so never during a run), and not at the Start step; the compulsory guide has no tower yet,
+## which shuts it too.
+func _plan_from_map(id: String) -> void:
+	if screen != Screen.MAP or profile.is_stand_due():
+		return
+	if not id in profile.get_unlocked_levels() or profile.is_tutorial(id) or not profile.has_a_tower():
+		return
+	profile.select_level(id)
+	_open_plan()
+
+
+## Opens the Plan page for the selected level.
+func _open_plan() -> void:
+	var level := profile.get_level()
 	var saved := profile.has_saved_layout(level)
 	planning.open(level, profile.get_layout(level) if saved else [], saved, profile.get_ring_spots(), profile.get_castle_cards(), profile.get_castle_mage_cards(), profile.get_castle_slots())
 	_offer_tower()

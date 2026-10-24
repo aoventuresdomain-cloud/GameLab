@@ -13,6 +13,8 @@ signal home_requested
 signal buy_requested(id: String)
 ## The Start button the guide shows once both guided buys are made: the short fight with the new post.
 signal stand_requested
+## The Plan button: plan a run on this level. Opens the Plan page; it never starts the level.
+signal plan_requested(id: String)
 
 const Hud = preload("res://scripts/ui/hud.gd")
 const FONT_PX := 20
@@ -42,6 +44,7 @@ const HERO_INFO := "Hero and gear"
 @onready var _guide_label: Label = %GuideLabel
 @onready var _guide_button: Button = %GuideButton
 @onready var _map: Control = %Map
+@onready var _plan: Button = %PlanButton
 @onready var _tree: Button = %TreeButton
 @onready var _back: Button = %BackButton
 @onready var _info: Label = %Info
@@ -68,6 +71,7 @@ func _ready() -> void:
 	_content = HoldfastContent.base()
 	_ids = _content["levels"].keys()
 	_back.pressed.connect(home_requested.emit)
+	_plan.pressed.connect(func() -> void: plan_requested.emit(_plan_target()))
 	_tree.pressed.connect(tree_requested.emit)
 	_guide_button.pressed.connect(_on_guide_pressed)
 	_map.draw.connect(_draw_map)
@@ -121,10 +125,21 @@ func refresh() -> void:
 	_tree_dot.visible = not locked and _profile.get_buyable_nodes().any(func(id: String) -> bool: return not id in _seen_buyable)
 	_hero_dot.visible = not locked and _profile.has_unseen_gear()
 	_tree.disabled = locked
+	_plan.disabled = locked or _guide.visible or _plan_target() == ""
 	_hero_button.disabled = locked
 	_hero_figure.disabled = locked
 	_place()
 	_map.queue_redraw()
+
+
+## The level the Plan button opens: the next one still to win, else the last one open ("" while
+## none can be planned, before the castle has a tower).
+func _plan_target() -> String:
+	var open: Array = _ids.filter(func(id: String) -> bool: return _is_open(id) and not _content["levels"][id].get("tutorial", false))
+	for id in open:
+		if not _profile.is_level_won(id):
+			return id
+	return "" if open.is_empty() else open[-1]
 
 
 ## True when the player can plan the level: it is unlocked and, past the tutorial, the
