@@ -14,7 +14,9 @@ const MAX_TICKS := 200000
 ## Plays levels 1 to `level_count` once each (replaying until won) with `model`
 ## (HoldfastSkilledBot.AVERAGE or POOR) and returns
 ## {levels: {id: {"first": won the first attempt, "attempts": int, "cleared": won within
-## MAX_ATTEMPTS}}, "dry_runs": most runs in a row with nothing new to buy, "runs": runs played}.
+## MAX_ATTEMPTS}}, "dry_runs": most runs in a row with nothing new to buy, "gaps": every return
+## to the tree with nothing the player could afford ("level" and "attempt", one entry each; a gap
+## is a finding), "runs": runs played}.
 ## A level the player never wins ends the climb. `skip` lists nodes the player never buys (one
 ## side of a fork).
 static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", level_count := 5, skip: Array = []) -> Dictionary:
@@ -28,6 +30,7 @@ static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", leve
 	var runs := 0
 	var dry := 0
 	var worst_dry := 0
+	var gaps := []
 	for level in _levels(content).slice(0, level_count):
 		var attempts := 0
 		var won := false
@@ -35,6 +38,7 @@ static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", leve
 			var bought := HoldfastProgression.buy_for_profile(content, profile, avoid)
 			if bought.is_empty():
 				dry += 1
+				gaps.append({"level": level, "attempt": attempts + 1})
 			else:
 				profile = bought[-1]["profile"]
 				dry = 0
@@ -51,7 +55,7 @@ static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", leve
 		levels[level]["cleared"] = won
 		if not won:
 			break
-	return {"levels": levels, "dry_runs": worst_dry, "runs": runs}
+	return {"levels": levels, "dry_runs": worst_dry, "gaps": gaps, "runs": runs}
 
 
 ## The level ids in play order, without the tutorial.

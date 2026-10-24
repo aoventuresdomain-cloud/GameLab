@@ -27,7 +27,9 @@ const COLOUR_HERO := Color(0.95, 0.6, 0.2)
 ## Clear of the glow ring (12 out, 4 thick), so a name never touches it.
 const LABEL_GAP := 20.0
 const HERO_FIGURE := Vector2(44, 64)
-const GLOW_TINT := Color(1.0, 0.85, 0.45)
+## The small dot on the Skill tree and Hero tabs: something new to look at.
+const COLOUR_DOT := Color(0.95, 0.7, 0.25)
+const DOT_PX := 16.0
 const DEFAULT_INFO := ""
 const HERO_INFO := "Hero and gear"
 
@@ -47,6 +49,11 @@ var _ids: Array = []
 var _buttons: Dictionary = {}
 var _names: Dictionary = {}
 var _hero_button: Button
+## The dots on the two tabs, shown while there is something the player has not looked at.
+var _tree_dot: Control
+var _hero_dot: Control
+## The nodes that could be bought when the tree was last opened or left.
+var _seen_buyable: Array = []
 ## The drawn Hero is a button too (transparent), so the figure itself can be tapped.
 var _hero_figure: Button
 var _next := ""
@@ -63,6 +70,8 @@ func _ready() -> void:
 	_map.draw.connect(_draw_map)
 	_map.resized.connect(_place)
 	_build_nodes()
+	_tree_dot = _make_dot(_tree)
+	_hero_dot = _make_dot(_hero_button)
 	_info.text = DEFAULT_INFO
 	visibility_changed.connect(_on_visibility_changed)
 
@@ -96,11 +105,10 @@ func refresh() -> void:
 		_names[id].size = _names[id].get_minimum_size()
 	_hero_button.text = "Hero: %s" % _content["hero_paths"][_profile.get_pillar()]["name"]
 	_hero_button.reset_size()
-	var buyable := upgrades_available()
-	_tree.text = "Skill tree: %d to buy" % buyable if buyable > 0 else "Skill tree"
-	_tree.modulate = GLOW_TINT if buyable > 0 else Color.WHITE
 	# The guided buy comes first: until it is made the tree and the Hero page stay shut.
 	var locked: bool = _profile.get_guided_step() != ""
+	_tree_dot.visible = not locked and _profile.get_buyable_nodes().any(func(id: String) -> bool: return not id in _seen_buyable)
+	_hero_dot.visible = not locked and _profile.has_unseen_gear()
 	_tree.disabled = locked
 	_hero_button.disabled = locked
 	_hero_figure.disabled = locked
@@ -141,11 +149,30 @@ static func _grant_text(node: Dictionary) -> String:
 
 ## How many tree nodes the player could buy right now.
 func upgrades_available() -> int:
-	var count := 0
-	for id in _content["upgrade_nodes"]:
-		if _profile.why_not_buy(id) == "":
-			count += 1
-	return count
+	return _profile.get_buyable_nodes().size()
+
+
+## The player has looked at the tree (opening it or leaving it): what could be bought then no
+## longer asks for a dot; only something that becomes affordable later does.
+func mark_tree_seen() -> void:
+	_seen_buyable = _profile.get_buyable_nodes()
+	refresh()
+
+
+## A small round dot on the top right corner of a tab, hidden until it is wanted.
+func _make_dot(tab: Button) -> Control:
+	var dot := Control.new()
+	dot.size = Vector2(DOT_PX, DOT_PX)
+	dot.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	dot.offset_left = -DOT_PX * 0.75
+	dot.offset_right = DOT_PX * 0.25
+	dot.offset_top = -DOT_PX * 0.25
+	dot.offset_bottom = DOT_PX * 0.75
+	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dot.visible = false
+	dot.draw.connect(func() -> void: dot.draw_circle(dot.size * 0.5, DOT_PX * 0.5, COLOUR_DOT))
+	tab.add_child(dot)
+	return dot
 
 
 ## The boss on a level, or "" (the first enemy of the boss tier in its waves).
