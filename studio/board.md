@@ -497,13 +497,13 @@
 
 ### HF-M2-38 Guided buys are compulsory and the tree opens zoomed out
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (CEO feedback 2026-10-24 on the tree build, point 2). Builds first of the feedback slice; touches the map guide and the tree view only
+- **Status:** Merged (#116, QA clear at 8b540b4, b7869bc). Originally: Ready. The guide is compulsory only while the step can be bought, so an old save can never get stuck
 - **QA:** full (save and progression flow change)
 - **Depends on:** HF-M2-37
 - **Done when:**
-  - [ ] During the guided buys (first slot, then first tower) the only thing the player can buy or open is the guided step, reached through the guide itself; the rest of the tree and the other screens cannot be used to buy anything else until the guide is done.
-  - [ ] An old save, a respec and a new game never leave the player stuck mid-guide (a test per case).
-  - [ ] The tree opens zoomed out far enough to show its whole size, with node labels still readable at 1280x720; the player's zoom and pan still work and are not reset on every visit within a session.
+  - [x] During the guided buys (first slot, then first tower) the only thing the player can buy or open is the guided step, reached through the guide itself; the rest of the tree and the other screens cannot be used to buy anything else until the guide is done.
+  - [x] An old save, a respec and a new game never leave the player stuck mid-guide (a test per case).
+  - [x] The tree opens zoomed out far enough to show its whole size, with node labels still readable at 1280x720; the player's zoom and pan still work and are not reset on every visit within a session.
 
 ### HF-M2-39 Place towers in any of the spots you have slots for
 - **Owner:** Gameplay Engineer
@@ -761,7 +761,7 @@
 | F-086 | HF-M2-36 | CEO feedback 2026-10-24: Hero page should show the Hero in the centre and gear slots on the right, with the inventory to equip | Minor | Gameplay Engineer | In HF-M2-40 |
 | F-087 | HF-M2-33 | CEO feedback 2026-10-24: menu names too long, "Bought" shown as a word, too much explanatory text; wants glow or green and good design practice | Minor | Gameplay Engineer | In HF-M2-40 |
 | F-088 | HF-M2-37 | CEO question 2026-10-24: how other heroes and recruit types are chosen is unclear; Advisor to propose | Minor | Game Design Advisor | In HF-M2-42 |
-| F-089 | HF-M2-38 | MUST FIX from QA (#116, 20cb68e): an old Level 0 save with First Slot and Second Slot bought but not the Archer Post is stuck (guide step unaffordable, tree and Hero disabled, Level 1 locked). Fix: the lock releases when the guided step cannot be afforded, with a test for that save | Major | Gameplay Engineer | In #116 || F-090 | HF-M2-38 | FOLLOW-UP from QA (#116, 20cb68e): the whole tree does not fit at the readable 0.5 floor at 1280x720 (about 55% of the width, labels about 10 px). Decision: readable wins; the CEO commented on the zoomed-out start and it stays | Minor | Head of Engineering | Closed, decision || F-091 | HF-M2-38 | FOLLOW-UP from QA (#116, 20cb68e): the Hero tab stays highlighted while the view is centred on Castle and Archer | Minor | Gameplay Engineer | In #116 || F-092 | HF-M2-32 | FOLLOW-UP from QA (#116, 20cb68e): a Level 0 replay pays 24 gold each time, so it can be farmed; checking whether it predates #116 | Minor | Gameplay Engineer | Open, checking |
+| F-089 | HF-M2-38 | MUST FIX from QA (#116, 20cb68e): an old Level 0 save with First Slot and Second Slot bought but not the Archer Post is stuck (guide step unaffordable, tree and Hero disabled, Level 1 locked). Fix: the lock releases when the guided step cannot be afforded, with a test for that save | Major | Gameplay Engineer | Closed in #116 || F-090 | HF-M2-38 | FOLLOW-UP from QA (#116, 20cb68e): the whole tree does not fit at the readable 0.5 floor at 1280x720 (about 55% of the width, labels about 10 px). Decision: readable wins; the CEO commented on the zoomed-out start and it stays | Minor | Head of Engineering | Closed, decision (readable wins) || F-091 | HF-M2-38 | FOLLOW-UP from QA (#116, 20cb68e): the Hero tab stays highlighted while the view is centred on Castle and Archer | Minor | Gameplay Engineer | Closed in #116 || F-092 | HF-M2-32 | FOLLOW-UP from QA (#116, 20cb68e): a Level 0 replay pays 24 gold each time, so it can be farmed; it predates #116 (bank_run adds the run's gold every run, on every level) and is normal replay income | Minor | Gameplay Engineer | Closed, as designed |
 | 2026-10-22 | `games/holdfast/tests/test_m2_hero_getup.gd::test_nearest_open_ground_skips_edges_that_are_blocked_by_another_area` | Second blocked rectangle changed from Rect2(35,10,25,40) to Rect2(20,10,40,40); assertions unchanged (PR #47) | The expected point broke QA's own rule: (35,20) is open ground and nearer than the expected one. Intent kept: the top, right and bottom edges of the first area stay covered | Head of Engineering |
 
 ## Test changes
@@ -811,6 +811,7 @@
 | 2026-10-23 | `test_build3.gd`, `test_build4.gd`, `test_build5.gd`, `test_build6.gd` (#110) | The legacy-rig win-rate tests (`..._winnable_with_its_kit_by_every_pillar_bot`, `..._win_levels_one_and_two_inside_the_pack_bands`, the band-schema test, `..._each_side_of_the_fork_wins_...`) are replaced by Flare Archer curve tests in `test_curve.gd` (first-time wins per level, poor-player floor, both Archer capstones reach level five, gate offer, dry count, determinism, Mage placement, band schema) | The empty-castle start made the old rigs meaningless. The only coverage dropped is the Dusk Mage and Tideblade level 3 to 5 gate loss; it returns in HF-M2-28 (M2b). QA confirmed these are exactly the OK'd changes | Head of Engineering |
 | 2026-10-23 | `test_links.gd` (#110) | `test_crossfire_adds_a_fifth_...` to `..._adds_half_...`; Lit Post test now needs the Hero beside the post | Retune of F-066 and F-067 (Crossfire trigger and Lit Post radius). Intent kept | Head of Engineering |
 | 2026-10-23 | Progression hash | Re-pinned in #110: `08cb412c` to `47bc1402` (HF-M2-35 retune of levels 1 to 5, Crossfire, Lit Post and Pillar Echo; pack data only) | The retune changes every run. Parity passes; QA confirmed the hash at c158f97 | Head of Engineering |
+| 2026-10-24 | `test_rework_b.gd`: `test_the_tabs_are_hero_archer_post_keep_and_castle_and_opening_lands_on_the_hero`, `test_dragging_the_background_pans_and_the_wheel_zooms` (#116) | Opening view: Hero section at real size with flare_boots and flare_focus in view and the Archer Post section out of view, to zoom between 0.5 and 1.0 with castle_slot_1 in view; wheel test: scale above 1.0 after one wheel-up, to larger than the scale recorded before it | HF-M2-38 opens the tree zoomed out and centred on what the player owns; the per-tab jump test (each tab at real size, its nodes in view) is untouched | Head of Engineering |
 
 ## Advisor views
 
