@@ -152,13 +152,13 @@ func test_the_first_win_of_level_one_gives_the_first_piece_on_every_seed() -> vo
 		expect_eq(rules.result()["gear_found"], [first], "seed %d: the piece comes with the win, not by chance" % run_seed)
 
 
-func test_the_piece_is_banked_and_worn_and_not_given_twice() -> void:
+func test_the_piece_is_banked_unequipped_and_not_given_twice() -> void:
 	var content := _content()
 	var first := str(content["levels"]["outpost"]["first_clear_gear"])
 	var profile := ThroughLevelZero.of(content, HoldfastMeta.new_profile(content))
 	profile = HoldfastMeta.bank_run(content, profile, {"outcome": "won", "level": "outpost", "gold": 0, "gear_found": [first]})
 	expect_true(first in profile["gear"]["owned"])
-	expect_true(first in profile["gear"]["equipped"].values(), "worn at once, so the Hero page has something in a slot")
+	expect_false(first in profile["gear"]["equipped"].values(), "in the bag, not worn: the player equips it")
 	var again := HoldfastMeta.bank_run(content, profile, {"outcome": "won", "level": "outpost", "gold": 0, "gear_found": [first]})
 	expect_eq(again["gear"]["owned"], profile["gear"]["owned"], "no second copy")
 

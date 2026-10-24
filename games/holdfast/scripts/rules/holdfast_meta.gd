@@ -535,6 +535,17 @@ static func has_unseen_gear(profile: Dictionary) -> bool:
 	return false
 
 
+## The profile with each piece it owns put on where its slot is free: what the bots do after a run,
+## the way a player equips what a drop brings. The game itself never calls this.
+static func wear_free_slots(content: Dictionary, profile: Dictionary) -> Dictionary:
+	var out := profile.duplicate(true)
+	for id in out["gear"]["owned"]:
+		var item: Dictionary = content.get("gear_items", {}).get(id, {})
+		if not item.is_empty() and out["gear"]["equipped"].get(item["slot"], "x") == "":
+			out["gear"]["equipped"] = HeroGear.equip({"kind": "hero", "slots": out["gear"]["equipped"]}, str(item["slot"]), id)["unit"]["slots"]
+	return out
+
+
 ## The profile with every gear piece it owns marked as looked at.
 static func see_gear(profile: Dictionary) -> Dictionary:
 	var out := profile.duplicate(true)
@@ -932,14 +943,12 @@ static func bank_run(content: Dictionary, profile: Dictionary, result: Dictionar
 	var stars := stars_for_run(content, result)
 	if stars > int(out["stars"].get(level, 0)):
 		out["stars"][level] = stars
-	# Gear a run found is kept whatever its outcome, and worn at once when its slot is free.
+	# Gear a run found is kept whatever its outcome. It goes to the inventory; the player equips it.
 	for id in result.get("gear_found", []):
 		var item: Dictionary = content.get("gear_items", {}).get(id, {})
 		if item.is_empty() or id in out["gear"]["owned"]:
 			continue
 		out["gear"]["owned"].append(id)
-		if out["gear"]["equipped"].get(item["slot"], "x") == "":
-			out["gear"]["equipped"] = HeroGear.equip({"kind": "hero", "slots": out["gear"]["equipped"]}, str(item["slot"]), id)["unit"]["slots"]
 	var next := next_level(content, level) if result.get("outcome") == HoldfastRules.OUTCOME_WON else ""
 	if next != "" and not next in out["unlocked"]:
 		out["unlocked"].append(next)

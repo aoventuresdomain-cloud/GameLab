@@ -60,6 +60,8 @@ const DEFAULT_UNTOUCHABLE_SECONDS := 2.0
 const TIME_EPSILON := 0.000001
 ## The arena's width and height when the level does not give them.
 const DEFAULT_ARENA := Vector2(1920.0, 858.0)
+## The post a layout builds when the level names none of its own.
+const DEFAULT_TOWER := "archer_post"
 
 
 class Enemy:
@@ -316,8 +318,10 @@ var tower: Attacker
 var towers: Array[Attacker] = []
 ## The site or castle spot ids the towers stand on (empty when the level's own tower stands alone).
 var layout_ids: Array = []
-## A tutorial level: its Keep cannot fall and its one post is the level's own.
+## A tutorial level: its Keep cannot fall and it builds no tower of its own (the Hero fights alone).
 var tutorial := false
+## Recruits and the light posts they staff are parked: none stand in the run (the game's runs).
+var parked := false
 ## The short fight that follows the two guided buys: the tutorial's own Keep, its `stand` waves,
 ## and the posts the player's castle holds, not the level's placed one.
 var stand := false
@@ -409,8 +413,11 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	problems.append_array(HeroKnockdown.validate(content["hero_paths"][hero_path]["knockdown_delays"]))
 	problems.append_array(HeroGetUp.validate_grace(content["hero_paths"][hero_path].get("untouchable_seconds", DEFAULT_UNTOUCHABLE_SECONDS)))
 	var roles := []
-	var placements: Array = [level["staff"]]
-	placements.append_array(level.get("recruits", []))
+	parked = bool(config.get("parked", false))
+	var placements: Array = []
+	if not parked:
+		placements.append(level["staff"])
+		placements.append_array(level.get("recruits", []))
 	for at in placements:
 		var data: Dictionary = content["staff"][at["id"]]
 		roles.append(str(data["class"]))
@@ -467,7 +474,7 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 
 	light_radius = float(light["radius"])
 	light_bonus = float(light["bonus"])
-	for at in level["posts"]:
+	for at in ([] if parked else level["posts"]):
 		var post := Post.new()
 		post.id = str(at["id"])
 		post.position = Vector2(float(at["x"]), float(at["y"]))
@@ -501,18 +508,18 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 
 	spawn_arcs = level.get("spawn_arcs", [])
 	var chosen := _chosen_sites(level, layout_spots(config.get("layout", null)), layout_towers(config.get("layout", null)))
-	if chosen.is_empty():
+	if chosen.is_empty() and not _builds_no_tower(level):
 		_fail("layout %s is not a valid set of sites for %s" % [config.get("layout"), level_id])
 		return
 	for i in chosen.size():
 		var at: Dictionary = chosen[i].duplicate()
-		var tower_id := str(at.get("tower", level["tower"]["id"]))
+		var tower_id := str(at.get("tower", level.get("tower", {}).get("id", DEFAULT_TOWER)))
 		# The first post keeps the tower's own id as its key, the others add their site.
 		at["id"] = tower_id if i == 0 else "%s@%s" % [tower_id, at["id"]]
 		var built := _build_tower(at, tower_id, content["towers"][tower_id], stats)
 		towers.append(built)
 		_defenders.append(built)
-	tower = towers[0]
+	tower = towers[0] if not towers.is_empty() else null
 	if _uses_layout(level, layout_spots(config.get("layout", null))):
 		for at in chosen:
 			layout_ids.append(str(at["id"]))
@@ -534,8 +541,9 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 			_fail("recruit %s staffs unknown post %s" % [recruit.id, recruit.post])
 			return
 		recruits.append(recruit)
-	staff = recruits[0]
-	staff_xp_per_level = int(content["staff"][staff.id]["xp_per_level"])
+	if not recruits.is_empty():
+		staff = recruits[0]
+		staff_xp_per_level = int(content["staff"][staff.id]["xp_per_level"])
 	_defenders.append_array(recruits)
 	for unit in recruits:
 		_tie_order.append(unit.key)
@@ -568,6 +576,11 @@ func _attacker(kind: String, at: Dictionary, data: Dictionary, damage: float, ex
 	a.attack_range = float(data["range"])
 	a.cooldown = float(data["cooldown"])
 	return a
+
+
+## True for a tutorial that names no tower of its own: the Hero fights alone, no post stands.
+func _builds_no_tower(level: Dictionary) -> bool:
+	return tutorial and not stand and not level.has("tower")
 
 
 ## True when the run builds on a layout: castle spots the layout names, or a level's own `sites`.
@@ -620,7 +633,7 @@ func _names_castle_spots(layout: Variant) -> bool:
 ## layout is bad.
 func _chosen_sites(level: Dictionary, layout: Variant, kinds := {}) -> Array:
 	if tutorial and not stand:
-		return [level["tower"]]
+		return [level["tower"]] if level.has("tower") else []
 	if _names_castle_spots(layout):
 		# Archers first, so the first post (the tower's own key) is an Archer when there is one.
 		var picked := _pick(layout, _castle_spots, _castle_spots.size())

@@ -206,11 +206,11 @@ func test_the_keep_cannot_fall_on_level_zero_but_does_on_any_other_level() -> vo
 	expect_false(other.tutorial)
 
 
-func test_level_zero_keeps_its_own_post_whatever_layout_is_passed() -> void:
+func test_level_zero_builds_no_tower_whatever_layout_is_passed() -> void:
 	var rules := HoldfastRules.new()
 	rules.setup(HoldfastContent.run_config("first_watch", [], {}, "flare_archer", ["spot_1", "spot_2"]), SimRng.new(1))
-	expect_eq(rules.towers.size(), 1)
-	expect_eq(rules.tower.position, Vector2(-90, 30))
+	expect_eq(rules.towers.size(), 0)
+	expect_true(rules.tower == null)
 	expect_eq(rules.layout_ids, [])
 
 
@@ -387,7 +387,9 @@ func test_after_level_zero_the_map_guides_the_first_slot_then_the_first_post_bef
 	expect_true(map._buttons["outpost"].disabled, "a slot is not enough")
 	map.get_node("%GuideButton").pressed.emit()
 	expect_eq(profile.get_castle_cards(), 1)
-	expect_false(map.get_node("%Guide").visible, "both buys made")
+	expect_true(map.get_node("%Guide").visible, "both buys made: the strip now offers the short fight")
+	expect_eq(map.get_node("%GuideButton").text, "Start")
+	expect_false(main.get_node("RunSource").is_running(), "nothing starts without a press")
 	expect_false(map._buttons["outpost"].disabled)
 	expect_eq(map._next, "outpost")
 	expect_eq(map.get_node("%StarsValue").text, "0")

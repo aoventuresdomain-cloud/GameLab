@@ -131,6 +131,8 @@ func test_the_hero_page_shows_the_slots_and_links_to_the_heros_tree_section() ->
 	var weapon: Label = page.get_node("%SlotColumn").get_child(0).get_node("Row/Item")
 	expect_eq(weapon.text, "")
 	profile.bank_run({"outcome": "won", "level": "shingle_beach", "gold": 0, "gear_found": ["tarred_bowstring"]})
+	expect_eq(weapon.text, "", "a drop waits in the bag")
+	profile.wear_gear("tarred_bowstring")
 	expect_eq(weapon.text, "Tarred bowstring")
 	expect_eq(page.get_node("%TreeButton").text, "Skill tree")
 	page.visible = true

@@ -112,7 +112,7 @@ func test_the_map_does_not_move_when_the_guide_strip_goes() -> void:
 	ThroughLevelZero.apply(main.get_node("Profile"))
 	await tree.process_frame
 	await tree.process_frame
-	expect_false(map.get_node("%Guide").visible, "the guide is gone once both buys are made")
+	expect_eq(map.get_node("%GuideButton").text, "Start", "the strip offers the short fight once both buys are made")
 	expect_eq(map._map.get_global_rect(), before, "the map keeps its place and size")
 	for id in map._ids:
 		expect_eq(map._buttons[id].get_global_rect(), positions[id], "%s has not moved" % id)

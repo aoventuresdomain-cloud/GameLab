@@ -10,6 +10,9 @@ func test_hud_never_covers_the_keep_or_the_attack_ranges() -> void:
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	source.auto_step = false
 	tree.root.add_child(main)
+	var profile: HoldfastProfile = main.get_node("Profile")
+	ThroughLevelZero.apply(profile)
+	profile.select_level("outpost")
 	main.call("_start_run")
 	var world: Node2D = main.get_node("World")
 	var rules := source.get_rules()
@@ -21,12 +24,12 @@ func test_hud_never_covers_the_keep_or_the_attack_ranges() -> void:
 		world._process(0.0) # place the world for this window size
 		var to_window := tree.root.get_final_transform()
 		var hud_bottom: float = (to_window * bar.get_global_rect().end).y
-		var reach := maxf(rules.tower.attack_range, rules.staff.attack_range)
+		var reach: float = rules.tower.attack_range
 		var size := "%dx%d" % [window.x, window.y]
 		var keep_top: float = (to_window * world.world_to_screen(Vector2(0.0, -reach))).y
 		expect_true(keep_top > hud_bottom,
 				"%s: keep plus the longer range reaches y=%.0f, below the HUD at y=%.0f" % [size, keep_top, hud_bottom])
-		for attacker in [rules.tower, rules.staff]:
+		for attacker in [rules.tower]:
 			var top: float = (to_window * world.world_to_screen(attacker.position - Vector2(0.0, attacker.attack_range))).y
 			expect_true(top > hud_bottom,
 					"%s: range circle top at y=%.0f, below the HUD at y=%.0f" % [size, top, hud_bottom])

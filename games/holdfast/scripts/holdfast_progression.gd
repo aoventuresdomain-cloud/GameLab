@@ -118,10 +118,11 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 		var run_seed := p_seed * 100003 + runs.size()
 		var run_level := level if level != "" else str(HoldfastMeta.unlocked_levels(content, profile)[-1])
 		var layout := HoldfastMeta.layout_for(content, profile, run_level)
-		var report := HoldfastSim.run_headless(run_seed, HoldfastContent.run_config(run_level, profile["upgrades"], content, "", layout, HoldfastMeta.worn_gear(profile), profile["gear"]["owned"]))
+		var report := HoldfastSim.run_headless(run_seed, HoldfastContent.run_config(run_level, profile["upgrades"], content, "", layout, HoldfastMeta.worn_gear(profile), profile["gear"]["owned"], false, true))
 		var result: Dictionary = report["result"]
 		sim_time += float(report["seconds"]) + BETWEEN_RUNS_SECONDS
 		profile = HoldfastMeta.bank_run(content, profile, result)
+		profile = HoldfastMeta.wear_free_slots(content, profile)
 		var outcome := str(result["outcome"])
 		outcomes[outcome] = int(outcomes.get(outcome, 0)) + 1
 		runs.append({

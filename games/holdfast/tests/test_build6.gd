@@ -523,7 +523,10 @@ func test_the_hero_page_lists_owned_gear_and_toggles_it() -> void:
 	expect_true((main.hero_page.get_node("%BagHint") as Label).text.begins_with("Gear: none yet"))
 	profile.bank_run({"outcome": "won", "level": "shingle_beach", "gold": 0, "gear_found": ["driftwood_stave", "sea_glass_charm"]})
 	await tree.process_frame
-	expect_eq(profile.get_gear_worn(), {"weapon": "driftwood_stave", "armour": "sea_glass_charm"}, "worn as found")
+	expect_eq(profile.get_gear_worn(), {}, "nothing is worn as found")
+	expect_eq(bag.get_child_count(), 2, "both pieces wait in the bag")
+	profile.wear_gear("driftwood_stave")
+	profile.wear_gear("sea_glass_charm")
 	expect_eq(bag.get_child_count(), 0, "both pieces are on their slots, so the bag is empty")
 	main.hero_page.gear_off_requested.emit("weapon")
 	expect_eq(profile.get_gear_worn(), {"armour": "sea_glass_charm"}, "taking the slot's piece off")
@@ -539,6 +542,7 @@ func test_the_run_flow_sends_the_worn_gear_and_the_owned_list_to_the_run() -> vo
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	ThroughLevelZero.apply(profile)
 	profile.bank_run({"outcome": "lost", "level": "outpost", "gold": 0, "gear_found": ["tarred_bowstring"]})
+	profile.wear_gear("tarred_bowstring")
 	main.journey._buttons["outpost"].pressed.emit()
 	main.planning.auto_place()
 	main.planning.get_node("%StartButton").pressed.emit()
@@ -557,15 +561,17 @@ func test_a_new_profile_has_five_empty_gear_slots() -> void:
 	expect_eq(HoldfastMeta.worn_gear(profile), {})
 
 
-func test_banking_a_run_keeps_its_gear_won_or_lost_and_wears_it_in_a_free_slot() -> void:
+func test_banking_a_run_keeps_its_gear_won_or_lost_and_leaves_it_in_the_bag() -> void:
 	var content := HoldfastContent.base()
 	var profile := HoldfastMeta.new_profile(content)
 	profile = HoldfastMeta.bank_run(content, profile, {"outcome": "lost", "level": "shingle_beach", "gold": 5, "gear_found": ["driftwood_stave"]})
 	expect_eq(profile["gear"]["owned"], ["driftwood_stave"], "a lost run keeps what it found")
-	expect_eq(profile["gear"]["equipped"]["weapon"], "driftwood_stave", "worn at once")
+	expect_eq(profile["gear"]["equipped"]["weapon"], "", "not worn: the player equips it")
 	profile = HoldfastMeta.bank_run(content, profile, {"outcome": "won", "level": "tidewrack_cove", "gold": 5, "gear_found": ["tarred_bowstring", "lamp_oil_flask"]})
 	expect_eq(profile["gear"]["owned"], ["driftwood_stave", "tarred_bowstring", "lamp_oil_flask"])
-	expect_eq(profile["gear"]["equipped"], {"weapon": "driftwood_stave", "helmet": "", "armour": "", "boots": "", "ring": "lamp_oil_flask"}, "a worn slot is not taken over")
+	expect_eq(profile["gear"]["equipped"], {"weapon": "", "helmet": "", "armour": "", "boots": "", "ring": ""}, "nothing is worn by itself")
+	var worn := HoldfastMeta.wear_free_slots(content, profile)
+	expect_eq(worn["gear"]["equipped"], {"weapon": "driftwood_stave", "helmet": "", "armour": "", "boots": "", "ring": "lamp_oil_flask"}, "the bots' helper wears each free slot's first piece")
 
 
 func test_banking_ignores_unknown_and_repeated_gear() -> void:
@@ -619,7 +625,7 @@ func test_gear_survives_a_save_and_a_reload() -> void:
 	var main := _main(path)
 	var profile: HoldfastProfile = main.get_node("Profile")
 	profile.bank_run({"outcome": "won", "level": "shingle_beach", "gold": 1, "gear_found": ["wave_worn_boots", "tarred_bowstring"]})
-	profile.toggle_gear("tarred_bowstring")
+	profile.wear_gear("wave_worn_boots")
 	main.free()
 	var again := _main(path)
 	var loaded: HoldfastProfile = again.get_node("Profile")
