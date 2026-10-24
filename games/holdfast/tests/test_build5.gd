@@ -537,11 +537,11 @@ func test_a_layout_is_checked_saved_and_defaulted() -> void:
 	expect_eq(chosen["layouts"]["shingle_beach"], ["spot_4", "spot_3"])
 	expect_eq(HoldfastMeta.layout_for(content, chosen, "shingle_beach"), ["spot_4", "spot_3"])
 	expect_eq(profile["layouts"], {}, "the profile given is untouched")
-	for bad in [[], ["spot_2", "spot_1", "spot_4"], ["spot_2", "spot_2"], ["nowhere"], ["spot_5"]]:
+	for bad in [[], ["spot_2", "spot_1", "spot_4"], ["spot_2", "spot_2"], ["nowhere"]]:
 		expect_eq(HoldfastMeta.set_layout(content, chosen, "shingle_beach", bad), chosen, "refused: " + str(bad))
 	expect_eq(HoldfastMeta.set_layout(content, chosen, "first_watch", ["spot_2"]), chosen, "the tutorial")
 	expect_eq(HoldfastMeta.set_layout(content, chosen, "no_such_level", ["spot_2"]), chosen)
-	var loaded := HoldfastMeta.from_save(content, {"stars": {"first_watch": 2}, "upgrades": ["castle_slot_1", "castle_archer_1"], "layouts": {"shingle_beach": ["spot_4"], "outpost": ["bogus"], "gone": ["x"], "tidewrack_cove": ["west_gate"], "old_pier": ["spot_6"]}})
+	var loaded := HoldfastMeta.from_save(content, {"stars": {"first_watch": 2}, "upgrades": ["castle_slot_1", "castle_archer_1"], "layouts": {"shingle_beach": ["spot_4"], "outpost": ["bogus"], "gone": ["x"], "tidewrack_cove": ["west_gate"], "old_pier": ["spot_99"]}})
 	expect_eq(loaded["layouts"], {"shingle_beach": ["spot_4"]}, "only valid layouts of real levels are kept")
 	expect_eq(HoldfastMeta.from_save(content, {"layouts": 7})["layouts"], {}, "and nonsense is dropped")
 
@@ -560,7 +560,7 @@ func test_a_chosen_layout_survives_a_save_and_a_reload() -> void:
 	again.save_path = path
 	tree.root.add_child(again)
 	expect_eq(again.get_layout("outpost"), ["spot_1"])
-	expect_eq(again.get_layout("shingle_beach"), ["spot_1"], "a level never planned gets the best layout the castle allows")
+	expect_eq(again.get_layout("shingle_beach"), ["spot_2"], "a level never planned gets the best layout the castle allows")
 	again.free()
 
 
@@ -587,7 +587,7 @@ func test_play_opens_the_planning_screen_and_start_runs_on_the_chosen_site() -> 
 	expect_eq(source.get_rules().layout_ids, ["spot_1"])
 	expect_eq(source.get_rules().tower.position, Vector2(100, 0))
 	expect_eq(profile.get_layout("outpost"), ["spot_1"], "saved with the profile")
-	expect_eq(source.get_posts_note(), "Posts: East", "and shown as the run starts")
+	expect_eq(source.get_posts_note(), "Posts: 1", "and shown as the run starts")
 	expect_eq(source.get_wave_banner(), "", "the wave banner is left alone")
 	main.free()
 

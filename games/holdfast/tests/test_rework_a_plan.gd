@@ -124,7 +124,8 @@ func test_the_flow_opens_empty_the_first_time_then_with_the_last_layout() -> voi
 	main.journey.level_requested.emit("outpost")
 	expect_eq(main.planning._chosen, [], "first visit")
 	expect_true(main.planning.get_node("%QuickButton").disabled)
-	expect_eq(main.planning._site_buttons.keys(), ["spot_1"], "only the one slot the player owns")
+	expect_eq(main.planning._site_buttons.size(), 8, "the whole ring")
+	expect_eq(main.planning.get_node("%Count").text, "Posts: 0 of 1", "one slot, so one post")
 	main.planning._site_buttons["spot_1"].pressed.emit()
 	main.planning.get_node("%StartButton").pressed.emit()
 	expect_true(profile.has_saved_layout("outpost"))
@@ -145,7 +146,7 @@ func test_a_layout_is_saved_only_when_valid_so_quick_start_never_reuses_a_bad_on
 	var content := HoldfastContent.base()
 	var profile := ThroughLevelZero.of(content, HoldfastMeta.new_profile(content))
 	expect_false(HoldfastMeta.has_saved_layout(content, profile, "shingle_beach"))
-	for bad in [["spot_1", "no_such_spot"], ["spot_2"], ["spot_1", "spot_1"], []]:
+	for bad in [["spot_1", "no_such_spot"], ["spot_1", "spot_2"], ["spot_1", "spot_1"], []]:
 		profile["layouts"]["shingle_beach"] = bad
 		expect_false(HoldfastMeta.has_saved_layout(content, profile, "shingle_beach"), "not a saved layout: %s" % [bad])
 	profile["layouts"]["shingle_beach"] = ["spot_1"]

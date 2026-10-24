@@ -56,6 +56,7 @@ func _ready() -> void:
 	summary.play_again_requested.connect(_plan_run)
 	planning.start_requested.connect(_planned)
 	planning.back_requested.connect(_show.bind(Screen.MAP))
+	planning.tower_requested.connect(_tower_requested)
 	summary.next_level_requested.connect(_next_level)
 	summary.map_requested.connect(_show.bind(Screen.MAP))
 	summary.tree_requested.connect(_show.bind(Screen.TREE))
@@ -96,8 +97,24 @@ func _plan_run() -> void:
 		_show(Screen.MAP)
 		return
 	var saved := profile.has_saved_layout(level)
-	planning.open(level, profile.get_layout(level) if saved else [], saved, profile.get_owned_spots(), profile.get_castle_cards(), profile.get_castle_mage_cards())
+	planning.open(level, profile.get_layout(level) if saved else [], saved, profile.get_ring_spots(), profile.get_castle_cards(), profile.get_castle_mage_cards(), profile.get_castle_slots())
+	_offer_tower()
 	_show(Screen.PLAN)
+
+
+## Sets the Plan page's "+ Tower" button to the next buy that adds a tower, with its price.
+func _offer_tower() -> void:
+	var id := profile.get_next_tower_node()
+	planning.set_tower_offer("" if id == "" else "+ Tower (%s)" % profile.get_cost_text(id), "" if id == "" else profile.why_not_buy(id))
+
+
+## "+ Tower" on the Plan page buys the next slot or Archer Post at the tree's price; the posts
+## already placed stay.
+func _tower_requested() -> void:
+	var id := profile.get_next_tower_node()
+	if id != "" and profile.buy(id):
+		planning.set_castle(profile.get_ring_spots(), profile.get_castle_cards(), profile.get_castle_mage_cards(), profile.get_castle_slots())
+	_offer_tower()
 
 
 ## A respec changes what the next run is built on, so it waits until the run is over.

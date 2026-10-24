@@ -122,7 +122,7 @@ func test_the_castle_chain_grants_slots_and_cards_with_cards_two_behind() -> voi
 	expect_eq(HoldfastMeta.castle_cards(content, all), 3, "three cards for five slots")
 	var one := _holding(["castle_slot_1", "castle_archer_1", "castle_archer_2", "castle_archer_3"], 0, 12)
 	expect_eq(HoldfastMeta.castle_cards(content, one), 1, "cards never pass the slots")
-	expect_eq(HoldfastMeta.owned_spots(content, one).size(), 1)
+	expect_eq(HoldfastMeta.castle_slots(content, one), 1)
 	var profile := _fresh()
 	profile["stars"] = {"outpost": 3, "shingle_beach": 3, "tidewrack_cove": 3, "gull_rock": 3}
 	var wanted := ["castle_slot_1", "castle_archer_1", "castle_slot_2", "castle_slot_3", "castle_slot_4", "castle_slot_5"]

@@ -149,7 +149,7 @@ func get_wave_banner() -> String:
 	return _rules.wave_banner() if _rules else ""
 
 
-## Where the Archer Posts stand, until the first wave starts; a tutorial says its teaching
+## How many posts stand, until the first wave starts; a tutorial says its teaching
 ## text instead ("" when there is nothing to say).
 func get_posts_note() -> String:
 	if _rules == null or _rules.wave > 0:
@@ -159,13 +159,7 @@ func get_posts_note() -> String:
 		return str(content["levels"][_rules.level_id].get("intro", ""))
 	if _rules.layout_ids.is_empty():
 		return ""
-	var spot_names := {}
-	for spot in HoldfastMeta.castle_rules(content).get("spots", []):
-		spot_names[str(spot["id"])] = str(spot["name"])
-	var names: PackedStringArray = []
-	for id in _rules.layout_ids:
-		names.append(str(spot_names.get(id, str(id).replace("_", " ").capitalize())))
-	return "Posts: " + ", ".join(names)
+	return "Posts: %d" % _rules.layout_ids.size()
 
 
 ## While a boss is on the field: whether its shroud is up and what lifts it.

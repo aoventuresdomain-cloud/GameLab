@@ -191,9 +191,18 @@ func get_castle_mage_cards() -> int:
 	return HoldfastMeta.castle_mage_cards(_content, data)
 
 
-## The castle spots the player owns, in the pack's order: [{id, name, x, y}].
-func get_owned_spots() -> Array:
-	return HoldfastMeta.owned_spots(_content, data)
+## The castle's ring of spots, in the pack's order: [{id, name, x, y}]. Any can hold a post, up to the slots bought.
+func get_ring_spots() -> Array:
+	return HoldfastMeta.ring_spots(_content)
+
+
+## The upgrade the Plan page's "+ Tower" buys ("" when none is left), and what it costs.
+func get_next_tower_node() -> String:
+	return HoldfastMeta.next_tower_node(_content, data)
+
+
+func get_cost_text(id: String) -> String:
+	return HoldfastMeta.cost_text(_content["upgrade_nodes"][id])
 
 
 ## True once the player has a slot and an Archer Post to put in it, so any level can be planned.
