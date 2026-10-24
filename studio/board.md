@@ -669,76 +669,76 @@
 
 ### HF-M2-46 The first guide text is short, fits the screen and waits for a press
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (CEO feedback 2026-10-24, comment 1)
+- **Status:** Merged (#127, QA clear at 161a9a4, 6779f91). Three-line note that waits for a press
 - **QA:** full
 - **Depends on:** HF-M2-44
 - **Done when:**
-  - [ ] The first guide message is short enough to fit at 1280x720 and 1920x1080 with nothing running off the screen (a layout check).
-  - [ ] It stays until the player clicks, taps or presses a key, and nothing underneath reacts to that press.
+  - [x] The first guide message is short enough to fit at 1280x720 and 1920x1080 with nothing running off the screen (a layout check).
+  - [x] It stays until the player clicks, taps or presses a key, and nothing underneath reacts to that press.
 
 ### HF-M2-47 Level 0 starts with no tower
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (CEO feedback 2026-10-24, comment 2)
+- **Status:** Merged (#127, QA clear at 161a9a4, 6779f91). Level 0 has no tower; the stand brings its own post
 - **QA:** full
 - **Depends on:** HF-M2-44
 - **Done when:**
-  - [ ] A new game's Level 0 shows no tower before the player buys one; the castle's own stand post appears only in the short fight after the second guided buy.
-  - [ ] Old saves still load, and a test covers a new profile's Level 0 start.
+  - [x] A new game's Level 0 shows no tower before the player buys one; the castle's own stand post appears only in the short fight after the second guided buy.
+  - [x] Old saves still load, and a test covers a new profile's Level 0 start.
 
 ### HF-M2-48 Buying a skill closes the detail card
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (CEO feedback 2026-10-24, comment 3; replaces "the card stays with a tick" from HF-M2-43)
+- **Status:** Merged (#128, QA clear at aed2803, 344f7e2). A buy closes the detail card
 - **QA:** full
 - **Depends on:** HF-M2-43
 - **Done when:**
-  - [ ] After a successful buy the card closes and the newly buyable neighbours light up on the tree.
-  - [ ] A refused buy leaves the card open with its reason; Refund keeps the card behaviour decided in HF-M2-43. The HF-M2-43 tests that expect the card to stay change only with my OK, each logged.
+  - [x] After a successful buy the card closes and the newly buyable neighbours light up on the tree.
+  - [x] A refused buy leaves the card open with its reason; Refund keeps the card behaviour decided in HF-M2-43. The HF-M2-43 tests that expect the card to stay change only with my OK, each logged.
 
 ### HF-M2-49 Nothing starts Level 0 without a press
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (CEO feedback 2026-10-24, comment 4). Default: after the second guided buy a Start button begins the short fight
+- **Status:** Merged (#127, QA clear at 161a9a4, 6779f91). A Start button begins the stand; nothing auto-starts
 - **QA:** full
 - **Depends on:** HF-M2-44
 - **Done when:**
-  - [ ] Buying the first post does not start any level; the short fight begins only when the player presses Start, still within about two minutes of the first Start.
-  - [ ] A test covers the guided flow on a new profile and on an old save.
+  - [x] Buying the first post does not start any level; the short fight begins only when the player presses Start, still within about two minutes of the first Start.
+  - [x] A test covers the guided flow on a new profile and on an old save.
 
 ### HF-M2-50 Recruit markers and recruits in Levels 0 and 1 (recruits are parked)
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (CEO feedback 2026-10-24, comment 5)
+- **Status:** Merged (#127, QA clear at 161a9a4, 6779f91). Bryn, Wren and the two light posts parked behind a `parked` run flag; Levels 1 to 5 retuned by pack data (interim, M2b rebalances); hash re-pinned
 - **QA:** full
 - **Depends on:** none
 - **Done when:**
-  - [ ] The cause of the yellow markers next to recruits and of two recruits in Levels 0 and 1 is found and explained in one paragraph to the Head of Engineering.
-  - [ ] No recruit or recruit marker appears in a new game while recruits stay parked (decision 23 Oct), with a test.
+  - [x] The cause of the yellow markers next to recruits and of two recruits in Levels 0 and 1 is found and explained in one paragraph to the Head of Engineering.
+  - [x] No recruit or recruit marker appears in a new game while recruits stay parked (decision 23 Oct), with a test.
 
 ### HF-M2-51 The first gear piece lands in the inventory
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (CEO feedback 2026-10-24, comment 6)
+- **Status:** Merged (#127, QA clear at 161a9a4, 6779f91). First gear piece lands in the bag unequipped
 - **QA:** full
 - **Depends on:** HF-M2-45
 - **Done when:**
-  - [ ] A first gear drop goes into the inventory unequipped; the player equips it on the Hero page. The Hero tab dot stays until that page is opened.
-  - [ ] A test covers the first drop, and old saves keep what they have equipped.
+  - [x] A first gear drop goes into the inventory unequipped; the player equips it on the Hero page. The Hero tab dot stays until that page is opened.
+  - [x] A test covers the first drop, and old saves keep what they have equipped.
 
 ### HF-M2-52 The Mage description no longer breaks the screen
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (CEO feedback 2026-10-24, comment 7)
+- **Status:** Merged (#128, QA clear at aed2803, 344f7e2). Cause: the Dusk Mage blurb on the Hero page wrapped to two lines and moved the page
 - **QA:** full
 - **Depends on:** none
 - **Done when:**
-  - [ ] The Mage Post and Tower Gate I descriptions fit their cards on the tree and the Plan page at 1280x720 and 1920x1080, with no overflow or jump (a layout check on the longest text).
-  - [ ] The cause is found and named in the pull request.
+  - [x] The Mage Post and Tower Gate I descriptions fit their cards on the tree and the Plan page at 1280x720 and 1920x1080, with no overflow or jump (a layout check on the longest text).
+  - [x] The cause is found and named in the pull request.
 
 ### HF-M2-53 Open the Plan page from the journey map
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (CEO request 2026-10-24: planning reachable between levels)
+- **Status:** Merged (#128, QA clear at aed2803, 344f7e2). Plan button on the journey map
 - **QA:** full (new route into a core screen)
 - **Depends on:** none
 - **Done when:**
-  - [ ] The journey map has a clear way to open the Plan page (short name, same look as the other entries), and the Plan page returns to the map.
-  - [ ] It is hidden or inert during the compulsory guide and while a run is on; it never starts a level by itself.
-  - [ ] A test and a layout check at 1280x720 and 1920x1080 cover the new entry.
+  - [x] The journey map has a clear way to open the Plan page (short name, same look as the other entries), and the Plan page returns to the map.
+  - [x] It is hidden or inert during the compulsory guide and while a run is on; it never starts a level by itself.
+  - [x] A test and a layout check at 1280x720 and 1920x1080 cover the new entry.
 
 ### HF-M2-54 Design: the skill tree as a web from a central place (Designer, then Advisor critique)
 - **Owner:** Designer (screen mockups)
@@ -872,15 +872,17 @@
 | F-103 | HF-M2-43 | The mockup's hollow amber ring on buyable nodes is not built (not in the Done when lines) | Minor | Gameplay Engineer | Open (backlog) |
 | F-104 | HF-M2-44 | FOLLOW-UP from QA (#122, ff7ce29): `from_save` marks the intro flags seen for any non-empty save, so an old save that had not yet won Level 0 never sees the line or the fight | Minor | Gameplay Engineer | Open, accepted (spec covers saves past Level 0) |
 | F-105 | HF-M2-45 | FOLLOW-UP from QA (#123, 8f6cce2): the tree dot's seen list is kept in memory only, so after a reload the dot returns for nodes looked at last session | Minor | Gameplay Engineer | Open (backlog) |
-| F-106 | HF-M2-44 | CEO test 2026-10-24: the first guide wording does not wait for a press and runs longer than the screen | Major | Gameplay Engineer | In HF-M2-46 |
-| F-107 | HF-M2-32 | CEO test 2026-10-24: a tower is already in Level 0 before the player buys one | Major | Gameplay Engineer | In HF-M2-47 |
-| F-108 | HF-M2-43 | CEO test 2026-10-24: buying a skill should close the detail card | Minor | Gameplay Engineer | In HF-M2-48 |
-| F-109 | HF-M2-44 | CEO test 2026-10-24: buying the first post starts Level 0 again automatically | Major | Gameplay Engineer | In HF-M2-49 |
-| F-110 | HF-M2-30 | CEO test 2026-10-24: yellow markers next to recruits and two recruits already in Levels 0 and 1, though recruits are parked | Major | Gameplay Engineer | In HF-M2-50 |
-| F-111 | HF-M2-45 | CEO test 2026-10-24: the first gear piece was auto-allocated instead of landing in the inventory | Minor | Gameplay Engineer | In HF-M2-51 |
-| F-112 | HF-M2-37 | CEO test 2026-10-24: the Mage description makes the screen act strangely | Major | Gameplay Engineer | In HF-M2-52 |
-| F-113 | HF-M2-33 | CEO request 2026-10-24: no way to open the Plan page from the journey map | Minor | Gameplay Engineer | In HF-M2-53 |
+| F-106 | HF-M2-44 | CEO test 2026-10-24: the first guide wording does not wait for a press and runs longer than the screen | Major | Gameplay Engineer | Closed in #127 |
+| F-107 | HF-M2-32 | CEO test 2026-10-24: a tower is already in Level 0 before the player buys one | Major | Gameplay Engineer | Closed in #127 |
+| F-108 | HF-M2-43 | CEO test 2026-10-24: buying a skill should close the detail card | Minor | Gameplay Engineer | Closed in #128 |
+| F-109 | HF-M2-44 | CEO test 2026-10-24: buying the first post starts Level 0 again automatically | Major | Gameplay Engineer | Closed in #127 |
+| F-110 | HF-M2-30 | CEO test 2026-10-24: yellow markers next to recruits and two recruits already in Levels 0 and 1, though recruits are parked | Major | Gameplay Engineer | Closed in #127 |
+| F-111 | HF-M2-45 | CEO test 2026-10-24: the first gear piece was auto-allocated instead of landing in the inventory | Minor | Gameplay Engineer | Closed in #127 |
+| F-112 | HF-M2-37 | CEO test 2026-10-24: the Mage description makes the screen act strangely | Major | Gameplay Engineer | Closed in #128 |
+| F-113 | HF-M2-33 | CEO request 2026-10-24: no way to open the Plan page from the journey map | Minor | Gameplay Engineer | Closed in #128 |
 | F-114 | HF-M2-33 | CEO request 2026-10-24: the skill tree should read as a web from a central place, not a tree, and its spacing feels wrong | Major | Designer (screen mockups) | In HF-M2-54, build in HF-M2-55 |
+| F-115 | HF-M2-48 | FOLLOW-UP from QA (#128, aed2803): Refund leaves the detail card open (now showing Buy) while a buy closes it | Minor | Gameplay Engineer | Open (backlog) |
+| F-116 | HF-M2-50 | Interim: the Levels 1 to 5 retune after parking Bryn, Wren and the light posts makes the early levels easier than the M2 design intends; QA's simulator shows first-try wins for an average player of 7, 6, 3, 5, 3 of 8 on Levels 1 to 5 | Minor | Head of Engineering | Open, M2b balance |
 
 ## Test changes
 
@@ -936,6 +938,9 @@
 | 2026-10-24 | `test_build3.gd`, `test_build5.gd`, `test_guided_start.gd`, `test_stars_and_castle.gd`, `test_mage_post.gd`, `test_rework_b.gd`, `test_tree_pan_zoom.gd`, `test_interface_tidy.gd` (#121, nine changes listed old to new in its description) | Checks on the bottom strip become checks on the detail card through a shared `TreeCard` helper; two strip-only asserts dropped; the journey guide text now says "Refund a node to free a star" | The strip is gone (HF-M2-43); QA confirmed each keeps its intent | Head of Engineering |
 | 2026-10-24 | `test_build3.gd::test_a_new_profile_starts_empty...`, `run_ui_tests.gd`, `test_detail_card.gd` (#122) | New profile gains `"stand_done": false, "stars_line_seen": false`; the clicked walk gains the stand checks and one map click; the gate fixture gains one node (six owned) to match the corrected gate rule | HF-M2-44 flags and flow; HF-M2-43 follow-up F-100 | Head of Engineering |
 | 2026-10-24 | `test_build3.gd` profile shape, `test_rework_a.gd::test_the_skill_tree_button_says_how_many_upgrades_can_be_bought` (#123) | Profile gains `"gear_seen": []`; button text assert `"Skill tree: %d to buy" % affordable` to `"Skill tree"` plus the dot visible | The dot replaces the count (HF-M2-45) | Head of Engineering |
+| 2026-10-24 | `test_stars_and_castle.gd`, `test_guided_start.gd`, `test_plan_and_map_layout.gd`, `test_first_stand.gd`, `run_ui_tests.gd`, `test_playable_level.gd`, `test_world_view_layout.gd`, `test_build3d.gd`, `test_always_something.gd`, `test_build6.gd`, `test_gear_slots.gd`, `test_interface_tidy.gd`, `test_rework_a.gd` (#127, listed old to new in its description) | Level 0 has 0 towers (was 1); a Start button replaces the automatic start of the stand; staff and their range circle are not in a parked run; a first gear drop stays in the bag (was worn); the timed walk counts one more tap | HF-M2-47, 49, 50 and 51 Done when lines; no band, floor, seed count or curve expectation changed; QA confirmed each keeps its intent | Head of Engineering |
+| 2026-10-24 | Progression hash | Re-pinned in #127: `21a15385` to `bd20a8e7` (parked Bryn, Wren and light posts, and the Levels 1 to 5 data retune; unchanged by #128) | Parking changes every simulated run | Head of Engineering |
+| 2026-10-24 | `test_detail_card.gd` (#128, three changes) | The buy test: card stays with a tick and glow to card closes with the neighbours lit; the owned-card test reopens the card after the buy; the unaffordable test also asserts a refused buy leaves the card open | HF-M2-48 behaviour change (CEO: a buy closes the window); nothing weakened | Head of Engineering |
 
 ## Advisor views
 
@@ -954,6 +959,7 @@
 | 2026-10-23 | Menus and navigation | Four pages joined by a journey map (main menu, journey map hub, skill tree, Plan page). The tree is one big zoomable web with jump tabs, not separate tab pages, so Hero and tower links show as bridges. Placement moves to a Plan page before each level with a budget, Auto-place and a Quick start for the last layout; inside the level the player only upgrades and repairs between waves. Order: menus, map and Plan page first; the web second; bridge nodes and synergies third. Headline twist: the Keeper's light flows through the towers (lit posts, the special fired through nearby towers). Full note: `holdfast/m2/advisor-menus-navigation.md` in the project files. Answered: accepted. Changed: bridge nodes and synergies stay out of the first two items. |
 | 2026-10-24 | HF-M2-42 pillar and recruit unlocks | Flare Archer is the starter; Dusk Mage unlocks free by beating the level 5 boss, Tideblade by the next biome's boss; no star or gold cost. A pillar's tree arm shows only once unlocked. Full view in `/mnt/project-files/holdfast/m2/advisor-pillar-and-recruit-unlocks.md` (unedited, four taste decisions for the CEO) | Proposal only; the CEO decides before any build |
 | 2026-10-24 | HF-M2-41 design pass, round 1 critique | Accepts keeping slots in the tree with a "+ Slot" shortcut on the Plan page (same node, same price); green tick for owned, amber for what to do next; changes "Refresh" to "Refund". Full view in `/mnt/project-files/holdfast/m2/advisor-design-pass-1-critique.md` (unedited) | Open taste calls (Refund or Refresh, slots in the tree with a shortcut) put to the CEO by the Chief of Staff; the interface and slot items wait for the answer |
+| 2026-10-24 | HF-M2-54 radial skill web, one critique round | The web is the right idea; ring spacing is even but angular spacing is uneven (one 30 degree slice holds 1 node, others 7) and spoke lengths vary (Tithe reaches radius 472, most stop at 352); aim for 72 or more between any two nodes. All of the Advisor's points accepted by the Designer. Full view in `/mnt/project-files/holdfast/m2/advisor-radial-web-critique.md` (unedited) | Mockup `radial-skill-web.html` shown to the CEO; no build (HF-M2-55) until the CEO accepts |
 
 ## Decisions and open questions
 
@@ -1010,3 +1016,4 @@
 - 2026-10-24: Feedback slice HF-M2-38 to HF-M2-45 merged (#116, #119, #120, #121, #122, #123), all QA clear at named commits. Open follow-ups F-094, F-096, F-098, F-099, F-102 to F-105. Boss-unlocked pillars wait for the M2b balance floors. One combined handoff to the CEO, then stop for the CEO's test.
 - 2026-10-24: CEO tested the feedback build: seven comments logged as F-106 to F-112 and items HF-M2-46 to 52. Standing go: the engineer opens each PR at once and the Head of Engineering merges on green CI. Before the CEO sees the next build Head of QA plays a fresh game end to end at 1280x720 and 1920x1080 and the handoff carries a written pass list. Recruits stay parked.
 - 2026-10-24: CEO asks added after the test: a Plan entry on the journey map (HF-M2-53, folded into the fix batch) and a radial skill tree (design HF-M2-54 with one Advisor round, build HF-M2-55 only after the CEO accepts the mockup). The other fixes do not wait for the redesign.
+- 2026-10-24: HF-M2-46 to 53 merged (#127, #128) with QA clear at named commits; HF-M2-50 parks Bryn, Wren and the light posts behind a flag (Head of Engineering chose a data-only retune of Levels 1 to 5 over loosening the curve bands; interim, M2b rebalances). The CEO's standing rules: no idle gaps between steps, only the Chief of Staff runs stall checks, every 30 minutes. Radial skill web (HF-M2-55) waits for the CEO's acceptance of the mockup.
