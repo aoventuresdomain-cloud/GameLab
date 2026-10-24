@@ -667,6 +667,69 @@
   - [ ] The CEO has one brief with their own playtest notes, the pacing report, style for approval, the QA result and a go / rework / stop recommendation.
   - [ ] The brief states the commit each QA result was run on.
 
+### HF-M2-46 The first guide text is short, fits the screen and waits for a press
+- **Owner:** Gameplay Engineer
+- **Status:** Ready (CEO feedback 2026-10-24, comment 1)
+- **QA:** full
+- **Depends on:** HF-M2-44
+- **Done when:**
+  - [ ] The first guide message is short enough to fit at 1280x720 and 1920x1080 with nothing running off the screen (a layout check).
+  - [ ] It stays until the player clicks, taps or presses a key, and nothing underneath reacts to that press.
+
+### HF-M2-47 Level 0 starts with no tower
+- **Owner:** Gameplay Engineer
+- **Status:** Ready (CEO feedback 2026-10-24, comment 2)
+- **QA:** full
+- **Depends on:** HF-M2-44
+- **Done when:**
+  - [ ] A new game's Level 0 shows no tower before the player buys one; the castle's own stand post appears only in the short fight after the second guided buy.
+  - [ ] Old saves still load, and a test covers a new profile's Level 0 start.
+
+### HF-M2-48 Buying a skill closes the detail card
+- **Owner:** Gameplay Engineer
+- **Status:** Ready (CEO feedback 2026-10-24, comment 3; replaces "the card stays with a tick" from HF-M2-43)
+- **QA:** full
+- **Depends on:** HF-M2-43
+- **Done when:**
+  - [ ] After a successful buy the card closes and the newly buyable neighbours light up on the tree.
+  - [ ] A refused buy leaves the card open with its reason; Refund keeps the card behaviour decided in HF-M2-43. The HF-M2-43 tests that expect the card to stay change only with my OK, each logged.
+
+### HF-M2-49 Nothing starts Level 0 without a press
+- **Owner:** Gameplay Engineer
+- **Status:** Ready (CEO feedback 2026-10-24, comment 4). Default: after the second guided buy a Start button begins the short fight
+- **QA:** full
+- **Depends on:** HF-M2-44
+- **Done when:**
+  - [ ] Buying the first post does not start any level; the short fight begins only when the player presses Start, still within about two minutes of the first Start.
+  - [ ] A test covers the guided flow on a new profile and on an old save.
+
+### HF-M2-50 Recruit markers and recruits in Levels 0 and 1 (recruits are parked)
+- **Owner:** Gameplay Engineer
+- **Status:** Ready (CEO feedback 2026-10-24, comment 5)
+- **QA:** full
+- **Depends on:** none
+- **Done when:**
+  - [ ] The cause of the yellow markers next to recruits and of two recruits in Levels 0 and 1 is found and explained in one paragraph to the Head of Engineering.
+  - [ ] No recruit or recruit marker appears in a new game while recruits stay parked (decision 23 Oct), with a test.
+
+### HF-M2-51 The first gear piece lands in the inventory
+- **Owner:** Gameplay Engineer
+- **Status:** Ready (CEO feedback 2026-10-24, comment 6)
+- **QA:** full
+- **Depends on:** HF-M2-45
+- **Done when:**
+  - [ ] A first gear drop goes into the inventory unequipped; the player equips it on the Hero page. The Hero tab dot stays until that page is opened.
+  - [ ] A test covers the first drop, and old saves keep what they have equipped.
+
+### HF-M2-52 The Mage description no longer breaks the screen
+- **Owner:** Gameplay Engineer
+- **Status:** Ready (CEO feedback 2026-10-24, comment 7)
+- **QA:** full
+- **Depends on:** none
+- **Done when:**
+  - [ ] The Mage Post and Tower Gate I descriptions fit their cards on the tree and the Plan page at 1280x720 and 1920x1080, with no overflow or jump (a layout check on the longest text).
+  - [ ] The cause is found and named in the pull request.
+
 ## Findings
 
 *Every finding from review, QA, CI or the Advisor goes here with an owner before anyone fixes it. Closed findings stay, marked Fixed with the PR. Grading (from 20 Oct 2026): Blocker and Major findings are MUST FIX and block the merge; Minor ones are FOLLOW-UP and don't, unless the row says otherwise. New findings put MUST FIX or FOLLOW-UP in the Severity cell. A finding counts only if it reproduces without test-only helpers.*
@@ -779,6 +842,13 @@
 | F-103 | HF-M2-43 | The mockup's hollow amber ring on buyable nodes is not built (not in the Done when lines) | Minor | Gameplay Engineer | Open (backlog) |
 | F-104 | HF-M2-44 | FOLLOW-UP from QA (#122, ff7ce29): `from_save` marks the intro flags seen for any non-empty save, so an old save that had not yet won Level 0 never sees the line or the fight | Minor | Gameplay Engineer | Open, accepted (spec covers saves past Level 0) |
 | F-105 | HF-M2-45 | FOLLOW-UP from QA (#123, 8f6cce2): the tree dot's seen list is kept in memory only, so after a reload the dot returns for nodes looked at last session | Minor | Gameplay Engineer | Open (backlog) |
+| F-106 | HF-M2-44 | CEO test 2026-10-24: the first guide wording does not wait for a press and runs longer than the screen | Major | Gameplay Engineer | In HF-M2-46 |
+| F-107 | HF-M2-32 | CEO test 2026-10-24: a tower is already in Level 0 before the player buys one | Major | Gameplay Engineer | In HF-M2-47 |
+| F-108 | HF-M2-43 | CEO test 2026-10-24: buying a skill should close the detail card | Minor | Gameplay Engineer | In HF-M2-48 |
+| F-109 | HF-M2-44 | CEO test 2026-10-24: buying the first post starts Level 0 again automatically | Major | Gameplay Engineer | In HF-M2-49 |
+| F-110 | HF-M2-30 | CEO test 2026-10-24: yellow markers next to recruits and two recruits already in Levels 0 and 1, though recruits are parked | Major | Gameplay Engineer | In HF-M2-50 |
+| F-111 | HF-M2-45 | CEO test 2026-10-24: the first gear piece was auto-allocated instead of landing in the inventory | Minor | Gameplay Engineer | In HF-M2-51 |
+| F-112 | HF-M2-37 | CEO test 2026-10-24: the Mage description makes the screen act strangely | Major | Gameplay Engineer | In HF-M2-52 |
 
 ## Test changes
 
@@ -906,3 +976,4 @@
 - 2026-10-24: CEO decisions on the design pass: taking a node back is called "Refund"; the red arrows on the Plan page go; the Hero page design is approved. Slots in the tree with a "+ Tower" shortcut on the Plan page and the boss unlocks for other heroes are not answered yet; HF-M2-39 and HF-M2-40 build on the recommendations unless told otherwise. The CEO asked what the bottom two skills on the tree are; the mockup must make them self-explanatory.
 - 2026-10-24: CEO decisions on the UI and journey research (`holdfast-ui-and-journey-research.html`): adopted points 1 to 4 (real fight within two minutes, always something to buy with a tab dot, guide capped at two taps, one line on stars), points 7 to 9 (non-colour can't-afford cue, certain first gear drop with a Hero tab dot, clear Refund amount with the tutorial buys not refundable). Kept as agreed: the zoomed-out tree start (point 5) and Tower Gate I's three cards as mocked (point 6). Dropped: the accessibility pass (10), step timings (11) and hints-only guide (12). Items HF-M2-43 (extended), HF-M2-44 and HF-M2-45. The hold on HF-M2-39, 40 and 43 is released.
 - 2026-10-24: Feedback slice HF-M2-38 to HF-M2-45 merged (#116, #119, #120, #121, #122, #123), all QA clear at named commits. Open follow-ups F-094, F-096, F-098, F-099, F-102 to F-105. Boss-unlocked pillars wait for the M2b balance floors. One combined handoff to the CEO, then stop for the CEO's test.
+- 2026-10-24: CEO tested the feedback build: seven comments logged as F-106 to F-112 and items HF-M2-46 to 52. Standing go: the engineer opens each PR at once and the Head of Engineering merges on green CI. Before the CEO sees the next build Head of QA plays a fresh game end to end at 1280x720 and 1920x1080 and the handoff carries a written pass list. Recruits stay parked.
