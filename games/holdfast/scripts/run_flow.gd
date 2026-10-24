@@ -168,7 +168,8 @@ func _start_run(stand := false) -> void:
 		source.upgrades = profile.get_upgrades().duplicate()
 		source.stand = stand
 		source.parked = true
-		source.wait_for_press = true
+		# A bot-driven run (the CI smoke) has nobody to press a key.
+		source.wait_for_press = not source.use_bot
 		source.layout = profile.get_stand_layout() if stand else profile.get_layout(profile.get_level())
 		source.gear = profile.get_gear_worn()
 		source.gear_owned = profile.get_gear_owned().duplicate()

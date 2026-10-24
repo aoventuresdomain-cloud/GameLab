@@ -66,6 +66,19 @@ func test_a_run_that_teaches_nothing_never_waits() -> void:
 	main.free()
 
 
+func test_a_bot_driven_run_never_waits_for_a_press() -> void:
+	# The CI smoke plays Level 0 with the bot; nobody is there to press a key.
+	var main := _main()
+	var source: HoldfastRunSource = main.get_node("RunSource")
+	source.use_bot = true
+	main.call("_new_game")
+	main.call("_level_picked", "first_watch")
+	expect_true(source.is_running())
+	expect_false(source.is_held(), "a bot's run is not held")
+	source.step(1000.0)
+	main.free()
+
+
 func test_a_click_a_tap_or_a_key_lifts_the_hold_and_nothing_else_does() -> void:
 	var main := _main()
 	var source: HoldfastRunSource = main.get_node("RunSource")
