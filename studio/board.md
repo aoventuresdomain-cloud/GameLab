@@ -752,12 +752,12 @@
 
 ### HF-M2-55 Build the radial skill tree
 - **Owner:** Gameplay Engineer
-- **Status:** On hold (waits for the CEO to accept HF-M2-54)
+- **Status:** Building (CEO accepted the mockup 2026-10-25)
 - **QA:** full (tree layout, pan and zoom)
 - **Depends on:** HF-M2-54
 - **Done when:**
   - [ ] The tree draws as in the accepted mockup with the same nodes, prices, links and adjacent-only reveal; old saves are unaffected.
-  - [ ] Pan, zoom, the zoomed-out first view, the detail card and the guide still work; labels stay readable at 1280x720.
+  - [ ] Pan, zoom, the zoomed-out first view, the detail card and the guide still work; labels stay readable at 1280x720 with slightly more generous spacing between nodes and labels than the mockup (CEO, 2026-10-25).
   - [ ] Any existing test change is OK'd by the Head of Engineering and logged.
 
 ## Findings
@@ -880,7 +880,7 @@
 | F-111 | HF-M2-45 | CEO test 2026-10-24: the first gear piece was auto-allocated instead of landing in the inventory | Minor | Gameplay Engineer | Closed in #127 |
 | F-112 | HF-M2-37 | CEO test 2026-10-24: the Mage description makes the screen act strangely | Major | Gameplay Engineer | Closed in #128 |
 | F-113 | HF-M2-33 | CEO request 2026-10-24: no way to open the Plan page from the journey map | Minor | Gameplay Engineer | Closed in #128 |
-| F-114 | HF-M2-33 | CEO request 2026-10-24: the skill tree should read as a web from a central place, not a tree, and its spacing feels wrong | Major | Designer (screen mockups) | In HF-M2-54, build in HF-M2-55 |
+| F-114 | HF-M2-33 | CEO request 2026-10-24: the skill tree should read as a web from a central place, not a tree, and its spacing feels wrong | Major | Designer (screen mockups) | In HF-M2-55 (Building) |
 | F-115 | HF-M2-48 | FOLLOW-UP from QA (#128, aed2803): Refund leaves the detail card open (now showing Buy) while a buy closes it | Minor | Gameplay Engineer | Open (backlog) |
 | F-116 | HF-M2-50 | Interim: the Levels 1 to 5 retune after parking Bryn, Wren and the light posts makes the early levels easier than the M2 design intends; QA's simulator shows first-try wins for an average player of 7, 6, 3, 5, 3 of 8 on Levels 1 to 5 | Minor | Head of Engineering | Open, M2b balance |
 
@@ -963,6 +963,7 @@
 
 ## Decisions and open questions
 
+- 2026-10-25: CEO accepted the radial skill web mockup (HF-M2-54) and asked for it to be built (HF-M2-55). Defaults picked by HoE: standing go (the engineer opens the PR at once, QA full, merge on green CI), then Head of QA's fresh-game dry run before the handoff; the Advisor's accepted spacing points are kept; known limit is that the busiest mid-game view at 1280x720 needs a pan to the outer rings.
 - 2026-10-22: **Go on the revised plan** (CEO). Recruits are parked until the core gameplay is established (HF-M2-03 on hold, what exists stays as is). The CEO now gets 7 builds: 3 Gold and saves, 4 Hero skills, 5 Monsters and the boss, 6 Pacing, 7 Recruits. Build 3 starts now and includes HF-M2-18. Defaults picked by HoE: the Gameplay Engineer builds the plain Build 3 screens (no new role woken); the save service PR (KIT-07, core logic) gets QA's strict tests plus a focused QA check on that one commit, not a full round.
 - 2026-10-22: CEO after Build 2b: pillar difficulty feels good enough (no retune); the Hero gets back up where they fell, not at the keep (HF-M2-18, in Build 3). Defaults picked by HoE: a short untouchable time after getting up, because the Hero can now fall in the middle of a fight; the wait, XP drop and Recruit rules are unchanged.
 - 2026-10-22: CEO after Build 3 start: the map felt small and the Hero could not reach the edge (HF-M2-19). Defaults picked by HoE: a quick fix with the Build 3 letter (3b) that rides after Build 3 and changes only arena size; the estimate stays the same.
