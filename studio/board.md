@@ -752,13 +752,13 @@
 
 ### HF-M2-55 Build the radial skill tree
 - **Owner:** Gameplay Engineer
-- **Status:** Building (CEO accepted the mockup 2026-10-25)
+- **Status:** Merged (#131, QA clear at 43e2e0e, merge 254ff42). Build 8 of 8, radial skill web
 - **QA:** full (tree layout, pan and zoom)
 - **Depends on:** HF-M2-54
 - **Done when:**
-  - [ ] The tree draws as in the accepted mockup with the same nodes, prices, links and adjacent-only reveal; old saves are unaffected.
-  - [ ] Pan, zoom, the zoomed-out first view, the detail card and the guide still work; labels stay readable at 1280x720 with slightly more generous spacing between nodes and labels than the mockup (CEO, 2026-10-25).
-  - [ ] Any existing test change is OK'd by the Head of Engineering and logged.
+  - [x] The tree draws as in the accepted mockup with the same nodes, prices, links and adjacent-only reveal; old saves are unaffected.
+  - [x] Pan, zoom, the zoomed-out first view, the detail card and the guide still work; labels stay readable at 1280x720 with slightly more generous spacing between nodes and labels than the mockup (CEO, 2026-10-25).
+  - [x] Any existing test change is OK'd by the Head of Engineering and logged.
 
 ## Findings
 
@@ -880,9 +880,13 @@
 | F-111 | HF-M2-45 | CEO test 2026-10-24: the first gear piece was auto-allocated instead of landing in the inventory | Minor | Gameplay Engineer | Closed in #127 |
 | F-112 | HF-M2-37 | CEO test 2026-10-24: the Mage description makes the screen act strangely | Major | Gameplay Engineer | Closed in #128 |
 | F-113 | HF-M2-33 | CEO request 2026-10-24: no way to open the Plan page from the journey map | Minor | Gameplay Engineer | Closed in #128 |
-| F-114 | HF-M2-33 | CEO request 2026-10-24: the skill tree should read as a web from a central place, not a tree, and its spacing feels wrong | Major | Designer (screen mockups) | In HF-M2-55 (Building) |
+| F-114 | HF-M2-33 | CEO request 2026-10-24: the skill tree should read as a web from a central place, not a tree, and its spacing feels wrong | Major | Designer (screen mockups) | Fixed in #131 (HF-M2-55) |
 | F-115 | HF-M2-48 | FOLLOW-UP from QA (#128, aed2803): Refund leaves the detail card open (now showing Buy) while a buy closes it | Minor | Gameplay Engineer | Open (backlog) |
 | F-116 | HF-M2-50 | Interim: the Levels 1 to 5 retune after parking Bryn, Wren and the light posts makes the early levels easier than the M2 design intends; QA's simulator shows first-try wins for an average player of 7, 6, 3, 5, 3 of 8 on Levels 1 to 5 | Minor | Head of Engineering | Open, M2b balance |
+| F-117 | HF-M2-55 | FOLLOW-UP from QA (#131, 43e2e0e): label collisions in the busy Archer wedge: rim label "Hero" overlaps "Steady hands"; "Lamp oil" and "Steady hands" stack so it is unclear which node is which; "Twin arrows" touches the Lit Post circle; dashed synergy links run across labels | Minor | Gameplay Engineer | Open (backlog, with the next tree pass) |
+| F-118 | HF-M2-55 | FOLLOW-UP from QA (#131): with about 4 nodes owned the Castle tab view at 1280x720 crops Tithe I and Walls I and a link runs off the top (the known pan limit; the very first open fits) | Minor | Gameplay Engineer | Open (backlog) |
+| F-119 | HF-M2-55 | FOLLOW-UP from QA (#131): during the guide the Slot II node shows the amber buyable ring but its card refuses; a dimmed ring would match | Minor | Gameplay Engineer | Open (backlog) |
+| F-120 | HF-M2-55 | QA (#131): the mockup leaves Tower Gate I out of the early view until the Mage Post exists, and the build shows it dim next to the first Archer Post (reveal rule unchanged by agreement). Design call for the Advisor and CEO, not a defect | Minor | Game Design Advisor | Open (design call) |
 
 ## Test changes
 
@@ -941,6 +945,7 @@
 | 2026-10-24 | `test_stars_and_castle.gd`, `test_guided_start.gd`, `test_plan_and_map_layout.gd`, `test_first_stand.gd`, `run_ui_tests.gd`, `test_playable_level.gd`, `test_world_view_layout.gd`, `test_build3d.gd`, `test_always_something.gd`, `test_build6.gd`, `test_gear_slots.gd`, `test_interface_tidy.gd`, `test_rework_a.gd` (#127, listed old to new in its description) | Level 0 has 0 towers (was 1); a Start button replaces the automatic start of the stand; staff and their range circle are not in a parked run; a first gear drop stays in the bag (was worn); the timed walk counts one more tap | HF-M2-47, 49, 50 and 51 Done when lines; no band, floor, seed count or curve expectation changed; QA confirmed each keeps its intent | Head of Engineering |
 | 2026-10-24 | Progression hash | Re-pinned in #127: `21a15385` to `bd20a8e7` (parked Bryn, Wren and light posts, and the Levels 1 to 5 data retune; unchanged by #128) | Parking changes every simulated run | Head of Engineering |
 | 2026-10-24 | `test_detail_card.gd` (#128, three changes) | The buy test: card stays with a tick and glow to card closes with the neighbours lit; the owned-card test reopens the card after the buy; the unaffordable test also asserts a refused buy leaves the card open | HF-M2-48 behaviour change (CEO: a buy closes the window); nothing weakened | Head of Engineering |
+| 2026-10-25 | `test_rework_b.gd`, `test_stars_and_castle.gd`, `test_interface_tidy.gd`, `test_guided_start.gd`, `run_ui_tests.gd` (#131; full old to new in the PR body) | Node below its required nodes became no nearer the middle; first-view zoom 0.5 to 1.0 became 0.9 to 1.5 (floor 0.9, every shown node must fit, stricter); tab tests: other tabs out of view became view centred nearest this tab; node button text moved from name plus price to price only with the name on a 12 px label; tree node text minimum 20 px to 12 px on the tree only | HF-M2-55 radial layout (round web, names beside nodes); two assertions loosened as the layout needs, one tightened; nothing else weakened. Hash unchanged (`bd20a8e7`) | Head of Engineering |
 
 ## Advisor views
 
@@ -964,6 +969,7 @@
 ## Decisions and open questions
 
 - 2026-10-25: CEO accepted the radial skill web mockup (HF-M2-54) and asked for it to be built (HF-M2-55). Defaults picked by HoE: standing go (the engineer opens the PR at once, QA full, merge on green CI), then Head of QA's fresh-game dry run before the handoff; the Advisor's accepted spacing points are kept; known limit is that the busiest mid-game view at 1280x720 needs a pan to the outer rings.
+- 2026-10-25: Build 8 of 8 (radial skill web, HF-M2-55) merged in #131; QA full round and fresh-game dry run clear at 43e2e0e, no MUST FIX. Defaults picked by HoE: Tower Gate I reveal rule left as it was (F-120, a design call), Refund-closes-card stays F-115, label collisions logged as F-117.
 - 2026-10-22: **Go on the revised plan** (CEO). Recruits are parked until the core gameplay is established (HF-M2-03 on hold, what exists stays as is). The CEO now gets 7 builds: 3 Gold and saves, 4 Hero skills, 5 Monsters and the boss, 6 Pacing, 7 Recruits. Build 3 starts now and includes HF-M2-18. Defaults picked by HoE: the Gameplay Engineer builds the plain Build 3 screens (no new role woken); the save service PR (KIT-07, core logic) gets QA's strict tests plus a focused QA check on that one commit, not a full round.
 - 2026-10-22: CEO after Build 2b: pillar difficulty feels good enough (no retune); the Hero gets back up where they fell, not at the keep (HF-M2-18, in Build 3). Defaults picked by HoE: a short untouchable time after getting up, because the Hero can now fall in the middle of a fight; the wait, XP drop and Recruit rules are unchanged.
 - 2026-10-22: CEO after Build 3 start: the map felt small and the Hero could not reach the edge (HF-M2-19). Defaults picked by HoE: a quick fix with the Build 3 letter (3b) that rides after Build 3 and changes only arena size; the estimate stays the same.
