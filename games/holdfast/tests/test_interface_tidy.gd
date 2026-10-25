@@ -123,7 +123,9 @@ func test_an_owned_node_glows_green_and_has_no_bought_word() -> void:
 	profile.changed.emit()
 	var page: Control = main.keep_screen
 	var slot: Button = page._node_buttons["castle_slot_1"]
-	expect_eq(slot.text, "First Slot", "the name alone")
+	expect_eq(slot.text, "", "no word on it: a tick is drawn there")
+	expect_eq(page._marks["castle_slot_1"].get_meta("state"), "owned", "the tick")
+	expect_eq(page._labels["castle_slot_1"].text, "First Slot", "and the name stays under it")
 	expect_true(slot.get_theme_stylebox("disabled") == page._owned_style and slot.get_theme_stylebox("normal") == page._owned_style, "it glows")
 	page.open_card("castle_slot_1")
 	expect_false(TreeCard.text(page).to_lower().contains("bought"), TreeCard.text(page))

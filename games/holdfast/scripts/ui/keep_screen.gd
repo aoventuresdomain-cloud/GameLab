@@ -1,8 +1,9 @@
 extends Control
-## Skill tree page: spend gold and stars on the upgrade tree, one web the player pans and zooms. Node
-## positions and the tab each section belongs to come from the pack. Pressing a node opens its
-## detail card over the dimmed tree: the card shows only that node and is where it is bought or
-## taken back. The page shows the profile and asks for changes through signals; the run flow acts
+## Skill tree page: spend gold and stars on the upgrade tree, one radial web the player pans and
+## zooms. Node positions (from the middle of the web, y down), short labels, the one-word section
+## names on the rim and the tab each section belongs to come from the pack. Pressing a node opens its
+## detail card on the side away from it, over the dimmed tree: the card shows only that node and is
+## where it is bought or taken back. The page shows the profile and asks for changes through signals; the run flow acts
 ## on them.
 
 signal back_requested
@@ -17,15 +18,36 @@ const FONT_PX := 20
 const DIMMED := Color(1, 1, 1, 0.45)
 const OWNED_FILL := Color(0.2, 0.5, 0.3)
 const OWNED_EDGE := Color(0.45, 0.85, 0.55)
-const NODE_SIZE := Vector2(260, 48)
-## A section's heading sits this far above its first row.
-const HEADING_GAP := 44.0
+## A round node: big enough to press at real size.
+const NODE_SIZE := Vector2(44, 44)
+const PRICE_PX := 14
+const CLOSED_PX := 11
+## Names under the nodes and on the rim keep their size on screen at any zoom, and the node names
+## are left off when the web is too small for them to be told apart.
+const LABEL_PX := 12
+const LABEL_WIDTH := 96.0
+const LABEL_GAP := 2.0
+const LABELS_MIN_ZOOM := 0.6
+const RIM_PX := 16
+const RIM_SIZE := Vector2(100, 24)
+## A section's name sits this far beyond its outermost node, and never nearer the middle than RIM_MIN.
+const RIM_GAP := 56.0
+const RIM_MIN := 120.0
+## Link nodes (they join two parts of the web) have a dashed ring.
+const LINK_PREFIX := "link_"
+const LINK_DASHES := 16
+const FAR_EDGE := Color(0.55, 0.62, 0.72)
+const NODE_FILL := Color(0.14, 0.16, 0.21)
+## The card keeps this far from the edge of the page.
+const CARD_MARGIN := 24.0
 ## About 0.4, a power-of-two fraction so the stored scale equals the limit exactly.
 const ZOOM_MIN := 0.375
 const ZOOM_MAX := 2.5
-## The tree opens zoomed out to show everything on show, but no smaller than this, so a node's
-## name stays legible (20 px type at this scale is 10 px on screen).
-const OVERVIEW_ZOOM_MIN := 0.5
+## The tree opens at the size that shows everything on show, from OVERVIEW_ZOOM_MIN (below it the
+## player pans) to OVERVIEW_ZOOM_MAX, so a node and its name stay easy to read and press.
+## About 0.9, a binary fraction so the stored scale equals the limit exactly.
+const OVERVIEW_ZOOM_MIN := 0.90625
+const OVERVIEW_ZOOM_MAX := 1.5
 ## How visible the sections of other tabs are while a tab is in view.
 const OTHER_TAB_ALPHA := 0.3
 const ZOOM_STEP := 1.15
@@ -116,9 +138,15 @@ var _owned_style := _make_owned_style()
 var _owned_focus_style := _make_owned_style(COLOUR_FOCUS)
 var _content: Dictionary
 var _node_buttons: Dictionary = {}
+## The name under each node, and the mark drawn on it (tick, star, dashed ring).
+var _labels: Dictionary = {}
+var _marks: Dictionary = {}
+## The way each section lies from the middle, which is where its name goes on the rim.
+var _rim_dirs: Dictionary = {}
+var _styles: Dictionary = {}
 ## Each section's holder in the web: hiding it hides its nodes and their links.
 var _section_columns: Dictionary = {}
-## Each section's heading, which sits above the nodes of it that are shown.
+## Each section's name on the rim, beyond the nodes of it that are shown.
 var _headings: Dictionary = {}
 var _tab_buttons: Dictionary = {}
 var _tab_group := ButtonGroup.new()
@@ -145,6 +173,7 @@ var _card_buy: Button
 var _card_refund: Button
 var _card_note: Label
 var _card_panel: PanelContainer
+var _card_row: HBoxContainer
 var _card_style: StyleBoxFlat
 ## The node whose button had the focus when its card opened, which gets it back on close.
 var _card_from: Button
@@ -191,18 +220,27 @@ func refresh() -> void:
 		var button: Button = _node_buttons[id]
 		var bought: bool = id in owned
 		var closed: bool = _profile.why_not_buy(id).begins_with("Closed")
+		var near: bool = bought or _profile.is_near(id)
 		button.visible = _profile.is_visible(id)
+		_labels[id].visible = button.visible
 		button.tooltip_text = _tip_text(id)
-		button.text = str(node["name"]) if bought else ("%s (closed)" % node["name"] if closed else "%s  %s" % [node["name"], _price(node)])
-		_light(button, bought)
+		# The price on the node (a tick when owned); the name is under it and on its tooltip.
+		button.text = "" if bought else ("closed" if closed else _face(node))
+		button.add_theme_font_size_override("font_size", CLOSED_PX if closed else PRICE_PX)
+		var state := "owned" if bought else ("closed" if closed else ("open" if near else "far"))
+		_marks[id].set_meta("state", state)
+		_marks[id].queue_redraw()
+		_light(button, state, _is_link(id))
 		# Every node can be pressed: its card says what is open to the player, and what is not.
 		button.set_pressed_no_signal(bought)
 		# Only what is one buy away (or already bought) is drawn in full; the rest is dimmed.
-		button.modulate = Color.WHITE if bought or _profile.is_near(id) else DIMMED
+		button.modulate = Color.WHITE if near else DIMMED
+		_labels[id].modulate = button.modulate
 	for section in _section_columns:
 		_section_columns[section].visible = (not _content["hero_paths"].has(section) or section == selected_pillar) and _section_has_shown_node(section)
 		_place_heading(section)
 	_refresh_tabs()
+	_sync_labels()
 	_web.queue_redraw()
 	_respec.disabled = owned.is_empty()
 	var change: int = _profile.get_respec_gold_change()
@@ -212,29 +250,62 @@ func refresh() -> void:
 		_fill_card()
 
 
-static func _make_owned_style(edge := OWNED_EDGE) -> StyleBoxFlat:
+static func _make_owned_style(edge := OWNED_EDGE, bordered := true) -> StyleBoxFlat:
+	return _round_style(OWNED_FILL, edge, bordered)
+
+
+static func _round_style(fill: Color, edge: Color, bordered: bool) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
-	box.bg_color = OWNED_FILL
+	box.bg_color = fill
 	box.border_color = edge
-	box.set_border_width_all(3)
-	box.set_corner_radius_all(6)
-	box.content_margin_left = 6.0
-	box.content_margin_right = 6.0
+	box.set_border_width_all(3 if bordered else 0)
+	box.set_corner_radius_all(int(NODE_SIZE.x * 0.5))
 	return box
 
 
-## An owned node glows green, with no word to say so; any other keeps the theme's look.
-func _light(button: Button, owned: bool) -> void:
-	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
-		if owned:
-			button.add_theme_stylebox_override(state, _owned_style)
-		else:
-			button.remove_theme_stylebox_override(state)
-	button.add_theme_stylebox_override("focus", _owned_focus_style if owned else _focus_style())
-	if owned:
-		button.add_theme_color_override("font_disabled_color", Color.WHITE)
-	else:
-		button.remove_theme_color_override("font_disabled_color")
+## The look of a node by state: owned (green), open (an amber ring: one buy away), far or closed
+## (a grey ring). A link node's ring is drawn dashed on its mark, so its box has no border.
+func _node_style(state: String, link: bool, hover: bool) -> StyleBoxFlat:
+	var key := "%s%s%s" % [state, link, hover]
+	if not _styles.has(key):
+		var fill := OWNED_FILL if state == "owned" else NODE_FILL
+		_styles[key] = _round_style(fill.lightened(0.15) if hover else fill, _edge(state), not link)
+	return _styles[key]
+
+
+static func _edge(state: String) -> Color:
+	return OWNED_EDGE if state == "owned" else (COLOUR_ACT if state == "open" else FAR_EDGE)
+
+
+## What the node's button looks like in a state; every state of the button looks the same, save
+## a brighter fill under the pointer.
+func _light(button: Button, state: String, link: bool) -> void:
+	var rest: StyleBoxFlat = _owned_style if state == "owned" and not link else _node_style(state, link, false)
+	for name in ["normal", "pressed", "disabled"]:
+		button.add_theme_stylebox_override(name, rest)
+	for name in ["hover", "hover_pressed"]:
+		button.add_theme_stylebox_override(name, _node_style(state, link, true))
+	button.add_theme_stylebox_override("focus", _owned_focus_style if state == "owned" else _focus_style(int(NODE_SIZE.x * 0.5)))
+
+
+func _is_link(id: String) -> bool:
+	return id.begins_with(LINK_PREFIX)
+
+
+## True when the line from a node to one it needs joins two sections: a link node reaching over.
+func _joins_sections(id: String, required: String) -> bool:
+	return _is_link(id) and _content["upgrade_nodes"][required]["branch"] != _content["upgrade_nodes"][id]["branch"]
+
+
+## Where a node sits in the web: its place in the pack, from the middle of the web.
+func _point(id: String) -> Vector2:
+	var at: Dictionary = _content["upgrade_nodes"][id]["at"]
+	return Vector2(float(at["x"]), float(at["y"]))
+
+
+## What a node's button says: its price, with room above it for the star of a star price.
+func _face(node: Dictionary) -> String:
+	return ("\n%d" if HoldfastMeta.is_star_node(node) else "%d") % int(node["cost"])
 
 
 func _build_tree() -> void:
@@ -243,31 +314,129 @@ func _build_tree() -> void:
 		holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_web.add_child(holder)
 		_section_columns[str(section["id"])] = holder
+		var middle := Vector2.ZERO
+		var count := 0
 		for id in _content["upgrade_nodes"]:
 			var node: Dictionary = _content["upgrade_nodes"][id]
 			if node["branch"] != section["id"]:
 				continue
-			var at := Vector2(float(node["at"]["x"]), float(node["at"]["y"]))
-			var button := _button(str(node["name"]), FONT_PX, 1)
+			var point := _point(id)
+			middle += point
+			count += 1
+			var button := Button.new()
+			button.clip_text = true
 			# Pass the mouse on, so a wheel turn or a drag that starts on a node still reaches the view.
 			button.mouse_filter = Control.MOUSE_FILTER_PASS
-			button.clip_text = true
 			button.custom_minimum_size = NODE_SIZE
-			button.position = at - NODE_SIZE * 0.5
+			button.position = point - NODE_SIZE * 0.5
 			button.button_down.connect(_node_pressed)
 			button.button_up.connect(_node_released)
 			button.pressed.connect(_node_clicked.bind(id))
-			button.add_theme_stylebox_override("focus", _focus_style())
 			holder.add_child(button)
 			_node_buttons[id] = button
-		var heading := Label.new()
-		heading.text = str(section["name"])
-		heading.add_theme_font_size_override("font_size", FONT_PX)
+			var mark := Control.new()
+			mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			button.add_child(mark)
+			mark.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			mark.draw.connect(_draw_mark.bind(id))
+			_marks[id] = mark
+			var text := str(node.get("label", node["name"]))
+			var width := get_theme_default_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_PX).x + 4.0
+			var label := _caption(text, LABEL_PX, Vector2(width, LABEL_PX + 4))
+			holder.add_child(label)
+			label.reset_size()
+			_labels[id] = label
+		_rim_dirs[str(section["id"])] = (middle / maxf(count, 1)).normalized() if middle.length() > 1.0 else Vector2.LEFT
+		var heading := _caption(str(section.get("rim", section["name"])), RIM_PX, RIM_SIZE)
+		heading.pivot_offset = RIM_SIZE * 0.5
 		heading.theme_type_variation = &"HudCaption"
 		holder.add_child(heading)
 		_headings[str(section["id"])] = heading
+	_place_labels()
 	# The web is as big as everything in it, so what it draws is never culled.
 	_web.custom_minimum_size = _holders_rect(_section_columns.values()).end
+
+
+## Each node's name goes on the side of it (below, above, right, left, then the corners) that crowds the other nodes
+## least, worked out once for the whole web at real size. A name grows from the edge of its
+## node, so it never runs back over it as it keeps its size when the web is zoomed out.
+func _place_labels() -> void:
+	var half := NODE_SIZE * 0.5
+	var taken: Array[Rect2] = []
+	for id in _node_buttons:
+		taken.append(Rect2(_point(id) - half, NODE_SIZE))
+	for id in _labels:
+		var label: Label = _labels[id]
+		var at := _point(id)
+		var box := label.size
+		# Where the name hangs from, and the point of the name that sits on it.
+		var options: Array = [
+			[at + Vector2(0, half.y + LABEL_GAP), Vector2(box.x * 0.5, 0)],
+			[at + Vector2(0, -half.y - LABEL_GAP), Vector2(box.x * 0.5, box.y)],
+			[at + Vector2(half.x + LABEL_GAP, 0), Vector2(0, box.y * 0.5)],
+			[at + Vector2(-half.x - LABEL_GAP, 0), Vector2(box.x, box.y * 0.5)],
+			[at + half * 0.7 + Vector2.ONE * LABEL_GAP, Vector2.ZERO],
+			[at + Vector2(-half.x * 0.7 - LABEL_GAP, half.y * 0.7 + LABEL_GAP), Vector2(box.x, 0)],
+			[at + Vector2(half.x * 0.7 + LABEL_GAP, -half.y * 0.7 - LABEL_GAP), Vector2(0, box.y)],
+			[at - half * 0.7 - Vector2.ONE * LABEL_GAP, box],
+		]
+		var best := 0
+		var best_cost := INF
+		for i in options.size():
+			var rect := Rect2(options[i][0] - options[i][1], box)
+			var cost := float(i) * 0.1
+			for other in taken:
+				cost += rect.intersection(other).get_area() if other != Rect2(at - half, NODE_SIZE) else 0.0
+			if cost < best_cost:
+				best = i
+				best_cost = cost
+		label.pivot_offset = options[best][1]
+		label.position = options[best][0] - options[best][1]
+
+
+## A name that does not take the mouse, centred in a box of a given size.
+func _caption(text: String, font_px: int, box: Vector2) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", font_px)
+	label.add_theme_color_override("font_outline_color", Color(0.06, 0.07, 0.1))
+	label.add_theme_constant_override("outline_size", 4)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.custom_minimum_size = box
+	return label
+
+
+## The tick of an owned node, the star of a star price, the dashed ring of a link.
+func _draw_mark(id: String) -> void:
+	var mark: Control = _marks[id]
+	var state: String = mark.get_meta("state", "far")
+	var middle := NODE_SIZE * 0.5
+	if _is_link(id):
+		var step := TAU / LINK_DASHES
+		for i in LINK_DASHES:
+			mark.draw_arc(middle, middle.x - 1.5, i * step, (i + 0.55) * step, 4, _edge(state), 3.0, true)
+	if state == "owned":
+		mark.draw_polyline(PackedVector2Array([Vector2(12, 23), Vector2(19, 30), Vector2(32, 15)]), Color.WHITE, 4.0, true)
+	elif state != "closed" and HoldfastMeta.is_star_node(_content["upgrade_nodes"][id]):
+		var points := PackedVector2Array()
+		for i in 10:
+			var angle := -PI * 0.5 + i * PI * 0.2
+			points.append(Vector2(middle.x, 12.0) + Vector2.from_angle(angle) * (6.0 if i % 2 == 0 else 2.6))
+		mark.draw_colored_polygon(points, COLOUR_ACT)
+
+
+## Names keep their size on screen whatever the zoom; node names go when the web is too small for them.
+func _sync_labels() -> void:
+	var zoom := _web.scale.x
+	if zoom <= 0.0:
+		return
+	var shown := zoom >= LABELS_MIN_ZOOM
+	for id in _labels:
+		_labels[id].scale = Vector2.ONE / zoom
+		_labels[id].self_modulate.a = 1.0 if shown else 0.0
+	for section in _headings:
+		_headings[section].scale = Vector2.ONE / zoom
 
 
 ## The tab labels in section order, for the sections that are shown.
@@ -288,14 +457,17 @@ func _section_has_shown_node(section: String) -> bool:
 	return false
 
 
-## The heading sits above the top-left of the section's nodes that are on show.
+## The section's name sits on the rim, out along the way the section lies, just beyond its
+## outermost node on show.
 func _place_heading(section: String) -> void:
-	var top_left := Vector2(INF, INF)
+	var far := 0.0
+	var found := false
 	for id in _node_buttons:
 		if _content["upgrade_nodes"][id]["branch"] == section and _node_buttons[id].visible:
-			top_left = top_left.min(_node_buttons[id].position)
-	if top_left.x != INF:
-		_headings[section].position = top_left - Vector2(0, HEADING_GAP)
+			far = maxf(far, _point(id).length())
+			found = true
+	if found:
+		_headings[section].position = _rim_dirs[section] * maxf(far + RIM_GAP, RIM_MIN) - RIM_SIZE * 0.5
 
 
 func _sections_in_order() -> Array:
@@ -341,12 +513,14 @@ func show_tab(label: String, picked := true) -> void:
 	var zoom := clampf(minf(1.0, minf(room.x / rect.size.x, room.y / rect.size.y)), ZOOM_MIN, ZOOM_MAX)
 	_web.scale = Vector2.ONE * zoom
 	_web.position = _view.size * 0.5 - rect.get_center() * zoom
+	_sync_labels()
 	_keep_in_view()
 	_fade_other_tabs(true)
 	_web.queue_redraw()
 
 
-## Opening the tree: everything on show in one view, as large as fits down to OVERVIEW_ZOOM_MIN.
+## Opening the tree: everything on show in one view, as large as fits between OVERVIEW_ZOOM_MIN
+## and OVERVIEW_ZOOM_MAX.
 ## When it cannot all fit at that size the view is centred on what the player owns (or on the
 ## middle of what is shown, when they own nothing yet) and they pan from there.
 func show_overview() -> void:
@@ -356,7 +530,7 @@ func show_overview() -> void:
 		return
 	var room := _view.size - Vector2.ONE * FIT_PAD * 2.0
 	var fit := minf(room.x / rect.size.x, room.y / rect.size.y)
-	var zoom := clampf(fit, OVERVIEW_ZOOM_MIN, 1.0)
+	var zoom := clampf(fit, OVERVIEW_ZOOM_MIN, OVERVIEW_ZOOM_MAX)
 	var centre := rect.get_center()
 	if fit < OVERVIEW_ZOOM_MIN:
 		var owned_rect := Rect2()
@@ -370,6 +544,7 @@ func show_overview() -> void:
 			centre = owned_rect.get_center()
 	_web.scale = Vector2.ONE * zoom
 	_web.position = _view.size * 0.5 - centre * zoom
+	_sync_labels()
 	_keep_in_view()
 	_fade_other_tabs(false)
 	_web.queue_redraw()
@@ -422,6 +597,7 @@ func zoom_by(factor: float, around := Vector2(-1, -1)) -> void:
 	_fade_other_tabs(false)
 	_web.position = point - (point - _web.position) * (zoom / _web.scale.x)
 	_web.scale = Vector2.ONE * zoom
+	_sync_labels()
 	_keep_in_view()
 
 
@@ -504,30 +680,26 @@ func _follow_view_tab() -> void:
 		_tab_buttons[label].set_pressed_no_signal(label == best)
 
 
-## A line from each node to the nodes it needs; a dashed one between the two sides of a fork.
+## A straight line from each node to the nodes it needs, dashed where a link node joins two
+## sections; a dashed red one between the two sides of a fork.
 func _draw_links() -> void:
-	var half := Vector2(0, NODE_SIZE.y * 0.5)
 	var owned: Array = _profile.get_upgrades() if _profile != null else []
 	for id in _node_buttons:
 		var node: Dictionary = _content["upgrade_nodes"][id]
 		if not _node_buttons[id].visible:
 			continue
-		var here := Vector2(float(node["at"]["x"]), float(node["at"]["y"]))
+		var here := _point(id)
 		for required in node.get("requires", []):
 			if not _node_buttons[required].visible:
 				continue
-			var other: Dictionary = _content["upgrade_nodes"][required]
-			var there := Vector2(float(other["at"]["x"]), float(other["at"]["y"]))
-			var middle := (there.y + here.y) * 0.5
-			var elbow := PackedVector2Array([there + half, Vector2(there.x, middle), Vector2(here.x, middle), here - half])
-			_web.draw_polyline(elbow, LINK_BOUGHT if id in owned and required in owned else LINK_OPEN, 3.0)
+			var colour := LINK_BOUGHT if id in owned and required in owned else LINK_OPEN
+			if _joins_sections(id, required):
+				_web.draw_dashed_line(_point(required), here, colour, 3.0, 8.0)
+			else:
+				_web.draw_line(_point(required), here, colour, 3.0, true)
 		for other_id in node.get("excludes", []):
 			if str(other_id) > id and _node_buttons[other_id].visible:
-				var other: Dictionary = _content["upgrade_nodes"][other_id]
-				# Side by side: from the edge of one node to the edge of the other.
-				var there := Vector2(float(other["at"]["x"]), float(other["at"]["y"]))
-				var edge := Vector2(NODE_SIZE.x * 0.5 * signf(there.x - here.x), 0)
-				_web.draw_dashed_line(here + edge, there - edge, LINK_FORK, 3.0, 8.0)
+				_web.draw_dashed_line(here, _point(other_id), LINK_FORK, 3.0, 8.0)
 
 
 ## A compact button at the screen's text size: the theme's button look with slim margins.
@@ -546,12 +718,12 @@ func _button(text: String, font_px := FONT_PX, margin := 3) -> Button:
 
 
 ## A transparent box with a blue outline: where a controller or the keyboard is.
-static func _focus_style() -> StyleBoxFlat:
+static func _focus_style(radius := 6) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
 	box.bg_color = Color(0, 0, 0, 0)
 	box.border_color = COLOUR_FOCUS
 	box.set_border_width_all(3)
-	box.set_corner_radius_all(6)
+	box.set_corner_radius_all(radius)
 	return box
 
 
@@ -572,11 +744,19 @@ func _build_card() -> void:
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_card.add_child(dim)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var centre := CenterContainer.new()
-	centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_card.add_child(centre)
-	centre.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# The card stands at one side of the page and an empty space fills the rest, so it can be put
+	# on the side away from the node it shows.
+	_card_row = HBoxContainer.new()
+	_card_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_card.add_child(_card_row)
+	_card_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, int(CARD_MARGIN))
+	var space := Control.new()
+	space.name = "Space"
+	space.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	space.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_card_row.add_child(space)
 	_card_panel = PanelContainer.new()
+	_card_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_card_panel.name = "Panel"
 	_card_panel.custom_minimum_size = Vector2(CARD_WIDTH, 0)
 	_card_style = StyleBoxFlat.new()
@@ -586,7 +766,8 @@ func _build_card() -> void:
 	_card_style.set_corner_radius_all(10)
 	_card_style.set_content_margin_all(16.0)
 	_card_panel.add_theme_stylebox_override("panel", _card_style)
-	centre.add_child(_card_panel)
+	_card_row.add_child(_card_panel)
+	_card_row.move_child(_card_panel, 0)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 10)
 	_card_panel.add_child(column)
@@ -673,12 +854,21 @@ func open_card(id: String) -> void:
 	_card_id = id
 	_card_from = _node_buttons.get(id)
 	_fill_card()
+	_place_card()
 	_card.visible = true
 	_set_tree_focus(false)
 	for control in [_card_buy, _card_close]:
 		if control.visible and not control.disabled:
 			control.grab_focus()
 			break
+
+
+## The card stands on the half of the page away from its node, so it never hides it.
+func _place_card() -> void:
+	var node_x := size.x * 0.5
+	if _card_from != null and _card_from.is_visible_in_tree():
+		node_x = _card_from.get_global_rect().get_center().x - get_global_rect().position.x
+	_card_row.move_child(_card_panel, 0 if node_x > size.x * 0.5 else 1)
 
 
 func close_card() -> void:

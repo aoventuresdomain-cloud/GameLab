@@ -11,6 +11,7 @@ const Main = preload("res://scenes/main.tscn")
 const StubRunSource = preload("res://scripts/stub_run_source.gd")
 const BASE_SIZE := Vector2i(1280, 720)
 const MIN_FONT_PX := 20 # on-screen pixels
+const MIN_TREE_FONT_PX := 12 # the skill tree's node prices and names, as the radial web mock-up has them
 
 var _failures := 0
 var _main: Node
@@ -194,7 +195,10 @@ func _check_layout(screen: Control, window: Vector2i, scale: float, view: Rect2)
 				if screen._tab_rect(tab).encloses(Rect2(node.position, node.size)) and node.get_parent().visible:
 					var name := "%dp %s tab %s/%s" % [window.y, screen.name, tab, id]
 					var px := roundi(node.get_theme_font_size("font_size") * web.scale.x * scale)
-					_check(px >= MIN_FONT_PX, "%s text is %dpx on screen" % [name, px])
+					_check(px >= MIN_TREE_FONT_PX, "%s text is %dpx on screen" % [name, px])
+					var label: Label = screen._labels[id]
+					var label_px := roundi(label.get_theme_font_size("font_size") * label.scale.x * web.scale.x * scale)
+					_check(label_px >= MIN_TREE_FONT_PX or web.scale.x < screen.LABELS_MIN_ZOOM, "%s name is %dpx on screen" % [name, label_px])
 					_check(screen.get_node("%View").get_global_rect().encloses(node.get_global_rect()), "%s fits in the view" % name)
 					_check(node.size.x + 0.5 >= node.get_minimum_size().x, "%s is not clipped" % name)
 	screen.visible = false
