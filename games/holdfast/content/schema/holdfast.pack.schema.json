@@ -473,6 +473,10 @@
           "type": "string",
           "x-ref": "upgrade_sections"
         },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
         "tier": {
           "type": "integer",
           "minimum": 1,
@@ -971,6 +975,10 @@
           "minimum": 0
         },
         "tab": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rim": {
           "type": "string",
           "minLength": 1
         }

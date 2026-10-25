@@ -267,13 +267,12 @@ func test_the_tree_opens_on_everything_that_is_shown_as_large_as_that_fits() -> 
 	var main: Node = made[0]
 	var page: Control = made[1]
 	var zoom: float = page.get_node("%Web").scale.x
-	expect_true(zoom >= page.OVERVIEW_ZOOM_MIN and zoom <= 1.0, "zoom %s is between the floor and real size" % zoom)
+	expect_true(zoom >= page.OVERVIEW_ZOOM_MIN and zoom <= page.OVERVIEW_ZOOM_MAX, "zoom %s is between the floor and the largest first view" % zoom)
 	var shown := 0
 	for id in page._node_buttons:
 		if page._node_buttons[id].visible and page._node_buttons[id].get_parent().visible:
 			shown += 1
-			if page.get_node("%Web").scale.x > page.OVERVIEW_ZOOM_MIN + 0.001:
-				expect_true(_on_screen(page, id), "%s is in the first view" % id)
+			expect_true(_on_screen(page, id), "%s is in the first view" % id)
 	expect_true(shown > 4, "there is a tree to see")
 	main.free()
 
@@ -291,7 +290,7 @@ func test_when_the_tree_is_too_wide_it_opens_at_the_floor_centred_on_what_the_pl
 	var main: Node = made[0]
 	var page: Control = made[1]
 	var web: Control = page.get_node("%Web")
-	expect_near(web.scale.x, 0.5, 0.0001, "as small as is still legible (10 px names)")
+	expect_near(web.scale.x, page.OVERVIEW_ZOOM_MIN, 0.0001, "as small as nodes are still easy to press")
 	var owned := Rect2()
 	for id in profile["upgrades"]:
 		var rect: Rect2 = page._node_buttons[id].get_global_rect()

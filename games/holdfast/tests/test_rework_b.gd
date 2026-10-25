@@ -44,11 +44,13 @@ func test_every_node_has_a_position_and_no_two_overlap() -> void:
 			expect_false(a.intersects(b), "%s and %s do not overlap" % [ids[i], ids[j]])
 
 
-func test_a_node_sits_below_every_node_it_needs() -> void:
+func test_a_node_is_no_nearer_the_middle_than_any_node_it_needs() -> void:
 	var nodes: Dictionary = HoldfastContent.base()["upgrade_nodes"]
 	for id in nodes:
+		var out := Vector2(float(nodes[id]["at"]["x"]), float(nodes[id]["at"]["y"])).length()
 		for required in nodes[id].get("requires", []):
-			expect_true(float(nodes[id]["at"]["y"]) > float(nodes[required]["at"]["y"]), "%s is below %s" % [id, required])
+			var in_ := Vector2(float(nodes[required]["at"]["x"]), float(nodes[required]["at"]["y"])).length()
+			expect_true(out >= in_ - 1.0, "%s is as far out as %s or further" % [id, required])
 
 
 func test_a_pack_node_without_a_position_is_refused() -> void:
@@ -77,7 +79,7 @@ func test_the_tabs_are_hero_archer_post_keep_and_castle_and_opening_lands_on_the
 	expect_eq(page.get_node("%Tabs").get_child_count(), 5)
 	expect_eq(page._tab, "Hero")
 	var zoom: float = page.get_node("%Web").scale.x
-	expect_true(zoom >= page.OVERVIEW_ZOOM_MIN and zoom < 1.0, "the tree opens zoomed out, not at real size")
+	expect_true(zoom >= page.OVERVIEW_ZOOM_MIN and zoom <= page.OVERVIEW_ZOOM_MAX, "the tree opens at the size that fits what is shown")
 	expect_true(_in_view(page, "castle_slot_1"), "and shows what the player owns")
 	main.free()
 
@@ -98,9 +100,12 @@ func test_each_tab_moves_the_view_to_its_sections_at_real_size() -> void:
 		expect_eq(page.get_node("%Web").scale.x, 1.0, "%s fits at real size, so text stays readable" % label)
 		for id in expected[label]:
 			expect_true(_in_view(page, id), "%s: %s is in view" % [label, id])
+		# The web is round, so the tabs' sections are near each other: the view is centred on this one.
+		var web: Control = page.get_node("%Web")
+		var middle: Vector2 = (page.get_node("%View").size * 0.5 - web.position) / web.scale.x
 		for other in expected:
 			if other != label:
-				expect_false(_in_view(page, expected[other][0]), "%s: %s is not" % [label, expected[other][0]])
+				expect_true(page._tab_rect(label).get_center().distance_to(middle) < page._tab_rect(other).get_center().distance_to(middle), "%s: the view is centred nearer it than %s" % [label, other])
 	main.free()
 
 
@@ -206,7 +211,8 @@ func test_every_node_is_on_the_web_and_buying_and_respec_work_from_it() -> void:
 	profile.bank_run({"gold": 500, "outcome": "lost", "level": "outpost"})
 	TreeCard.buy(page, "flare_focus")
 	expect_true("flare_focus" in profile.get_upgrades(), "buying works")
-	expect_eq(page._node_buttons["flare_focus"].text, "Steady aim")
+	expect_eq(page._node_buttons["flare_focus"].text, "", "owned: a tick, no price")
+	expect_eq(page._labels["flare_focus"].text, "Steady aim", "the name is under it")
 	expect_true(page._node_buttons["flare_focus"].get_theme_stylebox("disabled") == page._owned_style, "an owned node glows green")
 	page.get_node("%RespecButton").pressed.emit()
 	expect_true(profile.get_upgrades().is_empty(), "respec works")
