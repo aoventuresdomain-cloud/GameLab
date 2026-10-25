@@ -757,7 +757,7 @@
 - **Depends on:** HF-M2-54
 - **Done when:**
   - [ ] The tree draws as in the accepted mockup with the same nodes, prices, links and adjacent-only reveal; old saves are unaffected.
-  - [ ] Pan, zoom, the zoomed-out first view, the detail card and the guide still work; labels stay readable at 1280x720.
+  - [ ] Pan, zoom, the zoomed-out first view, the detail card and the guide still work; labels stay readable at 1280x720 with slightly more generous spacing between nodes and labels than the mockup (CEO, 2026-10-25).
   - [ ] Any existing test change is OK'd by the Head of Engineering and logged.
 
 ## Findings
