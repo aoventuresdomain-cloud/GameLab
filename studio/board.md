@@ -250,7 +250,7 @@
 
 ### HF-M2-03 Recruits: hiring, traits, levels and the squad
 - **Owner:** Gameplay Engineer
-- **Status:** On hold (CEO, 2026-10-22): Recruit work is parked until the core gameplay is established. What exists (Bryn, Wren, revive, leash) stays as is. Comes back as Build 7 of 7 if the CEO wants it
+- **Status:** Ready, Build 11 of 13 (CEO 2026-10-30: "recruits can be build as well after 9 - 10"; the hold of 2026-10-22 is lifted). Waits only on the Advisor's updated plan HF-M2-57 for the tree and star rules; the engineer starts with the data and engine parts meanwhile
 - **QA:** full
 - **Done when:**
   - [ ] A recruitment board on the keep screen offers Recruits to hire with gold, from packs. Each has a generated name, one of 4 classes (Warden, Lookout, Alchemist, Engineer; Recruits hold posts and the Hero owns the damage, so Recruit damage stays modest; the Alchemist lays status fields at posts: burn, slow, heal) and one of about 8 traits (for example "Steady: +20% range", "Coward: flees below half health"). Each trait is covered by a rules test.
@@ -258,6 +258,7 @@
   - [ ] Recruits earn XP from tokens mid-run, level up and can gain a trait. Each class has a small skill tree of three forks of two choices (24 nodes across the 4 classes, from packs), offered as a pick-1-of-2 on the level-up card with no new screen. Each choice changes behaviour (Warden: taunt or bulwark) and has a rules test. Recruits have no gear.
   - [ ] Recruits are drawn as distinct shapes in class colours, bigger than enemies and smaller than the Hero. Each shows a name tag, a level-up flash, short barks ("Hold the gate!") and a visible knock-out. They stand at the keep between waves.
   - [ ] The keep, the Hero and every Recruit can be renamed, and names persist. Every Hero path, with a squad the bot picks, can clear the slice in the simulator (bot report per path).
+  - [ ] The `parked` run flag is dropped: Bryn, Wren and the light posts return as Recruits and lights under the new rules, and the simulator and the bands gate play with a squad (the Levels 1 to 5 interim retune, F-116, is reviewed in M2b, Build 12).
 
 ### HF-M2-04 Blessings
 - **Owner:** Gameplay Engineer
@@ -399,13 +400,15 @@
 
 ### HF-M2-28 Recalibrate levels and balance all pillars
 - **Owner:** Gameplay Engineer
-- **Status:** Backlog, M2b (CEO 2026-10-23 10:17): balancing every pillar and level, the stat-model unification and the overall pacing wait until all the mechanics are settled. HF-M2-35 keeps only levels 1 to 5 winnable for the Flare Archer with the new empty-castle start
+- **Status:** Ready, Build 12 of 13 with HF-M2-58 (CEO 2026-10-30: "m2b should also be built"), after Build 11
 - **QA:** full (pack retune changes outcomes)
 - **Done when:**
   - [ ] Bands per pillar and per bot (average, poor) for every level, with a per-pillar first-time floor, from the Advisor's targets (pillar balance view, 2026-10-22, in the Advisor views table). Hero stats are not nerfed.
   - [ ] Dusk Mage and Tideblade are brought within the floor (F-044, F-049, F-043), and Volley and Sniper are within the stated gap per level.
   - [ ] The simulator gates on the bands and CI fails when one is missed (HF-M2-01, HF-M2-05).
 - **Notes:** Re-scoped from Build 7 (parked). When Build 7 is proposed again it is mechanics-first and Archer-only, not a cross-pillar balance pass.
+  - [ ] The Flare Archer's special is worth no more than +40 points on average and the Outpost is winnable without it (Advisor view, F-123, by lifting the no-special baseline, never by nerfing the special); Volley and Sniper forks differ in feel (Keep health left, clear time), and the Tideblade special is worth pressing (F-124).
+  - [ ] The known-miss list in `pacing-bands.json` is empty (every pillar strict), and the Advisor's view on the final bands is logged. Dusk Mage and Tideblade are tuned to the biomes they unlock into, per the Advisor's pick, unless the CEO says otherwise.
 
 ### HF-M2-29 Menus, journey map and Plan page (navigation rework, part 1)
 - **Owner:** Gameplay Engineer (the UI Engineer thread is closed; the Gameplay Engineer built the current screens)
@@ -770,6 +773,37 @@
   - [x] The page says which blessing is offered first, and any open taste decision for the CEO in one line each.
   - [x] The CEO sees the Advisor's view unedited and it is logged under Advisor views.
 
+### HF-M2-57 Design: Recruits updated for the tree, stars and unlock rules (Game Design Advisor)
+- **Owner:** Game Design Advisor
+- **Status:** Ready (CEO 2026-10-30, Build 11 of 13)
+- **QA:** none (design note)
+- **Depends on:** none
+- **Done when:**
+  - [ ] A one-page update to the Recruit design for the empty-castle start, stars and gold rules, the radial tree and the blessings: how a Recruit is hired and what it costs in gold or stars, where the 3rd and 4th deploy slots sit in the tree, how Recruits meet the Hero-near-tower synergies, and how Dusk Mage and Tideblade unlock (HF-M2-42 folds in here).
+  - [ ] The page says what to build first and any open taste decision for the CEO in one line each.
+  - [ ] The CEO sees the Advisor's view unedited and it is logged under Advisor views.
+
+### HF-M2-58 Stat model tidy-up and pacing across the game (M2b)
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, Build 12 of 13 with HF-M2-28 (CEO 2026-10-30)
+- **QA:** full (core numbers move)
+- **Depends on:** HF-M2-03
+- **Done when:**
+  - [ ] One stat model: Hero, towers, Recruits, gear, blessings and tree nodes all modify the same named stats in one place, with a test that lists every stat and its sources; no duplicated or hidden multipliers.
+  - [ ] Overall pacing is set from the bands: time to the first star, to the first tower, to each boss and to the end of the content reads sensibly in the simulator report, and the hours per section the Advisor set are inside their bands.
+  - [ ] Hero stats are not nerfed. Every number change is data in packs, and the progression hash re-pin is logged once with old and new values.
+
+### HF-M2-59 Play the whole game and compare it with Incrempire (review round)
+- **Owner:** Head of QA and Validation (plays); Game Design Advisor (comparison and gap list)
+- **Status:** Ready, starts the moment Build 12 is merged (it runs while the CEO tests; CEO 2026-10-30)
+- **QA:** none (review; findings feed Build 13)
+- **Depends on:** HF-M2-03, HF-M2-28, HF-M2-58
+- **Done when:**
+  - [ ] Head of QA plays a fresh game in a real browser from the first screen through every section and level, at 1280x720 and 1920x1080, and returns a written problem list on one commit, each graded MUST FIX or FOLLOW-UP, with logic and test coverage gaps named (any rule or screen with no test).
+  - [ ] The Game Design Advisor compares the game with Incrempire as a system (progression, tree, offline-free loop, prestige, pacing, UI clarity; reference material is mood and mechanics only, never assets or training data) and writes a gap list of what is missing, graded by effect on the CEO's goal.
+  - [ ] Every gap and problem becomes a board item with an owner and Done when lines, ordered into Build 13 of 13; the CEO sees the list with the Head of Engineering's estimate before anything is built.
+  - [ ] The CEO's target: sections complete and logic tests done, only visual polish left. The list says plainly what stands between the game and that state.
+
 ## Findings
 
 *Every finding from review, QA, CI or the Advisor goes here with an owner before anyone fixes it. Closed findings stay, marked Fixed with the PR. Grading (from 20 Oct 2026): Blocker and Major findings are MUST FIX and block the merge; Minor ones are FOLLOW-UP and don't, unless the row says otherwise. New findings put MUST FIX or FOLLOW-UP in the Severity cell. A finding counts only if it reproduces without test-only helpers.*
@@ -990,6 +1024,7 @@
 - 2026-10-25: Build 8 of 8 (radial skill web, HF-M2-55) merged in #131; QA full round and fresh-game dry run clear at 43e2e0e, no MUST FIX. Defaults picked by HoE: Tower Gate I reveal rule left as it was (F-120, a design call), Refund-closes-card stays F-115, label collisions logged as F-117.
 - 2026-10-30: CEO go: "continue to next 2 builds together". Defaults picked by HoE: the next two on the board are the last unbuilt mechanic and the first half of M2b. Build 9 of 10 = pacing bands and the simulator gate (HF-M2-01, HF-M2-05), starts now; Build 10 of 10 = Blessings (HF-M2-04, after the Advisor's HF-M2-56 page). New total is 10 builds. One combined handoff after both, Head of QA fresh-game dry run first. The wider balance pass (HF-M2-28) and Recruits stay parked.
 - 2026-10-30: Builds 9 and 10 of 10 merged (#134 85e13f8, #135 84dafce); QA full clear on both and a fresh-game dry run on 84dafce. Decision B taken by HoE: Dusk Mage and Tideblade bands are written in full but pinned as 24 known misses (no Hero retune in this run, since they unlock at bosses later and the CEO's focus is the Flare Archer). Blessings: the CEO said yes to gold-raising blessings, No blessing always offered, blessings generic.
+- 2026-10-30: CEO decision: Recruits come off hold and are built after Builds 9 and 10; all of M2b is built too; then the game is played and compared with Incrempire to find what is missing; the goal is a game that is almost ready, with every section and the logic testing done and only visual polish left. Defaults picked by HoE: the plan is now 13 builds. Build 11 = Recruits (HF-M2-03, after the Advisor's updated plan HF-M2-57); Build 12 = M2b: balance of every pillar and stat tidy-up (HF-M2-28, HF-M2-58, closing HF-M2-01's last line and F-123 to F-125); then the review round (HF-M2-59, Head of QA plays, Advisor compares), which runs while the CEO tests Builds 11 and 12; Build 13 = fixes and gaps from that list, itemised and estimated first. The style guide (HF-M2-08, art) waits until after the review round, as final art is the last step (CEO 2026-10-23); the name check (HF-M2-11) can run in parallel on a Researcher thread from the Chief of Staff. Team stops for the CEO's test after Build 11 and Build 12 (ITERATE+STOP) unless the CEO says to run through; Gate 2 (HF-M2-12, HF-M2-13) follows Build 13.
 - 2026-10-22: **Go on the revised plan** (CEO). Recruits are parked until the core gameplay is established (HF-M2-03 on hold, what exists stays as is). The CEO now gets 7 builds: 3 Gold and saves, 4 Hero skills, 5 Monsters and the boss, 6 Pacing, 7 Recruits. Build 3 starts now and includes HF-M2-18. Defaults picked by HoE: the Gameplay Engineer builds the plain Build 3 screens (no new role woken); the save service PR (KIT-07, core logic) gets QA's strict tests plus a focused QA check on that one commit, not a full round.
 - 2026-10-22: CEO after Build 2b: pillar difficulty feels good enough (no retune); the Hero gets back up where they fell, not at the keep (HF-M2-18, in Build 3). Defaults picked by HoE: a short untouchable time after getting up, because the Hero can now fall in the middle of a fight; the wait, XP drop and Recruit rules are unchanged.
 - 2026-10-22: CEO after Build 3 start: the map felt small and the Hero could not reach the edge (HF-M2-19). Defaults picked by HoE: a quick fix with the Build 3 letter (3b) that rides after Build 3 and changes only arena size; the estimate stays the same.
