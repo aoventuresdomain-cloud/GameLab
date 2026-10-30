@@ -8,6 +8,8 @@ extends HoldfastHeroBot
 ## An average player reacts in about a fifth of a second, a poor one in over half a second.
 const AVERAGE := {"reaction_ticks": 6, "ability_every": 1}
 const POOR := {"reaction_ticks": 18, "ability_every": 2}
+## The average player who never presses the Hero's special, for the pacing bands' special on/off gap.
+const AVERAGE_NO_SPECIAL := {"reaction_ticks": 6, "ability_every": 1000000}
 
 var reaction_ticks := 1
 var ability_every := 1
