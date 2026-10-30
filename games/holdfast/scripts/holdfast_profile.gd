@@ -306,6 +306,16 @@ func get_recruits() -> Array:
 	return data["recruits"]["roster"]
 
 
+## "Bryn and Wren have joined you" until the Recruits page has been opened ("" otherwise).
+func get_welcome() -> String:
+	return RecruitMeta.welcome_text(data)
+
+
+func clear_welcome() -> void:
+	if get_welcome() != "":
+		_apply(RecruitMeta.clear_welcome(data))
+
+
 func get_squad() -> Array:
 	return RecruitMeta.squad_for_run(_content, data)
 
