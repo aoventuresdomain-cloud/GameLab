@@ -591,17 +591,57 @@ func test_the_squad_arm_sells_the_third_and_fourth_slot_for_stars() -> void:
 	var fourth: Dictionary = content["upgrade_nodes"]["squad_hand_4"]
 	expect_eq([third["currency"], int(third["cost"]), fourth["currency"], int(fourth["cost"])], ["stars", 2, "stars", 3], "2 stars, then 3")
 	expect_eq(Array(fourth["requires"]), ["squad_hand_3"], "the fourth needs the third")
-	expect_eq(Array(third["requires"]), ["castle_archer_1"], "the arm starts at the first Archer Post")
+	expect_eq(Array(third["requires"]), ["squad_root"], "the third hand needs the Squad root")
+	expect_eq([int(content["upgrade_nodes"]["squad_root"]["cost"]), Array(content["upgrade_nodes"]["squad_root"]["requires"])], [0, ["castle_archer_1"]], "the root is free and hangs off the first Archer Post")
 	var profile := _rich()
 	expect_eq(RecruitMeta.slots(content, profile), 2)
-	profile["upgrades"] = ["castle_slot_1", "castle_archer_1", "squad_hand_3"]
+	profile["upgrades"] = ["castle_slot_1", "castle_archer_1", "squad_root", "squad_hand_3"]
 	expect_eq(RecruitMeta.slots(content, profile), 3)
 	profile["upgrades"].append("squad_hand_4")
 	expect_eq(RecruitMeta.slots(content, profile), 4)
 	var early := _rich()
-	early["upgrades"] = ["castle_slot_1"]
+	early["upgrades"] = ["castle_slot_1", "castle_archer_1"]
 	early["stars"] = {"x": 9}
-	expect_eq(HoldfastMeta.why_not_buy(content, early, "squad_hand_3"), "Needs Archer Post first", "closed until the Archer Post is owned")
+	expect_eq(HoldfastMeta.why_not_buy(content, early, "squad_hand_3"), "Needs The Squad first", "closed until the Squad root is owned")
+
+
+func test_the_squad_arm_stays_out_of_sight_until_someone_joins_and_the_root_is_free() -> void:
+	var content := _content()
+	var arm := ["squad_root", "squad_hand_3", "squad_hand_4", "squad_barracks", "squad_drills"]
+	var profile := _rich()
+	profile["upgrades"] = ["castle_slot_1", "castle_archer_1"]
+	var bare := profile.duplicate(true)
+	bare["recruits"]["roster"] = []
+	for id in arm:
+		expect_false(HoldfastMeta.is_visible(content, bare, id), "%s is hidden with nobody on the roster" % id)
+	expect_true(HoldfastMeta.is_visible(content, profile, "squad_root"), "the first rescue shows the root")
+	for id in ["squad_hand_3", "squad_barracks", "squad_drills"]:
+		expect_false(HoldfastMeta.is_visible(content, profile, id), "%s waits for the root" % id)
+	var gold: int = profile["gold"]
+	var opened := HoldfastMeta.buy(content, profile, "squad_root")
+	expect_true(opened["ok"], "the root can be bought")
+	expect_eq(opened["profile"]["gold"], gold, "and costs nothing")
+	for id in ["squad_hand_3", "squad_barracks"]:
+		expect_true(HoldfastMeta.is_visible(content, opened["profile"], id), "%s shows once the root is owned" % id)
+	expect_false(HoldfastMeta.is_visible(content, opened["profile"], "squad_drills"), "Drills wait for Barracks")
+	var kept := bare.duplicate(true)
+	kept["upgrades"] = ["castle_slot_1", "castle_archer_1", "squad_root"]
+	expect_true(HoldfastMeta.is_visible(content, kept, "squad_root"), "an owned node stays in view")
+
+
+func test_barracks_and_drills_make_the_squad_the_run_builds_tougher() -> void:
+	var content := _content()
+	expect_eq(content["upgrade_nodes"]["squad_barracks"]["effects"], [{"stat": "recruit.health", "multiply": 1.25}], "Barracks: a quarter more health")
+	expect_eq(content["upgrade_nodes"]["squad_drills"]["effects"], [{"stat": "recruit.damage", "multiply": 1.25}], "Drills: a quarter more damage")
+	var plain: HoldfastRules.Attacker = _quiet([_r("warden", [], [], 100)]).recruits[0]
+	var rules := HoldfastRules.new()
+	rules.report_errors = false
+	var cfg := HoldfastContent.run_config("outpost", ["squad_root", "squad_barracks", "squad_drills"], _content(), "flare_archer", null, {}, [], false, [_r("warden", [], [], 100)])
+	rules.setup(cfg, SimRng.new(1))
+	var built: HoldfastRules.Attacker = rules.recruits[0]
+	expect_near(_stat(built, "health"), _stat(plain, "health") * 1.25, 0.0001, "Barracks reaches the unit")
+	expect_near(_stat(built, "damage"), _stat(plain, "damage") * 1.25, 0.0001, "Drills reaches the unit")
+	expect_near(_stat(built, "range"), _stat(plain, "range"), 0.0001, "and nothing else moves")
 
 
 func test_the_tree_sells_the_third_and_fourth_slot() -> void:

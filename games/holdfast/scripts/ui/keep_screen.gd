@@ -1058,7 +1058,7 @@ static func _effects_text(effects: Array) -> String:
 ## "tower.range" is "range", "hero.attack.damage" is "arrow damage": the scope is dropped.
 static func _stat_text(stat: String) -> String:
 	var field := stat
-	for scope in ["tower.", "hero."]:
+	for scope in ["tower.", "hero.", "recruit."]:
 		if stat.begins_with(scope):
 			field = stat.substr(scope.length())
 	return STAT_TEXT.get(field, field)
