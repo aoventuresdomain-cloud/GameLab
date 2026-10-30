@@ -644,6 +644,16 @@
   - [ ] A hand-edited `unlocked` list cannot open a later level on its own (F-032).
   - [ ] The save format is versioned: when the tree or Recruit data changes again, older saves migrate and a test loads one saved file from each earlier version.
 
+### HF-M2-63 Special button: auto-cast node and guided first press
+- **Owner:** Gameplay Engineer
+- **Status:** Planned, Build 13 of 13; standing CEO go (2026-10-30). From the Advisor's view `advisor-special-button.md` (F-137); taste default taken: press at first, buy the auto-cast later
+- **QA:** full (rules, tree and tutorial)
+- **Depends on:** HF-M2-28
+- **Done when:**
+  - [ ] A Flare arm gold behaviour node, "Keeper's Habit" (name is the Advisor's working name): the Hero's special fires on its own when three or more enemies are close, at about 70% of manual power; a manual press still fires at full power. The Hero is not nerfed; the node's cost and place in the tree come from the simulator, with a rules test for the trigger, the power and the cooldown.
+  - [ ] The first level that needs the special is preceded by a short guided press (a prompt that waits for the press and teaches the button), skippable after the first time, with a test that the guide fires once and never on Level 0.
+  - [ ] The simulator report shows the special's worth with and without the node, so the bands gate can use the auto-cast player as a third bot.
+
 ### HF-M2-08 Style guide locked
 - **Owner:** Product Designer
 - **Status:** Ready
@@ -978,6 +988,7 @@
 | F-134 | HF-M2-03 | FOLLOW-UP from QA (#140): wording "1 more Recruits have a pick waiting" | Minor | Gameplay Engineer | Open, Build 11b |
 | F-135 | HF-M2-03 | FOLLOW-UP from QA (#140): Third Hand makes "Refund all" read "-10 gold" although only stars are refunded | Minor | Gameplay Engineer | Open, Build 11b |
 | F-136 | HF-M2-03 | FOLLOW-UP from QA (#140): the result panel with the pick card shows a lighter band about 28 px along the top edge at 1280x720 | Minor | UI Engineer | Open, visual polish (with F-079) |
+| F-137 | HF-M2-28 | The Flare special is about 3x the arrow's damage rate for 5 s in every 14 s, so a player who never presses it cannot clear Shingle Beach and the +65 gap on the bands is largely level tuning around special-on play. 12a eases enemy data (special worth at most +40, Outpost winnable without it); a 3-4x arrow buff is rejected (Advisor: belongs in M2b's balance pass, or not at all) | Major | Gameplay Engineer | Open: 12a eases enemy data; the auto-cast node and guided press are HF-M2-63, Build 13 |
 
 ## Test changes
 
@@ -1069,6 +1080,7 @@
 - 2026-10-25: Build 8 of 8 (radial skill web, HF-M2-55) merged in #131; QA full round and fresh-game dry run clear at 43e2e0e, no MUST FIX. Defaults picked by HoE: Tower Gate I reveal rule left as it was (F-120, a design call), Refund-closes-card stays F-115, label collisions logged as F-117.
 - 2026-10-30: CEO go: "continue to next 2 builds together". Defaults picked by HoE: the next two on the board are the last unbuilt mechanic and the first half of M2b. Build 9 of 10 = pacing bands and the simulator gate (HF-M2-01, HF-M2-05), starts now; Build 10 of 10 = Blessings (HF-M2-04, after the Advisor's HF-M2-56 page). New total is 10 builds. One combined handoff after both, Head of QA fresh-game dry run first. The wider balance pass (HF-M2-28) and Recruits stay parked.
 - 2026-10-30: Builds 9 and 10 of 10 merged (#134 85e13f8, #135 84dafce); QA full clear on both and a fresh-game dry run on 84dafce. Decision B taken by HoE: Dusk Mage and Tideblade bands are written in full but pinned as 24 known misses (no Hero retune in this run, since they unlock at bosses later and the CEO's focus is the Flare Archer). Blessings: the CEO said yes to gold-raising blessings, No blessing always offered, blessings generic.
+- 2026-10-30 19:20: Advisor view on the special button (`advisor-special-button.md`, kept unedited) taken in: the special stays a button; 12a keeps the enemy easing; a later Flare arm node (Keeper's Habit, auto-cast at about 70% power) and a guided first press are HF-M2-63 in Build 13; a free pierce or burn arrow and any lowering of the special are rejected. HoE approved a CI budget change for the bands step (600 to 900 s, job timeout 1100) as the sweep gets longer once a no-special player can pass Outpost. CEO taste line (a button at first, an auto-cast later) goes in the handoff.
 - 2026-10-30 18:55: Build 11 (Recruits, #140) merged after QA clear at 77b0056; the engineer's guess was 4 to 6 h and it took about 3 h 30 min from the go to the PR. Build 11b (F-133 to F-135) comes before the CEO handoff because the CEO's own save is a pre-Build-11 save. Build 12 splits into 12a (stat model, Squad arm, retune, bands, F-127) and 12b (Posted Hand, tap-a-post squad choice); Dusk Mage and Tideblade are judged on gull_rock only (the hardest level that exists, where they unlock) with the scope in `pacing-bands.json`, widening when biome 2 exists (HoE, in line with the Advisor's view of 30 Oct).
 - 2026-10-30 18:15: Build 11 (Recruits, #140) follows the Advisor's page (HF-M2-57): Bryn is rescued free after L2 and Wren after L4, hires cost more each time, Third Hand and Fourth Hand are star nodes, Alchemist and Engineer ship locked. HoE approved the retune of Levels 1 to 5 enemy data (Hero untouched) and a one-off re-pin of the Dusk Mage and Tideblade known misses (9 re-pinned, 8 deleted), because one shared enemy data set cannot serve all three pillars; Build 12 must empty the list (F-124). Build 12 starts on its own branch while QA runs on #140.
 - 2026-10-30 16:25: Full play-through findings (bot, Levels 0 to 5, Archer only; no Mage Post or blessings tested) taken in under the standing go: logic items boarded as HF-M2-61 (guidance and end of content, UI Engineer) and HF-M2-62 (save integrity, Gameplay Engineer), findings F-128 to F-132; HF-M2-59 must still cover the Mage Post, blessings, Recruits and the unlock taps. Build 13 gets the HF-M2-59 list on top of HF-M2-60, 61 and 62.
