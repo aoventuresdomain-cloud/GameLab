@@ -108,7 +108,6 @@ func test_a_recruit_state_with_any_change_in_it_is_never_topped_up() -> void:
 	var changes := {
 		"a hire": func(data: Dictionary) -> void: data["recruits"]["hired"] = [0],
 		"a purchase": func(data: Dictionary) -> void: data["recruits"]["bought"] = 1,
-		"a round played": func(data: Dictionary) -> void: data["recruits"]["round"] = 1,
 		"the next number": func(data: Dictionary) -> void: data["recruits"]["next"] = 2,
 		"a squad": func(data: Dictionary) -> void: data["recruits"]["squad"] = ["bryn"],
 		"a rescue": func(data: Dictionary) -> void: data["recruits"]["roster"] = [RecruitRoster.new_recruit("bryn", "Bryn", "warden")],
@@ -121,6 +120,39 @@ func test_a_recruit_state_with_any_change_in_it_is_never_topped_up() -> void:
 		var profile := HoldfastMeta.from_save(content, data)
 		expect_eq(_ids(profile, "roster").size(), 1 if label == "a rescue" else 0, "%s: no top-up" % label)
 		expect_false(profile["recruits"].has("welcome"), "%s: nobody to welcome" % label)
+
+
+## A save as the real flow leaves it: levels won through HoldfastMeta.bank_run (so the round count and the
+## profile are what a banked run writes), with the Recruits a build that did not rescue yet never gave.
+func _banked_save(levels: Array) -> Dictionary:
+	var content := _content()
+	var profile := HoldfastMeta.new_profile(content)
+	for level in levels:
+		profile = HoldfastMeta.bank_run(content, profile, {"outcome": HoldfastRules.OUTCOME_WON, "level": level, "gold": 10})
+	profile = HoldfastMeta.bank_run(content, profile, {"outcome": HoldfastRules.OUTCOME_LOST, "level": levels[-1], "gold": 0})
+	profile["recruits"]["roster"] = []
+	profile["recruits"]["squad"] = []
+	return profile
+
+
+func test_a_save_with_banked_runs_but_no_hiring_still_gets_the_rescues() -> void:
+	var content := _content()
+	var data := _banked_save(["outpost", "shingle_beach", "tidewrack_cove", "old_pier", "gull_rock"])
+	expect_true(int(data["recruits"]["round"]) > 0, "the real flow moved the round on")
+	var profile := HoldfastMeta.from_save(content, data)
+	expect_eq(_ids(profile, "roster"), ["bryn", "wren"], "banked runs alone do not count as a change")
+	expect_eq(int(profile["recruits"]["round"]), int(data["recruits"]["round"]), "the round count is kept")
+
+
+func test_a_banked_save_with_a_hire_or_a_rename_is_not_topped_up() -> void:
+	var content := _content()
+	var hired := _banked_save(["outpost", "shingle_beach"])
+	hired["recruits"]["bought"] = 1
+	hired["recruits"]["next"] = 2
+	expect_eq(_ids(HoldfastMeta.from_save(content, hired), "roster"), [], "bought and next moved: no top-up")
+	var renamed := _banked_save(["outpost", "shingle_beach"])
+	renamed["names"]["keep"] = "Lantern"
+	expect_eq(_ids(HoldfastMeta.from_save(content, renamed), "roster"), [], "a renamed keep: no top-up")
 
 
 func test_the_recruits_who_come_with_a_load_are_welcomed_until_the_page_is_opened() -> void:

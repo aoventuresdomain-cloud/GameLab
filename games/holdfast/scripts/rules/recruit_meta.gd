@@ -76,11 +76,16 @@ static func from_save(content: Dictionary, profile: Dictionary, data: Dictionary
 	profile["names"] = names
 
 
-## True when the saved Recruit state is exactly a new profile's: nobody, nothing hired or bought, no
-## round played, and nothing renamed.
+## True when the saved Recruit state is a new profile's apart from the round count: nobody, nothing
+## hired or bought, and nothing renamed. Every banked run turns the round over (a win or a loss, with
+## or without Recruits), so a player who has only played still counts as untouched.
 static func _untouched(content: Dictionary, data: Dictionary) -> bool:
 	var saved: Variant = data.get("recruits")
-	if not saved is Dictionary or saved != new_state(content):
+	if not saved is Dictionary:
+		return false
+	var compare: Dictionary = saved.duplicate()
+	compare["round"] = 0
+	if compare != new_state(content):
 		return false
 	var names: Variant = data.get("names")
 	if names is Dictionary:
