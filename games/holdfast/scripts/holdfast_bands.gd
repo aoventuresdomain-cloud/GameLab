@@ -17,6 +17,8 @@ const FORK_SKIPS := {
 }
 ## One post at a time: the second castle slot is never bought.
 const ONE_POST_SKIP := ["castle_slot_2"]
+## Pins are written to four places; a rate is a whole number of players, so a real change is far bigger.
+const PIN_TOLERANCE := 0.0001
 
 
 static func load_bands() -> Dictionary:
@@ -115,7 +117,7 @@ static func evaluate(figs: Dictionary, known_misses: Dictionary) -> Dictionary:
 			fig["state"] = "MISSED"
 		else:
 			var pin := float(known_misses[key])
-			var worse := value < pin - 1e-9 if value < float(fig["lo"]) else value > pin + 1e-9
+			var worse := value < pin - PIN_TOLERANCE if value < float(fig["lo"]) else value > pin + PIN_TOLERANCE
 			fig["state"] = "WORSE than its pin" if worse else "known miss"
 		out[key] = fig
 	for key in known_misses:

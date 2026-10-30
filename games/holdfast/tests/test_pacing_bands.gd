@@ -71,27 +71,45 @@ func test_the_figures_are_the_gaps_and_floors_the_bands_describe() -> void:
 	for pillar in HoldfastBands.PILLARS:
 		for cell in ["average", "poor", "volley", "sniper", "no_special"]:
 			cells["%s/%s" % [pillar, cell]] = []
-	# One row per player over all the levels, not one per level.
+	# One row per player over all the levels. The second player loses the last level; the third and
+	# fourth reach every level and lose it.
 	var all := {}
 	var all_off := {}
+	var lost_last := {}
+	var lost_all := {}
+	var last: String = HoldfastBands.levels()[-1]
 	for level in HoldfastBands.levels():
 		all[level] = true
 		all_off[level] = false
-	cells["flare_archer/average"] = [all, all, {}, {}]
+		lost_last[level] = level != last
+		lost_all[level] = false
+	cells["flare_archer/average"] = [all, lost_last, lost_all, lost_all]
 	cells["flare_archer/no_special"] = [all_off, all]
 	cells["flare_archer/volley"] = [all]
 	cells["flare_archer/sniper"] = [all_off]
+	cells["dusk_mage/volley"] = [all_off]
+	cells["dusk_mage/sniper"] = [all]
 	cells["dusk_mage/one_post"] = [{"shingle_beach": true}, {"shingle_beach": false}]
 	var figs := HoldfastBands.figures(bands, cells)
 	var level: String = HoldfastBands.levels()[0]
-	expect_eq(figs["flare_archer/average/%s" % level]["value"], 1.0, "the rate over the players who got there")
+	expect_eq(figs["flare_archer/average/%s" % level]["value"], 0.5, "the rate over the players who got there")
+	expect_eq(figs["flare_archer/average/%s" % last]["value"], 0.25, "the last level is won by one in four")
 	expect_eq(figs["flare_archer/fork_gap/%s" % level]["value"], 1.0, "Volley won, Sniper lost: the whole gap")
-	expect_eq(figs["flare_archer/special_gap/%s" % level]["value"], 0.5, "special on (first two players, 100%) less off (50%)")
-	expect_eq(figs["flare_archer/special_gap/mean"]["value"], 0.5, "the mean over the five levels")
-	expect_eq(figs["flare_archer/floor"]["value"], 1.0, "the lowest level rate")
+	expect_eq(figs["dusk_mage/fork_gap/%s" % level]["value"], 1.0, "Sniper ahead is the same gap")
+	expect_eq(figs["flare_archer/special_gap/%s" % level]["value"], 0.5, "special on (the first two players, 100%) less off (50%)")
+	expect_eq(figs["flare_archer/special_gap/%s" % last]["value"], 0.0, "special on (the first two players, 50%) less off (50%)")
+	expect_eq(figs["flare_archer/special_gap/mean"]["value"], 0.4, "the mean over the five levels")
+	expect_eq(figs["flare_archer/floor"]["value"], 0.25, "the lowest level rate")
 	expect_eq(figs["dusk_mage/one_post/shingle_beach"]["value"], 0.5, "the one-post rate")
 	expect_eq(figs["dusk_mage/average/%s" % level]["value"], 0.0, "nobody reached the level")
 	expect_eq(figs.size(), 3 * (5 * 4 + 2) + 1, "every pillar has 4 figures a level, a floor and a mean gap, plus the one-post figure")
+	# Each figure is held to the bound the file states for it.
+	expect_eq([figs["flare_archer/fork_gap/%s" % level]["lo"], figs["flare_archer/fork_gap/%s" % level]["hi"]], [0.0, float(bands["fork_gap"]["max"])], "the fork gap bound")
+	expect_eq([figs["flare_archer/special_gap/mean"]["lo"], figs["flare_archer/special_gap/mean"]["hi"]], [float(bands["special_gap"]["mean_min"]), float(bands["special_gap"]["mean_max"])], "the mean special gap bound")
+	expect_eq([figs["flare_archer/special_gap/%s" % level]["lo"], figs["flare_archer/special_gap/%s" % level]["hi"]], [float(bands["special_gap"]["level_min"]), float(bands["special_gap"]["level_max"])], "the special gap bound on a level")
+	expect_eq(figs["flare_archer/floor"]["lo"], float(bands["first_time_floor"]), "the floor bound")
+	expect_eq(figs["flare_archer/poor/%s" % level]["lo"], float(bands["bands"][level]["poor_min"]), "the poor bot's floor")
+	expect_eq(figs["flare_archer/average/%s" % level]["hi"], float(bands["bands"][level]["average"][1]), "the average band's top")
 
 
 func test_a_band_is_met_missed_or_pinned() -> void:
@@ -143,7 +161,7 @@ func test_the_report_shows_every_pillar_and_level_for_both_bots() -> void:
 func test_the_no_special_bot_never_presses_the_special_and_the_average_bot_does() -> void:
 	var content := HoldfastContent.base()
 	var level: String = HoldfastBands.levels()[1]
-	var config := HoldfastContent.run_config(level, [], content, "flare_archer", [], [], [], false, true)
+	var config := HoldfastContent.run_config(level, [], content, "flare_archer", null, {}, [], false, false)
 	var average := AbilityCounter.new(HoldfastSkilledBot.AVERAGE)
 	SimBotRunner.run(HoldfastRules.new(), average, 1, config, 20000, HoldfastRules.TICK_RATE)
 	var off := AbilityCounter.new(HoldfastSkilledBot.AVERAGE_NO_SPECIAL)
