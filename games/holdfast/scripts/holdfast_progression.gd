@@ -165,11 +165,23 @@ static func other_hero_nodes(nodes: Dictionary, pillar: String) -> Array:
 
 
 ## What the bot buys with the stars and gold the profile has: [{id, profile}] in the order
-## bought, each bought through the same rules the Keep screen uses.
-static func buy_for_profile(content: Dictionary, profile: Dictionary, avoid: Array) -> Array:
+## bought, each bought through the same rules the Keep screen uses. A player who has chosen a side
+## of a fork gives `prefer` (that chain, in order): its next node comes first and the player saves
+## up for it, spending nothing else until it is bought.
+static func buy_for_profile(content: Dictionary, profile: Dictionary, avoid: Array, prefer: Array = []) -> Array:
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	avoid = avoid + unfilled_squad_nodes(content, profile)
 	var out := []
+	for id in prefer:
+		if id in profile["upgrades"] or not nodes.has(id):
+			continue
+		if not _requirements_met(nodes[id], profile["upgrades"]):
+			continue
+		var wanted := HoldfastMeta.buy(content, profile, id)
+		if not wanted["ok"]:
+			return out
+		profile = wanted["profile"]
+		out.append({"id": id, "profile": profile})
 	for id in buy_cheapest(nodes, profile["upgrades"], int(profile["gold"]), avoid, HoldfastMeta.stars_available(content, profile)):
 		var bought := HoldfastMeta.buy(content, profile, id)
 		if not bought["ok"]:

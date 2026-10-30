@@ -73,29 +73,17 @@
     "how": "the Dusk Mage with only the first castle slot bought, average bot, 12 players"
   },
   "known_misses": {
-    "dusk_mage/average/outpost": 0.0,
-    "dusk_mage/poor/outpost": 0.0,
-    "dusk_mage/average/shingle_beach": 0.1429,
-    "dusk_mage/poor/shingle_beach": 0.1429,
-    "dusk_mage/average/gull_rock": 0.875,
-    "dusk_mage/floor": 0.0,
-    "tideblade/average/outpost": 0.0,
-    "tideblade/poor/outpost": 0.0,
-    "tideblade/average/shingle_beach": 0.4583,
-    "tideblade/average/tidewrack_cove": 0.2083,
-    "tideblade/poor/tidewrack_cove": 0.0909,
-    "tideblade/average/old_pier": 0.3333,
-    "tideblade/average/gull_rock": 0.2083,
-    "tideblade/floor": 0.0,
-    "dusk_mage/one_post/shingle_beach": 0.0,
-    "tideblade/special_gap/mean": -0.0722,
-    "tideblade/poor/shingle_beach": 0.1538,
-    "tideblade/special_gap/tidewrack_cove": -0.4722,
-    "tideblade/special_gap/old_pier": -0.2222
+    "flare_archer/special_gap/mean": 0.45,
+    "dusk_mage/average/gull_rock": 0.8667,
+    "dusk_mage/fork_feel/gull_rock": 0.0,
+    "dusk_mage/special_gap/mean": 0.875,
+    "tideblade/special_gap/mean": 0.5
   },
-  "known_misses_note": "Dusk Mage and Tideblade are not retuned in this run (HF-M2-28, M2b): their misses are pinned at the measured figure. Delete a pin and the figure must meet its band. Re-pinned in Build 11 (Head of Engineering approved, F-124): the shared Levels 1 to 5 enemy data was retuned for the Flare Archer with Recruits and lights back, which moved these two pillars. Build 12 (HF-M2-28) tunes both and empties this list.",
+  "known_misses_note": "A pinned miss may not get worse, and CI fails if it comes back inside its band (delete the pin then). Build 12a (HF-M2-28) removed every pin that levels and data could fix and pinned what remains, each with its cause. flare_archer/special_gap/mean: the Flare special is about three times the arrow and a win rate falls from near 100% to near 0% within about 10% of enemy strength, so the gap is close to the win rate on any level that is not trivial; fixed by the arrow and special rebalance (HF-M2-63), which also brings the per-level +15 to +35 target. Dusk Mage: Levels 1 to 5 are shared by all three pillars, so Gull Rock cannot be made hard enough for the Dusk Mage without taking the Flare Archer out of band, and monsters must not depend on the Hero picked; Hero stats are not changed to meet bands. The Dusk Mage and the Tideblade special gap are tuned when the biome they unlock into exists.",
   "fork_feel": {
     "min": 0.05,
+    "first_level": "shingle_beach",
+    "first_level_note": "Judged from this level on: at Outpost no fork node is affordable yet (the first costs 600 gold), so the two sides cannot differ there. A player who picks a side saves up for its chain.",
     "how": "per level and pillar, the larger of the gap in Keep health left (a share of full health) and in clear time (a share of the longer one) between the Volley side and the Sniper side, first attempts of the average bot: the two sides must feel different even where they win as often"
   }
 }

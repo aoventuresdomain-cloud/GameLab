@@ -19,8 +19,9 @@ const MAX_TICKS := 200000
 ## is a finding), "runs": runs played}.
 ## A level the player never wins ends the climb. `skip` lists nodes the player never buys (one
 ## side of a fork). `first_only` is for a caller that reads only the first attempts: the last level is
-## played once, as nothing comes after it.
-static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", level_count := 5, skip: Array = [], first_only := false) -> Dictionary:
+## played once, as nothing comes after it. `prefer` is a chain the player saves up for (see
+## HoldfastProgression.buy_for_profile).
+static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", level_count := 5, skip: Array = [], first_only := false, prefer: Array = []) -> Dictionary:
 	var content := HoldfastContent.base()
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	var avoid := HoldfastProgression.other_hero_nodes(nodes, pillar) + skip
@@ -37,7 +38,7 @@ static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", leve
 		var won := false
 		var last_level: bool = first_only and level == _levels(content).slice(0, level_count)[-1]
 		while not won and attempts < MAX_ATTEMPTS and not (last_level and attempts > 0):
-			var bought := HoldfastProgression.buy_for_profile(content, profile, avoid)
+			var bought := HoldfastProgression.buy_for_profile(content, profile, avoid, prefer)
 			if bought.is_empty():
 				dry += 1
 				gaps.append({"level": level, "attempt": attempts + 1})

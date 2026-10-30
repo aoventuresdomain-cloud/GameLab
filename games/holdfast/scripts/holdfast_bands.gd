@@ -15,6 +15,12 @@ const FORK_SKIPS := {
 	"volley": ["post_scope", "post_marksman", "post_piercing"],
 	"sniper": ["post_twin", "post_burst", "post_storm"],
 }
+## The chain a player who picked that side buys first, saving up for each node: without it the
+## cheapest-first bot reaches neither side's 600 gold nodes in five levels and the forks never differ.
+const FORK_PREFER := {
+	"volley": ["post_sight", "post_scope", "post_marksman", "post_piercing"],
+	"sniper": ["post_drills", "post_twin", "post_burst", "post_storm"],
+}
 ## One post at a time: the second castle slot is never bought.
 const ONE_POST_SKIP := ["castle_slot_2"]
 ## Pins are written to four places; a rate is a whole number of players, so a real change is far bigger.
@@ -65,14 +71,15 @@ static func scope_problems(bands: Dictionary) -> PackedStringArray:
 
 
 ## One cell of the sweep: the climbs of seeds 1..`seeds`, as one {level: won first time} per seed
-## (a level the climb never reached is left out).
-static func cell(model: Dictionary, pillar: String, seeds: int, skip: Array = []) -> Array:
+## (a level the climb never reached is left out), with how its first attempt felt under the FEEL key.
+static func cell(model: Dictionary, pillar: String, seeds: int, skip: Array = [], prefer: Array = []) -> Array:
 	var out := []
 	for run_seed in range(1, seeds + 1):
-		var row := {}
-		var climb := HoldfastCurve.climb(run_seed, model, pillar, 5, skip, true)
+		var row := {FEEL: {}}
+		var climb := HoldfastCurve.climb(run_seed, model, pillar, 5, skip, true, prefer)
 		for id in climb["levels"]:
 			row[id] = climb["levels"][id]["first"]
+			row[FEEL][id] = {"keep": climb["levels"][id]["keep"], "seconds": climb["levels"][id]["seconds"]}
 		out.append(row)
 	return out
 
@@ -85,7 +92,7 @@ static func measure(bands: Dictionary) -> Dictionary:
 		for bot in BOTS:
 			out["%s/%s" % [pillar, bot]] = cell(BOTS[bot], pillar, int(seeds["band"]))
 		for side in FORK_SKIPS:
-			out["%s/%s" % [pillar, side]] = cell(HoldfastSkilledBot.AVERAGE, pillar, int(seeds["fork"]), FORK_SKIPS[side])
+			out["%s/%s" % [pillar, side]] = cell(HoldfastSkilledBot.AVERAGE, pillar, int(seeds["fork"]), FORK_SKIPS[side], FORK_PREFER[side])
 		out["%s/no_special" % pillar] = cell(HoldfastSkilledBot.AVERAGE_NO_SPECIAL, pillar, int(seeds["special"]))
 	var one_post: Dictionary = bands["one_post"]
 	if str(one_post["level"]) in scope(bands, str(one_post["pillar"])):
@@ -134,6 +141,7 @@ static func figures(bands: Dictionary, cells: Dictionary) -> Dictionary:
 	var seeds: Dictionary = bands["seeds"]
 	var fork_max := float(bands["fork_gap"]["max"])
 	var feel_min := float(bands["fork_feel"]["min"])
+	var feel_from: int = maxi(levels().find(str(bands["fork_feel"].get("first_level", ""))), 0)
 	var special: Dictionary = bands["special_gap"]
 	for pillar in PILLARS:
 		var inside := scope(bands, pillar)
@@ -148,7 +156,8 @@ static func figures(bands: Dictionary, cells: Dictionary) -> Dictionary:
 			out["%s/poor/%s" % [pillar, level]] = {"value": rate(cells["%s/poor" % pillar], level), "lo": poor_min, "hi": 1.0, "how": "first-time win rate of the poor bot, %d players" % seeds["band"]}
 			var gap := absf(rate(cells["%s/volley" % pillar], level) - rate(cells["%s/sniper" % pillar], level))
 			out["%s/fork_gap/%s" % [pillar, level]] = {"value": gap, "lo": 0.0, "hi": fork_max, "how": "Volley against Sniper, average bot, %d players each" % seeds["fork"]}
-			out["%s/fork_feel/%s" % [pillar, level]] = {"value": feel_gap(cells["%s/volley" % pillar], cells["%s/sniper" % pillar], level), "lo": feel_min, "hi": 1.0, "how": "Volley against Sniper: the larger of the gap in Keep health left and in clear time, first attempts"}
+			if levels().find(level) >= feel_from:
+				out["%s/fork_feel/%s" % [pillar, level]] = {"value": feel_gap(cells["%s/volley" % pillar], cells["%s/sniper" % pillar], level), "lo": feel_min, "hi": 1.0, "how": "Volley against Sniper: the larger of the gap in Keep health left and in clear time, first attempts"}
 			var diff := rate(cells["%s/average" % pillar], level, int(seeds["special"])) - rate(cells["%s/no_special" % pillar], level)
 			gaps.append(diff)
 			out["%s/special_gap/%s" % [pillar, level]] = {"value": diff, "lo": float(special["level_min"]), "hi": float(special["level_max"]), "how": "special on less special off, average bot, the same %d players" % seeds["special"]}

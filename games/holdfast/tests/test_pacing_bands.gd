@@ -103,7 +103,7 @@ func test_the_figures_are_the_gaps_and_floors_the_bands_describe() -> void:
 	expect_eq(figs["flare_archer/floor"]["value"], 0.25, "the lowest level rate")
 	expect_eq(figs["dusk_mage/one_post/shingle_beach"]["value"], 0.5, "the one-post rate")
 	expect_eq(figs["dusk_mage/average/%s" % level]["value"], 0.0, "nobody reached the level")
-	expect_eq(figs.size(), 3 * (5 * 5 + 3) + 1, "every pillar has 5 figures a level (the fork feel is the fifth), a floor, a mean gap and the first level without the special, plus the one-post figure")
+	expect_eq(figs.size(), 3 * (5 * 4 + 4 + 3) + 1, "every pillar has 4 figures a level, the fork feel on the four levels from Shingle Beach on, a floor, a mean gap and the first level without the special, plus the one-post figure")
 	# Each figure is held to the bound the file states for it.
 	expect_eq([figs["flare_archer/fork_gap/%s" % level]["lo"], figs["flare_archer/fork_gap/%s" % level]["hi"]], [0.0, float(bands["fork_gap"]["max"])], "the fork gap bound")
 	expect_eq([figs["flare_archer/special_gap/mean"]["lo"], figs["flare_archer/special_gap/mean"]["hi"]], [float(bands["special_gap"]["mean_min"]), float(bands["special_gap"]["mean_max"])], "the mean special gap bound")
@@ -221,3 +221,34 @@ func test_the_fork_feel_is_the_larger_gap_in_keep_health_or_clear_time() -> void
 	var weaker := [{"_feel": {"outpost": {"keep": 0.4, "seconds": 110.0}}}]
 	expect_near(HoldfastBands.feel_gap(a, weaker, "outpost"), 0.3, 0.0001, "30 points less Keep health: a gap of 0.3")
 	expect_eq(HoldfastBands.feel_gap(a, [{"_feel": {}}], "outpost"), 0.0, "a side that never got there has no gap to measure")
+
+
+func test_the_fork_feel_is_judged_from_the_first_level_a_fork_node_can_be_bought() -> void:
+	var bands := HoldfastBands.load_bands()
+	var cells := {}
+	for pillar in HoldfastBands.PILLARS:
+		for cell in ["average", "poor", "volley", "sniper", "no_special"]:
+			cells["%s/%s" % [pillar, cell]] = []
+	var figs := HoldfastBands.figures(bands, cells)
+	expect_false(figs.has("flare_archer/fork_feel/outpost"), "no fork node is affordable at Outpost")
+	expect_true(figs.has("flare_archer/fork_feel/shingle_beach"), "judged from Shingle Beach on")
+
+
+func test_a_climb_row_keeps_how_the_first_attempt_felt() -> void:
+	var rows := HoldfastBands.cell(HoldfastSkilledBot.AVERAGE, "flare_archer", 1)
+	var feel: Dictionary = rows[0][HoldfastBands.FEEL]
+	expect_true(feel.has("outpost"), "the first level is there")
+	expect_true(float(feel["outpost"]["keep"]) >= 0.0 and float(feel["outpost"]["seconds"]) > 0.0, "with the Keep health left and the time it took")
+
+
+func test_a_player_who_chose_a_side_saves_up_for_its_next_node() -> void:
+	var content := HoldfastContent.base()
+	var profile := HoldfastMeta.new_profile(content)
+	profile["upgrades"] = ["castle_slot_1", "castle_archer_1", "post_sight"]
+	profile["gold"] = 500
+	var prefer: Array = HoldfastBands.FORK_PREFER["volley"]
+	expect_eq(HoldfastProgression.buy_for_profile(content, profile, [], prefer).size(), 0, "500 gold is not enough for Scope: nothing else is bought either")
+	expect_true(HoldfastProgression.buy_for_profile(content, profile, []).size() > 0, "a player with no side buys the cheapest nodes")
+	profile["gold"] = 700
+	var bought := HoldfastProgression.buy_for_profile(content, profile, [], prefer)
+	expect_eq(bought[0]["id"], "post_scope", "with the gold, Scope comes first")
