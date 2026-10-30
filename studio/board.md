@@ -208,7 +208,7 @@
 
 ### HF-M2-01 Pacing bands
 - **Owner:** Gameplay Engineer (the Balance Analyst role is not woken; amended 2026-10-22 for Build 7 of 8)
-- **Status:** Parked for M2b (CEO 2026-10-23 10:17): overall pacing, stat tidy-up and balancing everything happen after all the mechanics are settled. Formerly Build 7 of 8. Not part of the tree, gear and Mage slice
+- **Status:** Building as Build 9 of 10 with HF-M2-05 (CEO go 2026-10-30: "continue to next 2 builds together"). The interim retune of Levels 1 to 5 (F-116) is what the first bands are measured against
 - **QA:** full (pack retune changes outcomes)
 - **Done when:**
   - [ ] `games/holdfast/content/pacing-bands.json` holds first-time win-rate bands per pillar and per bot (average and poor) for levels 1-5, with a per-pillar first-time floor, from the Advisor's targets. Hero stats are not nerfed.
@@ -261,7 +261,7 @@
 
 ### HF-M2-04 Blessings
 - **Owner:** Gameplay Engineer
-- **Status:** Ready
+- **Status:** Ready, Build 10 of 10 (CEO go 2026-10-30). Waits on HF-M2-56 (the Advisor's six blessings); the engineer starts it when that page lands
 - **QA:** full
 - **Done when:**
   - [ ] 6 blessings from packs, unlocked through play; the player picks 1 of 3 offered at run start.
@@ -583,7 +583,7 @@
 
 ### HF-M2-05 Simulator covers the slice and gates on the bands
 - **Owner:** Gameplay Engineer
-- **Status:** Parked for M2b (CEO 2026-10-23 10:17); formerly Build 7 of 8, amended for the parked Recruits. HF-M2-35 adds only the bots the tree slice needs
+- **Status:** Building as Build 9 of 10 with HF-M2-01 (CEO go 2026-10-30)
 - **QA:** full
 - **Depends on:** HF-M2-01
 - **Done when:**
@@ -759,6 +759,16 @@
   - [x] The tree draws as in the accepted mockup with the same nodes, prices, links and adjacent-only reveal; old saves are unaffected.
   - [x] Pan, zoom, the zoomed-out first view, the detail card and the guide still work; labels stay readable at 1280x720 with slightly more generous spacing between nodes and labels than the mockup (CEO, 2026-10-25).
   - [x] Any existing test change is OK'd by the Head of Engineering and logged.
+
+### HF-M2-56 Design: the six blessings (Game Design Advisor)
+- **Owner:** Game Design Advisor
+- **Status:** Ready (CEO go 2026-10-30, Build 10 of 10)
+- **QA:** none (design note)
+- **Depends on:** none
+- **Done when:**
+  - [ ] A one-page proposal of six blessings (name, one-line effect, how it unlocks through play, what it changes in a run) that fit the tree and star rules, never nerf the Hero, and are data in a pack (HF-M2-04).
+  - [ ] The page says which blessing is offered first, and any open taste decision for the CEO in one line each.
+  - [ ] The CEO sees the Advisor's view unedited and it is logged under Advisor views.
 
 ## Findings
 
@@ -970,6 +980,7 @@
 
 - 2026-10-25: CEO accepted the radial skill web mockup (HF-M2-54) and asked for it to be built (HF-M2-55). Defaults picked by HoE: standing go (the engineer opens the PR at once, QA full, merge on green CI), then Head of QA's fresh-game dry run before the handoff; the Advisor's accepted spacing points are kept; known limit is that the busiest mid-game view at 1280x720 needs a pan to the outer rings.
 - 2026-10-25: Build 8 of 8 (radial skill web, HF-M2-55) merged in #131; QA full round and fresh-game dry run clear at 43e2e0e, no MUST FIX. Defaults picked by HoE: Tower Gate I reveal rule left as it was (F-120, a design call), Refund-closes-card stays F-115, label collisions logged as F-117.
+- 2026-10-30: CEO go: "continue to next 2 builds together". Defaults picked by HoE: the next two on the board are the last unbuilt mechanic and the first half of M2b. Build 9 of 10 = pacing bands and the simulator gate (HF-M2-01, HF-M2-05), starts now; Build 10 of 10 = Blessings (HF-M2-04, after the Advisor's HF-M2-56 page). New total is 10 builds. One combined handoff after both, Head of QA fresh-game dry run first. The wider balance pass (HF-M2-28) and Recruits stay parked.
 - 2026-10-22: **Go on the revised plan** (CEO). Recruits are parked until the core gameplay is established (HF-M2-03 on hold, what exists stays as is). The CEO now gets 7 builds: 3 Gold and saves, 4 Hero skills, 5 Monsters and the boss, 6 Pacing, 7 Recruits. Build 3 starts now and includes HF-M2-18. Defaults picked by HoE: the Gameplay Engineer builds the plain Build 3 screens (no new role woken); the save service PR (KIT-07, core logic) gets QA's strict tests plus a focused QA check on that one commit, not a full round.
 - 2026-10-22: CEO after Build 2b: pillar difficulty feels good enough (no retune); the Hero gets back up where they fell, not at the keep (HF-M2-18, in Build 3). Defaults picked by HoE: a short untouchable time after getting up, because the Hero can now fall in the middle of a fight; the wait, XP drop and Recruit rules are unchanged.
 - 2026-10-22: CEO after Build 3 start: the map felt small and the Hero could not reach the edge (HF-M2-19). Defaults picked by HoE: a quick fix with the Build 3 letter (3b) that rides after Build 3 and changes only arena size; the estimate stays the same.
