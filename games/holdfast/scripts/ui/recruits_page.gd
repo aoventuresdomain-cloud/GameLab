@@ -157,7 +157,11 @@ func _fill_picks() -> void:
 			row.add_child(button)
 		_picks.add_child(row)
 	if waiting.size() > PICKS_SHOWN:
-		_picks.add_child(_label("%d more Recruits have a pick waiting." % (waiting.size() - PICKS_SHOWN)))
+		_picks.add_child(_label(more_picks_text(waiting.size() - PICKS_SHOWN)))
+
+
+static func more_picks_text(count: int) -> String:
+	return "%d more %s waiting for a pick." % [count, "Recruit is" if count == 1 else "Recruits are"]
 
 
 func _fill_roster() -> void:

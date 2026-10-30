@@ -48,6 +48,11 @@ static func from_save(content: Dictionary, profile: Dictionary, data: Dictionary
 		state["bought"] = maxi(int(saved["bought"]), 0) if saved.get("bought") is int or saved.get("bought") is float else 0
 	profile["recruits"] = state
 	profile["recruits"]["squad"] = profile["recruits"]["squad"].slice(0, slots(content, profile))
+	# A save from before Recruits existed has no Recruit state: the levels it already won pay their
+	# rescues now, once (the next save carries the state, so this does not run again).
+	if not data.has("recruits"):
+		for level in profile.get("levels_won", []):
+			_rescue(content, profile, str(level))
 	var names := {"keep": "", "hero": ""}
 	var saved_names: Variant = data.get("names")
 	if saved_names is Dictionary:
@@ -202,12 +207,7 @@ static func rename(profile: Dictionary, who: String, text: String) -> Dictionary
 static func bank_run(content: Dictionary, profile: Dictionary, result: Dictionary) -> Dictionary:
 	var out := profile.duplicate(true)
 	if result.get("outcome") == HoldfastRules.OUTCOME_WON:
-		for rescue in content.get("recruit_rescues", {}).values():
-			var class_data: Dictionary = content.get("recruit_classes", {}).get(rescue["class"], {})
-			if rescue["level"] == result.get("level") and recruit(out, rescue["id"]).is_empty() and not class_data.is_empty() and not class_data.get("locked", false):
-				out["recruits"]["roster"].append(RecruitRoster.new_recruit(str(rescue["id"]), str(rescue["name"]), str(rescue["class"])))
-				if out["recruits"]["squad"].size() < slots(content, out):
-					out["recruits"]["squad"].append(rescue["id"])
+		_rescue(content, out, str(result.get("level")))
 	var gained: Variant = result.get("recruit_xp", {})
 	if gained is Dictionary:
 		for i in out["recruits"]["roster"].size():
@@ -217,6 +217,17 @@ static func bank_run(content: Dictionary, profile: Dictionary, result: Dictionar
 	out["recruits"]["round"] = int(out["recruits"]["round"]) + 1
 	out["recruits"]["hired"] = []
 	return out
+
+
+## Rescues the Recruit the level frees, if there is one not yet on the roster (free, and onto the squad
+## if there is a place). `profile` is changed in place.
+static func _rescue(content: Dictionary, profile: Dictionary, level: String) -> void:
+	for rescue in content.get("recruit_rescues", {}).values():
+		var class_data: Dictionary = content.get("recruit_classes", {}).get(rescue["class"], {})
+		if rescue["level"] == level and recruit(profile, rescue["id"]).is_empty() and not class_data.is_empty() and not class_data.get("locked", false):
+			profile["recruits"]["roster"].append(RecruitRoster.new_recruit(str(rescue["id"]), str(rescue["name"]), str(rescue["class"])))
+			if profile["recruits"]["squad"].size() < slots(content, profile):
+				profile["recruits"]["squad"].append(rescue["id"])
 
 
 ## What changed for the Recruits between two profiles, for the level-up card: [{id, name, class, from,
