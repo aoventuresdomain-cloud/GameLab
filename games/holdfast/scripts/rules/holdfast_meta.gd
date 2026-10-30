@@ -106,13 +106,17 @@ static func new_profile(content: Dictionary) -> Dictionary:
 	}
 
 
+## The most a saved count (gold, runs) is believed to be: nothing a player reaches comes near it, and
+## a hand-edited huge number would overflow the sums made with it.
+const WHOLE_LIMIT := 1.0e9
+
 ## A saved value that should be a list or a whole number, or an empty one when it is neither (a damaged file).
 static func _list(value: Variant) -> Array:
 	return value if value is Array else []
 
 
 static func _whole(value: Variant) -> int:
-	return int(value) if value is int or value is float else 0
+	return int(clampf(float(value), -WHOLE_LIMIT, WHOLE_LIMIT)) if value is int or value is float else 0
 
 
 ## A profile read from a save, made safe to use: missing fields get their
@@ -135,12 +139,7 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 			if is_star_node(nodes[id]) and stars_spent(content, profile) + int(nodes[id]["cost"]) > stars_earned(profile):
 				continue
 			profile["upgrades"].append(id)
-	for id in _list(data.get("levels_won")):
-		if levels.has(id) and not id in profile["levels_won"]:
-			profile["levels_won"].append(id)
-	for id in _list(data.get("unlocked")):
-		if levels.has(id) and not id in profile["unlocked"]:
-			profile["unlocked"].append(id)
+	_read_levels(content, profile, data)
 	var saved_layouts: Variant = data.get("layouts", {})
 	if saved_layouts is Dictionary:
 		for level in saved_layouts:
@@ -183,6 +182,25 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 		profile["pillar"] = str(data["pillar"])
 	RecruitMeta.from_save(content, profile, data)
 	return profile
+
+
+## `levels_won` and `unlocked` from a save. The first level is always open; a later level stays in
+## `unlocked` only if the one before it is open or won, so a hand-edited `unlocked` list cannot open
+## a level out of turn on its own. (Winning a level opens the next one, which is how a save can list
+## a level whose own predecessor is only won.)
+static func _read_levels(content: Dictionary, profile: Dictionary, data: Dictionary) -> void:
+	var levels: Dictionary = content.get("levels", {})
+	for id in _list(data.get("levels_won")):
+		if levels.has(id) and not id in profile["levels_won"]:
+			profile["levels_won"].append(id)
+	var unlocked := _list(data.get("unlocked"))
+	var ids: Array = levels.keys()
+	var behind_open := true
+	for i in ids.size():
+		var kept: bool = ids[i] in unlocked and (i == 0 or behind_open)
+		if kept:
+			profile["unlocked"].append(ids[i])
+		behind_open = i == 0 or kept or ids[i] in profile["levels_won"]
 
 
 ## The gear slots the pack gives the Hero ([] when it has no gear).
@@ -287,6 +305,14 @@ static func unlocked_levels(content: Dictionary, profile: Dictionary) -> Array:
 	return out
 
 
+## The steps that bring an older save up to SAVE_VERSION: version N's data to version N + 1's. Whoever
+## changes the shape of the tree or of what is saved (the Recruit state, the layouts...) bumps
+## SAVE_VERSION, adds `migrate_v<N>` and its entry here, and commits a file saved at version N in
+## tests/fixtures/saves/ (test_save_versions.gd fails without all three).
+static func migrations(content: Dictionary) -> Dictionary:
+	return {1: migrate_v1.bind(content), 2: migrate_v2.bind(content), 3: migrate_v3.bind(content), 4: migrate_v4.bind(content)}
+
+
 ## A version 1 save as version 2. Each bought level node opens its level (once,
 ## however many times it is listed) and is removed from the upgrades, its gold
 ## refunded: the levels are kept, nothing is paid for twice. Each level the save
@@ -295,14 +321,14 @@ static func migrate_v1(data: Dictionary, content: Dictionary) -> Dictionary:
 	var out := data.duplicate(true)
 	var unlocked := []
 	var upgrades := []
-	var gold := maxi(int(out.get("gold", 0)), 0)
-	for id in out.get("upgrades", []):
+	var gold := maxi(_whole(out.get("gold")), 0)
+	for id in _list(out.get("upgrades")):
 		if not V1_LEVEL_NODES.has(id):
 			upgrades.append(id)
 		elif not V1_LEVEL_NODES[id][0] in unlocked:
 			unlocked.append(V1_LEVEL_NODES[id][0])
 			gold += int(V1_LEVEL_NODES[id][1])
-	for won in out.get("levels_won", []):
+	for won in _list(out.get("levels_won")):
 		var next := next_level(content, str(won))
 		if next != "" and not next in unlocked:
 			unlocked.append(next)
