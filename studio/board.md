@@ -250,7 +250,7 @@
 
 ### HF-M2-03 Recruits: hiring, traits, levels and the squad
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 11 of 13 (CEO 2026-10-30: "recruits can be build as well after 9 - 10"; the hold of 2026-10-22 is lifted). Waits only on the Advisor's updated plan HF-M2-57 for the tree and star rules; the engineer starts with the data and engine parts meanwhile
+- **Status:** Merged (#140, QA clear at 77b0056, dbfc0b7). Build 11 of 13. Built to the Advisor's page HF-M2-57, so the free rescues (Bryn after L2, Wren after L4), Third Hand and Fourth Hand star nodes and locked Alchemist and Engineer replace hiring those at the start. Deferred to Build 12 (HF-M2-58): the Squad reveal node, Barracks, Drills, Posted Hand, the Recruit stat pipeline and tap-a-post squad choice. Quick fix 11b follows (F-133 to F-135)
 - **QA:** full
 - **Done when:**
   - [ ] A recruitment board on the keep screen offers Recruits to hire with gold, from packs. Each has a generated name, one of 4 classes (Warden, Lookout, Alchemist, Engineer; Recruits hold posts and the Hero owns the damage, so Recruit damage stays modest; the Alchemist lays status fields at posts: burn, slow, heal) and one of about 8 traits (for example "Steady: +20% range", "Coward: flees below half health"). Each trait is covered by a rules test.
@@ -644,6 +644,16 @@
   - [ ] A hand-edited `unlocked` list cannot open a later level on its own (F-032).
   - [ ] The save format is versioned: when the tree or Recruit data changes again, older saves migrate and a test loads one saved file from each earlier version.
 
+### HF-M2-63 Special button: auto-cast node and guided first press
+- **Owner:** Gameplay Engineer
+- **Status:** Planned, Build 13 of 13; standing CEO go (2026-10-30). From the Advisor's view `advisor-special-button.md` (F-137); taste default taken: press at first, buy the auto-cast later
+- **QA:** full (rules, tree and tutorial)
+- **Depends on:** HF-M2-28
+- **Done when:**
+  - [ ] A Flare arm gold behaviour node, "Keeper's Habit" (name is the Advisor's working name): the Hero's special fires on its own when three or more enemies are close, at about 70% of manual power; a manual press still fires at full power. The Hero is not nerfed; the node's cost and place in the tree come from the simulator, with a rules test for the trigger, the power and the cooldown.
+  - [ ] The first level that needs the special is preceded by a short guided press (a prompt that waits for the press and teaches the button), skippable after the first time, with a test that the guide fires once and never on Level 0.
+  - [ ] The simulator report shows the special's worth with and without the node, so the bands gate can use the auto-cast player as a third bot.
+
 ### HF-M2-08 Style guide locked
 - **Owner:** Product Designer
 - **Status:** Ready
@@ -974,6 +984,11 @@
 | F-130 | HF-M2-61 | W4: gear sits in a "Bag" with no instruction on how to wear it | Minor | UI Engineer | Open, Build 13 |
 | F-131 | HF-M2-61 | W5: Dusk Mage and Tideblade tabs look as available as the Archer; what a tap does is untested | Minor | UI Engineer | Open, Build 13 (HF-M2-59 checks the tap) |
 | F-132 | HF-M2-61 | W6 and W7: "Quick start" greyed with no reason; tree nodes show only a cost until opened, so choices cannot be compared | Minor | UI Engineer | Open, Build 13 |
+| F-133 | HF-M2-03 | FOLLOW-UP from QA (#140): a pre-Build-11 save that already won L2 or L4 never gets Bryn or Wren and shows no Recruits button until that level is won again | Minor | Gameplay Engineer | Open, Build 11b (grant the rescues on load; the CEO's own save is one) |
+| F-134 | HF-M2-03 | FOLLOW-UP from QA (#140): wording "1 more Recruits have a pick waiting" | Minor | Gameplay Engineer | Open, Build 11b |
+| F-135 | HF-M2-03 | FOLLOW-UP from QA (#140): Third Hand makes "Refund all" read "-10 gold" although only stars are refunded | Minor | Gameplay Engineer | Open, Build 11b |
+| F-136 | HF-M2-03 | FOLLOW-UP from QA (#140): the result panel with the pick card shows a lighter band about 28 px along the top edge at 1280x720 | Minor | UI Engineer | Open, visual polish (with F-079) |
+| F-137 | HF-M2-28 | The Flare special is about 3x the arrow's damage rate for 5 s in every 14 s, so a player who never presses it cannot clear Shingle Beach and the +65 gap on the bands is largely level tuning around special-on play. 12a eases enemy data (special worth at most +40, Outpost winnable without it); a 3-4x arrow buff is rejected (Advisor: belongs in M2b's balance pass, or not at all) | Major | Gameplay Engineer | Open: 12a eases enemy data; the auto-cast node and guided press are HF-M2-63, Build 13 |
 
 ## Test changes
 
@@ -1034,6 +1049,9 @@
 | 2026-10-24 | `test_detail_card.gd` (#128, three changes) | The buy test: card stays with a tick and glow to card closes with the neighbours lit; the owned-card test reopens the card after the buy; the unaffordable test also asserts a refused buy leaves the card open | HF-M2-48 behaviour change (CEO: a buy closes the window); nothing weakened | Head of Engineering |
 | 2026-10-25 | `test_rework_b.gd`, `test_stars_and_castle.gd`, `test_interface_tidy.gd`, `test_guided_start.gd`, `run_ui_tests.gd` (#131; full old to new in the PR body) | Node below its required nodes became no nearer the middle; first-view zoom 0.5 to 1.0 became 0.9 to 1.5 (floor 0.9, every shown node must fit, stricter); tab tests: other tabs out of view became view centred nearest this tab; node button text moved from name plus price to price only with the name on a 12 px label; tree node text minimum 20 px to 12 px on the tree only | HF-M2-55 radial layout (round web, names beside nodes); two assertions loosened as the layout needs, one tightened; nothing else weakened. Hash unchanged (`bd20a8e7`) | Head of Engineering |
 | 2026-10-30 | `run_ui_tests.gd` `_test_readable_layout` (#135) | Added `set_blessings` with three blessings on the Plan page, so the page is also checked at 1280x720 and 1080p with three blessings and No blessing showing (old: checked with no blessing choice) | HF-M2-04 adds a choice to the Plan page; strengthens only, no assertion removed or loosened. Hash unchanged (`bd20a8e7`) | Head of Engineering |
+| 2026-10-30 | `test_build3.gd` profile literal, `test_feedback_flow.gd` (three parked tests), `test_radial_web.gd`, `test_rework_b.gd`, `test_tree_connected.gd`, `run_ui_tests.gd` (#140; full old to new in the PR body) | Profile literal gains `recruits` and `names`; the parked tests become squad tests (an empty squad still has the light posts, a new game starts with no squad, `["bryn","wren"]` once L2 and L4 are won, the tutorial and its stand stay empty); node count 56 to 58 and the star-node list gains `squad_hand_3`, `squad_hand_4`; the UI tests add the Recruits page (strengthens only) | Dropping `parked` (HF-M2-03) and the two Third and Fourth Hand star nodes (HF-M2-57); every assertion kept as strict as before | Head of Engineering |
+| 2026-10-30 | Progression hash | Re-pinned in #140: `bd20a8e7` to `b7ef4bfa` (Recruits and light posts back, Levels 1 to 5 enemy data retuned; Hero untouched) | Un-parking changes every simulated run | Head of Engineering |
+| 2026-10-30 | `pacing-bands.json` pins (#140) | 6 re-pinned, 3 added and 8 deleted (full table in the PR body); no Flare pin and no band changed | The shared enemy data retune moved Dusk Mage and Tideblade; one-off, Build 12 empties the list (F-124) | Head of Engineering |
 
 ## Advisor views
 
@@ -1062,6 +1080,8 @@
 - 2026-10-25: Build 8 of 8 (radial skill web, HF-M2-55) merged in #131; QA full round and fresh-game dry run clear at 43e2e0e, no MUST FIX. Defaults picked by HoE: Tower Gate I reveal rule left as it was (F-120, a design call), Refund-closes-card stays F-115, label collisions logged as F-117.
 - 2026-10-30: CEO go: "continue to next 2 builds together". Defaults picked by HoE: the next two on the board are the last unbuilt mechanic and the first half of M2b. Build 9 of 10 = pacing bands and the simulator gate (HF-M2-01, HF-M2-05), starts now; Build 10 of 10 = Blessings (HF-M2-04, after the Advisor's HF-M2-56 page). New total is 10 builds. One combined handoff after both, Head of QA fresh-game dry run first. The wider balance pass (HF-M2-28) and Recruits stay parked.
 - 2026-10-30: Builds 9 and 10 of 10 merged (#134 85e13f8, #135 84dafce); QA full clear on both and a fresh-game dry run on 84dafce. Decision B taken by HoE: Dusk Mage and Tideblade bands are written in full but pinned as 24 known misses (no Hero retune in this run, since they unlock at bosses later and the CEO's focus is the Flare Archer). Blessings: the CEO said yes to gold-raising blessings, No blessing always offered, blessings generic.
+- 2026-10-30 19:20: Advisor view on the special button (`advisor-special-button.md`, kept unedited) taken in: the special stays a button; 12a keeps the enemy easing; a later Flare arm node (Keeper's Habit, auto-cast at about 70% power) and a guided first press are HF-M2-63 in Build 13; a free pierce or burn arrow and any lowering of the special are rejected. HoE approved a CI budget change for the bands step (600 to 900 s, job timeout 1100) as the sweep gets longer once a no-special player can pass Outpost. CEO taste line (a button at first, an auto-cast later) goes in the handoff.
+- 2026-10-30 18:55: Build 11 (Recruits, #140) merged after QA clear at 77b0056; the engineer's guess was 4 to 6 h and it took about 3 h 30 min from the go to the PR. Build 11b (F-133 to F-135) comes before the CEO handoff because the CEO's own save is a pre-Build-11 save. Build 12 splits into 12a (stat model, Squad arm, retune, bands, F-127) and 12b (Posted Hand, tap-a-post squad choice); Dusk Mage and Tideblade are judged on gull_rock only (the hardest level that exists, where they unlock) with the scope in `pacing-bands.json`, widening when biome 2 exists (HoE, in line with the Advisor's view of 30 Oct).
 - 2026-10-30 18:15: Build 11 (Recruits, #140) follows the Advisor's page (HF-M2-57): Bryn is rescued free after L2 and Wren after L4, hires cost more each time, Third Hand and Fourth Hand are star nodes, Alchemist and Engineer ship locked. HoE approved the retune of Levels 1 to 5 enemy data (Hero untouched) and a one-off re-pin of the Dusk Mage and Tideblade known misses (9 re-pinned, 8 deleted), because one shared enemy data set cannot serve all three pillars; Build 12 must empty the list (F-124). Build 12 starts on its own branch while QA runs on #140.
 - 2026-10-30 16:25: Full play-through findings (bot, Levels 0 to 5, Archer only; no Mage Post or blessings tested) taken in under the standing go: logic items boarded as HF-M2-61 (guidance and end of content, UI Engineer) and HF-M2-62 (save integrity, Gameplay Engineer), findings F-128 to F-132; HF-M2-59 must still cover the Mage Post, blessings, Recruits and the unlock taps. Build 13 gets the HF-M2-59 list on top of HF-M2-60, 61 and 62.
 - 2026-10-30 16:12: CEO: "once you get it fix the gaps" (after the full play-through): standing go for Build 13. When the Researcher's updated gap review and HF-M2-59 land, every logic gap is boarded and built with no extra CEO check; visual polish waits for the art step.
