@@ -135,10 +135,18 @@ func _banked_save(levels: Array) -> Dictionary:
 	return profile
 
 
+## What a save file gives back: the same data through JSON, so every number is a float.
+func _through_json(data: Dictionary) -> Dictionary:
+	var back: Variant = JSON.parse_string(JSON.stringify(data))
+	expect_true(back is Dictionary, "the save reads back")
+	return back if back is Dictionary else {}
+
+
 func test_a_save_with_banked_runs_but_no_hiring_still_gets_the_rescues() -> void:
 	var content := _content()
-	var data := _banked_save(["outpost", "shingle_beach", "tidewrack_cove", "old_pier", "gull_rock"])
+	var data := _through_json(_banked_save(["outpost", "shingle_beach", "tidewrack_cove", "old_pier", "gull_rock"]))
 	expect_true(int(data["recruits"]["round"]) > 0, "the real flow moved the round on")
+	expect_true(data["recruits"]["bought"] is float, "the numbers came back as floats, as a real save has them")
 	var profile := HoldfastMeta.from_save(content, data)
 	expect_eq(_ids(profile, "roster"), ["bryn", "wren"], "banked runs alone do not count as a change")
 	expect_eq(int(profile["recruits"]["round"]), int(data["recruits"]["round"]), "the round count is kept")
@@ -149,10 +157,24 @@ func test_a_banked_save_with_a_hire_or_a_rename_is_not_topped_up() -> void:
 	var hired := _banked_save(["outpost", "shingle_beach"])
 	hired["recruits"]["bought"] = 1
 	hired["recruits"]["next"] = 2
-	expect_eq(_ids(HoldfastMeta.from_save(content, hired), "roster"), [], "bought and next moved: no top-up")
+	expect_eq(_ids(HoldfastMeta.from_save(content, _through_json(hired)), "roster"), [], "bought and next moved: no top-up")
 	var renamed := _banked_save(["outpost", "shingle_beach"])
 	renamed["names"]["keep"] = "Lantern"
-	expect_eq(_ids(HoldfastMeta.from_save(content, renamed), "roster"), [], "a renamed keep: no top-up")
+	expect_eq(_ids(HoldfastMeta.from_save(content, _through_json(renamed)), "roster"), [], "a renamed keep: no top-up")
+	var squad := _banked_save(["outpost", "shingle_beach"])
+	squad["recruits"]["squad"] = ["bryn"]
+	expect_eq(_ids(HoldfastMeta.from_save(content, _through_json(squad)), "roster"), [], "a squad pick: no top-up")
+
+
+func test_a_default_save_read_back_from_json_gets_the_rescues_at_round_zero_and_after() -> void:
+	var content := _content()
+	var fresh := _through_json(_default_state_save(["outpost", "shingle_beach", "old_pier"]))
+	expect_eq(_ids(HoldfastMeta.from_save(content, fresh), "roster"), ["bryn", "wren"], "round 0: both come")
+	var played := _through_json(_default_state_save(["outpost", "shingle_beach", "old_pier"]))
+	played["recruits"]["round"] = 1
+	expect_eq(_ids(HoldfastMeta.from_save(content, played), "roster"), ["bryn", "wren"], "round 1: both come")
+	var saved := _through_json(HoldfastMeta.from_save(content, fresh))
+	expect_eq(_ids(HoldfastMeta.from_save(content, saved), "roster"), ["bryn", "wren"], "and loading the result again adds nobody")
 
 
 func test_the_recruits_who_come_with_a_load_are_welcomed_until_the_page_is_opened() -> void:

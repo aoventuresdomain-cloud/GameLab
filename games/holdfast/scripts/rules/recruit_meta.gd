@@ -83,10 +83,18 @@ static func _untouched(content: Dictionary, data: Dictionary) -> bool:
 	var saved: Variant = data.get("recruits")
 	if not saved is Dictionary:
 		return false
-	var compare: Dictionary = saved.duplicate()
-	compare["round"] = 0
-	if compare != new_state(content):
+	# A welcome is only ever written by a grant, so a state that carries one has had its turn.
+	if saved.has("welcome"):
 		return false
+	# Field by field: a save read back from JSON holds its numbers as floats, which a whole-state compare
+	# would take for a change.
+	for key in ["roster", "squad", "hired"]:
+		if not saved.get(key) is Array or not saved[key].is_empty():
+			return false
+	for key in ["bought", "next"]:
+		var value: Variant = saved.get(key)
+		if not (value is int or value is float) or int(value) != int(new_state(content)[key]):
+			return false
 	var names: Variant = data.get("names")
 	if names is Dictionary:
 		for key in names:
