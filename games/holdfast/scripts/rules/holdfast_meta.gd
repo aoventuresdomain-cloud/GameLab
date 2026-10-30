@@ -251,14 +251,13 @@ static func hero_breakdown(content: Dictionary, profile: Dictionary) -> Array:
 			gear_nodes[str(worn[slot])] = {"hero": path_id, "effects": items[worn[slot]]["effects"]}
 			gear_ids.append(str(worn[slot]))
 	var gear := HoldfastRules.upgrade_stats(gear_nodes, gear_ids)
+	var both := StatModel.combine(tree, gear)
 	var rows := []
 	for spec in HERO_ROWS:
 		var key := "hero.%s.%s" % [path_id, spec["stat"]]
 		var base := _hero_base(data, spec)
-		var t: Dictionary = tree.get(key, {"add": 0.0, "multiply": 1.0})
-		var g: Dictionary = gear.get(key, {"add": 0.0, "multiply": 1.0})
-		var after_tree := (base + float(t["add"])) * float(t["multiply"])
-		var final := (base + float(t["add"]) + float(g["add"])) * float(t["multiply"]) * float(g["multiply"])
+		var after_tree := StatModel.apply(tree, key, base)
+		var final := StatModel.apply(both, key, base)
 		if spec.has("cap"):
 			final = clampf(final, 0.0, float(spec["cap"]))
 			after_tree = clampf(after_tree, 0.0, float(spec["cap"]))
@@ -777,6 +776,9 @@ static func is_visible(content: Dictionary, profile: Dictionary, id: String) -> 
 		return false
 	if id in profile["upgrades"]:
 		return true
+	# The Squad arm stays out of sight until someone has joined (a Recruit is rescued or hired).
+	if nodes[id].get("needs_recruit", false) and profile.get("recruits", {}).get("roster", []).is_empty():
+		return false
 	var needs: Array = nodes[id].get("requires", [])
 	if needs.is_empty():
 		return true
@@ -786,13 +788,14 @@ static func is_visible(content: Dictionary, profile: Dictionary, id: String) -> 
 	return false
 
 
-## The next gold upgrades to show: up to `limit` near nodes, cheapest first (ties by id).
+## The next gold upgrades to show: up to `limit` near nodes, cheapest first (ties by id). A free node
+## (the Squad root) is not one to save up for.
 ## Star nodes are left out: their price is not comparable with gold, and the map guides
 ## the first of them.
 static func next_unlocks(content: Dictionary, profile: Dictionary, limit := 2) -> Array:
 	var near := []
 	for id in content.get("upgrade_nodes", {}):
-		if is_near(content, profile, id) and not is_star_node(content["upgrade_nodes"][id]):
+		if is_near(content, profile, id) and not is_star_node(content["upgrade_nodes"][id]) and int(content["upgrade_nodes"][id]["cost"]) > 0:
 			near.append(id)
 	var nodes: Dictionary = content["upgrade_nodes"] if content.has("upgrade_nodes") else {}
 	near.sort_custom(func(a: String, b: String) -> bool:
@@ -924,8 +927,7 @@ static func effect_lines(content: Dictionary, profile: Dictionary, id: String) -
 
 
 static func _stat_value(stats: Dictionary, key: String, base: float) -> float:
-	var entry: Dictionary = stats.get(key, {"add": 0.0, "multiply": 1.0})
-	return (base + float(entry["add"])) * float(entry["multiply"])
+	return StatModel.apply(stats, key, base)
 
 
 ## The value a node's stat starts from before any upgrade: a tower's own number, a Hero's own number

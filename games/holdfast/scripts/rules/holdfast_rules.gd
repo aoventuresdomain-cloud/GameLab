@@ -444,7 +444,10 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	problems.append_array(HeroKnockdown.validate(content["hero_paths"][hero_path]["knockdown_delays"]))
 	problems.append_array(HeroGetUp.validate_grace(content["hero_paths"][hero_path].get("untouchable_seconds", DEFAULT_UNTOUCHABLE_SECONDS)))
 	var roles := []
-	var placements: Variant = _placements(config, level, content)
+	# Only the tree can change a Recruit's stats for the whole squad, so the squad is built from the tree's sum.
+	var tree_nodes: Dictionary = content.get("upgrade_nodes", {})
+	var known: Array = config.get("upgrades", []).filter(func(id: Variant) -> bool: return tree_nodes.has(id))
+	var placements: Variant = _placements(config, level, content, StatModel.sum(tree_nodes, known))
 	if placements == null:
 		return
 	for at in placements:
@@ -608,7 +611,7 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 ## Where the Recruits stand: the level's own pair when the config names no squad, else the
 ## squad's Recruits (RecruitRoster data), one to each light post in turn and the rest round the
 ## keep. [{id, x, y, post, data, xp}]; null (and the run refused) when the squad is not usable.
-func _placements(config: Dictionary, level: Dictionary, content: Dictionary) -> Variant:
+func _placements(config: Dictionary, level: Dictionary, content: Dictionary, stats: Dictionary) -> Variant:
 	if not config.has("squad"):
 		var legacy: Array = [level["staff"]]
 		legacy.append_array(level.get("recruits", []))
@@ -623,7 +626,7 @@ func _placements(config: Dictionary, level: Dictionary, content: Dictionary) -> 
 	var spots: Array = level["posts"]
 	for i in squad.size():
 		var recruit: Dictionary = squad[i]
-		var data := RecruitRoster.build(recruit, content)
+		var data := RecruitRoster.build(recruit, content, stats)
 		if data.is_empty() or str(recruit["id"]) in seen:
 			_fail("Recruit %s cannot join the squad" % str(recruit.get("id", "?")))
 			return null
@@ -863,32 +866,13 @@ func _build_schedule(level: Dictionary) -> void:
 	_schedule.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0] or (a[0] == b[0] and a[3] < b[3]))
 
 
-## Sums upgrade effects: {stat: {add, multiply}}.
+## Sums upgrade effects: {stat: {add, multiply}} (the stat model's sum).
 static func upgrade_stats(nodes: Dictionary, purchased: Array) -> Dictionary:
-	var stats := {}
-	for id in purchased:
-		var node: Dictionary = nodes.get(id, {})
-		if node.is_empty():
-			push_error("HoldfastRules: unknown upgrade %s, ignored" % id)
-			continue
-		for effect in node.get("effects", []):
-			var stat := _scoped_stat(node, str(effect["stat"]))
-			var entry: Dictionary = stats.get(stat, {"add": 0.0, "multiply": 1.0})
-			entry["add"] += float(effect.get("add", 0.0))
-			entry["multiply"] *= float(effect.get("multiply", 1.0))
-			stats[stat] = entry
-	return stats
+	return StatModel.sum(nodes, purchased)
 
 
-## A tower or Hero node's stat is scoped to what it belongs to: `tower.damage` on
-## an archer_post node is `tower.archer_post.damage`, `hero.attack.damage` on a
-## flare_archer node is `hero.flare_archer.attack.damage`.
 static func _scoped_stat(node: Dictionary, stat: String) -> String:
-	if node.has("tower") and stat.begins_with("tower."):
-		return "tower.%s.%s" % [node["tower"], stat.substr(6)]
-	if node.has("hero") and stat.begins_with("hero."):
-		return "hero.%s.%s" % [node["hero"], stat.substr(5)]
-	return stat
+	return StatModel.scoped(node, stat)
 
 
 ## A blessing's effects as upgrade nodes, so they take the same path as gear: Hero stats scoped
@@ -912,12 +896,11 @@ static func blessing_nodes(blessing: Dictionary, hero_path: String, tower_ids: A
 
 
 static func _add(stats: Dictionary, stat: String) -> float:
-	return float(stats.get(stat, {}).get("add", 0.0))
+	return StatModel.add(stats, stat)
 
 
 static func _apply(stats: Dictionary, stat: String, base: float) -> float:
-	var entry: Dictionary = stats.get(stat, {"add": 0.0, "multiply": 1.0})
-	return (base + float(entry["add"])) * float(entry["multiply"])
+	return StatModel.apply(stats, stat, base)
 
 
 func step(dt: float, input: Dictionary) -> void:

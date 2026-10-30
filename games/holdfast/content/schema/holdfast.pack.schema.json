@@ -534,6 +534,9 @@
         "needs_nodes": {
           "type": "integer",
           "minimum": 1
+        },
+        "needs_recruit": {
+          "type": "boolean"
         }
       }
     },
@@ -541,7 +544,7 @@
       "properties": {
         "stat": {
           "type": "string",
-          "pattern": "^(aura_dps|aura_radius|keep_health|gold_multiplier|staff_damage|beam_reach|tower\\.[a-z_]+|hero\\.[a-z_]+(\\.[a-z_]+)?)$"
+          "pattern": "^(aura_dps|aura_radius|keep_health|gold_multiplier|staff_damage|beam_reach|recruit\\.[a-z_]+|tower\\.[a-z_]+|hero\\.[a-z_]+(\\.[a-z_]+)?)$"
         }
       }
     },
@@ -1297,7 +1300,7 @@
         "properties": {
           "stat": {
             "type": "string",
-            "pattern": "^(damage|range|cooldown|health|move_speed|leash|rest_heal|revive_seconds|revive_health|retreat_below|flee_below|armour|xp_gain|taunt_radius|effect_radius|slow|mark_bonus|field_dps|repair_per_second|heal_per_second)$"
+            "pattern": "^recruit\\.(damage|range|cooldown|health|move_speed|leash|rest_heal|revive_seconds|revive_health|retreat_below|flee_below|armour|xp_gain|taunt_radius|effect_radius|slow|mark_bonus|field_dps|repair_per_second|heal_per_second)$"
           },
           "add": {
             "type": "number"

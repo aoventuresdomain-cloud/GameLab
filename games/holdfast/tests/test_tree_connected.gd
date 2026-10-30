@@ -37,7 +37,7 @@ func _shown(profile: Dictionary) -> Array:
 
 func test_every_node_hangs_off_first_slot_through_the_nodes_it_requires() -> void:
 	var nodes: Dictionary = _content()["upgrade_nodes"]
-	expect_eq(nodes.size(), 58)
+	expect_eq(nodes.size(), 61)
 	var roots := []
 	for id in nodes:
 		if nodes[id].get("requires", []).is_empty():

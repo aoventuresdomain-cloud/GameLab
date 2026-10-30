@@ -87,27 +87,42 @@ static func xp_for(recruit: Dictionary, content: Dictionary, amount: int) -> int
 
 ## The numbers a run uses for this Recruit (the shape of a pack `staff` entry, plus `level`,
 ## `flee_below`, `armour`, `xp_gain` and `fx`, the post effect their class gives with the traits and
-## skills applied). {} for a class the pack does not have.
-static func build(recruit: Dictionary, content: Dictionary) -> Dictionary:
+## skills applied). {} for a class the pack does not have. `tree` is the run's stat table (see
+## StatModel); the `recruit.*` stats in it, from the tree, apply to every Recruit alongside their
+## own traits and skills, by the same rule: (base + every add) x every multiply.
+static func build(recruit: Dictionary, content: Dictionary, tree := {}) -> Dictionary:
 	var cls: Dictionary = content.get("recruit_classes", {}).get(recruit["class"], {})
 	if cls.is_empty():
 		return {}
+	var stats := {}
+	for stat in tree:
+		if str(stat).begins_with("recruit."):
+			stats[stat] = tree[stat]
+	for trait_id in recruit["traits"]:
+		for effect in content.get("recruit_traits", {}).get(trait_id, {}).get("effects", []):
+			StatModel.put(stats, str(effect["stat"]), effect)
+	for skill_id in recruit["skills"]:
+		for effect in content.get("recruit_skills", {}).get(skill_id, {}).get("effects", []):
+			StatModel.put(stats, str(effect["stat"]), effect)
 	var data := {"id": recruit["id"], "name": recruit["name"], "class": recruit["class"]}
-	for key in ["damage", "range", "cooldown", "health", "radius", "leash", "move_speed", "retreat_below", "rest_heal", "revive_seconds", "revive_health", "xp_per_level", "damage_per_level"]:
-		data[key] = cls[key]
+	for key in ["range", "cooldown", "health", "leash", "move_speed", "retreat_below", "rest_heal", "revive_seconds", "revive_health"]:
+		data[key] = StatModel.apply(stats, "recruit." + key, float(cls[key]))
+	data["radius"] = cls["radius"]
+	data["xp_per_level"] = cls["xp_per_level"]
 	var level := level_of(recruit, content)
 	data["level"] = level
-	data["damage"] = float(data["damage"]) + float(level - 1) * float(data["damage_per_level"])
+	# A level's worth of damage grows with the damage, so a levelled blow keeps its share.
+	data["damage"] = StatModel.apply(stats, "recruit.damage", float(cls["damage"]) + float(level - 1) * float(cls["damage_per_level"]))
+	data["damage_per_level"] = float(cls["damage_per_level"]) * StatModel.multiplier(stats, "recruit.damage")
 	data["barks"] = cls["barks"]
-	data["flee_below"] = 0.0
-	data["armour"] = 0.0
-	data["xp_gain"] = 1.0
+	data["flee_below"] = StatModel.apply(stats, "recruit.flee_below", 0.0)
+	data["armour"] = StatModel.apply(stats, "recruit.armour", 0.0)
+	data["xp_gain"] = StatModel.apply(stats, "recruit.xp_gain", 1.0)
 	var fx: Dictionary = content.get("role_effects", {}).get(recruit["class"], {}).duplicate()
 	fx.erase("id")
-	for trait_id in recruit["traits"]:
-		_apply(data, fx, content.get("recruit_traits", {}).get(trait_id, {}).get("effects", []))
-	for skill_id in recruit["skills"]:
-		_apply(data, fx, content.get("recruit_skills", {}).get(skill_id, {}).get("effects", []))
+	for stat in EFFECT_STATS:
+		if fx.has(stat) or stats.has("recruit." + stat):
+			fx[stat] = StatModel.apply(stats, "recruit." + stat, float(fx.get(stat, 0.0)))
 	data["cooldown"] = maxf(float(data["cooldown"]), 0.1)
 	data["armour"] = clampf(float(data["armour"]), 0.0, ARMOUR_CAP)
 	for key in ["retreat_below", "flee_below"]:
@@ -117,21 +132,6 @@ static func build(recruit: Dictionary, content: Dictionary) -> Dictionary:
 		fx["slow"] = clampf(float(fx["slow"]), 0.0, 0.9)
 	data["fx"] = fx
 	return data
-
-
-static func _apply(data: Dictionary, fx: Dictionary, effects: Array) -> void:
-	for effect in effects:
-		var stat := str(effect["stat"])
-		var target: Dictionary = fx if stat in EFFECT_STATS else data
-		var value := float(target.get(stat, 0.0))
-		if effect.has("add"):
-			value += float(effect["add"])
-		if effect.has("multiply"):
-			value *= float(effect["multiply"])
-			# A level's worth of damage grows with the damage, so a levelled blow keeps its share.
-			if stat == "damage":
-				data["damage_per_level"] = float(data["damage_per_level"]) * float(effect["multiply"])
-		target[stat] = value
 
 
 ## The fork a Recruit can pick from now: {fork: 1 to 3, options: [skill ids]}, or {} when they have

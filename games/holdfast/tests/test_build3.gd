@@ -81,7 +81,7 @@ func _save_path(name: String) -> String:
 func test_the_tree_has_sections_with_real_depth() -> void:
 	var nodes := _nodes()
 	var sections: Dictionary = HoldfastContent.base()["upgrade_sections"]
-	expect_true(nodes.size() >= 30 and nodes.size() <= 60, "about 50 nodes, got %d" % nodes.size())
+	expect_true(nodes.size() >= 30 and nodes.size() <= 65, "about 60 nodes, got %d" % nodes.size())
 	var by_branch := {}
 	for id in nodes:
 		expect_true(sections.has(nodes[id]["branch"]), id + " sits in a section the pack lists")
@@ -551,12 +551,13 @@ func test_every_upgrade_in_the_pack_is_understood_by_the_rules() -> void:
 	var known := ["aura_dps", "aura_radius", "keep_health", "gold_multiplier", "beam_reach", "staff_damage"]
 	var known_tower := ["damage", "health", "range", "cooldown", "repair", "extra_targets", "lone_bonus", "pierce", "burst_every", "burst_extra", "storm_every", "storm_share", "hero_haste", "hero_radius", "crossfire", "burn_dps", "burn_seconds", "rally_repair", "rally_shield", "rally_radius", "rally_seconds", "last_light", "last_light_radius", "watch_range", "watch_radius", "eclipse_widen", "eclipse_radius"]
 	var known_hero := ["move_speed", "health", "attack.damage", "attack.cooldown", "attack.count", "attack.spread_degrees", "ability.rapid_seconds", "ability.pierce", "ability.burn_dps", "ability.burn_seconds", "ability.cooldown", "armour", "getup_time", "pickup_radius"]
+	var known_recruit := ["health", "damage"]
 	var all := []
 	for id in _nodes():
 		all.append(id)
 		for effect in _nodes()[id].get("effects", []):
 			var stat := str(effect["stat"])
-			var understood: bool = stat in known or (stat.begins_with("tower.") and stat.substr(6) in known_tower) or (stat.begins_with("hero.") and stat.substr(5) in known_hero)
+			var understood: bool = stat in known or (stat.begins_with("tower.") and stat.substr(6) in known_tower) or (stat.begins_with("hero.") and stat.substr(5) in known_hero) or (stat.begins_with("recruit.") and stat.substr(8) in known_recruit)
 			expect_true(understood, id + " uses " + stat)
 	var rules := HoldfastRules.new()
 	rules.setup(HoldfastContent.run_config("outpost", all), SimRng.new(1))

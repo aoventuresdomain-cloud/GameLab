@@ -20,11 +20,17 @@ func _initialize() -> void:
 		quit(1)
 		return
 
+	var failures := HoldfastBands.scope_problems(bands)
+	if not failures.is_empty():
+		for failure in failures:
+			printerr("bands FAILED: " + failure)
+		quit(1)
+		return
 	var started := Time.get_ticks_usec()
 	var cells := HoldfastBands.measure(bands)
 	var wall := (Time.get_ticks_usec() - started) / 1_000_000.0
 	var judged := HoldfastBands.evaluate(HoldfastBands.figures(bands, cells), bands["known_misses"])
-	var failures := HoldfastBands.failures(judged)
+	failures = HoldfastBands.failures(judged)
 	if wall > budget:
 		failures.append("took %.0f s of wall-clock time, budget %.0f s" % [wall, budget])
 
