@@ -618,10 +618,10 @@
 - **Status:** Planned, Build 13 of 13 (from the Player Researcher's gap review, 2026-10-30); standing CEO go (2026-10-30), no further check
 - **QA:** screens (full if the save format changes)
 - **Done when:**
-  - [ ] Settings screen replaces the "arrives later" notice: volume, screen shake, flashes and text size, saved through KIT-07, each with a test; the Advisor says which of text size and game speed stay.
+  - [ ] Settings screen replaces the "arrives later" notice: volume, screen shake and flashes, saved through KIT-07, each with a test (the Advisor dropped text size for now, 1280 by 720 is tight and the CEO declined an accessibility pass).
   - [ ] An audio system plays CC0 sound effects for hits, gold, level-ups and the boss, obeys the volume setting, and lists sources in `CREDITS.md`.
   - [ ] Numbers use short formats (1.2K, 3.4M) everywhere, with a test for the boundaries.
-  - [ ] A game-speed control is in only if the Advisor decides so, and then ships with a test; the pause and leave-run controls belong to HF-M2-64 (one owner per item).
+  - [ ] Each new system (gear, blessings, Squad, Mage gate) gets one dot and one line, shown once and never a tutorial screen; pause, leave-run and game speed belong to HF-M2-64 (one owner per item).
 
 ### HF-M2-61 Guidance and end of content (from the full play-through)
 - **Owner:** UI Engineer
@@ -664,7 +664,52 @@
   - [ ] A run can be paused (key and button) and left from the pause screen after a confirmation; leaving banks nothing and loses or duplicates no rewards; each path has a test, and a reload mid-run says plainly that the run is gone (F-142).
   - [ ] The Dusk Mage and Tideblade tabs stay locked until their boss is won (Dusk Mage at the end of Gull Rock, Tideblade at the next biome's boss, which stays locked and says so until it exists); a save that already uses one keeps it; each case has a test through a real JSON save (F-143).
   - [ ] After the last existing level is won there is a defined end-of-content state: no "Next level" dead end, a "more levels coming" line and a next goal; tested with an all-won save (F-146; the panel itself is HF-M2-61).
-  - [ ] The journey map shows one next-goal line chosen from state (next level, the guided buy, the next boss, or spending stars and gold), with a test per branch (F-144).
+  - [ ] The journey map shows one next-goal line chosen from state (next level, the guided buy, the next boss, or spending stars and gold), with a test per branch (F-144; the Advisor's order: a node nearly affordable, then the next level, then the next boss).
+  - [ ] Game speed 1x and 2x (the Advisor's answer): a control on the run screen, saved with the settings, with a test that the rules and rewards are the same at both speeds; calling the next wave early comes later, after the CEO has felt speed.
+
+### HF-M2-65 Level modifiers and Hard replays
+- **Owner:** Gameplay Engineer
+- **Status:** Planned, Build 13b. From the Advisor's comparison (gap A). Default taken from the Advisor's pick (pull it forward from M5; Nightmare stays later, as data) unless the CEO says otherwise
+- **QA:** full (level data, rewards and saves)
+- **Depends on:** HF-M2-64
+- **Done when:**
+  - [ ] A level can carry a modifier list in its data (monster stat changes, Keep or gold changes), shown on the journey card as an icon and one word; the five existing levels each get one, with a test that every modifier is read from data.
+  - [ ] Every cleared level has a Hard replay that uses its modifiers, pays stars again and is unlocked by winning the level; stars from Hard are saved and cannot be earned twice (a test through a real JSON save).
+  - [ ] The simulator and the pacing bands cover Hard replays (a band per replay), and Hard is not just scaled numbers: the modifier changes how the level is played.
+  - [ ] Nightmare is not built; a stub in data shows where it goes.
+
+### HF-M2-66 Achievements
+- **Owner:** Gameplay Engineer
+- **Status:** Planned, Build 13b. From the Advisor's comparison (gap B); standing CEO go
+- **QA:** full (Steam integration)
+- **Done when:**
+  - [ ] About 12 achievements are defined as data (first clear, a boss, a level with no tower lost, three stars on a level, a node of each kind, hire a Recruit, wear a full set) with counters, each with a test that fires from a real event.
+  - [ ] An in-game list works without Steam and shows progress; unlocked achievements are saved through a real JSON save.
+  - [ ] A Steam mapping sends each unlock through the Steam integration when Steam is present and does nothing when it is not; no key or secret is committed.
+
+### HF-M2-67 A second biome is data only (proof)
+- **Owner:** Gameplay Engineer
+- **Status:** Planned, Build 13b. From the Advisor's comparison (gap C); standing CEO go
+- **QA:** sanity (tests only unless code changes)
+- **Done when:**
+  - [ ] A throwaway second-biome stub in tests (a level, a boss and its unlock) loads and plays in the simulator with no code change; if code is needed, the list of changes is written in the PR and the data gaps are boarded.
+  - [ ] The bands gate fails on a biome with no band entry, and the `pillar_levels` scope can widen to it with a data edit only.
+
+### HF-M2-68 Pacing gate in numbers
+- **Owner:** Gameplay Engineer
+- **Status:** Planned, Build 13b. From the Advisor's comparison (gap F), replaces the retired ten-hour report (F-127); standing CEO go
+- **QA:** full (core numbers)
+- **Done when:**
+  - [ ] The simulator report measures the tree and stars: runs between affordable purchases (never more than 3 in a row) and the hours to fill the whole tree (10 to 15), with the first-time-to-first-star, tower and boss figures.
+  - [ ] The bands gate fails CI when either number leaves its band, with a test for each failure; any known miss is pinned with a reason like the others.
+
+### HF-M2-69 Controller and keyboard input
+- **Owner:** UI Engineer
+- **Status:** On hold until the CEO answers whether the Steam Deck is a first-release target (the Advisor's pick: yes, its own build after Build 13 and before the demo); QA has not confirmed that no gamepad handling exists (F-148)
+- **QA:** full (touches every screen)
+- **Done when:**
+  - [ ] Every screen is reachable and every action works with a gamepad and with the keyboard alone, with a visible focus.
+  - [ ] A test walks the main flow without a mouse.
 ### HF-M2-08 Style guide locked
 - **Owner:** Product Designer
 - **Status:** Ready
@@ -1009,6 +1054,8 @@
 | F-144 | HF-M2-64 | FOLLOW-UP from QA (R8): no next-goal line on the journey map beyond the boss tag | Minor | Gameplay Engineer | Open, Build 13 |
 | F-145 | HF-M2-61 | FOLLOW-UP from QA (R10): no first-time hint for blessings or the Mage gate | Minor | UI Engineer | Open, Build 13 |
 | F-146 | HF-M2-64 | MUST FIX from QA (R3): end of content is a dead end: no Next level, no 'more coming', no next goal after Gull Rock (read from code and an all-won map; not played). The panel is F-128 | Major | Gameplay Engineer | Open, Build 13 |
+| F-147 | HF-M2-61 | Check first (Advisor, gap G): what happens when a gear piece drops that you already own. 12 items, 2 to 3 per slot, finite drops; a drop that does nothing feels like a bug | Minor | Gameplay Engineer | Open, Build 13b: confirm by play; a salvage-for-gold rule if confirmed |
+| F-148 | HF-M2-69 | The Advisor found no gamepad handling in the scripts though the Steam Deck is named as a target; QA to confirm | Minor | Head of QA | Open, confirm; HF-M2-69 waits for the CEO's answer on the Deck |
 
 ## Test changes
 
@@ -1108,6 +1155,7 @@
 - 2026-10-30 16:25: Full play-through findings (bot, Levels 0 to 5, Archer only; no Mage Post or blessings tested) taken in under the standing go: logic items boarded as HF-M2-61 (guidance and end of content, UI Engineer) and HF-M2-62 (save integrity, Gameplay Engineer), findings F-128 to F-132; HF-M2-59 must still cover the Mage Post, blessings, Recruits and the unlock taps. Build 13 gets the HF-M2-59 list on top of HF-M2-60, 61 and 62.
 - 2026-10-30 16:12: CEO: "once you get it fix the gaps" (after the full play-through): standing go for Build 13. When the Researcher's updated gap review and HF-M2-59 land, every logic gap is boarded and built with no extra CEO check; visual polish waits for the art step.
 - 2026-10-30: Player Researcher's gap review (`studio/research/holdfast-gap-review.md`, project files) taken in: HF-M2-07 split into the look half (stays last) and HF-M2-60, the logic half (settings, sound, number formats, pause and speed, Build 13) so that only visual polish is left at the end; F-126 (guide route) and F-127 (ten-hour report) logged; unchecked rows folded into HF-M2-59. Decided by HoE; game-speed and text-size scope left to the Advisor.
+- 2026-10-30 23:25: Advisor's Incrempire comparison (`holdfast/m2/advisor-incrempire-comparison.md`, project files) taken in: gaps A to G boarded as HF-M2-65 (modifiers and Hard replays), 66 (achievements), 67 (second biome proof), 68 (pacing gate in numbers), F-147 (duplicate gear), HF-M2-69 (controller and keyboard, on hold) and game speed 1x/2x added to HF-M2-64. Build 13 splits into 13a (62, 63, 64 and the UI items 60, 61) and 13b (65 to 68). Three CEO taste questions go to the CEO with the Advisor's picks as defaults for A and speed; the Steam Deck answer gates HF-M2-69.
 - 2026-10-30 23:15: QA's review round on db39607 returned 3 MUST FIX and 7 FOLLOW-UP; all boarded for Build 13 (HF-M2-64 new, Gameplay Engineer; the others are F-126 to F-132 duplicates or F-140, F-141 and F-145). The pause line moved from HF-M2-60 to HF-M2-64 so each item has one owner. QA did not cover other pillars in play, audio or human feel.
 - 2026-10-30 23:03: Build 12 (stat model, Squad arm, Levels 1 to 5 retune, Posted Hand) merged: 12a #147 at 19897eb and 12b #148 at db39607, both QA clear. Six pins stand as known misses (F-138) with named closing items. Review round HF-M2-59 and Build 13 (HF-M2-62, 63 first) started under the standing go.
 - 2026-10-30: Build 12a decision (HoE): Flare levels 1 to 5 stay in band; the special-gap mean (45 against a 40 limit) is pinned as a known miss with its reason, to be fixed by the arrow and special rebalance and HF-M2-63. Limit not changed, no test edited.
