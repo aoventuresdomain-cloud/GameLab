@@ -17,6 +17,9 @@ const FORK_SKIPS := {
 }
 ## The chain a player who picked that side buys first, saving up for each node: without it the
 ## cheapest-first bot reaches neither side's 600 gold nodes in five levels and the forks never differ.
+## Only the Flare Archer saves up for a side: its tower is its kit. The Dusk Mage and the Tideblade spend
+## on their own nodes first, and saving for a 1400 gold tower node would starve them.
+const FORK_PREFER_PILLAR := "flare_archer"
 const FORK_PREFER := {
 	"volley": ["post_sight", "post_scope", "post_marksman", "post_piercing"],
 	"sniper": ["post_drills", "post_twin", "post_burst", "post_storm"],
@@ -92,7 +95,7 @@ static func measure(bands: Dictionary) -> Dictionary:
 		for bot in BOTS:
 			out["%s/%s" % [pillar, bot]] = cell(BOTS[bot], pillar, int(seeds["band"]))
 		for side in FORK_SKIPS:
-			out["%s/%s" % [pillar, side]] = cell(HoldfastSkilledBot.AVERAGE, pillar, int(seeds["fork"]), FORK_SKIPS[side], FORK_PREFER[side])
+			out["%s/%s" % [pillar, side]] = cell(HoldfastSkilledBot.AVERAGE, pillar, int(seeds["fork"]), FORK_SKIPS[side], FORK_PREFER[side] if pillar == FORK_PREFER_PILLAR else [])
 		out["%s/no_special" % pillar] = cell(HoldfastSkilledBot.AVERAGE_NO_SPECIAL, pillar, int(seeds["special"]))
 	var one_post: Dictionary = bands["one_post"]
 	if str(one_post["level"]) in scope(bands, str(one_post["pillar"])):
