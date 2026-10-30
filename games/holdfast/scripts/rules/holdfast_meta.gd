@@ -251,14 +251,13 @@ static func hero_breakdown(content: Dictionary, profile: Dictionary) -> Array:
 			gear_nodes[str(worn[slot])] = {"hero": path_id, "effects": items[worn[slot]]["effects"]}
 			gear_ids.append(str(worn[slot]))
 	var gear := HoldfastRules.upgrade_stats(gear_nodes, gear_ids)
+	var both := StatModel.combine(tree, gear)
 	var rows := []
 	for spec in HERO_ROWS:
 		var key := "hero.%s.%s" % [path_id, spec["stat"]]
 		var base := _hero_base(data, spec)
-		var t: Dictionary = tree.get(key, {"add": 0.0, "multiply": 1.0})
-		var g: Dictionary = gear.get(key, {"add": 0.0, "multiply": 1.0})
-		var after_tree := (base + float(t["add"])) * float(t["multiply"])
-		var final := (base + float(t["add"]) + float(g["add"])) * float(t["multiply"]) * float(g["multiply"])
+		var after_tree := StatModel.apply(tree, key, base)
+		var final := StatModel.apply(both, key, base)
 		if spec.has("cap"):
 			final = clampf(final, 0.0, float(spec["cap"]))
 			after_tree = clampf(after_tree, 0.0, float(spec["cap"]))
@@ -914,8 +913,7 @@ static func effect_lines(content: Dictionary, profile: Dictionary, id: String) -
 
 
 static func _stat_value(stats: Dictionary, key: String, base: float) -> float:
-	var entry: Dictionary = stats.get(key, {"add": 0.0, "multiply": 1.0})
-	return (base + float(entry["add"])) * float(entry["multiply"])
+	return StatModel.apply(stats, key, base)
 
 
 ## The value a node's stat starts from before any upgrade: a tower's own number, a Hero's own number

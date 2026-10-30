@@ -6,7 +6,7 @@
    "text": "+20% range",
    "effects": [
     {
-     "stat": "range",
+     "stat": "recruit.range",
      "multiply": 1.2
     }
    ]
@@ -17,7 +17,7 @@
    "text": "Flees below half health",
    "effects": [
     {
-     "stat": "flee_below",
+     "stat": "recruit.flee_below",
      "add": 0.5
     }
    ]
@@ -28,7 +28,7 @@
    "text": "+25% health",
    "effects": [
     {
-     "stat": "health",
+     "stat": "recruit.health",
      "multiply": 1.25
     }
    ]
@@ -39,7 +39,7 @@
    "text": "+20% damage",
    "effects": [
     {
-     "stat": "damage",
+     "stat": "recruit.damage",
      "multiply": 1.2
     }
    ]
@@ -50,7 +50,7 @@
    "text": "+25% speed",
    "effects": [
     {
-     "stat": "move_speed",
+     "stat": "recruit.move_speed",
      "multiply": 1.25
     }
    ]
@@ -61,7 +61,7 @@
    "text": "Attacks 15% faster",
    "effects": [
     {
-     "stat": "cooldown",
+     "stat": "recruit.cooldown",
      "multiply": 0.85
     }
    ]
@@ -72,7 +72,7 @@
    "text": "Gets up in half the time",
    "effects": [
     {
-     "stat": "revive_seconds",
+     "stat": "recruit.revive_seconds",
      "multiply": 0.5
     }
    ]
@@ -83,7 +83,7 @@
    "text": "+25% experience",
    "effects": [
     {
-     "stat": "xp_gain",
+     "stat": "recruit.xp_gain",
      "multiply": 1.25
     }
    ]
@@ -98,7 +98,7 @@
    "fork": 1,
    "effects": [
     {
-     "stat": "taunt_radius",
+     "stat": "recruit.taunt_radius",
      "add": 60
     }
    ]
@@ -111,11 +111,11 @@
    "fork": 1,
    "effects": [
     {
-     "stat": "health",
+     "stat": "recruit.health",
      "multiply": 1.4
     },
     {
-     "stat": "armour",
+     "stat": "recruit.armour",
      "add": 0.15
     }
    ]
@@ -128,7 +128,7 @@
    "fork": 2,
    "effects": [
     {
-     "stat": "damage",
+     "stat": "recruit.damage",
      "multiply": 1.4
     }
    ]
@@ -141,7 +141,7 @@
    "fork": 2,
    "effects": [
     {
-     "stat": "cooldown",
+     "stat": "recruit.cooldown",
      "multiply": 0.8
     }
    ]
@@ -154,7 +154,7 @@
    "fork": 3,
    "effects": [
     {
-     "stat": "rest_heal",
+     "stat": "recruit.rest_heal",
      "multiply": 2.0
     }
    ]
@@ -167,7 +167,7 @@
    "fork": 3,
    "effects": [
     {
-     "stat": "revive_seconds",
+     "stat": "recruit.revive_seconds",
      "multiply": 0.5
     }
    ]
@@ -180,7 +180,7 @@
    "fork": 1,
    "effects": [
     {
-     "stat": "effect_radius",
+     "stat": "recruit.effect_radius",
      "add": 40
     }
    ]
@@ -193,7 +193,7 @@
    "fork": 1,
    "effects": [
     {
-     "stat": "mark_bonus",
+     "stat": "recruit.mark_bonus",
      "add": 0.25
     }
    ]
@@ -206,7 +206,7 @@
    "fork": 2,
    "effects": [
     {
-     "stat": "range",
+     "stat": "recruit.range",
      "multiply": 1.3
     }
    ]
@@ -219,7 +219,7 @@
    "fork": 2,
    "effects": [
     {
-     "stat": "slow",
+     "stat": "recruit.slow",
      "add": 0.15
     }
    ]
@@ -232,7 +232,7 @@
    "fork": 3,
    "effects": [
     {
-     "stat": "damage",
+     "stat": "recruit.damage",
      "multiply": 1.3
     }
    ]
@@ -245,11 +245,11 @@
    "fork": 3,
    "effects": [
     {
-     "stat": "move_speed",
+     "stat": "recruit.move_speed",
      "multiply": 1.3
     },
     {
-     "stat": "leash",
+     "stat": "recruit.leash",
      "add": 40
     }
    ]
@@ -262,7 +262,7 @@
    "fork": 1,
    "effects": [
     {
-     "stat": "slow",
+     "stat": "recruit.slow",
      "add": 0.25
     }
    ]
@@ -275,7 +275,7 @@
    "fork": 1,
    "effects": [
     {
-     "stat": "heal_per_second",
+     "stat": "recruit.heal_per_second",
      "add": 3
     }
    ]
@@ -288,7 +288,7 @@
    "fork": 2,
    "effects": [
     {
-     "stat": "field_dps",
+     "stat": "recruit.field_dps",
      "multiply": 1.6
     }
    ]
@@ -301,7 +301,7 @@
    "fork": 2,
    "effects": [
     {
-     "stat": "effect_radius",
+     "stat": "recruit.effect_radius",
      "add": 40
     }
    ]
@@ -314,7 +314,7 @@
    "fork": 3,
    "effects": [
     {
-     "stat": "range",
+     "stat": "recruit.range",
      "multiply": 1.3
     }
    ]
@@ -327,7 +327,7 @@
    "fork": 3,
    "effects": [
     {
-     "stat": "health",
+     "stat": "recruit.health",
      "multiply": 1.3
     }
    ]
@@ -340,7 +340,7 @@
    "fork": 1,
    "effects": [
     {
-     "stat": "repair_per_second",
+     "stat": "recruit.repair_per_second",
      "multiply": 2.0
     }
    ]
@@ -353,7 +353,7 @@
    "fork": 1,
    "effects": [
     {
-     "stat": "effect_radius",
+     "stat": "recruit.effect_radius",
      "add": 50
     }
    ]
@@ -366,7 +366,7 @@
    "fork": 2,
    "effects": [
     {
-     "stat": "damage",
+     "stat": "recruit.damage",
      "multiply": 1.5
     }
    ]
@@ -379,7 +379,7 @@
    "fork": 2,
    "effects": [
     {
-     "stat": "armour",
+     "stat": "recruit.armour",
      "add": 0.15
     }
    ]
@@ -392,11 +392,11 @@
    "fork": 3,
    "effects": [
     {
-     "stat": "move_speed",
+     "stat": "recruit.move_speed",
      "multiply": 1.3
     },
     {
-     "stat": "leash",
+     "stat": "recruit.leash",
      "add": 40
     }
    ]
@@ -409,7 +409,7 @@
    "fork": 3,
    "effects": [
     {
-     "stat": "health",
+     "stat": "recruit.health",
      "multiply": 1.3
     }
    ]

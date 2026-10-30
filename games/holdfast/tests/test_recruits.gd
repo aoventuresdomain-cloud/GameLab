@@ -55,7 +55,8 @@ func _enemy(rules: HoldfastRules, at: Vector2, health := 100.0, damage := 0) -> 
 
 
 ## What a run reads for one stat from the unit it built.
-func _stat(unit: HoldfastRules.Attacker, stat: String) -> float:
+func _stat(unit: HoldfastRules.Attacker, named: String) -> float:
+	var stat := named.trim_prefix("recruit.")
 	match stat:
 		"damage":
 			return unit.damage
@@ -223,9 +224,9 @@ func test_a_damage_trait_scales_the_levels_damage_gain_too_and_armour_is_capped(
 	var sharp := RecruitRoster.build(_r("warden", ["sharp"], [], 15), content)
 	expect_eq(sharp["level"], 3)
 	expect_near(float(sharp["damage"]), 6.0, 0.0001, "the level gain is multiplied as well")
-	content["recruit_traits"]["steady"]["effects"] = [{"stat": "armour", "add": 0.9}]
+	content["recruit_traits"]["steady"]["effects"] = [{"stat": "recruit.armour", "add": 0.9}]
 	expect_eq(RecruitRoster.build(_r("warden", ["steady"]), content)["armour"], RecruitRoster.ARMOUR_CAP, "armour stops at the cap")
-	content["recruit_traits"]["steady"]["effects"] = [{"stat": "armour", "add": -0.5}]
+	content["recruit_traits"]["steady"]["effects"] = [{"stat": "recruit.armour", "add": -0.5}]
 	expect_eq(RecruitRoster.build(_r("warden", ["steady"]), content)["armour"], 0.0, "and never goes below nothing")
 
 
