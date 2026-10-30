@@ -104,6 +104,7 @@ const STAT_TEXT := {
 	"getup_time": "time to get up",
 	"pickup_radius": "XP pickup reach",
 	"hero_haste": "faster shots with the Hero near",
+	"posted_haste": "faster again with a Recruit on the post and the Hero near",
 	"hero_radius": "how near the Hero must be",
 	"crossfire": "damage when another post hit the same enemy",
 	"burn_dps": "burn damage a second",

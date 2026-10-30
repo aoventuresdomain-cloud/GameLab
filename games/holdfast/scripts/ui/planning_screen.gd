@@ -12,6 +12,8 @@ signal back_requested
 signal tower_requested
 ## The Squad button was pressed: the player wants to see or change who goes on the run.
 signal squad_requested
+## A Recruit was picked for a placed post's spot (the id of the Recruit, "" for nobody).
+signal recruit_posted(site: String, id: String)
 
 const FONT_PX := 20
 const COLOUR_ARENA := Color(0.35, 0.4, 0.5)
@@ -26,6 +28,7 @@ const MAGE_ID := "mage_post"
 const EMPTY_SPOT := "Empty"
 const HINT := "Drag a post onto a spot, or press a spot."
 const NO_BLESSING := "No blessing"
+const NOBODY := "Nobody"
 
 @onready var _title: Label = %Title
 @onready var _hint: Label = %Hint
@@ -62,6 +65,11 @@ var _blessing_buttons: Dictionary = {}
 ## The hint's own line and the squad's, which sits under it.
 var _hint_text := ""
 var _squad_line := ""
+## The squad's Recruits as [{id, name}], who is set on which spot ({spot id: Recruit id}), and the
+## button under each spot that picks one.
+var _squad_picks: Array = []
+var _posted: Dictionary = {}
+var _recruit_buttons: Dictionary = {}
 
 
 func _ready() -> void:
@@ -105,9 +113,10 @@ func set_castle(spots: Array, cards: int, mage_cards := 0, slots := -1) -> void:
 	_slots = _spots.size() if slots < 0 else slots
 	while _chosen.size() > _slots:
 		_chosen.pop_back()
-	for button in _site_buttons.values():
+	for button in _site_buttons.values() + _recruit_buttons.values():
 		button.queue_free()
 	_site_buttons.clear()
+	_recruit_buttons.clear()
 	for id in _spots:
 		var button := Button.new()
 		button.toggle_mode = true
@@ -116,6 +125,12 @@ func set_castle(spots: Array, cards: int, mage_cards := 0, slots := -1) -> void:
 		button.set_drag_forwarding(_slot_drag.bind(id, button), _slot_can_drop.bind(id), _slot_drop.bind(id))
 		_map.add_child(button)
 		_site_buttons[id] = button
+		var picker := MenuButton.new()
+		picker.add_theme_font_size_override("font_size", FONT_PX)
+		picker.get_popup().add_theme_font_size_override("font_size", FONT_PX)
+		picker.get_popup().id_pressed.connect(_pick_recruit.bind(id))
+		_map.add_child(picker)
+		_recruit_buttons[id] = picker
 	_place_buttons()
 	_refresh()
 
@@ -164,6 +179,26 @@ func set_squad(names: Array, known := -1) -> void:
 	_squad_line = "" if have == 0 else ("Squad: %s" % ", ".join(PackedStringArray(names)) if not names.is_empty() else "Squad: nobody")
 	_squad.tooltip_text = "Pick who goes on the run"
 	_show_hint(_hint_text)
+
+
+## The squad's Recruits ([{id, name}]) and who is set on which spot ({spot id: Recruit id}): a placed post
+## gets a button to pick one, who then stands at that post on the run.
+func set_posted(squad: Array, posted: Dictionary) -> void:
+	_squad_picks = squad
+	_posted = posted
+	_refresh()
+
+
+func _pick_recruit(index: int, site: String) -> void:
+	recruit_posted.emit(site, "" if index == 0 else str(_squad_picks[index - 1]["id"]))
+
+
+## What the spot's Recruit button says: who is set on it, or Nobody.
+func _posted_name(site: String) -> String:
+	for pick in _squad_picks:
+		if pick["id"] == _posted.get(site, ""):
+			return str(pick["name"])
+	return NOBODY
 
 
 func _show_hint(text: String) -> void:
@@ -248,6 +283,16 @@ func _refresh() -> void:
 		# A placed post says what it is; the dot and range circle on the map say where.
 		_site_buttons[id].text = _tower_name(_tower_of(_chosen[at])) if at >= 0 else EMPTY_SPOT
 		_site_buttons[id].reset_size()
+	for id in _recruit_buttons:
+		var picker: MenuButton = _recruit_buttons[id]
+		picker.visible = _index_of(id) >= 0 and not _squad_picks.is_empty()
+		picker.text = _posted_name(id)
+		var popup := picker.get_popup()
+		popup.clear()
+		popup.add_item(NOBODY)
+		for pick in _squad_picks:
+			popup.add_item(str(pick["name"]))
+		picker.reset_size()
 	_count.text = "Posts: %d of %d" % [_chosen.size(), mini(_slots, _cards + _mage_cards)]
 	_start.disabled = _chosen.is_empty()
 	_quick.disabled = _saved.is_empty()
@@ -366,6 +411,10 @@ func _place_buttons() -> void:
 		var at: Vector2 = _map.size * 0.5 + Vector2(float(_spots[id]["x"]), float(_spots[id]["y"])) * _scale()
 		button.reset_size()
 		button.position = at - button.size * 0.5
+		var picker: Control = _recruit_buttons.get(id)
+		if picker != null:
+			picker.reset_size()
+			picker.position = Vector2(at.x - picker.size.x * 0.5, button.position.y + button.size.y + 2.0)
 
 
 func _draw_map() -> void:

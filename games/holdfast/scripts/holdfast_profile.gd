@@ -358,6 +358,15 @@ func why_not_hire(index: int) -> String:
 	return RecruitMeta.why_not_hire(_content, data, index)
 
 
+func get_posted() -> Dictionary:
+	return RecruitMeta.posted(data)
+
+
+## Sets a squad Recruit on the post at a castle spot ("" for nobody).
+func post_recruit(site: String, id: String) -> void:
+	_apply(RecruitMeta.post_recruit(_content, data, site, id))
+
+
 func toggle_squad(id: String) -> void:
 	_apply(RecruitMeta.toggle_squad(_content, data, id))
 

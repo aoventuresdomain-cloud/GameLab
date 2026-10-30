@@ -75,6 +75,7 @@ func _ready() -> void:
 	planning.back_requested.connect(_show.bind(Screen.MAP))
 	planning.tower_requested.connect(_tower_requested)
 	planning.squad_requested.connect(_open_recruits.bind(Screen.PLAN))
+	planning.recruit_posted.connect(_recruit_posted)
 	summary.next_level_requested.connect(_next_level)
 	summary.pick_requested.connect(profile.pick_skill)
 	profile.changed.connect(func() -> void:
@@ -159,8 +160,19 @@ func _open_plan() -> void:
 	draw.randomize()
 	planning.set_blessings(profile.get_blessing_offer(level, draw))
 	planning.set_squad(profile.get_squad().map(func(recruit: Dictionary) -> String: return recruit["name"]), profile.get_recruits().size())
+	_show_posted()
 	_offer_tower()
 	_show(Screen.PLAN)
+
+
+## Tells the Plan page who is on the squad and who is set on which post.
+func _show_posted() -> void:
+	planning.set_posted(profile.get_squad().map(func(recruit: Dictionary) -> Dictionary: return {"id": recruit["id"], "name": recruit["name"]}), profile.get_posted())
+
+
+func _recruit_posted(site: String, id: String) -> void:
+	profile.post_recruit(site, id)
+	_show_posted()
 
 
 ## Sets the Plan page's "+ Tower" button to the next buy that adds a tower, with its price.
@@ -225,6 +237,7 @@ func _start_run(stand := false, blessing := "") -> void:
 		source.blessing = blessing
 		# The tutorial and its stand are the Hero's alone; every other run takes the squad the player picked.
 		source.squad = [] if stand or profile.is_tutorial(profile.get_level()) else profile.get_squad()
+		source.posted = profile.get_posted()
 		# A bot-driven run (the CI smoke) has nobody to press a key.
 		source.wait_for_press = not source.use_bot
 		source.layout = profile.get_stand_layout() if stand else profile.get_layout(profile.get_level())

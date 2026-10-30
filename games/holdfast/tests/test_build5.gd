@@ -389,13 +389,13 @@ func _forked() -> Dictionary:
 	return content
 
 
-func test_the_post_section_has_seventeen_nodes_and_no_fork() -> void:
+func test_the_post_section_has_eighteen_nodes_and_no_fork() -> void:
 	var nodes: Dictionary = HoldfastContent.base()["upgrade_nodes"]
 	var post := []
 	for id in nodes:
 		if nodes[id]["branch"] == "archer_post":
 			post.append(id)
-	expect_eq(post.size(), 17, "four basics, one repair, three a side, six links")
+	expect_eq(post.size(), 18, "four basics, one repair, three a side, seven links")
 	for id in ["post_timbers", "post_drills", "post_sight", "post_rate"]:
 		expect_eq(nodes[id]["requires"], ["castle_archer_1"], id + " is a cheap basic that needs only the first Archer Post")
 	for id in nodes:

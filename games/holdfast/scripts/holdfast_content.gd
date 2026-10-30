@@ -25,8 +25,9 @@ static func base() -> Dictionary:
 ## `gear` is {slot: item id} the Hero wears; `gear_owned` is what the player has, so a drop is new.
 ## `squad` is the Recruits that go on the run (RecruitRoster data, in the order they take the light posts; [] for
 ## none); null leaves the level's own two (Bryn and Wren), which the rules tests rely on.
+## `posted` is {castle spot id: Recruit id}: a squad Recruit set on the post built at that spot stands there.
 ## `blessing` is the id of the blessing picked for the run ("" for none; bots play without one).
-static func run_config(level: String = DEFAULT_LEVEL, upgrades: Array = [], content: Dictionary = {}, hero: String = "", layout: Variant = null, gear: Dictionary = {}, gear_owned: Array = [], stand := false, squad: Variant = null, blessing := "") -> Dictionary:
+static func run_config(level: String = DEFAULT_LEVEL, upgrades: Array = [], content: Dictionary = {}, hero: String = "", layout: Variant = null, gear: Dictionary = {}, gear_owned: Array = [], stand := false, squad: Variant = null, blessing := "", posted: Dictionary = {}) -> Dictionary:
 	var config := {
 		"content": content if not content.is_empty() else base(),
 		"level": level,
@@ -40,6 +41,8 @@ static func run_config(level: String = DEFAULT_LEVEL, upgrades: Array = [], cont
 		config["stand"] = true
 	if squad is Array:
 		config["squad"] = squad
+	if not posted.is_empty():
+		config["posted"] = posted
 	if blessing != "":
 		config["blessing"] = blessing
 	var level_data: Dictionary = config["content"].get("levels", {}).get(level, {})

@@ -170,7 +170,7 @@ static func other_hero_nodes(nodes: Dictionary, pillar: String) -> Array:
 ## up for it, spending nothing else until it is bought.
 static func buy_for_profile(content: Dictionary, profile: Dictionary, avoid: Array, prefer: Array = []) -> Array:
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
-	avoid = avoid + unfilled_squad_nodes(content, profile)
+	avoid = avoid + unfilled_squad_nodes(content, profile) + unposted_nodes(nodes)
 	var out := []
 	for id in prefer:
 		if id in profile["upgrades"] or not nodes.has(id):
@@ -189,6 +189,16 @@ static func buy_for_profile(content: Dictionary, profile: Dictionary, avoid: Arr
 			break
 		profile = bought["profile"]
 		out.append({"id": id, "profile": profile})
+	return out
+
+
+## The nodes that pay only for a Recruit set on a post, which the bot never does: it keeps its stars.
+static func unposted_nodes(nodes: Dictionary) -> Array:
+	var out := []
+	for id in nodes:
+		for effect in nodes[id].get("effects", []):
+			if str(effect["stat"]).ends_with("posted_haste"):
+				out.append(id)
 	return out
 
 

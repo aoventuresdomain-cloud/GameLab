@@ -11,6 +11,8 @@ extends RefCounted
 ##   hired: [offer indexes]             what has been taken from this round's board
 ##   next: int                          the number the next hire's id carries
 ##   bought: int                        how many the board has sold, which sets the next price
+##   posted: {site: id}                 the Recruit set on each castle spot's post (only once one is set); a
+##                                      posted Recruit stands at that post when the run builds one there
 ## }
 ## profile["names"]: {keep, hero}       what the player calls them ("" for the default)
 
@@ -46,6 +48,15 @@ static func from_save(content: Dictionary, profile: Dictionary, data: Dictionary
 				state["hired"].append(int(index))
 		state["next"] = maxi(int(saved["next"]), 1) if saved.get("next") is int or saved.get("next") is float else 1
 		state["bought"] = maxi(int(saved["bought"]), 0) if saved.get("bought") is int or saved.get("bought") is float else 0
+	var posted: Variant = saved.get("posted") if saved is Dictionary else null
+	if posted is Dictionary:
+		var sites := _castle_sites(content)
+		var clean := {}
+		for site in posted:
+			if site is String and site in sites and posted[site] is String and posted[site] in state["squad"] and not posted[site] in clean.values():
+				clean[site] = posted[site]
+		if not clean.is_empty():
+			state["posted"] = clean
 	var welcome: Variant = saved.get("welcome") if saved is Dictionary else null
 	if welcome is Array:
 		var seen_names := []
@@ -57,6 +68,7 @@ static func from_save(content: Dictionary, profile: Dictionary, data: Dictionary
 			state["welcome"] = seen_names
 	profile["recruits"] = state
 	profile["recruits"]["squad"] = profile["recruits"]["squad"].slice(0, slots(content, profile))
+	_prune_posted(profile)
 	# A save from before Recruits existed has no Recruit state, and one an older build saved again has the
 	# new-profile state untouched: the levels it already won pay their rescues now, once (the next save
 	# carries the Recruits, so this does not run again). A state with any change in it is left alone.
@@ -149,8 +161,52 @@ static func toggle_squad(content: Dictionary, profile: Dictionary, id: String) -
 	var squad: Array = out["recruits"]["squad"]
 	if id in squad:
 		squad.erase(id)
+		_prune_posted(out)
 	elif squad.size() < slots(content, profile):
 		squad.append(id)
+	return out
+
+
+## The castle spot ids a post can stand on.
+static func _castle_sites(content: Dictionary) -> Array:
+	var sites := []
+	for castle in content.get("castle_rules", {}).values():
+		for spot in castle["spots"]:
+			sites.append(str(spot["id"]))
+	return sites
+
+
+## Drops the posted entries whose Recruit is not on the squad (and the key itself once it is empty).
+static func _prune_posted(profile: Dictionary) -> void:
+	var posted: Dictionary = profile["recruits"].get("posted", {})
+	for site in posted.keys():
+		if not posted[site] in profile["recruits"]["squad"]:
+			posted.erase(site)
+	if posted.is_empty():
+		profile["recruits"].erase("posted")
+
+
+## The Recruit set on each castle spot's post, {site: id}.
+static func posted(profile: Dictionary) -> Dictionary:
+	return profile["recruits"].get("posted", {})
+
+
+## Sets a squad Recruit on the post at `site`, taking them off any other, or clears the post when `id`
+## is "". Anyone else, or an unknown site, changes nothing.
+static func post_recruit(content: Dictionary, profile: Dictionary, site: String, id: String) -> Dictionary:
+	if not site in _castle_sites(content) or (id != "" and not id in profile["recruits"]["squad"]):
+		return profile
+	var out := profile.duplicate(true)
+	var posted: Dictionary = out["recruits"].get("posted", {})
+	for other in posted.keys():
+		if other == site or posted[other] == id:
+			posted.erase(other)
+	if id != "":
+		posted[site] = id
+	if posted.is_empty():
+		out["recruits"].erase("posted")
+	else:
+		out["recruits"]["posted"] = posted
 	return out
 
 

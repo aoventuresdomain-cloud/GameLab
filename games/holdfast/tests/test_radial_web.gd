@@ -57,7 +57,7 @@ func _rect(control: Control) -> Rect2:
 
 func test_the_positions_are_a_web_from_the_middle_with_room_between_nodes() -> void:
 	var ids: Array = _nodes().keys()
-	expect_eq(ids.size(), 61, "no node was lost")
+	expect_eq(ids.size(), 62, "no node was lost")
 	var low := Vector2.ZERO
 	var high := Vector2.ZERO
 	var closest := INF
@@ -86,10 +86,10 @@ func test_a_node_is_no_further_in_than_the_nodes_it_needs_and_links_are_dashed_w
 			if _nodes()[required]["branch"] != _nodes()[id]["branch"] and id.begins_with("link_"):
 				crossing.append(id)
 	crossing.sort()
-	expect_eq(crossing, ["link_crossfire", "link_pillar_echo"], "the two link nodes that join two sections")
+	expect_eq(crossing, ["link_crossfire", "link_pillar_echo", "link_posted_hand"], "the three link nodes that join two sections")
 
 
-func test_only_the_two_lines_where_a_link_joins_two_sections_are_dashed() -> void:
+func test_only_the_three_lines_where_a_link_joins_two_sections_are_dashed() -> void:
 	var made := await _tree_page()
 	var main: Node = made[0]
 	var page: Control = made[1]
@@ -99,7 +99,7 @@ func test_only_the_two_lines_where_a_link_joins_two_sections_are_dashed() -> voi
 			if page._joins_sections(id, required):
 				dashed.append("%s>%s" % [id, required])
 	dashed.sort()
-	expect_eq(dashed, ["link_crossfire>castle_archer_2", "link_pillar_echo>flare_embers"])
+	expect_eq(dashed, ["link_crossfire>castle_archer_2", "link_pillar_echo>flare_embers", "link_posted_hand>squad_root"])
 	main.free()
 
 
