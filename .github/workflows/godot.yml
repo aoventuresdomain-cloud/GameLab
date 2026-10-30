@@ -85,10 +85,16 @@ jobs:
         run: tools/ci/godot.sh --headless --path games/holdfast --script res://tests/run_ui_tests.gd
       - name: Ten simulated hours of progression (60 s budget, determinism check)
         run: tools/ci/godot.sh --headless --path games/holdfast -s res://tools/progression.gd -- --hours=10 --seed=1 --budget=60 --out=../../reports
+      # HF-M2-05: the first-time climbs of levels 1 to 5 for every pillar and both bots, held to
+      # games/holdfast/content/pacing-bands.json. A missed band (or a pinned miss that gets worse) fails the job.
+      - name: Pacing bands (levels 1 to 5, every pillar, both bots)
+        env:
+          GODOT_TIMEOUT: "900"
+        run: tools/ci/godot.sh --headless --path games/holdfast -s res://tools/bands.gd -- --budget=600 --out=../../reports
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: holdfast-progression-${{ github.sha }}
+          name: holdfast-reports-${{ github.sha }}
           path: reports
           if-no-files-found: ignore
       - name: Install the pinned GodotSteam Windows template
