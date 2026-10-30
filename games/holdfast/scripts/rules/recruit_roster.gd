@@ -18,6 +18,8 @@ const BOARD_OFFERS := 3
 const FORK_LEVELS := [2, 3, 4]
 const TRAIT_LEVEL := 5
 const TRAITS_MAX := 2
+## The most XP a saved Recruit is believed to have.
+const XP_MAX := 1000000
 const ARMOUR_CAP := 0.75
 ## The post effects a skill can change; every other stat is a number on the Recruit.
 const EFFECT_STATS := ["taunt_radius", "effect_radius", "slow", "mark_bonus", "field_dps", "repair_per_second", "heal_per_second"]
@@ -42,7 +44,8 @@ static func clean(content: Dictionary, saved: Variant) -> Dictionary:
 		if content.get("recruit_traits", {}).has(trait_id) and not trait_id in out["traits"] and out["traits"].size() < TRAITS_MAX:
 			out["traits"].append(str(trait_id))
 	var xp: Variant = saved.get("xp")
-	out["xp"] = maxi(int(xp), 0) if xp is int or xp is float else 0
+	# Capped: the level is found by counting up through the XP, so a hand-edited huge number would hang the game.
+	out["xp"] = clampi(int(clampf(float(xp), 0.0, float(XP_MAX))), 0, XP_MAX) if xp is int or xp is float else 0
 	# A skill counts only as the next fork's pick, in order, for the Recruit's class.
 	for skill_id in (saved.get("skills") if saved.get("skills") is Array else []):
 		var skill: Dictionary = content.get("recruit_skills", {}).get(skill_id, {})

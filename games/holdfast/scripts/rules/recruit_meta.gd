@@ -42,12 +42,12 @@ static func from_save(content: Dictionary, profile: Dictionary, data: Dictionary
 		for id in (saved.get("squad") if saved.get("squad") is Array else []):
 			if id in seen and not id in state["squad"]:
 				state["squad"].append(id)
-		state["round"] = maxi(int(saved["round"]), 0) if saved.get("round") is int or saved.get("round") is float else 0
+		state["round"] = _count(saved.get("round"), 0)
 		for index in (saved.get("hired") if saved.get("hired") is Array else []):
 			if (index is int or index is float) and int(index) >= 0 and int(index) < RecruitRoster.BOARD_OFFERS and not int(index) in state["hired"]:
 				state["hired"].append(int(index))
-		state["next"] = maxi(int(saved["next"]), 1) if saved.get("next") is int or saved.get("next") is float else 1
-		state["bought"] = maxi(int(saved["bought"]), 0) if saved.get("bought") is int or saved.get("bought") is float else 0
+		state["next"] = _count(saved.get("next"), 1)
+		state["bought"] = _count(saved.get("bought"), 0)
 	var posted: Variant = saved.get("posted") if saved is Dictionary else null
 	if posted is Dictionary:
 		var sites := _castle_sites(content)
@@ -86,6 +86,13 @@ static func from_save(content: Dictionary, profile: Dictionary, data: Dictionary
 		for key in names:
 			names[key] = RecruitRoster.clean_name(str(saved_names.get(key, "")))
 	profile["names"] = names
+
+
+## A saved count as a whole number of at least `least` and at most HoldfastMeta.WHOLE_LIMIT, or `least` when it is not a number.
+static func _count(value: Variant, least: int) -> int:
+	if not (value is int or value is float):
+		return least
+	return maxi(int(clampf(float(value), float(least), HoldfastMeta.WHOLE_LIMIT)), least)
 
 
 ## True when the saved Recruit state is a new profile's apart from the round count: nobody, nothing
