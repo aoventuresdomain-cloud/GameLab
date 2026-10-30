@@ -4,13 +4,14 @@ extends Node
 ## only place that starts a run or changes the profile. Screens ask through their
 ## signals and the flow acts, so a screen never writes progress itself.
 
-enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY }
+enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY, RECRUITS }
 
 @export var source_path: NodePath
 @export var profile_path: NodePath
 @export var home_path: NodePath
 @export var journey_path: NodePath
 @export var hero_page_path: NodePath
+@export var recruits_path: NodePath
 @export var keep_screen_path: NodePath
 @export var hud_path: NodePath
 @export var summary_path: NodePath
@@ -21,6 +22,8 @@ enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY }
 @onready var home: Control = get_node(home_path)
 @onready var journey: Control = get_node(journey_path)
 @onready var hero_page: Control = get_node(hero_page_path)
+## The Recruits page: board, roster and squad.
+@onready var recruits_page: Control = get_node(recruits_path)
 ## The skill tree page.
 @onready var keep_screen: Control = get_node(keep_screen_path)
 @onready var hud: Control = get_node(hud_path)
@@ -39,6 +42,7 @@ func _ready() -> void:
 	home.bind(profile)
 	journey.bind(profile)
 	hero_page.bind(profile)
+	recruits_page.bind(profile)
 	keep_screen.bind(profile)
 	home.continue_requested.connect(_show.bind(Screen.MAP))
 	home.new_game_requested.connect(_new_game)
@@ -46,6 +50,12 @@ func _ready() -> void:
 	journey.home_requested.connect(_show.bind(Screen.HOME))
 	journey.tree_requested.connect(_show.bind(Screen.TREE))
 	journey.hero_requested.connect(_show.bind(Screen.HERO))
+	journey.recruits_requested.connect(_open_recruits.bind(Screen.MAP))
+	recruits_page.back_requested.connect(_leave_recruits)
+	recruits_page.squad_toggled.connect(profile.toggle_squad)
+	recruits_page.hire_requested.connect(profile.hire)
+	recruits_page.pick_requested.connect(profile.pick_skill)
+	recruits_page.rename_requested.connect(profile.rename)
 	journey.level_requested.connect(_level_picked)
 	journey.buy_requested.connect(profile.buy)
 	journey.stand_requested.connect(_begin_stand)
@@ -64,7 +74,12 @@ func _ready() -> void:
 	planning.start_requested.connect(_planned)
 	planning.back_requested.connect(_show.bind(Screen.MAP))
 	planning.tower_requested.connect(_tower_requested)
+	planning.squad_requested.connect(_open_recruits.bind(Screen.PLAN))
 	summary.next_level_requested.connect(_next_level)
+	summary.pick_requested.connect(profile.pick_skill)
+	profile.changed.connect(func() -> void:
+		if screen == Screen.SUMMARY:
+			summary.set_picks(profile.get_pending_picks()))
 	summary.map_requested.connect(_show.bind(Screen.MAP))
 	summary.tree_requested.connect(_show.bind(Screen.TREE))
 	source.run_ended.connect(_on_run_ended)
@@ -74,6 +89,22 @@ func _ready() -> void:
 func _new_game() -> void:
 	profile.new_game()
 	_show(Screen.MAP)
+
+
+## Opens the Recruits page from the map or the Plan page, and goes back to whichever it came from.
+var _recruits_from := Screen.MAP
+
+
+func _open_recruits(from: Screen) -> void:
+	_recruits_from = from
+	_show(Screen.RECRUITS)
+
+
+func _leave_recruits() -> void:
+	if _recruits_from == Screen.PLAN:
+		_open_plan()
+	else:
+		_show(_recruits_from)
 
 
 ## Opens the skill tree with the view on one of its tabs.
@@ -126,6 +157,7 @@ func _open_plan() -> void:
 	var draw := RandomNumberGenerator.new()
 	draw.randomize()
 	planning.set_blessings(profile.get_blessing_offer(level, draw))
+	planning.set_squad(profile.get_squad().map(func(recruit: Dictionary) -> String: return recruit["name"]), profile.get_recruits().size())
 	_offer_tower()
 	_show(Screen.PLAN)
 
@@ -190,7 +222,8 @@ func _start_run(stand := false, blessing := "") -> void:
 		source.upgrades = profile.get_upgrades().duplicate()
 		source.stand = stand
 		source.blessing = blessing
-		source.parked = true
+		# The tutorial and its stand are the Hero's alone; every other run takes the squad the player picked.
+		source.squad = [] if stand or profile.is_tutorial(profile.get_level()) else profile.get_squad()
 		# A bot-driven run (the CI smoke) has nobody to press a key.
 		source.wait_for_press = not source.use_bot
 		source.layout = profile.get_stand_layout() if stand else profile.get_layout(profile.get_level())
@@ -213,7 +246,9 @@ func _on_run_ended(result: Dictionary) -> void:
 		var level := str(result["result"].get("level", ""))
 		var stars_before := profile.get_stars_earned()
 		var first_win: bool = result["result"].get("outcome") == HoldfastRules.OUTCOME_WON and not profile.is_level_won(level)
+		var before: Dictionary = profile.data.duplicate(true)
 		profile.bank_run(result["result"])
+		result["recruit_changes"] = RecruitMeta.changes(HoldfastContent.base(), before, profile.data)
 		result["stars_paid"] = profile.get_stars_earned() - stars_before
 		result["reward_gold"] = profile.get_reward_gold(level) if first_win else 0
 		if int(result["stars_paid"]) > 0 and not profile.has_seen_stars_line():
@@ -222,6 +257,7 @@ func _on_run_ended(result: Dictionary) -> void:
 		if result["result"].get("outcome") == HoldfastRules.OUTCOME_WON:
 			next = profile.get_next_level(level)
 	summary.show_summary(result, next)
+	summary.set_picks(profile.get_pending_picks() if result.has("result") else [])
 	_show(Screen.SUMMARY)
 
 
@@ -236,6 +272,7 @@ func _show(next: Screen) -> void:
 	home.visible = next == Screen.HOME
 	journey.visible = next == Screen.MAP
 	hero_page.visible = next == Screen.HERO
+	recruits_page.visible = next == Screen.RECRUITS
 	keep_screen.visible = next == Screen.TREE
 	planning.visible = next == Screen.PLAN
 	hud.visible = next == Screen.RUN

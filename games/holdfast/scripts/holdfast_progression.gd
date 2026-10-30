@@ -118,10 +118,10 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 		var run_seed := p_seed * 100003 + runs.size()
 		var run_level := level if level != "" else str(HoldfastMeta.unlocked_levels(content, profile)[-1])
 		var layout := HoldfastMeta.layout_for(content, profile, run_level)
-		var report := HoldfastSim.run_headless(run_seed, HoldfastContent.run_config(run_level, profile["upgrades"], content, "", layout, HoldfastMeta.worn_gear(profile), profile["gear"]["owned"], false, true))
+		var report := HoldfastSim.run_headless(run_seed, HoldfastContent.run_config(run_level, profile["upgrades"], content, "", layout, HoldfastMeta.worn_gear(profile), profile["gear"]["owned"], false, RecruitMeta.bot_squad(content, profile)))
 		var result: Dictionary = report["result"]
 		sim_time += float(report["seconds"]) + BETWEEN_RUNS_SECONDS
-		profile = HoldfastMeta.bank_run(content, profile, result)
+		profile = RecruitMeta.bot_picks(content, HoldfastMeta.bank_run(content, profile, result))
 		profile = HoldfastMeta.wear_free_slots(content, profile)
 		var outcome := str(result["outcome"])
 		outcomes[outcome] = int(outcomes.get(outcome, 0)) + 1
@@ -168,6 +168,7 @@ static func other_hero_nodes(nodes: Dictionary, pillar: String) -> Array:
 ## bought, each bought through the same rules the Keep screen uses.
 static func buy_for_profile(content: Dictionary, profile: Dictionary, avoid: Array) -> Array:
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	avoid = avoid + unfilled_squad_nodes(content, profile)
 	var out := []
 	for id in buy_cheapest(nodes, profile["upgrades"], int(profile["gold"]), avoid, HoldfastMeta.stars_available(content, profile)):
 		var bought := HoldfastMeta.buy(content, profile, id)
@@ -176,4 +177,16 @@ static func buy_for_profile(content: Dictionary, profile: Dictionary, avoid: Arr
 			break
 		profile = bought["profile"]
 		out.append({"id": id, "profile": profile})
+	return out
+
+
+## The nodes that sell a squad place the player has no spare Recruit to fill: a player does not buy them.
+static func unfilled_squad_nodes(content: Dictionary, profile: Dictionary) -> Array:
+	var out := []
+	if profile["recruits"]["roster"].size() > RecruitMeta.slots(content, profile):
+		return out
+	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	for id in nodes:
+		if int(nodes[id].get("grants", {}).get("squad", 0)) > 0:
+			out.append(id)
 	return out

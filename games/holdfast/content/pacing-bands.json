@@ -65,28 +65,23 @@
   "known_misses": {
     "dusk_mage/average/outpost": 0.0,
     "dusk_mage/poor/outpost": 0.0,
-    "dusk_mage/average/shingle_beach": 0.5,
+    "dusk_mage/average/shingle_beach": 0.1429,
     "dusk_mage/poor/shingle_beach": 0.1429,
-    "dusk_mage/average/tidewrack_cove": 0.375,
-    "dusk_mage/fork_gap/tidewrack_cove": 0.4286,
-    "dusk_mage/average/old_pier": 0.8125,
-    "dusk_mage/fork_gap/old_pier": 0.5714,
     "dusk_mage/average/gull_rock": 0.875,
-    "dusk_mage/fork_gap/gull_rock": 0.4286,
     "dusk_mage/floor": 0.0,
     "tideblade/average/outpost": 0.0,
     "tideblade/poor/outpost": 0.0,
-    "tideblade/average/shingle_beach": 0.5417,
-    "tideblade/average/tidewrack_cove": 0.2917,
+    "tideblade/average/shingle_beach": 0.4583,
+    "tideblade/average/tidewrack_cove": 0.2083,
     "tideblade/poor/tidewrack_cove": 0.0909,
     "tideblade/average/old_pier": 0.3333,
-    "tideblade/average/gull_rock": 0.25,
-    "tideblade/poor/gull_rock": 0.0,
-    "tideblade/fork_gap/gull_rock": 0.4,
+    "tideblade/average/gull_rock": 0.2083,
     "tideblade/floor": 0.0,
-    "dusk_mage/one_post/shingle_beach": 0.25,
-    "dusk_mage/special_gap/gull_rock": 1.0,
-    "tideblade/special_gap/mean": 0.0333
+    "dusk_mage/one_post/shingle_beach": 0.0,
+    "tideblade/special_gap/mean": -0.0722,
+    "tideblade/poor/shingle_beach": 0.1538,
+    "tideblade/special_gap/tidewrack_cove": -0.4722,
+    "tideblade/special_gap/old_pier": -0.2222
   },
-  "known_misses_note": "Dusk Mage and Tideblade are not retuned in this run (HF-M2-28, M2b): their misses are pinned at the measured figure. Delete a pin and the figure must meet its band."
+  "known_misses_note": "Dusk Mage and Tideblade are not retuned in this run (HF-M2-28, M2b): their misses are pinned at the measured figure. Delete a pin and the figure must meet its band. Re-pinned in Build 11 (Head of Engineering approved, F-124): the shared Levels 1 to 5 enemy data was retuned for the Flare Archer with Recruits and lights back, which moved these two pillars. Build 12 (HF-M2-28) tunes both and empties this list."
 }

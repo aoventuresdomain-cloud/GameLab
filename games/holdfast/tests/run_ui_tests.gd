@@ -149,6 +149,18 @@ func _test_readable_layout() -> void:
 	_main.get_node("Profile").data["gear"]["owned"] = HoldfastContent.base()["gear_items"].keys()
 	for id in ["gull_feather_fletching", "beacon_visor", "oilskin_vest", "kelp_sandals", "lamp_oil_flask"]:
 		_main.get_node("Profile").wear_gear(id)
+	# The Recruits page at its fullest: a roster of twelve with long names, two skill picks waiting.
+	var profile: Node = _main.get_node("Profile")
+	profile.data["gold"] = 1_000_000
+	for i in 10:
+		profile.hire(0)
+		profile.data["recruits"]["hired"] = []
+		profile.data["recruits"]["round"] += 1
+	for each in profile.data["recruits"]["roster"]:
+		each["name"] = "Longest Name Ok"
+	profile.data["recruits"]["roster"][0]["xp"] = 5
+	profile.data["recruits"]["roster"][1]["xp"] = 5
+	profile.data["recruits"]["roster"][2]["xp"] = 5
 	_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": true})
 	var hud: Control = _main.hud
 	hud._on_gold_changed(9_999_999)
@@ -162,15 +174,17 @@ func _test_readable_layout() -> void:
 		_check(Vector2i(view.size) == BASE_SIZE, "%dx%d window shows the whole 1280x720 layout" % [window.x, window.y])
 		_main.planning.open("shingle_beach", ["spot_2", "spot_1", "mage:spot_3"], false, HoldfastContent.base()["castle_rules"]["castle"]["spots"], 8, 2)
 		_main.planning.set_blessings(["steady_flame", "second_wind", "tides_gift"])
+		_main.planning.set_squad(["Longest Name Ok", "Longest Name Ok", "Longest Name Ok", "Longest Name Ok"])
 		hud.get_node("%PostsNote").text = "Posts: North Gate, South Gate"
 		hud.get_node("%PostsNote").visible = true
-		for screen in [_main.home, _main.journey, _main.hero_page, _main.keep_screen, hud, _main.summary, _main.planning]:
+		for screen in [_main.home, _main.journey, _main.hero_page, _main.recruits_page, _main.keep_screen, hud, _main.summary, _main.planning]:
 			await _check_layout(screen, window, scale, view)
 		hud.get_node("%PostsNote").text = "Fog Warden shrouded: use your special"
 		await _check_layout(hud, window, scale, view)
 		hud.get_node("%PostsNote").visible = false
 		# The summary after a win, with Next level and the Upgrade screen as well.
-		_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": false, "stars_paid": 2, "reward_gold": 150, "stars_note": "Stars buy slots and towers. Gold buys upgrades."}, "shingle_beach")
+		_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": false, "stars_paid": 2, "reward_gold": 150, "stars_note": "Stars buy slots and towers. Gold buys upgrades.", "recruit_changes": [{"name": "Longest Name Ok", "to": 5, "trait": "steady"}, {"name": "Longest Name Ok", "to": 3, "trait": ""}, {"name": "Longest Name Ok", "class": "lookout", "to": 1, "trait": "", "joined": true}]}, "shingle_beach")
+		_main.summary.set_picks(profile.get_pending_picks())
 		await _check_layout(_main.summary, window, scale, view)
 		_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": true})
 

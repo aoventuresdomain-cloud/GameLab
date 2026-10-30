@@ -10,6 +10,8 @@ signal start_requested(layout: Array)
 signal back_requested
 ## "+ Tower" was pressed: the player wants the next slot or Archer Post bought.
 signal tower_requested
+## The Squad button was pressed: the player wants to see or change who goes on the run.
+signal squad_requested
 
 const FONT_PX := 20
 const COLOUR_ARENA := Color(0.35, 0.4, 0.5)
@@ -36,6 +38,7 @@ const NO_BLESSING := "No blessing"
 @onready var _quick: Button = %QuickButton
 @onready var _side: Control = %Side
 @onready var _tray: GridContainer = %Tray
+@onready var _squad: Button = %SquadButton
 @onready var _blessings: HBoxContainer = %Blessings
 @onready var _blessing_text: Label = %BlessingText
 
@@ -56,6 +59,9 @@ var _site_buttons: Dictionary = {}
 ## The blessing picked for the run ("" for none), and each blessing on offer's button by id.
 var _blessing := ""
 var _blessing_buttons: Dictionary = {}
+## The hint's own line and the squad's, which sits under it.
+var _hint_text := ""
+var _squad_line := ""
 
 
 func _ready() -> void:
@@ -65,6 +71,7 @@ func _ready() -> void:
 	_auto.pressed.connect(auto_place)
 	_quick.pressed.connect(func() -> void: start_requested.emit(_saved.duplicate()))
 	_tower.pressed.connect(tower_requested.emit)
+	_squad.pressed.connect(squad_requested.emit)
 	# A lifted post goes back to the tray when let go anywhere that is not a free slot.
 	for target in [self, _map, _side, _auto, _quick, _start, _back]:
 		target.set_drag_forwarding(Callable(), _side_can_drop, _side_drop)
@@ -82,7 +89,7 @@ func open(level_id: String, layout: Array, saved: bool, spots: Array, cards: int
 	_chosen = layout.duplicate()
 	_saved = layout.duplicate() if saved else []
 	_title.text = "Plan your defence: %s" % _level["name"]
-	_hint.text = HINT
+	_show_hint(HINT)
 	set_castle(spots, cards, mage_cards, slots)
 
 
@@ -120,7 +127,7 @@ func set_tower_offer(text: String, why_not := "") -> void:
 	_tower.disabled = why_not != ""
 	_tower.tooltip_text = why_not
 	# The reason shows where the player looks, not only on hover.
-	_hint.text = why_not if why_not != "" else HINT
+	_show_hint(why_not if why_not != "" else HINT)
 
 
 ## Offers the blessings in `offer` (ids from the pack) beside "No blessing", which is picked to begin
@@ -147,6 +154,21 @@ func set_blessings(offer: Array) -> void:
 		_blessing_buttons[id] = button
 	_blessing_buttons[""].button_pressed = true
 	_pick_blessing("")
+
+
+## Who goes on the run, by name: a line under the hint, and the tooltip of the Squad button.
+## Who goes on the run, out of `known` Recruits; the button and the line wait for the first one.
+func set_squad(names: Array, known := -1) -> void:
+	var have := names.size() if known < 0 else known
+	_squad.visible = have > 0
+	_squad_line = "" if have == 0 else ("Squad: %s" % ", ".join(PackedStringArray(names)) if not names.is_empty() else "Squad: nobody")
+	_squad.tooltip_text = "Pick who goes on the run"
+	_show_hint(_hint_text)
+
+
+func _show_hint(text: String) -> void:
+	_hint_text = text
+	_hint.text = "%s\n%s" % [text, _squad_line] if _squad_line != "" else text
 
 
 ## The blessing picked for the run: an id, or "" for none.

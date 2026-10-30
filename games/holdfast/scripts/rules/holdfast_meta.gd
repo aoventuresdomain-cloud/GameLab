@@ -20,6 +20,8 @@ extends RefCounted
 ##   stand_done: bool      the tutorial's short fight after the two guided buys has begun (once only)
 ##   stars_line_seen: bool the one line on what stars buy has been shown (once only)
 ##   gear_seen: [item ids] the gear pieces the player has looked at on the Hero page
+##   recruits: {...}       the roster, the squad and the board (see RecruitMeta)
+##   names: {keep, hero}   what the player has called the keep and the Hero ("" for the default)
 ## }
 ## The save format version is SAVE_VERSION; bump it with a migration when the shape changes.
 ## Version 2: levels open by winning the previous one (`unlocked`), no longer by buying a
@@ -99,6 +101,8 @@ static func new_profile(content: Dictionary) -> Dictionary:
 		"stand_done": false,
 		"stars_line_seen": false,
 		"gear_seen": [],
+		"recruits": RecruitMeta.new_state(content),
+		"names": {"keep": "", "hero": ""},
 	}
 
 
@@ -177,6 +181,7 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 		profile["level"] = str(data["level"])
 	if content.get("hero_paths", {}).has(str(data.get("pillar", ""))):
 		profile["pillar"] = str(data["pillar"])
+	RecruitMeta.from_save(content, profile, data)
 	return profile
 
 
@@ -498,19 +503,20 @@ static func castle_rules(content: Dictionary) -> Dictionary:
 
 ## Castle slots the player has bought, and Archer Post cards (what the Plan page lets them place).
 static func castle_slots(content: Dictionary, profile: Dictionary) -> int:
-	return _granted(content, profile, "slots")
+	return granted(content, profile, "slots")
 
 
 static func castle_cards(content: Dictionary, profile: Dictionary) -> int:
-	return mini(_granted(content, profile, "cards"), castle_slots(content, profile))
+	return mini(granted(content, profile, "cards"), castle_slots(content, profile))
 
 
 ## Mage Post cards: what the Tower Gate grants, up to the slots there are.
 static func castle_mage_cards(content: Dictionary, profile: Dictionary) -> int:
-	return mini(_granted(content, profile, "mage_cards"), castle_slots(content, profile))
+	return mini(granted(content, profile, "mage_cards"), castle_slots(content, profile))
 
 
-static func _granted(content: Dictionary, profile: Dictionary, what: String) -> int:
+## What the bought nodes grant of one kind ("slots", "cards", "squad"...), added up.
+static func granted(content: Dictionary, profile: Dictionary, what: String) -> int:
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	var total := 0
 	for id in profile["upgrades"]:
@@ -991,4 +997,4 @@ static func bank_run(content: Dictionary, profile: Dictionary, result: Dictionar
 	var next := next_level(content, level) if result.get("outcome") == HoldfastRules.OUTCOME_WON else ""
 	if next != "" and not next in out["unlocked"]:
 		out["unlocked"].append(next)
-	return out
+	return RecruitMeta.bank_run(content, out, result)

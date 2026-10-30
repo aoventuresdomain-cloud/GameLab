@@ -111,7 +111,7 @@ func _draw() -> void:
 	for built in rules.towers:
 		_draw_attacker(rules, built, Color(built.colour) if built.colour != "" else COLOUR_TOWER, true)
 	for recruit in rules.recruits:
-		_draw_attacker(rules, recruit, RECRUIT_COLOURS.get(str(recruit.role.get("class", "")), COLOUR_STAFF), false)
+		_draw_attacker(rules, recruit, _recruit_colour(recruit), false)
 	for token in rules.xp_tokens:
 		draw_colored_polygon(PackedVector2Array([token.position + Vector2(0, -7), token.position + Vector2(6, 0), token.position + Vector2(0, 7), token.position + Vector2(-6, 0)]), COLOUR_TOKEN)
 	for enemy in rules.enemies:
@@ -139,8 +139,7 @@ func _draw_attacker(rules: HoldfastRules, attacker: HoldfastRules.Attacker, colo
 	if square:
 		draw_rect(Rect2(at - Vector2(14, 14), Vector2(28, 28)), shown)
 	else:
-		draw_circle(at, attacker.radius, shown)
-		draw_arc(at, attacker.radius, 0.0, TAU, 24, Color.BLACK, 2.0)
+		_draw_shape(at, attacker.radius, _recruit_sides(attacker), shown)
 	if is_up:
 		draw_arc(at, attacker.attack_range, 0.0, TAU, 64, Color(colour, 0.15), 1.0)
 	var health := float(attacker.health["health"])
@@ -149,17 +148,73 @@ func _draw_attacker(rules: HoldfastRules, attacker: HoldfastRules.Attacker, colo
 		_draw_bar(at + Vector2(-16, -attacker.radius - 10.0), 32.0, health / health_max, COLOUR_HEALTH)
 	if not is_up and attacker.kind == "recruit":
 		var held := float(attacker.health["revive_progress"]) / float(attacker.role["revive_seconds"])
-		draw_string(ThemeDB.fallback_font, at + Vector2(-40, -attacker.radius - 8.0), "down", HORIZONTAL_ALIGNMENT_CENTER, 80, FONT_SIZE, COLOUR_TEXT)
+		# A knocked-out Recruit is a grey shape with a cross through it and the word "down".
+		var arm := attacker.radius * 0.6
+		draw_line(at + Vector2(-arm, -arm), at + Vector2(arm, arm), COLOUR_TEXT, 3.0)
+		draw_line(at + Vector2(-arm, arm), at + Vector2(arm, -arm), COLOUR_TEXT, 3.0)
+		var size := roundi(FONT_SIZE / maxf(scale.x, 0.01))
+		draw_string(ThemeDB.fallback_font, at + Vector2(-40, attacker.radius + 2.0 + size), "down", HORIZONTAL_ALIGNMENT_CENTER, 80, size, COLOUR_TEXT)
 		if held > 0.0:
 			draw_arc(at, attacker.radius + 5.0, -PI / 2.0, -PI / 2.0 + TAU * clampf(held, 0.0, 1.0), 24, COLOUR_REVIVE, 3.0)
-	elif attacker.kind == "recruit":
-		draw_string(ThemeDB.fallback_font, at + Vector2(-40, attacker.radius + 14.0), str(attacker.role.get("name", "")), HORIZONTAL_ALIGNMENT_CENTER, 80, FONT_SIZE, COLOUR_TEXT)
+	if attacker.kind == "recruit":
+		_draw_recruit_marks(attacker, colour)
 	if attacker.last_target < 0:
 		return
 	for enemy in rules.enemies:
 		if enemy.uid == attacker.last_target:
 			draw_line(at, enemy.position, COLOUR_SHOT, 3.0)
 			return
+
+
+## A Recruit's shape: a polygon of `sides` corners, a different one for each class.
+func _draw_shape(at: Vector2, radius: float, sides: int, fill: Color) -> void:
+	if sides < 3:
+		draw_circle(at, radius, fill)
+		draw_arc(at, radius, 0.0, TAU, 24, Color.BLACK, 2.0)
+		return
+	var corners := PackedVector2Array()
+	for i in sides:
+		corners.append(at + Vector2.from_angle(-PI / 2.0 + TAU * float(i) / float(sides)) * radius * (1.15 if sides == 3 else 1.0))
+	draw_colored_polygon(corners, fill)
+	corners.append(corners[0])
+	draw_polyline(corners, Color.BLACK, 2.0)
+
+
+func _recruit_class(attacker: HoldfastRules.Attacker) -> Dictionary:
+	return HoldfastContent.base().get("recruit_classes", {}).get(str(attacker.role.get("class", "")), {})
+
+
+func _recruit_colour(attacker: HoldfastRules.Attacker) -> Color:
+	var cls := _recruit_class(attacker)
+	return Color(str(cls["colour"])) if cls.has("colour") else RECRUIT_COLOURS.get(str(attacker.role.get("class", "")), COLOUR_STAFF)
+
+
+func _recruit_sides(attacker: HoldfastRules.Attacker) -> int:
+	return int(_recruit_class(attacker).get("sides", 0)) if attacker.kind == "recruit" else 0
+
+
+## A Recruit's name tag (with their level), the flash of a level-up, and the bark they are calling out.
+## The view shrinks to fit the arena, so the writing is drawn larger by the same factor and stays readable.
+func _draw_recruit_marks(attacker: HoldfastRules.Attacker, colour: Color) -> void:
+	var at := attacker.position
+	var k := 1.0 / maxf(scale.x, 0.01)
+	var size := roundi(FONT_SIZE * k)
+	var line := float(size) + 4.0 * k
+	if attacker.up:
+		var tag := "%s %d" % [str(attacker.role.get("name", "")), attacker.level]
+		var width := (12.0 + 7.5 * tag.length()) * k
+		draw_rect(Rect2(at + Vector2(-width * 0.5, attacker.radius + 2.0), Vector2(width, line)), Color(0, 0, 0, 0.55))
+		draw_string(ThemeDB.fallback_font, at + Vector2(-width * 0.5, attacker.radius + 2.0 + size), tag, HORIZONTAL_ALIGNMENT_CENTER, width, size, COLOUR_TEXT)
+	if attacker.flash_left > 0.0:
+		var grow := 1.0 - attacker.flash_left / HoldfastRules.FLASH_SECONDS
+		draw_arc(at, attacker.radius + 4.0 + grow * 22.0, 0.0, TAU, 32, Color(COLOUR_HERO_FLASH, 1.0 - grow), 3.0)
+		draw_circle(at, attacker.radius * 0.9, Color(COLOUR_HERO_FLASH, 0.6 * (1.0 - grow)))
+	if attacker.bark_left > 0.0 and attacker.bark != "":
+		var width := (12.0 + 7.5 * attacker.bark.length()) * k
+		var top := at + Vector2(-width * 0.5, -attacker.radius - 14.0 - line)
+		draw_rect(Rect2(top, Vector2(width, line)), Color(0, 0, 0, 0.7))
+		draw_rect(Rect2(top, Vector2(width, line)), colour, false, 1.0 * k)
+		draw_string(ThemeDB.fallback_font, top + Vector2(0, size), attacker.bark, HORIZONTAL_ALIGNMENT_CENTER, width, size, COLOUR_TEXT)
 
 
 func _draw_bar(at: Vector2, width: float, fraction: float, colour: Color) -> void:

@@ -37,7 +37,7 @@ func _shown(profile: Dictionary) -> Array:
 
 func test_every_node_hangs_off_first_slot_through_the_nodes_it_requires() -> void:
 	var nodes: Dictionary = _content()["upgrade_nodes"]
-	expect_eq(nodes.size(), 56)
+	expect_eq(nodes.size(), 58)
 	var roots := []
 	for id in nodes:
 		if nodes[id].get("requires", []).is_empty():
@@ -100,9 +100,9 @@ func test_star_nodes_cost_stars_and_gold_nodes_cost_gold() -> void:
 		if HoldfastMeta.is_star_node(nodes[id]):
 			star_nodes.append(id)
 	star_nodes.sort()
-	var expected := CASTLE_ORDER + ["flare_inferno", "post_piercing", "post_storm", "link_lit_post", "link_pillar_echo", "link_rally", "link_last_light", "link_watchtower", "link_crossfire", "gate_mage", "link_eclipse"]
+	var expected := CASTLE_ORDER + ["flare_inferno", "post_piercing", "post_storm", "link_lit_post", "link_pillar_echo", "link_rally", "link_last_light", "link_watchtower", "link_crossfire", "gate_mage", "link_eclipse", "squad_hand_3", "squad_hand_4"]
 	expected.sort()
-	expect_eq(star_nodes, expected, "the castle chain, the three capstones, the six links, the Mage gate and its link are the star nodes")
+	expect_eq(star_nodes, expected, "the castle chain, the three capstones, the six links, the Mage gate and its link, and the two squad hands are the star nodes")
 	for id in nodes:
 		if not HoldfastMeta.is_star_node(nodes[id]):
 			expect_false(nodes[id].has("currency"), id)

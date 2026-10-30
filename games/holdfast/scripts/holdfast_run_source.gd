@@ -28,8 +28,8 @@ var layout: Variant = null
 var stand := false
 ## The blessing picked for the run ("" for none).
 var blessing := ""
-## True in the game's runs: Recruits and the light posts they staff stay out of the fight.
-var parked := false
+## The Recruits that go on the run (null: the level's own two, as the rules tests have them).
+var squad: Variant = null
 ## True when a run that has a teaching note waits for a click, tap or key before it starts moving.
 var wait_for_press := false
 ## What the Hero wears ({slot: item id}) and what the player owns, so a drop is new.
@@ -76,7 +76,7 @@ func start_run() -> void:
 	var controller: SimController = controller_override
 	if controller == null:
 		controller = HoldfastHeroBot.new() if use_bot else _player
-	var engine := SimEngine.new(rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content, hero_path, layout, gear, gear_owned, stand, parked, blessing), HoldfastRules.TICK_RATE)
+	var engine := SimEngine.new(rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content, hero_path, layout, gear, gear_owned, stand, squad, blessing), HoldfastRules.TICK_RATE)
 	if rules.setup_error != "":
 		if report_errors:
 			push_error("Holdfast: cannot start a run: " + rules.setup_error)
