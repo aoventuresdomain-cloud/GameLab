@@ -24,7 +24,8 @@ static func base() -> Dictionary:
 ## sites nearest where the enemies come from, as a bot or an untouched profile plays it).
 ## `gear` is {slot: item id} the Hero wears; `gear_owned` is what the player has, so a drop is new.
 ## `parked` leaves the Recruits and the light posts they staff out of the run (the game's runs).
-static func run_config(level: String = DEFAULT_LEVEL, upgrades: Array = [], content: Dictionary = {}, hero: String = "", layout: Variant = null, gear: Dictionary = {}, gear_owned: Array = [], stand := false, parked := false) -> Dictionary:
+## `blessing` is the id of the blessing picked for the run ("" for none; bots play without one).
+static func run_config(level: String = DEFAULT_LEVEL, upgrades: Array = [], content: Dictionary = {}, hero: String = "", layout: Variant = null, gear: Dictionary = {}, gear_owned: Array = [], stand := false, parked := false, blessing := "") -> Dictionary:
 	var config := {
 		"content": content if not content.is_empty() else base(),
 		"level": level,
@@ -38,6 +39,8 @@ static func run_config(level: String = DEFAULT_LEVEL, upgrades: Array = [], cont
 		config["stand"] = true
 	if parked:
 		config["parked"] = true
+	if blessing != "":
+		config["blessing"] = blessing
 	var level_data: Dictionary = config["content"].get("levels", {}).get(level, {})
 	if layout != null:
 		config["layout"] = layout

@@ -37,6 +37,8 @@ extends RefCounted
 ## cost stars, and a respec costs a fee; migrate_v4 refunds every bought node in gold (the
 ## capstones at the gold they cost before), keeps the stars and resets the layouts.
 
+## How many blessings the player is offered at the start of a level.
+const BLESSINGS_OFFERED := 3
 const SAVE_VERSION := 5
 
 ## The rows of the Hero page's breakdown: the stat the pack and the rules know it by, where its
@@ -420,6 +422,43 @@ static func stars_earned(profile: Dictionary) -> int:
 	return total
 
 
+## The blessings the player has earned, in the pack's order: each one's unlock rule is met by the
+## levels won and the stars paid so far (a level won, stars in all, or stars on any one level).
+static func blessings_unlocked(content: Dictionary, profile: Dictionary) -> Array:
+	var out := []
+	var best := 0
+	for level in profile["stars"]:
+		best = maxi(best, int(profile["stars"][level]))
+	for id in content.get("blessings", {}):
+		var rule: Dictionary = content["blessings"][id]["unlock"]
+		var met := false
+		match str(rule["kind"]):
+			"won":
+				met = str(rule["level"]) in profile["levels_won"]
+			"stars":
+				met = stars_earned(profile) >= int(rule["count"])
+			"stars_on_a_level":
+				met = best >= int(rule["count"])
+		if met:
+			out.append(id)
+	return out
+
+
+## The blessings offered at the start of `level`: up to three of the unlocked ones, drawn at
+## random with `rng`, in the pack's order; none for a tutorial. "No blessing" is always on offer
+## too, and is not listed here.
+static func blessing_offer(content: Dictionary, profile: Dictionary, level: String, rng: RandomNumberGenerator) -> Array:
+	if _tutorial(content.get("levels", {}).get(level, {})):
+		return []
+	var pool := blessings_unlocked(content, profile)
+	var picked := []
+	while picked.size() < BLESSINGS_OFFERED and not pool.is_empty():
+		picked.append(pool.pop_at(rng.randi_range(0, pool.size() - 1)))
+	var order: Array = content.get("blessings", {}).keys()
+	picked.sort_custom(func(a: String, b: String) -> bool: return order.find(a) < order.find(b))
+	return picked
+
+
 ## Stars tied up in the star nodes the player owns (a respec gives them back).
 static func stars_spent(content: Dictionary, profile: Dictionary) -> int:
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
@@ -444,7 +483,7 @@ static func stars_for_run(content: Dictionary, result: Dictionary) -> int:
 		return 0
 	if _tutorial(level):
 		return int(level["reward"]["stars"])
-	var left := float(result.get("keep_health", 0)) / float(result["keep_health_max"]) if float(result.get("keep_health_max", 0)) > 0.0 else 0.0
+	var left := float(result["keep_left"]) if result.has("keep_left") else (float(result.get("keep_health", 0)) / float(result["keep_health_max"]) if float(result.get("keep_health_max", 0)) > 0.0 else 0.0)
 	var stars := 1
 	for tier in castle_rules(content).get("star_tiers", []):
 		if left > float(tier["above"]):

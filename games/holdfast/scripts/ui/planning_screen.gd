@@ -23,6 +23,7 @@ const COLOUR_SLOT := Color(0.95, 0.85, 0.5)
 const MAGE_ID := "mage_post"
 const EMPTY_SPOT := "Empty"
 const HINT := "Drag a post onto a spot, or press a spot."
+const NO_BLESSING := "No blessing"
 
 @onready var _title: Label = %Title
 @onready var _hint: Label = %Hint
@@ -35,6 +36,8 @@ const HINT := "Drag a post onto a spot, or press a spot."
 @onready var _quick: Button = %QuickButton
 @onready var _side: Control = %Side
 @onready var _tray: GridContainer = %Tray
+@onready var _blessings: HBoxContainer = %Blessings
+@onready var _blessing_text: Label = %BlessingText
 
 var _content: Dictionary
 var _level_id := ""
@@ -50,6 +53,9 @@ var _mage_cards := 0
 ## The layout of the last run on this level ("" none yet): what Quick start reuses.
 var _saved: Array = []
 var _site_buttons: Dictionary = {}
+## The blessing picked for the run ("" for none), and each blessing on offer's button by id.
+var _blessing := ""
+var _blessing_buttons: Dictionary = {}
 
 
 func _ready() -> void:
@@ -115,6 +121,42 @@ func set_tower_offer(text: String, why_not := "") -> void:
 	_tower.tooltip_text = why_not
 	# The reason shows where the player looks, not only on hover.
 	_hint.text = why_not if why_not != "" else HINT
+
+
+## Offers the blessings in `offer` (ids from the pack) beside "No blessing", which is picked to begin
+## with. An empty offer hides the choice (a tutorial, or nothing earned yet).
+func set_blessings(offer: Array) -> void:
+	for button in _blessing_buttons.values():
+		_blessings.remove_child(button)
+		button.queue_free()
+	_blessing_buttons.clear()
+	_blessing = ""
+	_blessings.visible = not offer.is_empty()
+	_blessing_text.visible = not offer.is_empty()
+	if offer.is_empty():
+		return
+	var group := ButtonGroup.new()
+	for id in offer + [""]:
+		var button := Button.new()
+		button.toggle_mode = true
+		button.button_group = group
+		button.add_theme_font_size_override("font_size", FONT_PX)
+		button.text = str(_content["blessings"][id]["name"]) if id != "" else NO_BLESSING
+		button.pressed.connect(_pick_blessing.bind(id))
+		_blessings.add_child(button)
+		_blessing_buttons[id] = button
+	_blessing_buttons[""].button_pressed = true
+	_pick_blessing("")
+
+
+## The blessing picked for the run: an id, or "" for none.
+func blessing() -> String:
+	return _blessing
+
+
+func _pick_blessing(id: String) -> void:
+	_blessing = id
+	_blessing_text.text = str(_content["blessings"][id]["text"]) if id != "" else "Play the level as it is."
 
 
 ## The posts placed now, as layout entries.
