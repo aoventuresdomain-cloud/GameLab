@@ -213,7 +213,7 @@
 - **Done when:**
   - [x] `games/holdfast/content/pacing-bands.json` holds first-time win-rate bands per pillar and per bot (average and poor) for levels 1-5, with a per-pillar first-time floor, from the Advisor's targets. Hero stats are not nerfed.
   - [x] It also holds the special on/off gap rule and the Old Pier first-time band. Each band says how the simulator measures it.
-  - [x] Volley and Sniper are within a stated gap on every level (F-044), and Shingle Beach is fair for the Dusk Mage including with one post (F-049). Any Hero buff is cleared with the Advisor and logged first.
+  - [~] Volley and Sniper are within a stated gap on every level (F-044), and Shingle Beach is fair for the Dusk Mage including with one post (F-049). Met for the Flare Archer; Dusk Mage and Tideblade misses are pinned (F-124, decision B), moves to HF-M2-28. Any Hero buff is cleared with the Advisor and logged first.
   - [x] The Advisor's view on the bands is logged on the board.
 
 ### HF-M2-02 Meta progression: biome, 5 levels and the upgrade tree
