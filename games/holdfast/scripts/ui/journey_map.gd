@@ -134,6 +134,9 @@ func refresh() -> void:
 	_hero_button.disabled = locked
 	_recruits_button.disabled = locked
 	_recruits_button.visible = not _profile.get_recruits().is_empty()
+	var welcome: String = _profile.get_welcome()
+	_recruits_button.text = "Recruits: %s" % welcome if welcome != "" else "Recruits"
+	_recruits_button.reset_size()
 	_recruits_dot.visible = not locked and not _profile.get_pending_picks().is_empty()
 	_hero_figure.disabled = locked
 	_place()

@@ -1054,7 +1054,6 @@ static func _effects_text(effects: Array) -> String:
 	return ", ".join(parts)
 
 
-## "tower.range" is "range", "hero.attack.damage" is "arrow damage": the scope is dropped.
 ## The Refund all button: the gold and the stars it gives back, and a fee only as a fee.
 static func refund_all_text(stars: int, change: int) -> String:
 	var parts := PackedStringArray()
@@ -1067,6 +1066,7 @@ static func refund_all_text(stars: int, change: int) -> String:
 	return "Refund all: %s" % ", ".join(parts)
 
 
+## "tower.range" is "range", "hero.attack.damage" is "arrow damage": the scope is dropped.
 static func _stat_text(stat: String) -> String:
 	var field := stat
 	for scope in ["tower.", "hero.", "recruit."]:
