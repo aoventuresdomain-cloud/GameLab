@@ -231,3 +231,46 @@ func test_a_pick_on_the_plan_page_is_saved_and_stands_at_the_post_in_the_run() -
 	expect_eq(bryn.post, "tower:spot_1", "Bryn staffs the post that was placed")
 	expect_true(source._rules.tower.staffer == bryn)
 	main.free()
+
+
+# ------------------------------------------------------------------ 12a QA follow-ups
+
+func test_taking_back_a_free_node_costs_nothing() -> void:
+	var content := _content()
+	var root: Dictionary = content["upgrade_nodes"]["squad_root"]
+	expect_eq(HoldfastMeta.respec_fee(root), 0, "no fee on a node that cost nothing")
+	expect_eq(HoldfastMeta.refund_gain(content, "squad_root"), {"gold": 0, "stars": 0})
+	var profile := HoldfastMeta.new_profile(content)
+	profile["upgrades"] = ["castle_slot_1", "castle_archer_1", "squad_root"]
+	profile["gold"] = 0
+	expect_eq(HoldfastMeta.why_not_refund_node(content, profile, "squad_root"), "", "even with no gold in the purse")
+	expect_eq(HoldfastMeta.respec_fee(content["upgrade_nodes"]["keep_walls_1"]), 20, "a priced node keeps its fee")
+
+
+func test_the_two_drills_nodes_read_differently_on_the_tree() -> void:
+	var nodes: Dictionary = _content()["upgrade_nodes"]
+	var names := []
+	for id in nodes:
+		names.append(str(nodes[id].get("label", nodes[id]["name"])))
+	expect_eq(names.count("Drills"), 1, "one node is called Drills")
+	expect_eq(str(nodes["squad_drills"].get("label", nodes["squad_drills"]["name"])), "Squad drills")
+
+
+func test_a_squad_card_says_how_much_it_multiplies_and_starts_with_a_capital() -> void:
+	var main := Main.instantiate()
+	main.get_node("RunSource").auto_step = false
+	tree.root.add_child(main)
+	tree.root.size = Vector2i(1280, 720)
+	var profile: HoldfastProfile = main.get_node("Profile")
+	ThroughLevelZero.apply_castle(profile)
+	profile.data["upgrades"].append("squad_root")
+	profile.changed.emit()
+	var page: Control = main.keep_screen
+	page.visible = true
+	page._node_buttons["squad_barracks"].pressed.emit()
+	var shown := []
+	for label in page._card_lines.get_children():
+		shown.append(label.text)
+	expect_true("Health x1.25" in shown, "not Health 1 -> 1.25: %s" % [shown])
+	expect_true("Every Recruit has 25% more health" in shown, "the description is capitalised: %s" % [shown])
+	main.free()

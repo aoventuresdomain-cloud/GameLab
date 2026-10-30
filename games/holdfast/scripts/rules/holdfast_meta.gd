@@ -814,10 +814,13 @@ static func _closed_by(nodes: Dictionary, bought: Array, id: String) -> String:
 
 
 ## What taking one bought node back costs, in gold: a tenth of a gold node's price (at least
-## RESPEC_MIN_FEE), a flat RESPEC_STAR_FEE for a star node (its stars come back in full).
+## RESPEC_MIN_FEE), a flat RESPEC_STAR_FEE for a star node (its stars come back in full), and
+## nothing for a node that cost nothing (the Squad's root).
 static func respec_fee(node: Dictionary) -> int:
 	if is_star_node(node):
 		return RESPEC_STAR_FEE
+	if int(node.get("cost", 0)) == 0:
+		return 0
 	return maxi(RESPEC_MIN_FEE, int(round(float(node.get("cost", 0)) * RESPEC_FEE_SHARE)))
 
 
