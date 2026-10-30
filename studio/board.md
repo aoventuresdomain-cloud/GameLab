@@ -807,7 +807,7 @@
 - **QA:** none (review; findings feed Build 13)
 - **Depends on:** HF-M2-03, HF-M2-28, HF-M2-58
 - **Done when:**
-  - [ ] Head of QA plays a fresh game in a real browser from the first screen through every section and level, at 1280x720 and 1920x1080, and returns a written problem list on one commit, each graded MUST FIX or FOLLOW-UP, with logic and test coverage gaps named (any rule or screen with no test).
+  - [ ] Head of QA starts from the Player Researcher's full play-through (CEO asked for it on 2026-10-30, run in parallel with Builds 11 and 12; no repeated play-through), re-checks its findings on one commit at 1280x720 and 1920x1080 in a real browser, plays what it did not reach, and returns a written problem list on that commit, each graded MUST FIX or FOLLOW-UP, with logic and test coverage gaps named (any rule or screen with no test).
   - [ ] The Game Design Advisor compares the game with Incrempire as a system (progression, tree, offline-free loop, prestige, pacing, UI clarity; reference material is mood and mechanics only, never assets or training data) and writes a gap list of what is missing, graded by effect on the CEO's goal.
   - [ ] Every gap and problem becomes a board item with an owner and Done when lines, ordered into Build 13 of 13; the CEO sees the list with the Head of Engineering's estimate before anything is built.
   - [ ] The rows the Player Researcher could not check (`studio/research/holdfast-gap-review.md`, project files) are answered: pause, quit and resume a run, "Next level" before the guided buys, first-time hints for gear, blessings and the Mage gate, and a readable "next goal" on the journey map.
