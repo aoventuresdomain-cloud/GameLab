@@ -45,8 +45,14 @@ const DEFAULT_CURSOR_SPEED := 1800.0
 const RETARGET_TICKS := 10
 ## How long a Hero attack's flash stays in `effects`, for drawing.
 const EFFECT_SECONDS := 0.25
+## Where a Recruit stands beside the post they staff.
+const POST_OFFSET := Vector2(12.0, -12.0)
 ## A tower or Recruit with nothing in range looks again after this long.
 const SCAN_SECONDS := 0.1
+## How long a Recruit's level-up flash and bark show, and how far above the flee line they must heal to come back.
+const FLASH_SECONDS := 1.0
+const BARK_SECONDS := 2.0
+const FLEE_RECOVERY := 0.25
 ## The most damage armour can turn away, and the shortest a get-up wait can become (a share of base).
 const HERO_ARMOUR_CAP := 0.7
 const HERO_GETUP_MIN := 0.5
@@ -181,6 +187,23 @@ class Attacker:
 	## Recruits: their pack entry (revive numbers) and the post they staff ("" for none).
 	var role: Dictionary = {}
 	var post := ""
+	## Recruits: the effect their post gets (their class's, as their traits and skills left it), the
+	## share of damage they shrug off, the health fraction below which they flee to the keep (0: never)
+	## and whether they are fleeing now, their level, the XP that level counts and what it grows
+	## by, how much XP this run gave them, and the level-up flash and bark still showing.
+	var fx: Dictionary = {}
+	var armour := 0.0
+	var flee_below := 0.0
+	var fleeing := false
+	var refuge := Vector2.ZERO
+	var level := 1
+	var xp_total := 0
+	var xp_per_level := 1
+	var xp_gain := 1.0
+	var run_xp := 0
+	var flash_left := 0.0
+	var bark := ""
+	var bark_left := 0.0
 	var position: Vector2
 	var damage: float
 	var attack_range: float
@@ -330,8 +353,6 @@ var towers: Array[Attacker] = []
 var layout_ids: Array = []
 ## A tutorial level: its Keep cannot fall and it builds no tower of its own (the Hero fights alone).
 var tutorial := false
-## Recruits and the light posts they staff are parked: none stand in the run (the game's runs).
-var parked := false
 ## The short fight that follows the two guided buys: the tutorial's own Keep, its `stand` waves,
 ## and the posts the player's castle holds, not the level's placed one.
 var stand := false
@@ -423,13 +444,11 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	problems.append_array(HeroKnockdown.validate(content["hero_paths"][hero_path]["knockdown_delays"]))
 	problems.append_array(HeroGetUp.validate_grace(content["hero_paths"][hero_path].get("untouchable_seconds", DEFAULT_UNTOUCHABLE_SECONDS)))
 	var roles := []
-	parked = bool(config.get("parked", false))
-	var placements: Array = []
-	if not parked:
-		placements.append(level["staff"])
-		placements.append_array(level.get("recruits", []))
+	var placements: Variant = _placements(config, level, content)
+	if placements == null:
+		return
 	for at in placements:
-		var data: Dictionary = content["staff"][at["id"]]
+		var data: Dictionary = at.get("data", content["staff"].get(at["id"], {}))
 		roles.append(str(data["class"]))
 		problems.append_array(RecruitRules.validate_revive_time(data["revive_seconds"]))
 		problems.append_array(RecruitLeash.validate(data["leash"], data["move_speed"], data["range"], data["retreat_below"]))
@@ -498,7 +517,7 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 
 	light_radius = float(light["radius"])
 	light_bonus = float(light["bonus"])
-	for at in ([] if parked else level["posts"]):
+	for at in level["posts"]:
 		var post := Post.new()
 		post.id = str(at["id"])
 		post.position = Vector2(float(at["x"]), float(at["y"]))
@@ -548,7 +567,7 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		for at in chosen:
 			layout_ids.append(str(at["id"]))
 	for at in placements:
-		var data: Dictionary = content["staff"][at["id"]]
+		var data: Dictionary = at["data"] if at.has("data") else content["staff"][at["id"]]
 		var recruit := _attacker("recruit", at, data, _apply(stats, "staff_damage", float(data["damage"])))
 		recruit.damage_per_level = float(data["damage_per_level"])
 		recruit.home = recruit.position
@@ -556,6 +575,15 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		recruit.rest_heal = float(data["rest_heal"])
 		recruit.role = data
 		recruit.post = str(at.get("post", ""))
+		recruit.fx = data.get("fx", _role_effects.get(str(data["class"]), {}))
+		recruit.armour = float(data.get("armour", 0.0))
+		recruit.flee_below = float(data.get("flee_below", 0.0))
+		recruit.xp_gain = float(data.get("xp_gain", 1.0))
+		recruit.level = int(data.get("level", 1))
+		recruit.xp_per_level = int(data["xp_per_level"])
+		recruit.xp_total = int(at.get("xp", 0))
+		var away := recruit.home
+		recruit.refuge = (away.normalized() if away != Vector2.ZERO else Vector2.RIGHT) * (keep_radius + recruit.radius + 6.0)
 		recruit.walker = {
 			"role": str(data["class"]), "home": recruit.home, "pos": recruit.position, "leash": recruit.leash,
 			"speed": float(data["move_speed"]), "range": recruit.attack_range, "health": 0.0, "max_health": 0.0,
@@ -567,7 +595,7 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		recruits.append(recruit)
 	if not recruits.is_empty():
 		staff = recruits[0]
-		staff_xp_per_level = int(content["staff"][staff.id]["xp_per_level"])
+		staff_xp_per_level = staff.xp_per_level
 	_defenders.append_array(recruits)
 	for unit in recruits:
 		_tie_order.append(unit.key)
@@ -575,6 +603,42 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		_tie_order.append(built.key)
 
 	_build_schedule(level)
+
+
+## Where the Recruits stand: the level's own pair when the config names no squad, else the
+## squad's Recruits (RecruitRoster data), one to each light post in turn and the rest round the
+## keep. [{id, x, y, post, data, xp}]; null (and the run refused) when the squad is not usable.
+func _placements(config: Dictionary, level: Dictionary, content: Dictionary) -> Variant:
+	if not config.has("squad"):
+		var legacy: Array = [level["staff"]]
+		legacy.append_array(level.get("recruits", []))
+		return legacy
+	var squad: Variant = config["squad"]
+	if not squad is Array or squad.size() > RecruitRoster.SQUAD_MAX:
+		_fail("a squad is a list of at most %d Recruits" % RecruitRoster.SQUAD_MAX)
+		return null
+	var out := []
+	var seen := []
+	var ring := Vector2(float(level["staff"]["x"]), float(level["staff"]["y"]))
+	var spots: Array = level["posts"]
+	for i in squad.size():
+		var recruit: Dictionary = squad[i]
+		var data := RecruitRoster.build(recruit, content)
+		if data.is_empty() or str(recruit["id"]) in seen:
+			_fail("Recruit %s cannot join the squad" % str(recruit.get("id", "?")))
+			return null
+		seen.append(str(recruit["id"]))
+		var at := {"id": str(recruit["id"]), "data": data, "xp": int(recruit["xp"])}
+		if i < spots.size():
+			at["x"] = float(spots[i]["x"]) + POST_OFFSET.x
+			at["y"] = float(spots[i]["y"]) + POST_OFFSET.y
+			at["post"] = str(spots[i]["id"])
+		else:
+			var spot := ring.rotated(PI * 0.5 * float(i - spots.size() + 1))
+			at["x"] = spot.x
+			at["y"] = spot.y
+		out.append(at)
+	return out
 
 
 ## Setup failed: the run is over before it starts. Not assert: asserts are
@@ -888,7 +952,10 @@ func step(dt: float, input: Dictionary) -> void:
 			if repair > 0.0:
 				built.health = UnitHealth.repair(built.health, repair * dt)
 	for recruit in recruits:
-		_attack(recruit, recruit.damage + (staff_level - 1) * recruit.damage_per_level, dt)
+		if recruit.fleeing:
+			recruit.last_target = -1
+		else:
+			_attack(recruit, recruit.damage, dt)
 	_repair_keep(dt)
 	_collect_dead()
 	_age_effects(dt)
@@ -940,19 +1007,16 @@ func _refresh_targets() -> void:
 		if not unit.up:
 			continue
 		_candidates.append(unit.candidate)
-		if unit.kind != "recruit" or unit.post == "":
+		if unit.kind != "recruit" or unit.post == "" or unit.fleeing or unit.fx.is_empty():
 			continue
-		var given := RecruitRules.post_effects([unit.health], _role_effects)
-		if given.is_empty():
-			continue
-		var fx: Dictionary = given[0]["effect"]
+		var fx: Dictionary = unit.fx
 		var centre: Vector2 = _post_at[unit.post]
 		var reach := float(fx.get("effect_radius", 0.0))
 		unit.candidate["taunt_radius"] = float(fx.get("taunt_radius", 0.0))
 		if fx.has("slow") or fx.has("mark_bonus"):
 			_lookouts.append([centre, reach, float(fx.get("slow", 0.0)), float(fx.get("mark_bonus", 0.0))])
-		if fx.has("field_dps") or fx.has("repair_per_second"):
-			_ticking.append([centre, reach, float(fx.get("field_dps", 0.0)), float(fx.get("repair_per_second", 0.0))])
+		if fx.has("field_dps") or fx.has("repair_per_second") or fx.has("heal_per_second"):
+			_ticking.append([centre, reach, float(fx.get("field_dps", 0.0)), float(fx.get("repair_per_second", 0.0)), float(fx.get("heal_per_second", 0.0))])
 
 
 func _step_enemies(dt: float) -> void:
@@ -1062,7 +1126,7 @@ func _hit_unit(unit: Attacker, amount: float) -> void:
 		if unit.up:
 			_last_light(unit)
 	else:
-		unit.health = RecruitRules.damage(unit.health, amount)
+		unit.health = RecruitRules.damage(unit.health, amount * (1.0 - unit.armour))
 		unit.up = not unit.health["downed"]
 	if unit.up:
 		return
@@ -1071,6 +1135,7 @@ func _hit_unit(unit: Attacker, amount: float) -> void:
 		towers_lost += 1
 	else:
 		recruits_downed += 1
+		_bark(unit, "down")
 
 
 # --- Recruits: revive, and the effect of staffing a post -------------------
@@ -1079,8 +1144,12 @@ func _step_recruits(dt: float) -> void:
 	var enemy_points: Array = []
 	var points_built := false
 	for recruit in recruits:
+		recruit.bark_left = maxf(recruit.bark_left - dt, 0.0)
+		recruit.flash_left = maxf(recruit.flash_left - dt, 0.0)
 		if not recruit.up:
 			_revive(recruit, dt)
+			continue
+		if _flee(recruit, dt):
 			continue
 		var at_home := recruit.position == recruit.home
 		if not (at_home and (recruit.post != "" or recruit.leash <= 0.0)):
@@ -1094,6 +1163,10 @@ func _step_recruits(dt: float) -> void:
 		if at_home and recruit.rest_heal > 0.0:
 			recruit.health = RecruitRules.rest(recruit.health, recruit.rest_heal * dt)
 	for fx in _ticking:
+		if fx[4] > 0.0:
+			for recruit in recruits:
+				if recruit.up and recruit.position.distance_to(fx[0]) <= fx[1]:
+					recruit.health = RecruitRules.rest(recruit.health, fx[4] * dt)
 		if fx[2] > 0.0:
 			for enemy in enemies:
 				if enemy.health > 0.0 and enemy.position.distance_to(fx[0]) <= fx[1] + enemy.radius:
@@ -1102,6 +1175,38 @@ func _step_recruits(dt: float) -> void:
 			for built in towers:
 				if built.up and built.position.distance_to(fx[0]) <= fx[1]:
 					built.health = UnitHealth.repair(built.health, fx[3] * dt)
+
+
+## A Recruit with a `flee_below` (a Coward) who is below it leaves the fight for the keep, holds
+## their fire and rests there until back to that share plus FLEE_RECOVERY, then returns to their
+## post or home. True while they are fleeing, and they take no other step.
+func _flee(recruit: Attacker, dt: float) -> bool:
+	if recruit.flee_below <= 0.0:
+		return false
+	var share := float(recruit.health["health"]) / float(recruit.health["max_health"])
+	if not recruit.fleeing and share < recruit.flee_below:
+		recruit.fleeing = true
+		_targets_dirty = true
+	elif recruit.fleeing and share >= minf(recruit.flee_below + FLEE_RECOVERY, 1.0):
+		recruit.fleeing = false
+		_targets_dirty = true
+	if not recruit.fleeing:
+		return false
+	recruit.position = recruit.position.move_toward(recruit.refuge, float(recruit.role["move_speed"]) * dt)
+	recruit.candidate["pos"] = recruit.position
+	if recruit.position == recruit.refuge and recruit.rest_heal > 0.0:
+		recruit.health = RecruitRules.rest(recruit.health, recruit.rest_heal * dt)
+	return true
+
+
+## A short line over a Recruit's head for BARK_SECONDS: their class's line for the event
+## ("wave", "down", "up", "level"), picked by the tick so every run says the same.
+func _bark(unit: Attacker, event: String) -> void:
+	var lines: Array = unit.role.get("barks", {}).get(event, [])
+	if lines.is_empty():
+		return
+	unit.bark = str(lines[(ticks + wave) % lines.size()])
+	unit.bark_left = BARK_SECONDS
 
 
 ## One step of a Recruit's walk (RecruitLeash): out to an enemy within their leash
@@ -1125,6 +1230,7 @@ func _revive(recruit: Attacker, dt: float) -> void:
 	recruit.up = true
 	recruits_revived += 1
 	_targets_dirty = true
+	_bark(recruit, "up")
 
 
 # --- The Hero -------------------------------------------------------------
@@ -1460,6 +1566,14 @@ func apply_aura(at: Vector2, dt: float) -> void:
 			_any_dead = _any_dead or enemy.health <= 0.0
 
 
+## One Recruit, in turn, calls out as a wave begins.
+func _bark_a_wave(w: int) -> void:
+	if not recruits.is_empty():
+		var caller: Attacker = recruits[w % recruits.size()]
+		if caller.up:
+			_bark(caller, "wave")
+
+
 func _spawn_due() -> void:
 	while _next_spawn < _schedule.size() and _schedule[_next_spawn][0] <= time + 0.000001:
 		var entry: Array = _schedule[_next_spawn]
@@ -1467,6 +1581,7 @@ func _spawn_due() -> void:
 		var w: int = entry[1]
 		if w + 1 > wave:
 			_bank_xp()
+			_bark_a_wave(w)
 		wave = maxi(wave, w + 1)
 		var data: Dictionary = _enemy_types[entry[2]]
 		var enemy := Enemy.new()
@@ -1738,6 +1853,16 @@ func _gain_xp(amount: int) -> void:
 	while staff_xp >= staff_xp_per_level * staff_level:
 		staff_xp -= staff_xp_per_level * staff_level
 		staff_level += 1
+	for recruit in recruits:
+		var gained := maxi(roundi(float(amount) * recruit.xp_gain), 1) if amount > 0 else 0
+		recruit.run_xp += gained
+		recruit.xp_total += gained
+		var reached := RecruitRoster.level_for(recruit.xp_total, recruit.xp_per_level)
+		if reached > recruit.level:
+			recruit.damage += recruit.damage_per_level * float(reached - recruit.level)
+			recruit.level = reached
+			recruit.flash_left = FLASH_SECONDS
+			_bark(recruit, "level")
 
 
 ## The Keep takes a blow; a tutorial's Keep takes none.
@@ -1809,6 +1934,7 @@ func result() -> Dictionary:
 		"recruits_revived": recruits_revived,
 		"hero_knockdowns": int(hero_state["knockdowns"]) if not hero_state.is_empty() else 0,
 		"gear_found": gear_found.duplicate(),
+		"recruit_xp": _recruit_xp(),
 	}
 	if _blessed:
 		# The Keep's health as the tree builds it, whatever the blessing did to it, for the stars.
@@ -1840,6 +1966,13 @@ func snapshot() -> Dictionary:
 		"wave_leaked": Array(_wave_leaked),
 		"enemies": list,
 	}
+
+
+func _recruit_xp() -> Dictionary:
+	var out := {}
+	for recruit in recruits:
+		out[recruit.id] = recruit.run_xp
+	return out
 
 
 func _token_states() -> Array:

@@ -7,6 +7,7 @@ extends Control
 
 signal level_requested(id: String)
 signal hero_requested
+signal recruits_requested
 signal tree_requested
 signal home_requested
 ## A guided purchase (an upgrade node id) the player pressed.
@@ -37,6 +38,7 @@ const DOT_PX := 16.0
 const STAND_LINE := "Your post is up. Try it out."
 const DEFAULT_INFO := ""
 const HERO_INFO := "Hero and gear"
+const RECRUITS_INFO := "Recruits, the squad and the board"
 
 @onready var _gold: Label = %GoldValue
 @onready var _stars: Label = %StarsValue
@@ -55,9 +57,11 @@ var _ids: Array = []
 var _buttons: Dictionary = {}
 var _names: Dictionary = {}
 var _hero_button: Button
+var _recruits_button: Button
 ## The dots on the two tabs, shown while there is something the player has not looked at.
 var _tree_dot: Control
 var _hero_dot: Control
+var _recruits_dot: Control
 ## The nodes that could be bought when the tree was last opened or left.
 var _seen_buyable: Array = []
 ## The drawn Hero is a button too (transparent), so the figure itself can be tapped.
@@ -79,6 +83,7 @@ func _ready() -> void:
 	_build_nodes()
 	_tree_dot = _make_dot(_tree)
 	_hero_dot = _make_dot(_hero_button)
+	_recruits_dot = _make_dot(_recruits_button)
 	_info.text = DEFAULT_INFO
 	visibility_changed.connect(_on_visibility_changed)
 
@@ -127,6 +132,9 @@ func refresh() -> void:
 	_tree.disabled = locked
 	_plan.disabled = locked or _guide.visible or _plan_target() == ""
 	_hero_button.disabled = locked
+	_recruits_button.disabled = locked
+	_recruits_button.visible = not _profile.get_recruits().is_empty()
+	_recruits_dot.visible = not locked and not _profile.get_pending_picks().is_empty()
 	_hero_figure.disabled = locked
 	_place()
 	_map.queue_redraw()
@@ -263,6 +271,13 @@ func _build_nodes() -> void:
 	_hero_button.mouse_entered.connect(func() -> void: _info.text = HERO_INFO)
 	_hero_button.mouse_exited.connect(func() -> void: _info.text = DEFAULT_INFO)
 	_map.add_child(_hero_button)
+	_recruits_button = Button.new()
+	_recruits_button.text = "Recruits"
+	_recruits_button.add_theme_font_size_override("font_size", FONT_PX)
+	_recruits_button.pressed.connect(recruits_requested.emit)
+	_recruits_button.mouse_entered.connect(func() -> void: _info.text = RECRUITS_INFO)
+	_recruits_button.mouse_exited.connect(func() -> void: _info.text = DEFAULT_INFO)
+	_map.add_child(_recruits_button)
 	_hero_figure = Button.new()
 	for style_name in ["normal", "hover", "pressed", "focus", "disabled"]:
 		_hero_figure.add_theme_stylebox_override(style_name, StyleBoxEmpty.new())
@@ -327,6 +342,8 @@ func _place() -> void:
 		# Below the node and clear of its glow ring, which also keeps it off the path.
 		label.position = Vector2(clampf(at.x - label.size.x * 0.5, 0.0, _map.size.x - label.size.x), at.y + NODE_RADIUS + LABEL_GAP)
 	_hero_button.position = _lighthouse_at() + Vector2(-_hero_button.size.x * 0.5, -125.0)
+	_recruits_button.size = _recruits_button.get_minimum_size()
+	_recruits_button.position = _hero_button.position + Vector2(0.0, -_recruits_button.size.y - 8.0)
 	_hero_figure.position = _hero_at() - HERO_FIGURE * 0.5 + Vector2(0, -4)
 
 

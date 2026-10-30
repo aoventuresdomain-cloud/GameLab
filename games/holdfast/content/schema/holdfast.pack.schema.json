@@ -524,6 +524,10 @@
             "mage_cards": {
               "type": "integer",
               "minimum": 0
+            },
+            "squad": {
+              "type": "integer",
+              "minimum": 0
             }
           }
         },
@@ -628,6 +632,42 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/castle_rule"
+          }
+        },
+        "recruit_classes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/recruit_class"
+          }
+        },
+        "recruit_traits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/recruit_trait"
+          }
+        },
+        "recruit_skills": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/recruit_skill"
+          }
+        },
+        "recruit_names": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/recruit_names"
+          }
+        },
+        "recruit_rescues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/recruit_rescue"
+          }
+        },
+        "recruit_prices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/recruit_prices"
           }
         }
       }
@@ -1241,6 +1281,326 @@
           "items": {
             "type": "string",
             "x-ref": "upgrade_nodes"
+          }
+        }
+      }
+    },
+    "recruit_effects": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "stat"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "stat": {
+            "type": "string",
+            "pattern": "^(damage|range|cooldown|health|move_speed|leash|rest_heal|revive_seconds|revive_health|retreat_below|flee_below|armour|xp_gain|taunt_radius|effect_radius|slow|mark_bonus|field_dps|repair_per_second|heal_per_second)$"
+          },
+          "add": {
+            "type": "number"
+          },
+          "multiply": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    },
+    "recruit_class": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "text",
+        "damage",
+        "range",
+        "cooldown",
+        "health",
+        "radius",
+        "leash",
+        "move_speed",
+        "retreat_below",
+        "rest_heal",
+        "revive_seconds",
+        "revive_health",
+        "xp_per_level",
+        "damage_per_level",
+        "colour",
+        "sides",
+        "barks"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "enum": [
+            "warden",
+            "lookout",
+            "alchemist",
+            "engineer"
+          ]
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "damage": {
+          "type": "number",
+          "minimum": 0
+        },
+        "range": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "cooldown": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "health": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "leash": {
+          "type": "number",
+          "minimum": 0
+        },
+        "move_speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "retreat_below": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rest_heal": {
+          "type": "number",
+          "minimum": 0
+        },
+        "revive_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "revive_health": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "xp_per_level": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "damage_per_level": {
+          "type": "number",
+          "minimum": 0
+        },
+        "colour": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "sides": {
+          "type": "integer",
+          "minimum": 3,
+          "maximum": 8
+        },
+        "barks": {
+          "type": "object",
+          "required": [
+            "wave",
+            "down",
+            "up",
+            "level"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "wave": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 24
+              }
+            },
+            "down": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 24
+              }
+            },
+            "up": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 24
+              }
+            },
+            "level": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 24
+              }
+            }
+          }
+        },
+        "locked": {
+          "type": "boolean"
+        }
+      }
+    },
+    "recruit_trait": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "text",
+        "effects"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effects": {
+          "$ref": "#/$defs/recruit_effects"
+        }
+      }
+    },
+    "recruit_skill": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "text",
+        "class",
+        "fork",
+        "effects"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "class": {
+          "enum": [
+            "warden",
+            "lookout",
+            "alchemist",
+            "engineer"
+          ]
+        },
+        "fork": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "effects": {
+          "$ref": "#/$defs/recruit_effects"
+        }
+      }
+    },
+    "recruit_names": {
+      "type": "object",
+      "required": [
+        "id",
+        "names"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "names": {
+          "type": "array",
+          "minItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16
+          }
+        }
+      }
+    },
+    "recruit_rescue": {
+      "type": "object",
+      "required": [
+        "id",
+        "level",
+        "name",
+        "class"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "level": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "class": {
+          "enum": [
+            "warden",
+            "lookout",
+            "alchemist",
+            "engineer"
+          ]
+        }
+      }
+    },
+    "recruit_prices": {
+      "type": "object",
+      "required": [
+        "id",
+        "costs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "costs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "minimum": 0
           }
         }
       }

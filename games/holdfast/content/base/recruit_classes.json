@@ -1,0 +1,146 @@
+{
+ "recruit_classes": [
+  {
+   "id": "warden",
+   "name": "Warden",
+   "text": "Holds a post and pulls enemies onto themselves.",
+   "damage": 3,
+   "range": 70,
+   "cooldown": 0.8,
+   "health": 40,
+   "radius": 11,
+   "leash": 160,
+   "move_speed": 90,
+   "retreat_below": 0.6,
+   "rest_heal": 2,
+   "revive_seconds": 3,
+   "revive_health": 0.5,
+   "xp_per_level": 5,
+   "damage_per_level": 1,
+   "colour": "#e1a95f",
+   "sides": 5,
+   "barks": {
+    "wave": [
+     "Hold the gate!",
+     "Shields up!"
+    ],
+    "down": [
+     "Argh!"
+    ],
+    "up": [
+     "Back on my feet."
+    ],
+    "level": [
+     "Stronger now."
+    ]
+   }
+  },
+  {
+   "id": "lookout",
+   "name": "Lookout",
+   "text": "Watches from a post: slows enemies and marks them for more damage.",
+   "damage": 2,
+   "range": 150,
+   "cooldown": 0.9,
+   "health": 35,
+   "radius": 11,
+   "leash": 100,
+   "move_speed": 80,
+   "retreat_below": 0.6,
+   "rest_heal": 2,
+   "revive_seconds": 3,
+   "revive_health": 0.5,
+   "xp_per_level": 5,
+   "damage_per_level": 1,
+   "colour": "#7fc4a8",
+   "sides": 3,
+   "barks": {
+    "wave": [
+     "They are coming!",
+     "Eyes up!"
+    ],
+    "down": [
+     "I'm hit!"
+    ],
+    "up": [
+     "Thanks, Hero."
+    ],
+    "level": [
+     "Sharper eyes."
+    ]
+   }
+  },
+  {
+   "id": "alchemist",
+   "name": "Alchemist",
+   "text": "Lays a burning field at a post.",
+   "damage": 2,
+   "range": 110,
+   "cooldown": 1.1,
+   "health": 32,
+   "radius": 11,
+   "leash": 110,
+   "move_speed": 80,
+   "retreat_below": 0.6,
+   "rest_heal": 2,
+   "revive_seconds": 3,
+   "revive_health": 0.5,
+   "xp_per_level": 5,
+   "damage_per_level": 1,
+   "colour": "#b78be0",
+   "sides": 4,
+   "barks": {
+    "wave": [
+     "Stand back, mixing!",
+     "Mind the fumes!"
+    ],
+    "down": [
+     "My flasks!"
+    ],
+    "up": [
+     "Still bubbling."
+    ],
+    "level": [
+     "A better brew."
+    ]
+   },
+   "locked": true
+  },
+  {
+   "id": "engineer",
+   "name": "Engineer",
+   "text": "Mends the towers near a post.",
+   "damage": 2,
+   "range": 100,
+   "cooldown": 1.0,
+   "health": 38,
+   "radius": 11,
+   "leash": 110,
+   "move_speed": 80,
+   "retreat_below": 0.6,
+   "rest_heal": 2,
+   "revive_seconds": 3,
+   "revive_health": 0.5,
+   "xp_per_level": 5,
+   "damage_per_level": 1,
+   "colour": "#8fb3e8",
+   "sides": 6,
+   "barks": {
+    "wave": [
+     "Bolts tight!",
+     "On the wall!"
+    ],
+    "down": [
+     "Spanner down!"
+    ],
+    "up": [
+     "Patched up."
+    ],
+    "level": [
+     "New tools."
+    ]
+   },
+   "locked": true
+  }
+ ]
+}

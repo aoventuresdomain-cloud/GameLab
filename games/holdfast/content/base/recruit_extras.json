@@ -1,0 +1,489 @@
+{
+ "recruit_traits": [
+  {
+   "id": "steady",
+   "name": "Steady",
+   "text": "+20% range",
+   "effects": [
+    {
+     "stat": "range",
+     "multiply": 1.2
+    }
+   ]
+  },
+  {
+   "id": "coward",
+   "name": "Coward",
+   "text": "Flees below half health",
+   "effects": [
+    {
+     "stat": "flee_below",
+     "add": 0.5
+    }
+   ]
+  },
+  {
+   "id": "sturdy",
+   "name": "Sturdy",
+   "text": "+25% health",
+   "effects": [
+    {
+     "stat": "health",
+     "multiply": 1.25
+    }
+   ]
+  },
+  {
+   "id": "sharp",
+   "name": "Sharp",
+   "text": "+20% damage",
+   "effects": [
+    {
+     "stat": "damage",
+     "multiply": 1.2
+    }
+   ]
+  },
+  {
+   "id": "quick",
+   "name": "Quick",
+   "text": "+25% speed",
+   "effects": [
+    {
+     "stat": "move_speed",
+     "multiply": 1.25
+    }
+   ]
+  },
+  {
+   "id": "nimble",
+   "name": "Nimble",
+   "text": "Attacks 15% faster",
+   "effects": [
+    {
+     "stat": "cooldown",
+     "multiply": 0.85
+    }
+   ]
+  },
+  {
+   "id": "loyal",
+   "name": "Loyal",
+   "text": "Gets up in half the time",
+   "effects": [
+    {
+     "stat": "revive_seconds",
+     "multiply": 0.5
+    }
+   ]
+  },
+  {
+   "id": "eager",
+   "name": "Eager",
+   "text": "+25% experience",
+   "effects": [
+    {
+     "stat": "xp_gain",
+     "multiply": 1.25
+    }
+   ]
+  }
+ ],
+ "recruit_skills": [
+  {
+   "id": "warden_taunt",
+   "name": "Taunt",
+   "text": "Pulls enemies from further away.",
+   "class": "warden",
+   "fork": 1,
+   "effects": [
+    {
+     "stat": "taunt_radius",
+     "add": 60
+    }
+   ]
+  },
+  {
+   "id": "warden_bulwark",
+   "name": "Bulwark",
+   "text": "+40% health and takes 15% less damage.",
+   "class": "warden",
+   "fork": 1,
+   "effects": [
+    {
+     "stat": "health",
+     "multiply": 1.4
+    },
+    {
+     "stat": "armour",
+     "add": 0.15
+    }
+   ]
+  },
+  {
+   "id": "warden_heavy",
+   "name": "Heavy blows",
+   "text": "+40% damage.",
+   "class": "warden",
+   "fork": 2,
+   "effects": [
+    {
+     "stat": "damage",
+     "multiply": 1.4
+    }
+   ]
+  },
+  {
+   "id": "warden_quick_blows",
+   "name": "Quick blows",
+   "text": "Attacks 20% faster.",
+   "class": "warden",
+   "fork": 2,
+   "effects": [
+    {
+     "stat": "cooldown",
+     "multiply": 0.8
+    }
+   ]
+  },
+  {
+   "id": "warden_second_wind",
+   "name": "Second wind",
+   "text": "Heals twice as fast when resting.",
+   "class": "warden",
+   "fork": 3,
+   "effects": [
+    {
+     "stat": "rest_heal",
+     "multiply": 2.0
+    }
+   ]
+  },
+  {
+   "id": "warden_rally",
+   "name": "Rally",
+   "text": "Gets up in half the time.",
+   "class": "warden",
+   "fork": 3,
+   "effects": [
+    {
+     "stat": "revive_seconds",
+     "multiply": 0.5
+    }
+   ]
+  },
+  {
+   "id": "lookout_wide_watch",
+   "name": "Wide watch",
+   "text": "The watch zone reaches 40 further.",
+   "class": "lookout",
+   "fork": 1,
+   "effects": [
+    {
+     "stat": "effect_radius",
+     "add": 40
+    }
+   ]
+  },
+  {
+   "id": "lookout_hard_mark",
+   "name": "Hard mark",
+   "text": "Marked enemies take 25% more damage again.",
+   "class": "lookout",
+   "fork": 1,
+   "effects": [
+    {
+     "stat": "mark_bonus",
+     "add": 0.25
+    }
+   ]
+  },
+  {
+   "id": "lookout_long_sight",
+   "name": "Long sight",
+   "text": "+30% range.",
+   "class": "lookout",
+   "fork": 2,
+   "effects": [
+    {
+     "stat": "range",
+     "multiply": 1.3
+    }
+   ]
+  },
+  {
+   "id": "lookout_cold_snap",
+   "name": "Cold snap",
+   "text": "Slows enemies in the zone by 15% more.",
+   "class": "lookout",
+   "fork": 2,
+   "effects": [
+    {
+     "stat": "slow",
+     "add": 0.15
+    }
+   ]
+  },
+  {
+   "id": "lookout_steady_aim",
+   "name": "Steady aim",
+   "text": "+30% damage.",
+   "class": "lookout",
+   "fork": 3,
+   "effects": [
+    {
+     "stat": "damage",
+     "multiply": 1.3
+    }
+   ]
+  },
+  {
+   "id": "lookout_light_feet",
+   "name": "Light feet",
+   "text": "+30% speed and 40 more leash.",
+   "class": "lookout",
+   "fork": 3,
+   "effects": [
+    {
+     "stat": "move_speed",
+     "multiply": 1.3
+    },
+    {
+     "stat": "leash",
+     "add": 40
+    }
+   ]
+  },
+  {
+   "id": "alchemist_slow_field",
+   "name": "Slowing field",
+   "text": "The field slows enemies by 25%.",
+   "class": "alchemist",
+   "fork": 1,
+   "effects": [
+    {
+     "stat": "slow",
+     "add": 0.25
+    }
+   ]
+  },
+  {
+   "id": "alchemist_mending_field",
+   "name": "Mending field",
+   "text": "The field heals Recruits standing in it.",
+   "class": "alchemist",
+   "fork": 1,
+   "effects": [
+    {
+     "stat": "heal_per_second",
+     "add": 3
+    }
+   ]
+  },
+  {
+   "id": "alchemist_hotter_burn",
+   "name": "Hotter burn",
+   "text": "The field burns 60% harder.",
+   "class": "alchemist",
+   "fork": 2,
+   "effects": [
+    {
+     "stat": "field_dps",
+     "multiply": 1.6
+    }
+   ]
+  },
+  {
+   "id": "alchemist_wider_field",
+   "name": "Wider field",
+   "text": "The field reaches 40 further.",
+   "class": "alchemist",
+   "fork": 2,
+   "effects": [
+    {
+     "stat": "effect_radius",
+     "add": 40
+    }
+   ]
+  },
+  {
+   "id": "alchemist_long_throw",
+   "name": "Long throw",
+   "text": "+30% range.",
+   "class": "alchemist",
+   "fork": 3,
+   "effects": [
+    {
+     "stat": "range",
+     "multiply": 1.3
+    }
+   ]
+  },
+  {
+   "id": "alchemist_thick_apron",
+   "name": "Thick apron",
+   "text": "+30% health.",
+   "class": "alchemist",
+   "fork": 3,
+   "effects": [
+    {
+     "stat": "health",
+     "multiply": 1.3
+    }
+   ]
+  },
+  {
+   "id": "engineer_fast_repairs",
+   "name": "Fast repairs",
+   "text": "Mends towers twice as fast.",
+   "class": "engineer",
+   "fork": 1,
+   "effects": [
+    {
+     "stat": "repair_per_second",
+     "multiply": 2.0
+    }
+   ]
+  },
+  {
+   "id": "engineer_wide_reach",
+   "name": "Wide reach",
+   "text": "Mends towers 50 further away.",
+   "class": "engineer",
+   "fork": 1,
+   "effects": [
+    {
+     "stat": "effect_radius",
+     "add": 50
+    }
+   ]
+  },
+  {
+   "id": "engineer_spanner",
+   "name": "Spanner",
+   "text": "+50% damage.",
+   "class": "engineer",
+   "fork": 2,
+   "effects": [
+    {
+     "stat": "damage",
+     "multiply": 1.5
+    }
+   ]
+  },
+  {
+   "id": "engineer_bracing",
+   "name": "Bracing",
+   "text": "Takes 15% less damage.",
+   "class": "engineer",
+   "fork": 2,
+   "effects": [
+    {
+     "stat": "armour",
+     "add": 0.15
+    }
+   ]
+  },
+  {
+   "id": "engineer_brisk",
+   "name": "Brisk",
+   "text": "+30% speed and 40 more leash.",
+   "class": "engineer",
+   "fork": 3,
+   "effects": [
+    {
+     "stat": "move_speed",
+     "multiply": 1.3
+    },
+    {
+     "stat": "leash",
+     "add": 40
+    }
+   ]
+  },
+  {
+   "id": "engineer_tough",
+   "name": "Tough",
+   "text": "+30% health.",
+   "class": "engineer",
+   "fork": 3,
+   "effects": [
+    {
+     "stat": "health",
+     "multiply": 1.3
+    }
+   ]
+  }
+ ],
+ "recruit_names": [
+  {
+   "id": "pool",
+   "names": [
+    "Alder",
+    "Bram",
+    "Cora",
+    "Dunmore",
+    "Edda",
+    "Fenn",
+    "Garrick",
+    "Hesper",
+    "Isolde",
+    "Jory",
+    "Kestrel",
+    "Lysa",
+    "Marek",
+    "Nell",
+    "Osric",
+    "Petra",
+    "Quill",
+    "Rhosyn",
+    "Sorrel",
+    "Tamsin",
+    "Ulf",
+    "Verity",
+    "Wystan",
+    "Yara",
+    "Zeb",
+    "Ansel",
+    "Brea",
+    "Cael",
+    "Delwyn",
+    "Elowen",
+    "Faolan",
+    "Gwen",
+    "Hale",
+    "Imogen",
+    "Jago",
+    "Kerra",
+    "Lorcan",
+    "Morwen",
+    "Nye"
+   ]
+  }
+ ],
+ "recruit_rescues": [
+  {
+   "id": "bryn",
+   "level": "shingle_beach",
+   "name": "Bryn",
+   "class": "warden"
+  },
+  {
+   "id": "wren",
+   "level": "old_pier",
+   "name": "Wren",
+   "class": "lookout"
+  }
+ ],
+ "recruit_prices": [
+  {
+   "id": "board",
+   "costs": [
+    150,
+    300,
+    600,
+    1200
+   ]
+  }
+ ]
+}

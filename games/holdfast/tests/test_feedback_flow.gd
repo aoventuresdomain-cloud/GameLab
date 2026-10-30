@@ -239,38 +239,49 @@ func test_the_bots_wear_what_they_find_so_the_simulator_is_unchanged() -> void:
 	expect_eq(HoldfastMeta.wear_free_slots(content, profile), profile, "wearing twice changes nothing")
 
 
-# ------------------------------------------------------------------ 50: the parked Recruits and light posts
+# ------------------------------------------------------------------ 50: the squad and the light posts
 
-func _rules_for(level: String, parked: bool) -> HoldfastRules:
+func _rules_for(level: String, squad: Variant) -> HoldfastRules:
 	var rules := HoldfastRules.new()
-	rules.setup(HoldfastContent.run_config(level, [], _content(), "", null, {}, [], false, parked), SimRng.new(1))
+	rules.setup(HoldfastContent.run_config(level, [], _content(), "", null, {}, [], false, squad), SimRng.new(1))
 	return rules
 
 
-func test_a_parked_run_has_no_recruits_no_staff_and_no_light_posts_on_any_level() -> void:
+func test_a_run_with_an_empty_squad_has_no_recruits_no_staff_and_the_light_posts_on_any_level() -> void:
 	for id in _content()["levels"]:
-		var rules := _rules_for(id, true)
+		var rules := _rules_for(id, [])
 		expect_eq(rules.setup_error, "", "%s sets up" % id)
 		expect_eq(rules.recruits.size(), 0, "%s: no Recruits" % id)
 		expect_eq(rules.staff, null, "%s: no staff" % id)
-		expect_eq(rules.posts.size(), 0, "%s: no light posts" % id)
+		expect_true(rules.posts.size() > 0, "%s: the light posts stand" % id)
 
 
-func test_the_flag_is_off_by_default_and_turning_it_off_brings_them_back() -> void:
-	var rules := _rules_for("outpost", false)
-	expect_true(rules.recruits.size() > 0 or rules.staff != null, "Recruits stand when not parked")
+func test_a_config_with_no_squad_keeps_the_levels_own_pair_and_the_flag_is_gone() -> void:
+	var rules := _rules_for("outpost", null)
+	expect_true(rules.recruits.size() > 0 or rules.staff != null, "Recruits stand when no squad is named")
 	expect_true(rules.posts.size() > 0, "and so do the light posts")
-	expect_false("parked" in HoldfastContent.run_config("outpost"), "an ordinary config does not carry the flag")
+	expect_false("squad" in HoldfastContent.run_config("outpost"), "an ordinary config names no squad")
+	expect_false("parked" in HoldfastContent.run_config("outpost", [], {}, "", null, {}, [], false, []), "and nothing carries the old flag")
 
 
-func test_the_game_parks_them_in_every_run_it_starts() -> void:
+func test_the_game_starts_every_run_with_the_profiles_squad_and_the_light_posts() -> void:
 	var main := _main()
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	ThroughLevelZero.apply(main.get_node("Profile"))
 	main.get_node("Profile").select_level("outpost")
 	main.call("_start_run")
 	expect_true(source.is_running())
-	expect_eq(source.get_rules().recruits.size(), 0, "no Recruits in the game")
-	expect_eq(source.get_rules().posts.size(), 0, "no light posts in the game")
+	expect_eq(source.get_rules().recruits.size(), 0, "a new game has no squad yet")
+	source.step(1000.0)
+	for level in ["shingle_beach", "old_pier"]:
+		main.get_node("Profile").bank_run({"outcome": HoldfastRules.OUTCOME_WON, "level": level, "gold": 0})
+	main.get_node("Profile").select_level("outpost")
+	main.call("_start_run")
+	expect_eq(source.get_rules().recruits.map(func(unit: HoldfastRules.Attacker) -> String: return unit.id), ["bryn", "wren"], "the squad the profile holds")
+	expect_eq(source.get_rules().posts.size(), 2, "and the light posts")
+	source.step(1000.0)
+	main.get_node("Profile").select_level("first_watch")
+	main.call("_start_run")
+	expect_eq(source.get_rules().recruits.size(), 0, "the tutorial is the Hero's alone")
 	source.step(1000.0)
 	main.free()

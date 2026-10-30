@@ -296,6 +296,69 @@ func get_blessing_offer(level: String, rng: RandomNumberGenerator) -> Array:
 	return HoldfastMeta.blessing_offer(_content, data, level, rng)
 
 
+## The Recruits and the squad (see RecruitMeta). Only the run flow calls the ones that change them.
+func get_recruits() -> Array:
+	return data["recruits"]["roster"]
+
+
+func get_squad() -> Array:
+	return RecruitMeta.squad_for_run(_content, data)
+
+
+func get_squad_ids() -> Array:
+	return data["recruits"]["squad"]
+
+
+func get_squad_slots() -> int:
+	return RecruitMeta.slots(_content, data)
+
+
+func get_board() -> Array:
+	return RecruitMeta.board(_content, data)
+
+
+func get_pending_picks() -> Array:
+	return RecruitMeta.pending_picks(_content, data)
+
+
+func get_name_of(who: String) -> String:
+	return RecruitMeta.name_of(data, who)
+
+
+## What the player typed for "keep" or "hero" ("" for the default), so a name box can show it apart from the default.
+func get_given_name(who: String) -> String:
+	return str(data["names"].get(who, ""))
+
+
+## One Recruit from the roster, or {} when there is no such id.
+func get_recruit(id: String) -> Dictionary:
+	return RecruitMeta.recruit(data, id)
+
+
+func why_not_squad(id: String) -> String:
+	return RecruitMeta.why_not_squad(_content, data, id)
+
+
+func why_not_hire(index: int) -> String:
+	return RecruitMeta.why_not_hire(_content, data, index)
+
+
+func toggle_squad(id: String) -> void:
+	_apply(RecruitMeta.toggle_squad(_content, data, id))
+
+
+func hire(index: int) -> void:
+	_apply(RecruitMeta.hire(_content, data, index))
+
+
+func pick_skill(id: String, skill_id: String) -> void:
+	_apply(RecruitMeta.pick_skill(_content, data, id, skill_id))
+
+
+func rename(who: String, text: String) -> void:
+	_apply(RecruitMeta.rename(data, who, text))
+
+
 ## Owned gear item ids, in the order found.
 func get_gear_owned() -> Array:
 	return data["gear"]["owned"]

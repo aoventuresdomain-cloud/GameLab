@@ -28,15 +28,19 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Panel" type="PanelContainer" parent="Centre"]
+[node name="Row" type="HBoxContainer" parent="Centre"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Panel" type="PanelContainer" parent="Centre/Row"]
 custom_minimum_size = Vector2(680, 0)
 layout_mode = 2
 
-[node name="Column" type="VBoxContainer" parent="Centre/Panel"]
+[node name="Column" type="VBoxContainer" parent="Centre/Row/Panel"]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="Title" type="Label" parent="Centre/Panel/Column"]
+[node name="Title" type="Label" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ScreenTitle"
@@ -44,66 +48,66 @@ theme_override_font_sizes/font_size = 52
 text = "Holdfast holds!"
 horizontal_alignment = 1
 
-[node name="Stats" type="GridContainer" parent="Centre/Panel/Column"]
+[node name="Stats" type="GridContainer" parent="Centre/Row/Panel/Column"]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/h_separation = 48
 theme_override_constants/v_separation = 8
 columns = 2
 
-[node name="GoldCaption" type="Label" parent="Centre/Panel/Column/Stats"]
+[node name="GoldCaption" type="Label" parent="Centre/Row/Panel/Column/Stats"]
 layout_mode = 2
 text = "Gold earned"
 
-[node name="GoldValue" type="Label" parent="Centre/Panel/Column/Stats"]
+[node name="GoldValue" type="Label" parent="Centre/Row/Panel/Column/Stats"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudValue"
 text = "0"
 horizontal_alignment = 2
 
-[node name="WavesCaption" type="Label" parent="Centre/Panel/Column/Stats"]
+[node name="WavesCaption" type="Label" parent="Centre/Row/Panel/Column/Stats"]
 layout_mode = 2
 text = "Waves cleared"
 
-[node name="WavesValue" type="Label" parent="Centre/Panel/Column/Stats"]
+[node name="WavesValue" type="Label" parent="Centre/Row/Panel/Column/Stats"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudValue"
 text = "0 / 0"
 horizontal_alignment = 2
 
-[node name="StarsCaption" type="Label" parent="Centre/Panel/Column/Stats"]
+[node name="StarsCaption" type="Label" parent="Centre/Row/Panel/Column/Stats"]
 layout_mode = 2
 text = "Stars won"
 
-[node name="StarsValue" type="Label" parent="Centre/Panel/Column/Stats"]
+[node name="StarsValue" type="Label" parent="Centre/Row/Panel/Column/Stats"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudValue"
 text = "0"
 horizontal_alignment = 2
 
-[node name="Reward" type="Label" parent="Centre/Panel/Column"]
+[node name="Reward" type="Label" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 horizontal_alignment = 1
 
-[node name="StarsNote" type="Label" parent="Centre/Panel/Column"]
+[node name="StarsNote" type="Label" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 horizontal_alignment = 1
 
-[node name="GearFound" type="Label" parent="Centre/Panel/Column"]
+[node name="GearFound" type="Label" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="NextLevelButton" type="Button" parent="Centre/Panel/Column"]
+[node name="NextLevelButton" type="Button" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(280, 0)
@@ -111,23 +115,47 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "Next level"
 
-[node name="PlayAgainButton" type="Button" parent="Centre/Panel/Column"]
+[node name="PlayAgainButton" type="Button" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Play again"
 
-[node name="MapButton" type="Button" parent="Centre/Panel/Column"]
+[node name="MapButton" type="Button" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Journey map"
 
-[node name="TreeButton" type="Button" parent="Centre/Panel/Column"]
+[node name="TreeButton" type="Button" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Skill tree"
+
+[node name="CardPanel" type="PanelContainer" parent="Centre/Row"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(440, 0)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="CardColumn" type="VBoxContainer" parent="Centre/Row/CardPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Levelled" type="Label" parent="Centre/Row/CardPanel/CardColumn"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+autowrap_mode = 2
+
+[node name="PickCard" type="VBoxContainer" parent="Centre/Row/CardPanel/CardColumn"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
