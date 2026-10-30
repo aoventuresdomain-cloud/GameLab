@@ -257,8 +257,7 @@
   - [ ] Deploy slots start at 2, with the 3rd and 4th bought in the tree. The player picks the squad before each run from a roster that can be larger.
   - [ ] Recruits earn XP from tokens mid-run, level up and can gain a trait. Each class has a small skill tree of three forks of two choices (24 nodes across the 4 classes, from packs), offered as a pick-1-of-2 on the level-up card with no new screen. Each choice changes behaviour (Warden: taunt or bulwark) and has a rules test. Recruits have no gear.
   - [ ] Recruits are drawn as distinct shapes in class colours, bigger than enemies and smaller than the Hero. Each shows a name tag, a level-up flash, short barks ("Hold the gate!") and a visible knock-out. They stand at the keep between waves.
-  - [ ] The keep, the Hero and every Recruit can be renamed, and names persist. Every Hero path, with a squad the bot picks, can clear the slice in the simulator (bot report per path).
-  - [ ] The `parked` run flag is dropped: Bryn, Wren and the light posts return as Recruits and lights under the new rules, and the simulator and the bands gate play with a squad (the Levels 1 to 5 interim retune, F-116, is reviewed in M2b, Build 12).
+  - [ ] The keep, the Hero and every Recruit can be renamed, and names persist. The `parked` run flag is dropped: Bryn, Wren and the light posts return as Recruits and lights under the new rules. Every Hero path, with a squad the bot picks, can clear the slice in the simulator and the bands gate plays with a squad (the F-116 retune is reviewed in M2b, Build 12).
 
 ### HF-M2-04 Blessings
 - **Owner:** Gameplay Engineer
