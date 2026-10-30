@@ -8,6 +8,15 @@
     "one_post": 12
   },
   "first_time_floor": 0.3,
+  "pillar_levels": {
+    "dusk_mage": [
+      "gull_rock"
+    ],
+    "tideblade": [
+      "gull_rock"
+    ]
+  },
+  "pillar_levels_note": "Which levels each pillar is judged on (a pillar not named is judged on all five). The Dusk Mage unlocks at the level 5 boss and the Tideblade at the next biome boss, so both are tuned to the biomes they unlock into (Advisor view 2026-10-30, Head of Engineering decision). Gull Rock, the hardest level that exists, stands in for them. WIDEN THE SCOPE when a later biome exists. The gate fails if a pillar's scope is empty. Levels outside a scope are reported as not played by that pillar yet.",
   "bands": {
     "outpost": {
       "average": [
@@ -51,10 +60,11 @@
   },
   "special_gap": {
     "mean_min": 0.05,
-    "mean_max": 0.7,
+    "mean_max": 0.4,
     "level_min": -0.2,
     "level_max": 0.9,
-    "how": "per pillar, the first-time win rate of the average bot with its special less the same players with it never pressed"
+    "how": "per pillar, the first-time win rate of the average bot with its special less the same players with it never pressed; the mean over the levels judged is at most 40 points (the special is worth pressing, not required), and the first level is winnable without it",
+    "first_level_off_min": 0.3
   },
   "one_post": {
     "pillar": "dusk_mage",
@@ -83,5 +93,9 @@
     "tideblade/special_gap/tidewrack_cove": -0.4722,
     "tideblade/special_gap/old_pier": -0.2222
   },
-  "known_misses_note": "Dusk Mage and Tideblade are not retuned in this run (HF-M2-28, M2b): their misses are pinned at the measured figure. Delete a pin and the figure must meet its band. Re-pinned in Build 11 (Head of Engineering approved, F-124): the shared Levels 1 to 5 enemy data was retuned for the Flare Archer with Recruits and lights back, which moved these two pillars. Build 12 (HF-M2-28) tunes both and empties this list."
+  "known_misses_note": "Dusk Mage and Tideblade are not retuned in this run (HF-M2-28, M2b): their misses are pinned at the measured figure. Delete a pin and the figure must meet its band. Re-pinned in Build 11 (Head of Engineering approved, F-124): the shared Levels 1 to 5 enemy data was retuned for the Flare Archer with Recruits and lights back, which moved these two pillars. Build 12 (HF-M2-28) tunes both and empties this list.",
+  "fork_feel": {
+    "min": 0.05,
+    "how": "per level and pillar, the larger of the gap in Keep health left (a share of full health) and in clear time (a share of the longer one) between the Volley side and the Sniper side, first attempts of the average bot: the two sides must feel different even where they win as often"
+  }
 }

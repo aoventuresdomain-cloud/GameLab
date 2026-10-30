@@ -13,13 +13,14 @@ const MAX_TICKS := 200000
 
 ## Plays levels 1 to `level_count` once each (replaying until won) with `model`
 ## (HoldfastSkilledBot.AVERAGE or POOR) and returns
-## {levels: {id: {"first": won the first attempt, "attempts": int, "cleared": won within
-## MAX_ATTEMPTS}}, "dry_runs": most runs in a row with nothing new to buy, "gaps": every return
+## {levels: {id: {"first": won the first attempt, "keep": the Keep's health left after it (0 to 1),
+## "seconds": how long it ran, "attempts": int, "cleared": won within MAX_ATTEMPTS}}, "dry_runs": most runs in a row with nothing new to buy, "gaps": every return
 ## to the tree with nothing the player could afford ("level" and "attempt", one entry each; a gap
 ## is a finding), "runs": runs played}.
 ## A level the player never wins ends the climb. `skip` lists nodes the player never buys (one
-## side of a fork).
-static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", level_count := 5, skip: Array = []) -> Dictionary:
+## side of a fork). `first_only` is for a caller that reads only the first attempts: the last level is
+## played once, as nothing comes after it.
+static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", level_count := 5, skip: Array = [], first_only := false) -> Dictionary:
 	var content := HoldfastContent.base()
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	var avoid := HoldfastProgression.other_hero_nodes(nodes, pillar) + skip
@@ -34,7 +35,8 @@ static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", leve
 	for level in _levels(content).slice(0, level_count):
 		var attempts := 0
 		var won := false
-		while not won and attempts < MAX_ATTEMPTS:
+		var last_level: bool = first_only and level == _levels(content).slice(0, level_count)[-1]
+		while not won and attempts < MAX_ATTEMPTS and not (last_level and attempts > 0):
 			var bought := HoldfastProgression.buy_for_profile(content, profile, avoid)
 			if bought.is_empty():
 				dry += 1
@@ -49,7 +51,7 @@ static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", leve
 			profile = HoldfastMeta.wear_free_slots(content, profile)
 			won = result["outcome"] == HoldfastRules.OUTCOME_WON
 			if attempts == 0:
-				levels[level] = {"first": won}
+				levels[level] = {"first": won, "keep": float(result.get("keep_health", 0.0)) / maxf(float(result.get("keep_health_max", 1.0)), 1.0), "seconds": float(result.get("seconds", 0.0))}
 			attempts += 1
 			runs += 1
 		levels[level]["attempts"] = attempts

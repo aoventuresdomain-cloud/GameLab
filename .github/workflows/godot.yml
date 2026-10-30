@@ -89,8 +89,8 @@ jobs:
       # games/holdfast/content/pacing-bands.json. A missed band (or a pinned miss that gets worse) fails the job.
       - name: Pacing bands (levels 1 to 5, every pillar, both bots)
         env:
-          GODOT_TIMEOUT: "900"
-        run: tools/ci/godot.sh --headless --path games/holdfast -s res://tools/bands.gd -- --budget=600 --out=../../reports
+          GODOT_TIMEOUT: "1100"
+        run: tools/ci/godot.sh --headless --path games/holdfast -s res://tools/bands.gd -- --budget=900 --out=../../reports
       - uses: actions/upload-artifact@v4
         if: always()
         with:

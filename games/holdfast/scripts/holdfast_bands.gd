@@ -19,6 +19,8 @@ const FORK_SKIPS := {
 const ONE_POST_SKIP := ["castle_slot_2"]
 ## Pins are written to four places; a rate is a whole number of players, so a real change is far bigger.
 const PIN_TOLERANCE := 0.0001
+## The key in a climb's row that holds how each level's first attempt went (Keep health left, seconds).
+const FEEL := "_feel"
 
 
 static func load_bands() -> Dictionary:
@@ -32,13 +34,43 @@ static func levels() -> Array:
 	return HoldfastCurve._levels(HoldfastContent.base())
 
 
+## The levels a pillar is judged on: the pack's `pillar_levels` entry, or every level. A pillar is
+## tuned to the biomes it unlocks into, so it is judged only there. Widen the scope when a later biome
+## exists; the gate fails if a pillar's scope is empty or names a level that does not exist.
+static func scope(bands: Dictionary, pillar: String) -> Array:
+	var named: Variant = bands.get("pillar_levels", {}).get(pillar)
+	if named is Array:
+		return named.filter(func(level: Variant) -> bool: return level in levels())
+	return levels()
+
+
+## The levels a pillar is not judged on (shown in the report as not played by it yet).
+static func out_of_scope(bands: Dictionary, pillar: String) -> Array:
+	var inside := scope(bands, pillar)
+	return levels().filter(func(level: String) -> bool: return not inside.has(level))
+
+
+## Problems with the bands file itself: a pillar judged on nothing, or on a level that is not there.
+static func scope_problems(bands: Dictionary) -> PackedStringArray:
+	var out: PackedStringArray = []
+	for pillar in PILLARS:
+		var named: Variant = bands.get("pillar_levels", {}).get(pillar)
+		if named is Array:
+			for level in named:
+				if not levels().has(level):
+					out.append("%s is judged on %s, which is not a level" % [pillar, level])
+		if scope(bands, pillar).is_empty():
+			out.append("%s is judged on no level at all" % pillar)
+	return out
+
+
 ## One cell of the sweep: the climbs of seeds 1..`seeds`, as one {level: won first time} per seed
 ## (a level the climb never reached is left out).
 static func cell(model: Dictionary, pillar: String, seeds: int, skip: Array = []) -> Array:
 	var out := []
 	for run_seed in range(1, seeds + 1):
 		var row := {}
-		var climb := HoldfastCurve.climb(run_seed, model, pillar, 5, skip)
+		var climb := HoldfastCurve.climb(run_seed, model, pillar, 5, skip, true)
 		for id in climb["levels"]:
 			row[id] = climb["levels"][id]["first"]
 		out.append(row)
@@ -56,7 +88,8 @@ static func measure(bands: Dictionary) -> Dictionary:
 			out["%s/%s" % [pillar, side]] = cell(HoldfastSkilledBot.AVERAGE, pillar, int(seeds["fork"]), FORK_SKIPS[side])
 		out["%s/no_special" % pillar] = cell(HoldfastSkilledBot.AVERAGE_NO_SPECIAL, pillar, int(seeds["special"]))
 	var one_post: Dictionary = bands["one_post"]
-	out["%s/one_post" % one_post["pillar"]] = cell(HoldfastSkilledBot.AVERAGE, str(one_post["pillar"]), int(seeds["one_post"]), ONE_POST_SKIP)
+	if str(one_post["level"]) in scope(bands, str(one_post["pillar"])):
+		out["%s/one_post" % one_post["pillar"]] = cell(HoldfastSkilledBot.AVERAGE, str(one_post["pillar"]), int(seeds["one_post"]), ONE_POST_SKIP)
 	return out
 
 
@@ -72,16 +105,41 @@ static func rate(climbs: Array, level: String, seeds := 0) -> float:
 	return float(won) / float(reached) if reached > 0 else 0.0
 
 
-## Every figure the bands judge, as {key: {"value", "lo", "hi", "how"}}.
+## The mean of `field` ("keep" or "seconds") over the first attempts at `level` in `climbs`, or -1 when nobody reached it.
+static func feel(climbs: Array, level: String, field: String) -> float:
+	var total := 0.0
+	var count := 0
+	for row in climbs:
+		if row.get(FEEL, {}).has(level):
+			total += float(row[FEEL][level][field])
+			count += 1
+	return total / float(count) if count > 0 else -1.0
+
+
+## How differently two sets of climbs felt at `level`: the larger of the gap in the Keep's health left
+## (a share of its full health) and the gap in clear time (a share of the longer one). 0 when either side never reached it.
+static func feel_gap(a: Array, b: Array, level: String) -> float:
+	var keep_a := feel(a, level, "keep")
+	var keep_b := feel(b, level, "keep")
+	if keep_a < 0.0 or keep_b < 0.0:
+		return 0.0
+	var time_a := feel(a, level, "seconds")
+	var time_b := feel(b, level, "seconds")
+	return maxf(absf(keep_a - keep_b), absf(time_a - time_b) / maxf(maxf(time_a, time_b), 1.0))
+
+
+## Every figure the bands judge, as {key: {"value", "lo", "hi", "how"}}. A pillar is judged on its scope.
 static func figures(bands: Dictionary, cells: Dictionary) -> Dictionary:
 	var out := {}
 	var seeds: Dictionary = bands["seeds"]
 	var fork_max := float(bands["fork_gap"]["max"])
+	var feel_min := float(bands["fork_feel"]["min"])
 	var special: Dictionary = bands["special_gap"]
 	for pillar in PILLARS:
+		var inside := scope(bands, pillar)
 		var low := 1.0
 		var gaps := []
-		for level in levels():
+		for level in inside:
 			var avg: Array = bands["bands"][level]["average"]
 			var poor_min := float(bands["bands"][level]["poor_min"])
 			var on := rate(cells["%s/average" % pillar], level)
@@ -90,16 +148,21 @@ static func figures(bands: Dictionary, cells: Dictionary) -> Dictionary:
 			out["%s/poor/%s" % [pillar, level]] = {"value": rate(cells["%s/poor" % pillar], level), "lo": poor_min, "hi": 1.0, "how": "first-time win rate of the poor bot, %d players" % seeds["band"]}
 			var gap := absf(rate(cells["%s/volley" % pillar], level) - rate(cells["%s/sniper" % pillar], level))
 			out["%s/fork_gap/%s" % [pillar, level]] = {"value": gap, "lo": 0.0, "hi": fork_max, "how": "Volley against Sniper, average bot, %d players each" % seeds["fork"]}
+			out["%s/fork_feel/%s" % [pillar, level]] = {"value": feel_gap(cells["%s/volley" % pillar], cells["%s/sniper" % pillar], level), "lo": feel_min, "hi": 1.0, "how": "Volley against Sniper: the larger of the gap in Keep health left and in clear time, first attempts"}
 			var diff := rate(cells["%s/average" % pillar], level, int(seeds["special"])) - rate(cells["%s/no_special" % pillar], level)
 			gaps.append(diff)
 			out["%s/special_gap/%s" % [pillar, level]] = {"value": diff, "lo": float(special["level_min"]), "hi": float(special["level_max"]), "how": "special on less special off, average bot, the same %d players" % seeds["special"]}
-		out["%s/floor" % pillar] = {"value": low, "lo": float(bands["first_time_floor"]), "hi": 1.0, "how": "the lowest average-bot first-time win rate over levels 1 to 5"}
+		out["%s/floor" % pillar] = {"value": low, "lo": float(bands["first_time_floor"]), "hi": 1.0, "how": "the lowest average-bot first-time win rate over the levels judged"}
 		var mean := 0.0
 		for g in gaps:
 			mean += g
-		out["%s/special_gap/mean" % pillar] = {"value": mean / gaps.size(), "lo": float(special["mean_min"]), "hi": float(special["mean_max"]), "how": "special on less special off, averaged over levels 1 to 5"}
+		out["%s/special_gap/mean" % pillar] = {"value": mean / maxi(gaps.size(), 1), "lo": float(special["mean_min"]), "hi": float(special["mean_max"]), "how": "special on less special off, averaged over the levels judged"}
+		var first: String = levels()[0]
+		if first in inside:
+			out["%s/no_special/%s" % [pillar, first]] = {"value": rate(cells["%s/no_special" % pillar], first), "lo": float(special["first_level_off_min"]), "hi": 1.0, "how": "first-time win rate of the average bot that never presses the special, %d players" % seeds["special"]}
 	var post: Dictionary = bands["one_post"]
-	out["%s/one_post/%s" % [post["pillar"], post["level"]]] = {"value": rate(cells["%s/one_post" % post["pillar"]], str(post["level"])), "lo": float(post["min"]), "hi": 1.0, "how": "first-time win rate of the average bot with one post, %d players" % seeds["one_post"]}
+	if str(post["level"]) in scope(bands, str(post["pillar"])):
+		out["%s/one_post/%s" % [post["pillar"], post["level"]]] = {"value": rate(cells["%s/one_post" % post["pillar"]], str(post["level"])), "lo": float(post["min"]), "hi": 1.0, "how": "first-time win rate of the average bot with one post, %d players" % seeds["one_post"]}
 	return out
 
 
@@ -140,7 +203,7 @@ static func report(bands: Dictionary, judged: Dictionary) -> String:
 	var lines: PackedStringArray = []
 	lines.append("# Holdfast pacing bands")
 	lines.append("")
-	lines.append("First-time win rates over levels 1 to 5 (`content/pacing-bands.json`). A figure marked known miss is pinned: it may not get worse, and CI fails if it comes back inside its band.")
+	lines.append("First-time win rates over levels 1 to 5 (`content/pacing-bands.json`). A pillar is judged on the levels of its scope (`pillar_levels`); the others read \"not played by this pillar yet\" and widen when a later biome exists. A figure marked known miss is pinned: it may not get worse, and CI fails if it comes back inside its band.")
 	lines.append("")
 	for bot in BOTS:
 		lines.append("## %s bot, first-time win rate per level" % bot.capitalize())
@@ -150,6 +213,9 @@ static func report(bands: Dictionary, judged: Dictionary) -> String:
 		for pillar in PILLARS:
 			var cols: PackedStringArray = []
 			for level in levels():
+				if not judged.has("%s/%s/%s" % [pillar, bot, level]):
+					cols.append("not played by this pillar yet")
+					continue
 				var fig: Dictionary = judged["%s/%s/%s" % [pillar, bot, level]]
 				cols.append("%.0f%% (%.0f to %.0f)%s" % [float(fig["value"]) * 100.0, float(fig["lo"]) * 100.0, float(fig["hi"]) * 100.0, "" if fig["state"] == "met" else " " + str(fig["state"])])
 			lines.append("| %s | %s |" % [pillar, " | ".join(cols)])
