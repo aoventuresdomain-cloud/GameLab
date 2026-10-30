@@ -97,6 +97,7 @@ var _recruits_from := Screen.MAP
 
 func _open_recruits(from: Screen) -> void:
 	_recruits_from = from
+	profile.clear_welcome()
 	_show(Screen.RECRUITS)
 
 

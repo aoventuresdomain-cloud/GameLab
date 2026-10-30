@@ -46,19 +46,77 @@ static func from_save(content: Dictionary, profile: Dictionary, data: Dictionary
 				state["hired"].append(int(index))
 		state["next"] = maxi(int(saved["next"]), 1) if saved.get("next") is int or saved.get("next") is float else 1
 		state["bought"] = maxi(int(saved["bought"]), 0) if saved.get("bought") is int or saved.get("bought") is float else 0
+	var welcome: Variant = saved.get("welcome") if saved is Dictionary else null
+	if welcome is Array:
+		var seen_names := []
+		for name in welcome:
+			var clean_name := RecruitRoster.clean_name(str(name))
+			if clean_name != "" and seen_names.size() < RecruitRoster.ROSTER_MAX:
+				seen_names.append(clean_name)
+		if not seen_names.is_empty():
+			state["welcome"] = seen_names
 	profile["recruits"] = state
 	profile["recruits"]["squad"] = profile["recruits"]["squad"].slice(0, slots(content, profile))
-	# A save from before Recruits existed has no Recruit state: the levels it already won pay their
-	# rescues now, once (the next save carries the state, so this does not run again).
-	if not data.has("recruits"):
+	# A save from before Recruits existed has no Recruit state, and one an older build saved again has the
+	# new-profile state untouched: the levels it already won pay their rescues now, once (the next save
+	# carries the Recruits, so this does not run again). A state with any change in it is left alone.
+	if not data.has("recruits") or _untouched(content, data):
 		for level in profile.get("levels_won", []):
 			_rescue(content, profile, str(level))
+		var joined := []
+		for entry in profile["recruits"]["roster"]:
+			joined.append(entry["name"])
+		if not joined.is_empty():
+			profile["recruits"]["welcome"] = joined
 	var names := {"keep": "", "hero": ""}
 	var saved_names: Variant = data.get("names")
 	if saved_names is Dictionary:
 		for key in names:
 			names[key] = RecruitRoster.clean_name(str(saved_names.get(key, "")))
 	profile["names"] = names
+
+
+## True when the saved Recruit state is a new profile's apart from the round count: nobody, nothing
+## hired or bought, and nothing renamed. Every banked run turns the round over (a win or a loss, with
+## or without Recruits), so a player who has only played still counts as untouched.
+static func _untouched(content: Dictionary, data: Dictionary) -> bool:
+	var saved: Variant = data.get("recruits")
+	if not saved is Dictionary:
+		return false
+	# A welcome is only ever written by a grant, so a state that carries one has had its turn.
+	if saved.has("welcome"):
+		return false
+	# Field by field: a save read back from JSON holds its numbers as floats, which a whole-state compare
+	# would take for a change.
+	for key in ["roster", "squad", "hired"]:
+		if not saved.get(key) is Array or not saved[key].is_empty():
+			return false
+	for key in ["bought", "next"]:
+		var value: Variant = saved.get(key)
+		if not (value is int or value is float) or int(value) != int(new_state(content)[key]):
+			return false
+	var names: Variant = data.get("names")
+	if names is Dictionary:
+		for key in names:
+			if RecruitRoster.clean_name(str(names[key])) != "":
+				return false
+	return true
+
+
+## "Bryn and Wren have joined you" for the Recruits who came with the load of an old save, or "" when
+## nobody is waiting to be welcomed. It stands on the Recruits button until the page is opened.
+static func welcome_text(profile: Dictionary) -> String:
+	var names: Array = profile["recruits"].get("welcome", [])
+	if names.is_empty():
+		return ""
+	return "%s %s joined you" % [" and ".join(names) if names.size() < 3 else ", ".join(names.slice(0, names.size() - 1)) + " and " + str(names[-1]), "has" if names.size() == 1 else "have"]
+
+
+## The welcome has been seen.
+static func clear_welcome(profile: Dictionary) -> Dictionary:
+	var out := profile.duplicate(true)
+	out["recruits"].erase("welcome")
+	return out
 
 
 ## How many Recruits the player may take on a run.
