@@ -621,17 +621,17 @@
   - [ ] Settings screen replaces the "arrives later" notice: volume, screen shake, flashes and text size, saved through KIT-07, each with a test; the Advisor says which of text size and game speed stay.
   - [ ] An audio system plays CC0 sound effects for hits, gold, level-ups and the boss, obeys the volume setting, and lists sources in `CREDITS.md`.
   - [ ] Numbers use short formats (1.2K, 3.4M) everywhere, with a test for the boundaries.
-  - [ ] A pause control and "back to map" work mid-run without losing or duplicating rewards; the Advisor decides whether a game-speed control is in, and if so it ships with a test.
+  - [ ] A game-speed control is in only if the Advisor decides so, and then ships with a test; the pause and leave-run controls belong to HF-M2-64 (one owner per item).
 
 ### HF-M2-61 Guidance and end of content (from the full play-through)
 - **Owner:** UI Engineer
 - **Status:** Planned, Build 13 of 13; standing CEO go (2026-10-30 "once you get it fix the gaps")
 - **QA:** screens (full if the save format changes)
-- **Depends on:** HF-M2-03, HF-M2-04
+- **Depends on:** HF-M2-03, HF-M2-04, HF-M2-64 (the end-of-content state)
 - **Done when:**
   - [ ] Winning the last level of a biome (Gull Rock today) shows its own end-of-content moment: a boss-defeated line, what it unlocked (for example the Dusk Mage tab), and a "more is coming" note when no further level exists; the journey map shows the next goal (next unlock or boss) at a glance. Each case has a test. The banner art is left to the art step (F-128).
   - [ ] The loss panel says what happened and what to try: the wave reached and one tip chosen by state (unspent stars, unspent gold, unworn gear, or none), each with a test (F-129).
-  - [ ] The Hero page says how to wear a piece of gear (hint or tap to wear), shown only until the first piece is worn; pillar tabs that are not unlocked look locked and say what opens them, and tapping one does nothing harmful (F-130, F-131).
+  - [ ] The Hero page says how to wear a piece of gear (hint or tap to wear), shown only until the first piece is worn; pillar tabs that are not unlocked look locked and say what opens them, and tapping one does nothing harmful (F-130, F-131). First-time hints cover blessings and the Mage gate (F-145).
   - [ ] The guide follows the player to either route to the tree, and "Next level" behaves the same before and after the guided buys on both routes (F-126); "Quick start" says why it is greyed (F-132).
   - [ ] "Refund all" asks for confirmation and keeps the tutorial buys (F-102); the tree shows each node's effect on its card in comparable numbers (F-132).
 
@@ -654,6 +654,17 @@
   - [ ] The first level that needs the special is preceded by a short guided press (a prompt that waits for the press and teaches the button), skippable after the first time, with a test that the guide fires once and never on Level 0.
   - [ ] The simulator report shows the special's worth with and without the node, so the bands gate can use the auto-cast player as a third bot.
 
+
+### HF-M2-64 Run flow: pause and leave, pillar gating, end of content and next goal
+- **Owner:** Gameplay Engineer
+- **Status:** Planned, Build 13 of 13 (from QA's review round on db39607, F-142 to F-146); standing CEO go (2026-10-30 "once you get it fix the gaps"), no further check
+- **QA:** full (run flow and save data)
+- **Depends on:** HF-M2-03
+- **Done when:**
+  - [ ] A run can be paused (key and button) and left from the pause screen after a confirmation; leaving banks nothing and loses or duplicates no rewards; each path has a test, and a reload mid-run says plainly that the run is gone (F-142).
+  - [ ] The Dusk Mage and Tideblade tabs stay locked until their boss is won (Dusk Mage at the end of Gull Rock, Tideblade at the next biome's boss, which stays locked and says so until it exists); a save that already uses one keeps it; each case has a test through a real JSON save (F-143).
+  - [ ] After the last existing level is won there is a defined end-of-content state: no "Next level" dead end, a "more levels coming" line and a next goal; tested with an all-won save (F-146; the panel itself is HF-M2-61).
+  - [ ] The journey map shows one next-goal line chosen from state (next level, the guided buy, the next boss, or spending stars and gold), with a test per branch (F-144).
 ### HF-M2-08 Style guide locked
 - **Owner:** Product Designer
 - **Status:** Ready
@@ -835,7 +846,7 @@
 
 ### HF-M2-59 Play the whole game and compare it with Incrempire (review round)
 - **Owner:** Head of QA and Validation (plays); Game Design Advisor (comparison and gap list)
-- **Status:** Ready, starts the moment Build 12 is merged (it runs while the CEO tests; CEO 2026-10-30)
+- **Status:** In progress. QA half done on db39607 (`studio/qa/round-hf-m2-59-db39607.md`: 3 MUST FIX, 7 FOLLOW-UP, boarded as F-142 to F-146 and HF-M2-64); the Advisor's Incrempire comparison is pending (CEO 2026-10-30)
 - **QA:** none (review; findings feed Build 13)
 - **Depends on:** HF-M2-03, HF-M2-28, HF-M2-58
 - **Done when:**
@@ -993,6 +1004,11 @@
 | F-139 | HF-M2-58 | FOLLOW-UP from QA (#147): Archer and Squad drills both labelled Drills; the free Squad root cost the minimum refund fee; Barracks and Drills cards read as stats; Squad card started lowercase | Minor | Gameplay Engineer | Closed in 12b (#148, QA clear 16ebc6d) |
 | F-140 | HF-M2-58 | FOLLOW-UP from QA (#148): the Recruit picker under a placed post looks like plain text and shows even when Posted Hand is not owned, with no hint what it does | Minor | UI Engineer | Open, Build 13 |
 | F-141 | HF-M2-58 | FOLLOW-UP from QA (#148): the Posted Hand card reads Hero near 0 to 0.1 and says the effect twice. Also, the pick is tied to the spot, so moving the tower leaves the Recruit on a light post and the new spot reads Nobody | Minor | UI Engineer | Open, Build 13 |
+| F-142 | HF-M2-64 | MUST FIX from QA's review round (db39607, R1): no pause and no way to leave a run; a reload loses the run silently | Major | Gameplay Engineer | Open, Build 13 |
+| F-143 | HF-M2-64 | MUST FIX from QA (R2): the Dusk Mage and Tideblade tabs switch the Hero right after Level 0, though the design opens them at bosses, and the bands say they lose The Outpost every time | Major | Gameplay Engineer | Open, Build 13 |
+| F-144 | HF-M2-64 | FOLLOW-UP from QA (R8): no next-goal line on the journey map beyond the boss tag | Minor | Gameplay Engineer | Open, Build 13 |
+| F-145 | HF-M2-61 | FOLLOW-UP from QA (R10): no first-time hint for blessings or the Mage gate | Minor | UI Engineer | Open, Build 13 |
+| F-146 | HF-M2-64 | MUST FIX from QA (R3): end of content is a dead end: no Next level, no 'more coming', no next goal after Gull Rock (read from code and an all-won map; not played). The panel is F-128 | Major | Gameplay Engineer | Open, Build 13 |
 
 ## Test changes
 
@@ -1092,6 +1108,7 @@
 - 2026-10-30 16:25: Full play-through findings (bot, Levels 0 to 5, Archer only; no Mage Post or blessings tested) taken in under the standing go: logic items boarded as HF-M2-61 (guidance and end of content, UI Engineer) and HF-M2-62 (save integrity, Gameplay Engineer), findings F-128 to F-132; HF-M2-59 must still cover the Mage Post, blessings, Recruits and the unlock taps. Build 13 gets the HF-M2-59 list on top of HF-M2-60, 61 and 62.
 - 2026-10-30 16:12: CEO: "once you get it fix the gaps" (after the full play-through): standing go for Build 13. When the Researcher's updated gap review and HF-M2-59 land, every logic gap is boarded and built with no extra CEO check; visual polish waits for the art step.
 - 2026-10-30: Player Researcher's gap review (`studio/research/holdfast-gap-review.md`, project files) taken in: HF-M2-07 split into the look half (stays last) and HF-M2-60, the logic half (settings, sound, number formats, pause and speed, Build 13) so that only visual polish is left at the end; F-126 (guide route) and F-127 (ten-hour report) logged; unchecked rows folded into HF-M2-59. Decided by HoE; game-speed and text-size scope left to the Advisor.
+- 2026-10-30 23:15: QA's review round on db39607 returned 3 MUST FIX and 7 FOLLOW-UP; all boarded for Build 13 (HF-M2-64 new, Gameplay Engineer; the others are F-126 to F-132 duplicates or F-140, F-141 and F-145). The pause line moved from HF-M2-60 to HF-M2-64 so each item has one owner. QA did not cover other pillars in play, audio or human feel.
 - 2026-10-30 23:03: Build 12 (stat model, Squad arm, Levels 1 to 5 retune, Posted Hand) merged: 12a #147 at 19897eb and 12b #148 at db39607, both QA clear. Six pins stand as known misses (F-138) with named closing items. Review round HF-M2-59 and Build 13 (HF-M2-62, 63 first) started under the standing go.
 - 2026-10-30: Build 12a decision (HoE): Flare levels 1 to 5 stay in band; the special-gap mean (45 against a 40 limit) is pinned as a known miss with its reason, to be fixed by the arrow and special rebalance and HF-M2-63. Limit not changed, no test edited.
 - 2026-10-30: CEO decision: Recruits come off hold and are built after Builds 9 and 10; all of M2b is built too; then the game is played and compared with Incrempire to find what is missing; the goal is a game that is almost ready, with every section and the logic testing done and only visual polish left. Defaults picked by HoE: the plan is now 13 builds. Build 11 = Recruits (HF-M2-03, after the Advisor's updated plan HF-M2-57); Build 12 = M2b: balance of every pillar and stat tidy-up (HF-M2-28, HF-M2-58, closing HF-M2-01's last line and F-123 to F-125); then the review round (HF-M2-59, Head of QA plays, Advisor compares), which runs while the CEO tests Builds 11 and 12; Build 13 = fixes and gaps from that list, itemised and estimated first. The style guide (HF-M2-08, art) waits until after the review round, as final art is the last step (CEO 2026-10-23); the name check (HF-M2-11) can run in parallel on a Researcher thread from the Chief of Staff. Team stops for the CEO's test after Build 11 and Build 12 (ITERATE+STOP) unless the CEO says to run through; Gate 2 (HF-M2-12, HF-M2-13) follows Build 13.
