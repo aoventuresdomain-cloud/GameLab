@@ -104,6 +104,7 @@ const STAT_TEXT := {
 	"getup_time": "time to get up",
 	"pickup_radius": "XP pickup reach",
 	"hero_haste": "faster shots with the Hero near",
+	"posted_haste": "faster again with a Recruit on the post and the Hero near",
 	"hero_radius": "how near the Hero must be",
 	"crossfire": "damage when another post hit the same enemy",
 	"burn_dps": "burn damage a second",
@@ -909,11 +910,14 @@ func _fill_card() -> void:
 	var lines: Array = _profile.get_effect_lines(id)
 	for line in lines:
 		var change := _num(float(line["after"])) if owned else "%s -> %s" % [_num(float(line["before"])), _num(float(line["after"]))]
+		# A Recruit's stat has no one number to start from (each class has its own), so a card says how much it multiplies.
+		if str(line["stat"]).begins_with("recruit.") and float(line["before"]) > 0.0:
+			change = "x%s" % _num(float(line["after"]) / float(line["before"]))
 		_card_lines.add_child(_card_label("%s %s" % [_capital(_stat_text(str(line["stat"]))), change]))
 	if lines.is_empty() or node.has("text"):
 		var text := _effect_text(id)
 		if text != "":
-			_card_lines.add_child(_card_label(text))
+			_card_lines.add_child(_card_label(_capital(text)))
 	if node.has("excludes"):
 		var names: PackedStringArray = []
 		for other in node["excludes"]:

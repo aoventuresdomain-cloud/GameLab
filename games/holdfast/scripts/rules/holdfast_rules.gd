@@ -232,8 +232,12 @@ class Attacker:
 	## within `rally_radius` repairs it and shields it (damage cut by `rally_shield`, kept for
 	## `rally_seconds`). Last Light: once in danger with the Hero within `last_light_radius`, a
 	## volley of `last_light` times its damage on everything in range. Watchtower: the Hero
-	## within `watch_radius` shoots `watch_range` further.
+	## within `watch_radius` shoots `watch_range` further. Posted Hand: shoots `posted_haste`
+	## faster again while its `staffer` (a Recruit set on it from the Plan page) is up and the
+	## Hero is within `hero_radius`.
 	var hero_haste := 0.0
+	var posted_haste := 0.0
+	var staffer: Attacker = null
 	var hero_radius := 0.0
 	var crossfire := 0.0
 	var burn_dps := 0.0
@@ -569,8 +573,21 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	if _uses_layout(level, layout_spots(config.get("layout", null))):
 		for at in chosen:
 			layout_ids.append(str(at["id"]))
+	# Posted Recruits stand at the tower they were set on, if this run built one there.
+	var tower_at := {}
+	for i in chosen.size():
+		tower_at[str(chosen[i]["id"])] = towers[i]
 	for at in placements:
 		var data: Dictionary = at["data"] if at.has("data") else content["staff"][at["id"]]
+		var site: Variant = at.get("site", "")
+		var host: Attacker = tower_at.get(site) if site != "" else null
+		if host != null and host.staffer == null:
+			at["x"] = host.position.x + POST_OFFSET.x
+			at["y"] = host.position.y + POST_OFFSET.y
+			at["post"] = "tower:" + str(site)
+			_post_at[at["post"]] = host.position
+		else:
+			host = null
 		var recruit := _attacker("recruit", at, data, _apply(stats, "staff_damage", float(data["damage"])))
 		recruit.damage_per_level = float(data["damage_per_level"])
 		recruit.home = recruit.position
@@ -578,6 +595,8 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		recruit.rest_heal = float(data["rest_heal"])
 		recruit.role = data
 		recruit.post = str(at.get("post", ""))
+		if host != null:
+			host.staffer = recruit
 		recruit.fx = data.get("fx", _role_effects.get(str(data["class"]), {}))
 		recruit.armour = float(data.get("armour", 0.0))
 		recruit.flee_below = float(data.get("flee_below", 0.0))
@@ -624,6 +643,8 @@ func _placements(config: Dictionary, level: Dictionary, content: Dictionary, sta
 	var seen := []
 	var ring := Vector2(float(level["staff"]["x"]), float(level["staff"]["y"]))
 	var spots: Array = level["posts"]
+	# Tower sites the player set Recruits on, {site: Recruit id}; a Recruit with none takes a light post.
+	var posted: Dictionary = config["posted"] if config.get("posted") is Dictionary else {}
 	for i in squad.size():
 		var recruit: Dictionary = squad[i]
 		var data := RecruitRoster.build(recruit, content, stats)
@@ -632,6 +653,9 @@ func _placements(config: Dictionary, level: Dictionary, content: Dictionary, sta
 			return null
 		seen.append(str(recruit["id"]))
 		var at := {"id": str(recruit["id"]), "data": data, "xp": int(recruit["xp"])}
+		var site: Variant = posted.find_key(str(recruit["id"]))
+		if site != null:
+			at["site"] = str(site)
 		if i < spots.size():
 			at["x"] = float(spots[i]["x"]) + POST_OFFSET.x
 			at["y"] = float(spots[i]["y"]) + POST_OFFSET.y
@@ -817,9 +841,9 @@ func _build_tower(at: Dictionary, tower_id: String, data: Dictionary, stats: Dic
 	a.storm_share = _add(stats, key + "storm_share")
 	a.storm_in = a.storm_every
 	a.repair = _add(stats, key + "repair")
-	for field in ["hero_haste", "hero_radius", "crossfire", "burn_dps", "burn_seconds", "rally_repair", "rally_shield", "rally_radius", "rally_seconds", "last_light", "last_light_radius", "watch_range", "watch_radius", "eclipse_widen", "eclipse_radius"]:
+	for field in ["hero_haste", "posted_haste", "hero_radius", "crossfire", "burn_dps", "burn_seconds", "rally_repair", "rally_shield", "rally_radius", "rally_seconds", "last_light", "last_light_radius", "watch_range", "watch_radius", "eclipse_widen", "eclipse_radius"]:
 		a.set(field, _add(stats, key + field))
-	a.links = a.hero_haste > 0.0 or a.crossfire > 0.0 or a.burn_dps > 0.0 or a.rally_radius > 0.0 or a.last_light > 0.0 or a.watch_range > 0.0
+	a.links = a.hero_haste > 0.0 or a.posted_haste > 0.0 or a.crossfire > 0.0 or a.burn_dps > 0.0 or a.rally_radius > 0.0 or a.last_light > 0.0 or a.watch_range > 0.0
 	return a
 
 
@@ -1646,6 +1670,8 @@ func _attack(attacker: Attacker, damage: float, dt: float) -> void:
 	attacker.ready_in = attacker.cooldown
 	if attacker.hero_haste > 0.0 and _hero_within(attacker.position, attacker.hero_radius):
 		attacker.ready_in /= 1.0 + attacker.hero_haste
+	if attacker.posted_haste > 0.0 and _staffed(attacker) and _hero_within(attacker.position, attacker.hero_radius):
+		attacker.ready_in /= 1.0 + attacker.posted_haste
 	attacker.last_target = best.uid
 
 
@@ -1665,6 +1691,11 @@ func _eclipse_scale(centre: Vector2) -> float:
 		if built.up and built.eclipse_widen > widen and built.position.distance_to(centre) <= built.eclipse_radius:
 			widen = built.eclipse_widen
 	return 1.0 + widen
+
+
+## True while a post's Recruit is up and has not fled the fight.
+func _staffed(built: Attacker) -> bool:
+	return built.staffer != null and built.staffer.up and not built.staffer.fleeing
 
 
 ## True while the Hero is up and within `reach` of `point`.
