@@ -1,0 +1,92 @@
+{
+  "about": "First-time win-rate bands for levels 1 to 5, per pillar and per bot, from the Advisor's targets. Hero stats are not nerfed to meet them. A figure that misses its band can only be listed in known_misses with its measured value: CI then fails if it gets worse or comes back inside its band.",
+  "measure": "HoldfastCurve.climb: a first-time player who buys the cheapest star and gold nodes between runs, wears the gear found, places posts and replays a level until it wins. A rate is first-attempt wins over the players who reached the level. Bots: average (reacts in 6 ticks, special every decision), poor (18 ticks, special every second decision).",
+  "seeds": {
+    "band": 24,
+    "fork": 12,
+    "special": 12,
+    "one_post": 12
+  },
+  "first_time_floor": 0.3,
+  "bands": {
+    "outpost": {
+      "average": [
+        0.78,
+        1.0
+      ],
+      "poor_min": 0.35
+    },
+    "shingle_beach": {
+      "average": [
+        0.63,
+        0.87
+      ],
+      "poor_min": 0.25
+    },
+    "tidewrack_cove": {
+      "average": [
+        0.48,
+        0.72
+      ],
+      "poor_min": 0.2
+    },
+    "old_pier": {
+      "average": [
+        0.38,
+        0.62
+      ],
+      "poor_min": 0.05
+    },
+    "gull_rock": {
+      "average": [
+        0.38,
+        0.62
+      ],
+      "poor_min": 0.25
+    }
+  },
+  "fork_gap": {
+    "max": 0.34,
+    "how": "per level and pillar, the first-time win rate of the Volley side against the Sniper side (average bot, 12 players each)"
+  },
+  "special_gap": {
+    "mean_min": 0.05,
+    "mean_max": 0.7,
+    "level_min": -0.2,
+    "level_max": 0.9,
+    "how": "per pillar, the first-time win rate of the average bot with its special less the same players with it never pressed"
+  },
+  "one_post": {
+    "pillar": "dusk_mage",
+    "level": "shingle_beach",
+    "min": 0.3,
+    "how": "the Dusk Mage with only the first castle slot bought, average bot, 12 players"
+  },
+  "known_misses": {
+    "dusk_mage/average/outpost": 0.0,
+    "dusk_mage/poor/outpost": 0.0,
+    "dusk_mage/average/shingle_beach": 0.5,
+    "dusk_mage/poor/shingle_beach": 0.1429,
+    "dusk_mage/average/tidewrack_cove": 0.375,
+    "dusk_mage/fork_gap/tidewrack_cove": 0.4286,
+    "dusk_mage/average/old_pier": 0.8125,
+    "dusk_mage/fork_gap/old_pier": 0.5714,
+    "dusk_mage/average/gull_rock": 0.875,
+    "dusk_mage/fork_gap/gull_rock": 0.4286,
+    "dusk_mage/floor": 0.0,
+    "tideblade/average/outpost": 0.0,
+    "tideblade/poor/outpost": 0.0,
+    "tideblade/average/shingle_beach": 0.5417,
+    "tideblade/average/tidewrack_cove": 0.2917,
+    "tideblade/poor/tidewrack_cove": 0.0909,
+    "tideblade/average/old_pier": 0.3333,
+    "tideblade/average/gull_rock": 0.25,
+    "tideblade/poor/gull_rock": 0.0,
+    "tideblade/fork_gap/gull_rock": 0.4,
+    "tideblade/floor": 0.0,
+    "dusk_mage/one_post/shingle_beach": 0.25,
+    "dusk_mage/special_gap/gull_rock": 1.0,
+    "tideblade/special_gap/mean": 0.0333
+  },
+  "known_misses_note": "Dusk Mage and Tideblade are not retuned in this run (HF-M2-28, M2b): their misses are pinned at the measured figure. Delete a pin and the figure must meet its band."
+}
