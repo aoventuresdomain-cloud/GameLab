@@ -250,6 +250,10 @@ var aura_radius := 0.0
 var aura_dps := 0.0
 var cursor_speed := DEFAULT_CURSOR_SPEED
 var gold_multiplier := 1.0
+## A blessing's changes to the run: monsters' speed (a multiplier) and the share of its health
+## that the Keep and every tower repair each second while no enemy is on the field.
+var enemy_speed := 1.0
+var repair_share := 0.0
 ## Tower health restored per second while no enemy is on the field (between waves).
 var total_waves := 0
 
@@ -257,6 +261,12 @@ var total_waves := 0
 var ticks := 0
 var time := 0.0
 var keep_health := 0
+## What the Keep has lost in all, the Keep's size without a blessing (stars are judged on those two)
+## and the part-point of repair not yet added.
+var _keep_damage := 0
+var _keep_star_max := 0.0
+var _keep_mend := 0.0
+var _blessed := false
 var gold := 0
 var xp := 0
 var kills := 0
@@ -461,8 +471,22 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 			nodes["gear:" + str(equipped[slot])] = {"hero": hero_path, "effects": item["effects"]}
 			purchased.append("gear:" + str(equipped[slot]))
 	var stats := HoldfastRules.upgrade_stats(nodes, purchased)
-	keep_health_max = int(level["keep_health"]) + int(_add(stats, "keep_health"))
+	# Stars are judged on the Keep as the tree builds it, so a blessing never changes them.
+	_keep_star_max = _apply(stats, "keep_health", float(level["keep_health"]))
+	var blessing_id := str(config.get("blessing", ""))
+	if blessing_id != "":
+		if not content.get("blessings", {}).has(blessing_id):
+			_fail("unknown blessing %s" % blessing_id)
+			return
+		var blessed := blessing_nodes(content["blessings"][blessing_id], hero_path, content.get("towers", {}).keys())
+		_blessed = true
+		nodes.merge(blessed)
+		purchased.append_array(blessed.keys())
+		stats = HoldfastRules.upgrade_stats(nodes, purchased)
+	keep_health_max = roundi(_apply(stats, "keep_health", float(level["keep_health"])))
 	keep_health = keep_health_max
+	enemy_speed = _apply(stats, "enemy_speed", 1.0)
+	repair_share = _add(stats, "repair_share")
 	keep_radius = float(level["keep_radius"])
 	# The fog edge is where the keep's beam reaches, and enemies spawn at it.
 	spawn_radius = _apply(stats, "beam_reach", float(level["spawn_radius"]))
@@ -803,6 +827,26 @@ static func _scoped_stat(node: Dictionary, stat: String) -> String:
 	return stat
 
 
+## A blessing's effects as upgrade nodes, so they take the same path as gear: Hero stats scoped
+## to the Hero played, tower stats to each kind of tower, the rest as they are. Returns {id: node}.
+static func blessing_nodes(blessing: Dictionary, hero_path: String, tower_ids: Array) -> Dictionary:
+	var hero := []
+	var tower := []
+	var other := []
+	for effect in blessing["effects"]:
+		var stat := str(effect["stat"])
+		(hero if stat.begins_with("hero.") else tower if stat.begins_with("tower.") else other).append(effect)
+	var out := {}
+	if not hero.is_empty():
+		out["blessing:hero"] = {"hero": hero_path, "effects": hero}
+	if not tower.is_empty():
+		for id in tower_ids:
+			out["blessing:tower:" + str(id)] = {"tower": id, "effects": tower}
+	if not other.is_empty():
+		out["blessing"] = {"effects": other}
+	return out
+
+
 static func _add(stats: Dictionary, stat: String) -> float:
 	return float(stats.get(stat, {}).get("add", 0.0))
 
@@ -839,10 +883,13 @@ func step(dt: float, input: Dictionary) -> void:
 		_rally(built, dt)
 		_last_light_volley(built)
 		_attack(built, built.damage, dt)
-		if built.repair > 0.0 and enemies.is_empty():
-			built.health = UnitHealth.repair(built.health, built.repair * dt)
+		if enemies.is_empty():
+			var repair := built.repair + repair_share * float(built.health["max_health"])
+			if repair > 0.0:
+				built.health = UnitHealth.repair(built.health, repair * dt)
 	for recruit in recruits:
 		_attack(recruit, recruit.damage + (staff_level - 1) * recruit.damage_per_level, dt)
+	_repair_keep(dt)
 	_collect_dead()
 	_age_effects(dt)
 	_pick_up_tokens()
@@ -1431,7 +1478,7 @@ func _spawn_due() -> void:
 		enemy.position = _in_arena(Vector2(cos(angle), sin(angle)) * spawn_radius)
 		enemy.max_health = float(data["health"]) * _wave_health_scale[w]
 		enemy.health = enemy.max_health
-		enemy.speed = float(data["speed"])
+		enemy.speed = float(data["speed"]) * enemy_speed
 		enemy.radius = float(data["radius"])
 		enemy.damage = roundi(float(data["damage"]) * _wave_damage_scale[w])
 		enemy.gold = int(data["gold"])
@@ -1696,7 +1743,18 @@ func _gain_xp(amount: int) -> void:
 ## The Keep takes a blow; a tutorial's Keep takes none.
 func _hurt_keep(amount: int) -> void:
 	if not tutorial:
+		_keep_damage += mini(amount, keep_health)
 		keep_health = maxi(keep_health - amount, 0)
+
+
+## A blessing's repair: the Keep mends a share of its health a second while no enemy is on the field.
+func _repair_keep(dt: float) -> void:
+	if repair_share <= 0.0 or not enemies.is_empty() or keep_health >= keep_health_max:
+		return
+	_keep_mend += repair_share * keep_health_max * dt
+	var whole := int(_keep_mend)
+	_keep_mend -= whole
+	keep_health = mini(keep_health + whole, keep_health_max)
 
 
 func _wave_gone(w: int, killed: bool) -> void:
@@ -1732,7 +1790,7 @@ func is_finished() -> bool:
 
 
 func result() -> Dictionary:
-	return {
+	var out := {
 		"outcome": outcome,
 		"level": level_id,
 		"gold": gold,
@@ -1752,6 +1810,10 @@ func result() -> Dictionary:
 		"hero_knockdowns": int(hero_state["knockdowns"]) if not hero_state.is_empty() else 0,
 		"gear_found": gear_found.duplicate(),
 	}
+	if _blessed:
+		# The Keep's health as the tree builds it, whatever the blessing did to it, for the stars.
+		out["keep_left"] = 1.0 - float(_keep_damage) / _keep_star_max if _keep_star_max > 0.0 else 0.0
+	return out
 
 
 func snapshot() -> Dictionary:

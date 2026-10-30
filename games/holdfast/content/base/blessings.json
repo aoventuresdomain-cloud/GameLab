@@ -1,0 +1,10 @@
+{
+  "blessings": [
+    {"id": "steady_flame", "name": "Steady Flame", "text": "The Hero's special comes back 20% sooner.", "unlock": {"kind": "won", "level": "first_watch"}, "effects": [{"stat": "hero.ability.cooldown", "multiply": 0.8}]},
+    {"id": "lamp_oil", "name": "Lamp Oil", "text": "Towers and the Keep mend 2% of their health a second between waves.", "unlock": {"kind": "won", "level": "outpost"}, "effects": [{"stat": "repair_share", "add": 0.02}]},
+    {"id": "long_sight", "name": "Long Sight", "text": "Towers reach 15% further.", "unlock": {"kind": "won", "level": "shingle_beach"}, "effects": [{"stat": "tower.range", "multiply": 1.15}]},
+    {"id": "second_wind", "name": "Second Wind", "text": "The Hero gets up 40% sooner after a fall.", "unlock": {"kind": "won", "level": "tidewrack_cove"}, "effects": [{"stat": "hero.getup_time", "multiply": 0.6}]},
+    {"id": "tides_gift", "name": "Tide's Gift", "text": "30% more gold from kills, but the Keep has 15% less health.", "unlock": {"kind": "stars", "count": 8}, "effects": [{"stat": "gold_multiplier", "multiply": 1.3}, {"stat": "keep_health", "multiply": 0.85}]},
+    {"id": "thick_fog", "name": "Thick Fog", "text": "Monsters move 15% faster, and you earn 25% more gold.", "unlock": {"kind": "stars_on_a_level", "count": 3}, "effects": [{"stat": "enemy_speed", "multiply": 1.15}, {"stat": "gold_multiplier", "multiply": 1.25}]}
+  ]
+}

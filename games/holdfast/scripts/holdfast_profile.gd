@@ -291,6 +291,11 @@ func has_saved_layout(level: String) -> bool:
 	return HoldfastMeta.has_saved_layout(_content, data, level)
 
 
+## The blessings on offer at the start of `level` (ids; "No blessing" is always there as well).
+func get_blessing_offer(level: String, rng: RandomNumberGenerator) -> Array:
+	return HoldfastMeta.blessing_offer(_content, data, level, rng)
+
+
 ## Owned gear item ids, in the order found.
 func get_gear_owned() -> Array:
 	return data["gear"]["owned"]

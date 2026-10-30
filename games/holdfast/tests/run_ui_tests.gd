@@ -161,6 +161,7 @@ func _test_readable_layout() -> void:
 		var view := root.get_visible_rect()
 		_check(Vector2i(view.size) == BASE_SIZE, "%dx%d window shows the whole 1280x720 layout" % [window.x, window.y])
 		_main.planning.open("shingle_beach", ["spot_2", "spot_1", "mage:spot_3"], false, HoldfastContent.base()["castle_rules"]["castle"]["spots"], 8, 2)
+		_main.planning.set_blessings(["steady_flame", "second_wind", "tides_gift"])
 		hud.get_node("%PostsNote").text = "Posts: North Gate, South Gate"
 		hud.get_node("%PostsNote").visible = true
 		for screen in [_main.home, _main.journey, _main.hero_page, _main.keep_screen, hud, _main.summary, _main.planning]:

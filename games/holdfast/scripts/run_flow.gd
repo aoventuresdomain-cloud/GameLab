@@ -123,6 +123,9 @@ func _open_plan() -> void:
 	var level := profile.get_level()
 	var saved := profile.has_saved_layout(level)
 	planning.open(level, profile.get_layout(level) if saved else [], saved, profile.get_ring_spots(), profile.get_castle_cards(), profile.get_castle_mage_cards(), profile.get_castle_slots())
+	var draw := RandomNumberGenerator.new()
+	draw.randomize()
+	planning.set_blessings(profile.get_blessing_offer(level, draw))
 	_offer_tower()
 	_show(Screen.PLAN)
 
@@ -163,7 +166,7 @@ func _planned(layout: Array) -> void:
 	if layout.is_empty():
 		return
 	profile.set_layout(profile.get_level(), layout)
-	_start_run()
+	_start_run(false, planning.blessing())
 
 
 ## The map's Start button, after the two guided buys: the short fight with the post just bought.
@@ -177,8 +180,8 @@ func _begin_stand() -> void:
 
 
 ## Starts a run on the profile's level, upgrades and Hero pillar; `stand` fights the tutorial's
-## stand on the castle's own posts.
-func _start_run(stand := false) -> void:
+## stand on the castle's own posts; `blessing` is the one picked on the Plan page ("" for none).
+func _start_run(stand := false, blessing := "") -> void:
 	if source.is_running():
 		return
 	if "hero_path" in source:
@@ -186,6 +189,7 @@ func _start_run(stand := false) -> void:
 		source.level_id = profile.get_level()
 		source.upgrades = profile.get_upgrades().duplicate()
 		source.stand = stand
+		source.blessing = blessing
 		source.parked = true
 		# A bot-driven run (the CI smoke) has nobody to press a key.
 		source.wait_for_press = not source.use_bot
