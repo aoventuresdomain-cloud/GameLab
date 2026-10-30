@@ -835,6 +835,16 @@ static func respec_gold_change(content: Dictionary, profile: Dictionary) -> int:
 	return change
 
 
+## The stars a respec gives back: the price of every star node bought.
+static func respec_stars(content: Dictionary, profile: Dictionary) -> int:
+	var nodes: Dictionary = content.get("upgrade_nodes", {})
+	var stars := 0
+	for id in profile["upgrades"]:
+		if nodes.has(id) and is_star_node(nodes[id]):
+			stars += int(nodes[id]["cost"])
+	return stars
+
+
 ## "" when a respec can go ahead, else why not.
 static func why_not_respec(content: Dictionary, profile: Dictionary) -> String:
 	if profile["upgrades"].is_empty():

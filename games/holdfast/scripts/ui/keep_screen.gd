@@ -243,8 +243,7 @@ func refresh() -> void:
 	_sync_labels()
 	_web.queue_redraw()
 	_respec.disabled = owned.is_empty()
-	var change: int = _profile.get_respec_gold_change()
-	_respec.text = "Refund all: %s%s gold" % ["+" if change >= 0 else "-", Hud.format_number(absi(change))] if not owned.is_empty() else "Refund all"
+	_respec.text = refund_all_text(_profile.get_respec_stars(), _profile.get_respec_gold_change()) if not owned.is_empty() else "Refund all"
 	_info.text = ""
 	if _card.visible:
 		_fill_card()
@@ -1056,6 +1055,18 @@ static func _effects_text(effects: Array) -> String:
 
 
 ## "tower.range" is "range", "hero.attack.damage" is "arrow damage": the scope is dropped.
+## The Refund all button: the gold and the stars it gives back, and a fee only as a fee.
+static func refund_all_text(stars: int, change: int) -> String:
+	var parts := PackedStringArray()
+	if change > 0 or stars == 0:
+		parts.append("%s%s gold" % ["+" if change >= 0 else "-", Hud.format_number(absi(change))])
+	if stars > 0:
+		parts.append("+%d %s" % [stars, "star" if stars == 1 else "stars"])
+	if change < 0 and stars > 0:
+		parts.append("fee %s gold" % Hud.format_number(-change))
+	return "Refund all: %s" % ", ".join(parts)
+
+
 static func _stat_text(stat: String) -> String:
 	var field := stat
 	for scope in ["tower.", "hero.", "recruit."]:

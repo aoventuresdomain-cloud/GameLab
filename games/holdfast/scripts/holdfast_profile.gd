@@ -101,6 +101,11 @@ func get_respec_gold_change() -> int:
 	return HoldfastMeta.respec_gold_change(_content, data)
 
 
+## The stars a respec would give back.
+func get_respec_stars() -> int:
+	return HoldfastMeta.respec_stars(_content, data)
+
+
 ## Takes one bought node back (see HoldfastMeta.refund_node); refused with a notice when it cannot go.
 func refund(id: String) -> void:
 	var reason := why_not_refund(id)
