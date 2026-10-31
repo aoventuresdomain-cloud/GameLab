@@ -9,6 +9,8 @@ extends Node2D
 ## keep and the tower and staff ranges always stay clear of the HUD.
 
 @export var source_path: NodePath
+## The HoldfastSettings (shake and flashes); left empty, both are on.
+@export var settings_path: NodePath
 
 const COLOUR_GROUND := Color("#141b14")
 const COLOUR_ARENA := Color("#1f2a1f")
@@ -63,11 +65,49 @@ const COLOUR_EXPOSED := Color("#ffd86b")
 ## Any run_state_source.gd. Only a HoldfastRunSource has rules to draw; with
 ## another source (the UI tests' stub) the field stays empty.
 @onready var source: Node = get_node(source_path)
+@onready var _settings: Node = get_node_or_null(settings_path) if not settings_path.is_empty() else null
+
+## How long a hit on the keep shakes the view, and how far it moves at the start.
+const SHAKE_SECONDS := 0.3
+const SHAKE_PIXELS := 6.0
+
+var _shake_left := 0.0
+var _keep_health_seen := -1
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	_fit_below_hud()
+	_shake_on_keep_hit(delta)
 	queue_redraw()
+
+
+## A hit on the keep shakes the view for a moment, unless the player has turned shaking off.
+func _shake_on_keep_hit(delta: float) -> void:
+	var health := -1
+	if source is HoldfastRunSource and source.get_rules() != null:
+		health = source.get_rules().keep_health
+	if _keep_health_seen >= 0 and health >= 0 and health < _keep_health_seen and _shake_allowed():
+		_shake_left = SHAKE_SECONDS
+	_keep_health_seen = health
+	if _shake_left > 0.0:
+		position += shake_offset()
+		_shake_left = maxf(_shake_left - delta, 0.0)
+
+
+## Where the shake has moved the view now: nothing when it is off or over, else a quick wobble that fades.
+func shake_offset() -> Vector2:
+	if _shake_left <= 0.0 or not _shake_allowed():
+		return Vector2.ZERO
+	var fade := _shake_left / SHAKE_SECONDS
+	return Vector2(sin(_shake_left * 90.0), cos(_shake_left * 70.0)) * SHAKE_PIXELS * fade
+
+
+func _shake_allowed() -> bool:
+	return _settings == null or _settings.is_shake_on()
+
+
+func _flashes_allowed() -> bool:
+	return _settings == null or _settings.are_flashes_on()
 
 
 ## Centres the keep in the area below the HUD and scales the view to fit the whole
@@ -205,7 +245,7 @@ func _draw_recruit_marks(attacker: HoldfastRules.Attacker, colour: Color) -> voi
 		var width := (12.0 + 7.5 * tag.length()) * k
 		draw_rect(Rect2(at + Vector2(-width * 0.5, attacker.radius + 2.0), Vector2(width, line)), Color(0, 0, 0, 0.55))
 		draw_string(ThemeDB.fallback_font, at + Vector2(-width * 0.5, attacker.radius + 2.0 + size), tag, HORIZONTAL_ALIGNMENT_CENTER, width, size, COLOUR_TEXT)
-	if attacker.flash_left > 0.0:
+	if attacker.flash_left > 0.0 and _flashes_allowed():
 		var grow := 1.0 - attacker.flash_left / HoldfastRules.FLASH_SECONDS
 		draw_arc(at, attacker.radius + 4.0 + grow * 22.0, 0.0, TAU, 32, Color(COLOUR_HERO_FLASH, 1.0 - grow), 3.0)
 		draw_circle(at, attacker.radius * 0.9, Color(COLOUR_HERO_FLASH, 0.6 * (1.0 - grow)))
@@ -227,8 +267,9 @@ func _draw_bar(at: Vector2, width: float, fraction: float, colour: Color) -> voi
 ## ready (Space), and the arrows in flight. A knocked-down Hero is a grey ghost
 ## with the seconds left before they are back at the start.
 func _draw_hero(rules: HoldfastRules) -> void:
-	for effect in rules.effects:
-		_draw_effect(effect)
+	if _flashes_allowed():
+		for effect in rules.effects:
+			_draw_effect(effect)
 	if rules.zone_left > 0.0:
 		draw_arc(rules.zone_position, float(rules.hero_ability["zone_radius"]), 0.0, TAU, 64, Color(rules.hero_colour, 0.7), 3.0)
 	for arrow in rules.projectiles:
