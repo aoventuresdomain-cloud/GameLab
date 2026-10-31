@@ -551,6 +551,7 @@ func test_the_hero_page_pick_chooses_the_pillar_of_the_run() -> void:
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	source.auto_step = false
 	tree.root.add_child(main)
+	main.get_node("Profile").data["paths_kept"] = ["tideblade"]
 	main.hero_page.select_pillar("tideblade")
 	main.hero_page.select_pillar("not_a_pillar")
 	expect_eq(main.hero_page.selected_pillar, "tideblade", "an unknown id changes nothing")

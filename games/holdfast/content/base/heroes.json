@@ -75,7 +75,8 @@
         "pull": 60
       },
       "blurb": "Shadow pulses that hit hardest in the dark. Space: Eclipse pulls enemies in and slows them.",
-      "colour": "#9b7be0"
+      "colour": "#9b7be0",
+      "opens": {"after": "gull_rock"}
     },
     {
       "id": "tideblade",
@@ -107,7 +108,8 @@
         "dash_seconds": 1.2
       },
       "blurb": "Quick stabs up close. Space: Dash-Strike, three dashes through enemies while nothing can hurt you.",
-      "colour": "#4fc3c8"
+      "colour": "#4fc3c8",
+      "opens": {"after": "", "reason": "Opens at the boss of the second biome, which is not built yet."}
     }
   ]
 }

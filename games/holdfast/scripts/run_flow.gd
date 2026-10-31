@@ -46,6 +46,9 @@ var screen := Screen.HOME
 func _ready() -> void:
 	hud.bind(source)
 	hud.begin_requested.connect(source.release_hold)
+	hud.pause_requested.connect(source.set_paused)
+	hud.speed_requested.connect(_on_speed_requested)
+	hud.leave_requested.connect(_leave_run)
 	hud.special_requested.connect(_on_special_requested)
 	home.bind(profile)
 	settings_screen.bind(settings)
@@ -265,8 +268,25 @@ func _start_run(stand := false, blessing := "") -> void:
 		source.layout = profile.get_stand_layout() if stand else profile.get_layout(profile.get_level())
 		source.gear = profile.get_gear_worn()
 		source.gear_owned = profile.get_gear_owned().duplicate()
+	source.set_speed(settings.get_speed())
 	_show(Screen.RUN)
 	source.start_run()
+	if source.is_running():
+		profile.mark_run_open()
+
+
+## 1x or 2x from the run screen: the run runs at it and the settings remember it.
+func _on_speed_requested(speed: int) -> void:
+	source.set_speed(speed)
+	settings.set_speed(speed)
+
+
+## The pause screen's confirmed Leave: the run ends with no result, so nothing is banked or paid,
+## and the player is back on the map.
+func _leave_run() -> void:
+	source.leave_run()
+	profile.leave_run()
+	_show(Screen.MAP)
 
 
 ## The player pressed the special at its prompt: the Hero fires and the prompt is not shown again.

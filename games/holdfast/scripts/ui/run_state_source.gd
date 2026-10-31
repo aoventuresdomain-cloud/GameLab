@@ -16,6 +16,8 @@ signal wave_changed(wave: int, total: int)
 ## summary keys: gold_earned (int), waves_cleared (int), total_waves (int),
 ## keep_fell (bool).
 signal run_ended(summary: Dictionary)
+## The player left the run from the pause screen: nothing is banked.
+signal run_left
 
 
 func start_run() -> void:
@@ -66,6 +68,28 @@ func is_held() -> bool:
 func release_hold() -> void:
 	pass
 
+
+## Whether the run is paused (nothing moves until it is resumed).
+func is_paused() -> bool:
+	return false
+
+
+func set_paused(_paused: bool) -> void:
+	pass
+
+
+## The game speed, 1 or 2 times.
+func get_speed() -> int:
+	return 1
+
+
+func set_speed(_speed: int) -> void:
+	pass
+
+
+## Ends the run without a result: no run_ended, so nothing is banked or paid.
+func leave_run() -> void:
+	pass
 
 ## True while the run waits, mid-fight, for the player's first press of the Hero's special.
 func is_teaching_special() -> bool:

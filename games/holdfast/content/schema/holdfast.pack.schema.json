@@ -758,6 +758,20 @@
         "untouchable_seconds": {
           "type": "number",
           "minimum": 0
+        },
+        "opens": {
+          "type": "object",
+          "description": "What opens this path on the Hero page: winning the level `after` (a level id), or when `after` is empty, `reason` says what has to exist first. No `opens` means open from the start.",
+          "properties": {
+            "after": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string",
+              "maxLength": 120
+            }
+          },
+          "additionalProperties": false
         }
       }
     },
