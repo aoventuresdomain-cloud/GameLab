@@ -19,6 +19,18 @@ static func base() -> Dictionary:
 	return _base.content
 
 
+## About what one run pays at level number `number`: the gold_per_run of the last tier opened by then.
+static func gold_per_run_at(content: Dictionary, number: int) -> int:
+	var best := -1
+	var out := 0
+	for id in content.get("gold_tiers", {}):
+		var tier: Dictionary = content["gold_tiers"][id]
+		if int(tier["first_level"]) <= number and int(tier["first_level"]) > best:
+			best = int(tier["first_level"])
+			out = int(tier["gold_per_run"])
+	return out
+
+
 ## Rules config for one run. `hero` is the Hero path to play ("" for the level's own).
 ## `layout` is the Archer Post sites to build on, for a level that has them (null: the
 ## sites nearest where the enemies come from, as a bot or an untouched profile plays it).

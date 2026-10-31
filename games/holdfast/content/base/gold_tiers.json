@@ -1,0 +1,11 @@
+{
+  "gold_tiers": [
+    {"id": "tier_1", "name": "Tier 1", "first_level": 1, "gold_per_run": 250},
+    {"id": "tier_2", "name": "Tier 2", "first_level": 3, "gold_per_run": 550},
+    {"id": "tier_3", "name": "Tier 3", "first_level": 5, "gold_per_run": 1200},
+    {"id": "tier_4", "name": "Tier 4", "first_level": 6, "gold_per_run": 2600},
+    {"id": "tier_5", "name": "Tier 5", "first_level": 11, "gold_per_run": 5700},
+    {"id": "tier_6", "name": "Tier 6", "first_level": 16, "gold_per_run": 12500},
+    {"id": "tier_7", "name": "Tier 7", "first_level": 21, "gold_per_run": 27500}
+  ]
+}

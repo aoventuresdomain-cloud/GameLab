@@ -6,6 +6,8 @@ extends RefCounted
 ## between runs (menus, choosing upgrades).
 
 const BETWEEN_RUNS_SECONDS := 10.0
+## The star node that opens the Mage Post, which every Hero's gold tree includes.
+const TOWER_GATE := "gate_mage"
 
 
 ## Buys what the bot can afford: first star nodes (`stars` to spend, cheapest first), then the
@@ -98,7 +100,8 @@ static func _requirements_met(node: Dictionary, owned: Array) -> bool:
 ## {} keeps the plain Hero bot). The report also says when the tree was filled (`filled_at`, -1 if
 ## not), the longest run of returns with nothing affordable (`dry_runs`), and when the first star, the
 ## first new tower (the Tower Gate) and the first boss came, in simulated seconds (-1 if never).
-static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array = [], pillar := "", model: Dictionary = {}) -> Dictionary:
+## `hard_replays` has the player play each cleared level's Hard replay once, as soon as it opens.
+static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array = [], pillar := "", model: Dictionary = {}, hard_replays := false) -> Dictionary:
 	var content := HoldfastContent.base()
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	var budget := sim_hours * 3600.0
@@ -109,6 +112,7 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 	avoid = avoid + other_hero_nodes(nodes, str(profile["pillar"]))
 	# The bot plays as a player past the tutorial, so it starts on the first real level.
 	profile = HoldfastMeta.bank_run(content, profile, {"outcome": HoldfastRules.OUTCOME_WON, "level": HoldfastMeta.tutorial_level(content), "gold": 0})
+	var hard_done := []
 	var unlocks := []
 	var star_unlocks := []
 	var runs := []
@@ -121,6 +125,16 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 	while sim_time < budget:
 		# Between runs, as a player does: spend the stars and the gold, then plan and play.
 		var bought_now := 0
+		# The Tower Gate comes before other stars when they allow it: every Hero's gold tree reaches the Mage Post
+		# through it, and a player who wants the whole tree takes it first.
+		if nodes.has(TOWER_GATE) and not TOWER_GATE in profile["upgrades"] and not TOWER_GATE in avoid:
+			var gate := HoldfastMeta.buy(content, profile, TOWER_GATE)
+			if gate["ok"]:
+				profile = gate["profile"]
+				bought_now += 1
+				star_unlocks.append({"id": TOWER_GATE, "cost": int(nodes[TOWER_GATE]["cost"]), "at_seconds": sim_time, "after_run": runs.size()})
+				if first["tower"] < 0.0:
+					first["tower"] = sim_time
 		for bought in buy_for_profile(content, profile, avoid):
 			profile = bought["profile"]
 			bought_now += 1
@@ -136,8 +150,17 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 		worst_dry = maxi(worst_dry, dry)
 		var run_seed := p_seed * 100003 + runs.size()
 		var run_level := level if level != "" else str(HoldfastMeta.unlocked_levels(content, profile)[-1])
+		# With `hard_replays` the player plays each cleared level's Hard replay once, as soon as it is open.
+		var hard := false
+		if hard_replays and level == "":
+			for won_level in profile["levels_won"]:
+				if not won_level in hard_done and HoldfastMeta.hard_open(content, profile, str(won_level)):
+					run_level = str(won_level)
+					hard = true
+					hard_done.append(won_level)
+					break
 		var layout := HoldfastMeta.layout_for(content, profile, run_level)
-		var config := HoldfastContent.run_config(run_level, profile["upgrades"], content, pillar, layout, HoldfastMeta.worn_gear(profile), profile["gear"]["owned"], false, RecruitMeta.bot_squad(content, profile))
+		var config := HoldfastContent.run_config(run_level, profile["upgrades"], content, pillar, layout, HoldfastMeta.worn_gear(profile), profile["gear"]["owned"], false, RecruitMeta.bot_squad(content, profile), "", {}, hard)
 		var report: Dictionary
 		if model.is_empty():
 			report = HoldfastSim.run_headless(run_seed, config)

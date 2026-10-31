@@ -147,7 +147,7 @@ static func hard_cell(pillar: String, seeds: int) -> Array:
 static func tree_cell(pillar: String, seeds: int, sim_hours: float) -> Array:
 	var out := []
 	for run_seed in range(1, seeds + 1):
-		var played := HoldfastProgression.play(run_seed, sim_hours, "", [], pillar, BOTS["average"])
+		var played := HoldfastProgression.play(run_seed, sim_hours, "", [], pillar, BOTS["average"], true)
 		var filled: bool = float(played["filled_at"]) >= 0.0
 		out.append({
 			"hours": (float(played["filled_at"]) if filled else float(played["sim_seconds"])) / 3600.0,

@@ -23,6 +23,7 @@ const Hud = preload("res://scripts/ui/hud.gd")
 @onready var _guide_note: Label = %GuideNote
 @onready var _stars_note: Label = %StarsNote
 @onready var _gear_found: Label = %GearFound
+@onready var _salvaged: Label = %Salvaged
 @onready var _card: PanelContainer = %CardPanel
 @onready var _levelled: Label = %Levelled
 @onready var _pick_card: VBoxContainer = %PickCard
@@ -74,6 +75,9 @@ func show_summary(summary: Dictionary, next_level: String = "") -> void:
 		found.append(str(items.get(id, {}).get("name", id)))
 	_gear_found.text = "Gear found: " + ", ".join(found)
 	_gear_found.visible = not found.is_empty()
+	var salvaged := int(summary.get("result", {}).get("salvaged", 0))
+	_salvaged.text = "Salvaged: %s gold" % Hud.format_number(salvaged)
+	_salvaged.visible = salvaged > 0
 	var levelled := PackedStringArray()
 	for change in summary.get("recruit_changes", []):
 		if change.get("joined", false):
