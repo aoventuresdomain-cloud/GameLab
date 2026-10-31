@@ -37,7 +37,8 @@ static func counter(content: Dictionary, profile: Dictionary, kind: String) -> i
 		"nodes_owned":
 			return profile["upgrades"].size()
 		"recruits_hired":
-			return profile["recruits"]["roster"].size()
+			# What the player paid for, not the roster: a rescued Recruit (Bryn at Shingle Beach) is free.
+			return int(profile["recruits"]["bought"])
 		"gear_worn":
 			return profile["gear"]["equipped"].values().filter(func(id: Variant) -> bool: return str(id) != "").size()
 		"gear_owned":

@@ -130,10 +130,42 @@ func test_hiring_a_recruit_unlocks_the_achievement() -> void:
 	var profile := _profile()
 	profile.bank_run({"outcome": "won", "level": "outpost", "gold": 100000, "keep_left": 0.6})
 	expect_false("hire_recruit" in profile.get_unlocked_achievements())
-	var board: Array = profile.get_recruit_board() if profile.has_method("get_recruit_board") else []
+	var before := profile.get_recruits().size()
 	profile.hire(0)
-	expect_true(profile.get_recruits().size() > 0 and "hire_recruit" in profile.get_unlocked_achievements(), "hired %d (board %d)" % [profile.get_recruits().size(), board.size()])
+	expect_eq(profile.get_recruits().size(), before + 1, "one more on the roster")
+	expect_true("hire_recruit" in profile.get_unlocked_achievements(), "a real hire unlocks it")
 	profile.free()
+
+
+func test_a_rescued_recruit_does_not_count_as_a_hire() -> void:
+	var profile := _profile()
+	profile.bank_run(_won("outpost", 1))
+	profile.bank_run(_won("shingle_beach", 1))
+	expect_true(profile.get_recruits().size() > 0, "Bryn is rescued at Shingle Beach")
+	expect_eq(HoldfastAchievements.counter(_content(), profile.data, "recruits_hired"), 0, "but nobody has been hired")
+	expect_false("hire_recruit" in profile.get_unlocked_achievements(), "so it is not unlocked")
+	profile.free()
+
+
+func test_a_save_with_only_a_rescued_recruit_is_not_credited_with_a_hire() -> void:
+	var path := _save_path("rescued")
+	var profile := _profile(path)
+	profile.bank_run(_won("outpost", 1))
+	profile.bank_run(_won("shingle_beach", 1))
+	profile.free()
+	var again := HoldfastProfile.new()
+	again.save_path = path
+	tree.root.add_child(again)
+	expect_eq(again.load_status, "ok")
+	expect_true(again.get_recruits().size() > 0, "the rescued Recruit came back")
+	expect_false("hire_recruit" in again.get_unlocked_achievements(), "and still no hire")
+	# An older save (before achievements) that holds a rescued Recruit gets nothing for it either.
+	var old: Dictionary = JSON.parse_string(JSON.stringify(again.data))
+	old.erase("achievements")
+	old.erase("counters")
+	var upgraded := HoldfastMeta.from_save(_content(), old)
+	expect_false("hire_recruit" in upgraded["achievements"], "an old save is not credited")
+	again.free()
 
 
 func test_gear_found_and_worn_unlock_the_collector_and_the_full_set() -> void:
