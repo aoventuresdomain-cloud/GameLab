@@ -177,8 +177,8 @@ func test_a_save_with_the_stars_spent_on_slots_is_not_locked_out_and_can_refund(
 	expect_eq(HoldfastMeta.why_not_buy(content, profile, "castle_archer_1"), "Not enough stars")
 	expect_eq(HoldfastMeta.why_not_respec(content, profile), "", "the refund is open")
 	var refunded := HoldfastMeta.respec(content, profile)
-	expect_eq(HoldfastMeta.guided_step(content, refunded), "castle_slot_1", "after it the guide runs again with the stars to finish it")
-	expect_eq(HoldfastMeta.stars_available(content, refunded), 2)
+	expect_eq(HoldfastMeta.guided_step(content, refunded), "castle_archer_1", "after it the guide runs again with the star to finish it")
+	expect_eq(HoldfastMeta.stars_available(content, refunded), 1, "Second Slot's star is back; First Slot, a guided buy, stays")
 	# Without the gold for the fee the refund waits, and the gold a Level 0 replay collects pays for it.
 	var poor := _stuck_save(0)
 	expect_false(HoldfastMeta.why_not_respec(content, poor) == "", "no gold, no refund yet")
@@ -218,27 +218,21 @@ func test_a_respec_sends_the_player_back_through_the_guide_with_the_stars_to_fin
 		profile = bought["profile"]
 	expect_eq(HoldfastMeta.guided_step(content, profile), "")
 	profile = HoldfastMeta.respec(content, profile)
-	expect_eq(profile["upgrades"], [], "the tree is empty")
-	expect_eq(HoldfastMeta.guided_step(content, profile), "castle_slot_1", "so the guide is due again")
-	expect_eq(HoldfastMeta.stars_available(content, profile), HoldfastMeta.stars_earned(profile), "every star is free")
-	for id in HoldfastMeta.castle_rules(content)["guided"]:
-		var bought := HoldfastMeta.buy(content, profile, id)
-		expect_true(bought["ok"], "%s after a respec" % id)
-		profile = bought["profile"]
-	expect_eq(HoldfastMeta.guided_step(content, profile), "")
+	expect_eq(profile["upgrades"], HoldfastMeta.castle_rules(content)["guided"], "only the two guided buys are left")
+	expect_eq(HoldfastMeta.guided_step(content, profile), "", "so the guide is not due again")
+	expect_eq(HoldfastMeta.stars_available(content, profile), HoldfastMeta.stars_earned(profile) - 2, "every star but the guided two is free")
+	expect_true(HoldfastMeta.has_a_tower(content, profile), "and the castle still has its post")
 
 
 func test_respec_from_the_tree_page_leaves_the_guided_step_buyable_there() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
-	ThroughLevelZero.apply(profile)
-	profile.data["gold"] = 1000
+	profile.data = _stuck_save(150)
 	profile.changed.emit()
 	profile.respec()
 	var page: Control = main.keep_screen
-	expect_eq(profile.get_guided_step(), "castle_slot_1")
-	expect_true(TreeCard.can_buy(page, "castle_slot_1"), "the step is open on the tree page")
-	TreeCard.buy(page, "castle_slot_1")
+	expect_eq(profile.get_guided_step(), "castle_archer_1")
+	expect_true(TreeCard.can_buy(page, "castle_archer_1"), "the step is open on the tree page")
 	TreeCard.buy(page, "castle_archer_1")
 	expect_true(profile.has_a_tower(), "and finishes there")
 	main.free()

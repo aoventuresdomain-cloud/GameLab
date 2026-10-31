@@ -646,7 +646,7 @@ func test_the_keep_screen_shows_sections_dims_the_far_nodes_and_lists_the_next_u
 	keep.open_card("keep_walls_1")
 	expect_true(keep._card_price.text.begins_with("60") and TreeCard.text(keep).contains("25"), "its card has the price and the effect")
 	keep.close_card()
-	expect_false(keep.get_node("%RespecButton").disabled, "the two castle buys can be taken back")
+	expect_true(keep.get_node("%RespecButton").disabled, "the two castle buys stay: nothing to take back yet")
 	# The real tree has no fork; this one runs on a copy that makes Scope and Twin arrows one.
 	var forked := _forked()
 	profile._content = forked
@@ -665,8 +665,9 @@ func test_the_keep_screen_shows_sections_dims_the_far_nodes_and_lists_the_next_u
 	expect_false(keep.get_node("%RespecButton").disabled)
 	var gold_before := profile.get_gold()
 	keep.get_node("%RespecButton").pressed.emit()
-	expect_eq(profile.get_upgrades(), [])
-	expect_eq(profile.get_gold(), gold_before + 110 + 120 + 600 - 20 - 20 - 60 - 2 * 50, "the gold nodes' prices less a fee each, and 50 for each of the two star nodes")
+	keep.get_node("%ConfirmButton").pressed.emit()
+	expect_eq(profile.get_upgrades(), ["castle_slot_1", "castle_archer_1"], "the two guided buys stay")
+	expect_eq(profile.get_gold(), gold_before + 110 + 120 + 600 - 20 - 20 - 60, "the gold nodes' prices less a fee each; the two star nodes stay and cost no fee")
 	expect_false(not TreeCard.can_buy(keep, "post_twin") and keep._node_buttons["post_twin"].text.contains("closed"), "the choice is open again")
 	main.free()
 

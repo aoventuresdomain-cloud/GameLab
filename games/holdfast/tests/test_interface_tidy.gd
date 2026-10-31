@@ -105,7 +105,9 @@ func test_respec_is_called_refund_wherever_it_shows() -> void:
 				expect_false(text.to_lower().contains("respec"), "%s shows '%s'" % [screen.name, text])
 	var button: Button = main.keep_screen.get_node("%RespecButton")
 	expect_true(button.text.begins_with("Refund"), button.text)
-	expect_true(button.text.contains("gold"), "it says what comes back in gold")
+	profile.data["upgrades"].append("flare_boots")
+	profile.changed.emit()
+	expect_true(button.text.contains("gold"), "it says what comes back in gold once there is a node to take back")
 	profile.new_game()
 	var notices: Array = []
 	profile.notice.connect(func(text: String) -> void: notices.append(text))
@@ -133,8 +135,13 @@ func test_an_owned_node_glows_green_and_has_no_bought_word() -> void:
 	var other: Button = page._node_buttons["castle_slot_2"]
 	expect_false(other.get_theme_stylebox("normal") == page._owned_style, "a node not owned keeps the theme's look")
 	profile.data["gold"] = 500
+	profile.data["upgrades"].append("flare_boots")
+	profile.changed.emit()
+	var boots: Button = page._node_buttons["flare_boots"]
+	expect_true(boots.get_theme_stylebox("normal") == page._owned_style, "a bought node glows")
 	profile.respec()
-	expect_false(slot.get_theme_stylebox("normal") == page._owned_style, "and the glow goes with a refund")
+	expect_false(boots.get_theme_stylebox("normal") == page._owned_style, "and the glow goes with a refund")
+	expect_true(slot.get_theme_stylebox("normal") == page._owned_style, "the guided slot is not taken back and keeps its glow")
 	main.free()
 
 

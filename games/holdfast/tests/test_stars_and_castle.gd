@@ -116,13 +116,13 @@ func test_respec_frees_the_stars_and_gives_gold_back_less_a_fee_for_each_node() 
 	profile["upgrades"].append("keep_walls_1")
 	profile["layouts"]["outpost"] = ["spot_1"]
 	var after := HoldfastMeta.respec(content, profile)
-	# 100 held + 60 back for the Keep wall, less its 20 gold fee and 50 gold for each of the two star nodes.
-	expect_eq(after["gold"], 100 + 60 - 20 - 2 * 50)
-	expect_eq(after["upgrades"], [])
-	expect_eq(HoldfastMeta.stars_available(content, after), 2, "both stars are free again")
-	expect_false(HoldfastMeta.has_a_tower(content, after))
-	expect_eq(HoldfastMeta.layout_for(content, after, "outpost"), [], "and the saved layout no longer stands")
-	expect_false(HoldfastMeta.has_saved_layout(content, after, "outpost"))
+	# 100 held + 60 back for the Keep wall, less its 20 gold fee; the two star nodes stay and cost no fee.
+	expect_eq(after["gold"], 100 + 60 - 20)
+	expect_eq(after["upgrades"], ["castle_slot_1", "castle_archer_1"])
+	expect_eq(HoldfastMeta.stars_available(content, after), 0, "both stars stay spent on the two guided buys")
+	expect_true(HoldfastMeta.has_a_tower(content, after))
+	expect_eq(HoldfastMeta.layout_for(content, after, "outpost"), ["spot_1"], "and the saved layout still stands")
+	expect_true(HoldfastMeta.has_saved_layout(content, after, "outpost"))
 
 
 func test_winning_pays_one_star_two_above_half_the_keep_and_three_above_four_fifths() -> void:

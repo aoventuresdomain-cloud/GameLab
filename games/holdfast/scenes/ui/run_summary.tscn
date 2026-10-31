@@ -38,7 +38,7 @@ layout_mode = 2
 
 [node name="Column" type="VBoxContainer" parent="Centre/Row/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
@@ -94,6 +94,22 @@ visible = false
 layout_mode = 2
 horizontal_alignment = 1
 
+[node name="Moment" type="Label" parent="Centre/Row/Panel/Column"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(620, 0)
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="UnlockedLine" type="Label" parent="Centre/Row/Panel/Column"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(620, 0)
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+
 [node name="StarsNote" type="Label" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
 visible = false
@@ -103,6 +119,30 @@ horizontal_alignment = 1
 [node name="GearFound" type="Label" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
 visible = false
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="WayOn" type="Label" parent="Centre/Row/Panel/Column"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(620, 0)
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Tip" type="Label" parent="Centre/Row/Panel/Column"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(620, 0)
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="GuideNote" type="Label" parent="Centre/Row/Panel/Column"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(620, 0)
 layout_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 2
@@ -122,18 +162,21 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "Play again"
 
-[node name="MapButton" type="Button" parent="Centre/Row/Panel/Column"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(280, 0)
+[node name="Secondary" type="HBoxContainer" parent="Centre/Row/Panel/Column"]
 layout_mode = 2
 size_flags_horizontal = 4
+theme_override_constants/separation = 12
+
+[node name="MapButton" type="Button" parent="Centre/Row/Panel/Column/Secondary"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
 text = "Journey map"
 
-[node name="TreeButton" type="Button" parent="Centre/Row/Panel/Column"]
+[node name="TreeButton" type="Button" parent="Centre/Row/Panel/Column/Secondary"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(280, 0)
+custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-size_flags_horizontal = 4
 text = "Skill tree"
 
 [node name="CardPanel" type="PanelContainer" parent="Centre/Row"]

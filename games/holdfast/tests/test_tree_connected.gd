@@ -192,23 +192,23 @@ func test_a_respec_gives_back_prices_less_fees_and_every_star() -> void:
 	var owned := ["castle_slot_1", "castle_archer_1", "flare_boots", "flare_focus", "flare_hands"]
 	var profile := _holding(owned, 1000, 6)
 	expect_eq(HoldfastMeta.stars_available(content, profile), 4)
-	# 90 + 120 + 300 back, less 20 + 20 + 30, less 50 for each of two star nodes.
-	expect_eq(HoldfastMeta.respec_gold_change(content, profile), 510 - 70 - 100)
+	# 90 + 120 + 300 back, less 20 + 20 + 30; the two star nodes stay and cost no fee.
+	expect_eq(HoldfastMeta.respec_gold_change(content, profile), 510 - 70)
 	expect_eq(HoldfastMeta.why_not_respec(content, profile), "")
 	var after := HoldfastMeta.respec(content, profile)
-	expect_eq(after["gold"], 1000 + 340)
-	expect_eq(after["upgrades"], [])
-	expect_eq(HoldfastMeta.stars_available(content, after), 6, "all six stars are free again")
+	expect_eq(after["gold"], 1000 + 440)
+	expect_eq(after["upgrades"], ["castle_slot_1", "castle_archer_1"])
+	expect_eq(HoldfastMeta.stars_available(content, after), 4, "the two stars of the guided buys stay spent")
 	expect_eq(profile["upgrades"].size(), 5, "the profile given is untouched")
 
 
 func test_a_respec_is_refused_when_the_fees_are_more_than_the_gold_held() -> void:
 	var content := _content()
-	var owned := ["castle_slot_1", "castle_archer_1"]
-	var short := _holding(owned, 99, 3)
+	var owned := ["castle_slot_1", "castle_archer_1", "castle_slot_2", "castle_archer_2"]
+	var short := _holding(owned, 99, 5)
 	expect_eq(HoldfastMeta.why_not_respec(content, short), "Not enough gold for the refund fee")
 	expect_eq(HoldfastMeta.respec(content, short), short, "nothing changes")
-	var enough := _holding(owned, 100, 3)
+	var enough := _holding(owned, 100, 5)
 	expect_eq(HoldfastMeta.why_not_respec(content, enough), "")
 	expect_eq(HoldfastMeta.respec(content, enough)["gold"], 0, "the fees take the last of it")
 	expect_eq(HoldfastMeta.why_not_respec(content, _fresh()), "Nothing to refund")
@@ -227,10 +227,10 @@ func test_the_profile_tells_the_player_why_a_respec_was_refused() -> void:
 	profile.notice.connect(func(text: String) -> void: notices.append(text))
 	profile.respec()
 	expect_eq(notices, ["Nothing to refund"])
-	profile.data = _holding(["castle_slot_1", "castle_archer_1"], 10, 3)
+	profile.data = _holding(["castle_slot_1", "castle_archer_1", "castle_slot_2", "castle_archer_2"], 10, 5)
 	profile.respec()
 	expect_eq(notices[-1], "Not enough gold for the refund fee")
-	expect_eq(profile.get_upgrades().size(), 2, "nothing was taken back")
+	expect_eq(profile.get_upgrades().size(), 4, "nothing was taken back")
 	expect_eq(profile.get_respec_gold_change(), -100)
 	main.free()
 
