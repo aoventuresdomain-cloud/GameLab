@@ -6,6 +6,8 @@ extends RefCounted
 ## between runs (menus, choosing upgrades).
 
 const BETWEEN_RUNS_SECONDS := 10.0
+## The star node that opens the Mage Post, which every Hero's gold tree includes.
+const TOWER_GATE := "gate_mage"
 
 
 ## Buys what the bot can afford: first star nodes (`stars` to spend, cheapest first), then the
@@ -123,6 +125,16 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 	while sim_time < budget:
 		# Between runs, as a player does: spend the stars and the gold, then plan and play.
 		var bought_now := 0
+		# The Tower Gate comes before other stars when they allow it: every Hero's gold tree reaches the Mage Post
+		# through it, and a player who wants the whole tree takes it first.
+		if nodes.has(TOWER_GATE) and not TOWER_GATE in profile["upgrades"] and not TOWER_GATE in avoid:
+			var gate := HoldfastMeta.buy(content, profile, TOWER_GATE)
+			if gate["ok"]:
+				profile = gate["profile"]
+				bought_now += 1
+				star_unlocks.append({"id": TOWER_GATE, "cost": int(nodes[TOWER_GATE]["cost"]), "at_seconds": sim_time, "after_run": runs.size()})
+				if first["tower"] < 0.0:
+					first["tower"] = sim_time
 		for bought in buy_for_profile(content, profile, avoid):
 			profile = bought["profile"]
 			bought_now += 1

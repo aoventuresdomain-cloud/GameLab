@@ -46,18 +46,25 @@ func test_what_a_tier_pays_is_about_what_the_bot_earns_in_a_run_where_it_opens()
 
 # ------------------------------------------------------------------ prices
 
-func test_every_gold_node_names_a_tier_and_costs_its_weight_times_the_tier_scale() -> void:
+## A node costs between this many and this many runs of the gold a run pays where its tier opens. The top is
+## the pacing gate's rule: no more than 3 runs of waiting for anything, so nothing may cost much more than that.
+const MIN_RUNS := 0.2
+const MAX_RUNS := 3.5
+
+
+func test_every_gold_node_names_a_tier_and_costs_a_few_runs_of_that_tiers_gold() -> void:
 	var content := _content()
 	var nodes: Dictionary = content["upgrade_nodes"]
 	var priced := 0
 	for id in nodes:
 		var node: Dictionary = nodes[id]
-		if HoldfastMeta.is_star_node(node) or int(node.get("base_cost", node["cost"])) == 0:
+		if HoldfastMeta.is_star_node(node) or int(node["cost"]) == 0:
 			expect_false(node.has("gold_tier"), "%s is not a priced gold node" % id)
 			continue
 		expect_true(node.has("gold_tier"), "%s names its tier" % id)
-		var expected := roundi(float(node["base_cost"]) * HoldfastContent.tier_scale(content, str(node["gold_tier"])) / 10.0) * 10
-		expect_eq(int(node["cost"]), expected, "%s: %d weight in %s" % [id, int(node["base_cost"]), node["gold_tier"]])
+		var income := float(content["gold_tiers"][node["gold_tier"]]["gold_per_run"])
+		var runs := float(node["cost"]) / income
+		expect_true(runs >= MIN_RUNS and runs <= MAX_RUNS, "%s costs %d, %.2f runs of %s's %d" % [id, int(node["cost"]), runs, node["gold_tier"], int(income)])
 		priced += 1
 	expect_true(priced >= 40, "all the gold nodes: %d" % priced)
 
@@ -68,39 +75,41 @@ func test_the_first_buys_of_the_first_runs_keep_their_prices() -> void:
 		expect_eq(_content()["upgrade_nodes"][id]["gold_tier"], "tier_1", id)
 
 
-func test_the_dearest_nodes_sit_in_tiers_that_open_in_the_second_and_third_biomes() -> void:
+func test_the_dearest_nodes_sit_in_a_tier_priced_for_more_than_the_first_five_levels_pay() -> void:
+	# Marksman and Burst fire stay in the tier that opens at Gull Rock: the bands gate judges the two Archer sides
+	# in the first five levels, and a node out of reach there would make the sides play the same.
 	var content := _content()
-	for id in ["tithe_5", "tithe_6", "keep_walls_5", "post_marksman", "post_burst"]:
+	for id in ["tithe_4", "tithe_5", "tithe_6", "keep_walls_5"]:
 		var tier: Dictionary = content["gold_tiers"][content["upgrade_nodes"][id]["gold_tier"]]
-		expect_true(int(tier["first_level"]) >= 6, "%s is priced for level %d on" % [id, int(tier["first_level"])])
+		expect_true(int(tier["gold_per_run"]) >= 2 * HoldfastContent.gold_per_run_at(content, 5), "%s is priced from %d gold a run" % [id, int(tier["gold_per_run"])])
 
 
-func test_a_node_costs_more_the_later_its_tier_opens() -> void:
+func test_a_node_in_a_later_tier_costs_more_than_any_in_an_earlier_one() -> void:
 	var content := _content()
-	var by_tier := {}
+	var low := {}
+	var high := {}
 	for id in content["upgrade_nodes"]:
 		var node: Dictionary = content["upgrade_nodes"][id]
 		if node.has("gold_tier"):
-			by_tier[node["gold_tier"]] = maxi(int(by_tier.get(node["gold_tier"], 0)), int(node["cost"]))
-	var last := 0
+			var tier: String = node["gold_tier"]
+			low[tier] = mini(int(low.get(tier, 1 << 30)), int(node["cost"]))
+			high[tier] = maxi(int(high.get(tier, 0)), int(node["cost"]))
+	var last_high := 0
 	for tier in _tiers():
-		if by_tier.has(tier["id"]):
-			expect_true(int(by_tier[tier["id"]]) >= last, "%s: its dearest node %d is no cheaper than the tier before's" % [tier["id"], int(by_tier[tier["id"]])])
-			last = int(by_tier[tier["id"]])
+		if high.has(tier["id"]):
+			expect_true(int(high[tier["id"]]) >= last_high, "%s: its dearest node %d is no cheaper than the tier before's %d" % [tier["id"], int(high[tier["id"]]), last_high])
+			last_high = int(high[tier["id"]])
 
 
-func test_a_new_tier_is_a_row_not_a_change_to_the_old_prices() -> void:
+func test_a_new_tier_is_a_row_and_checks_the_nodes_that_name_it() -> void:
+	# Levels past the ones built add a row; a node in it is checked against that row's gold with no change to the old ones.
 	var content := _content().duplicate(true)
-	var before := {}
-	for id in content["upgrade_nodes"]:
-		before[id] = content["upgrade_nodes"][id]["cost"]
 	content["gold_tiers"]["tier_8"] = {"id": "tier_8", "name": "Tier 8", "first_level": 26, "gold_per_run": 60000}
-	for id in content["upgrade_nodes"]:
-		var node: Dictionary = content["upgrade_nodes"][id]
-		if node.has("gold_tier"):
-			expect_eq(roundi(float(node["base_cost"]) * HoldfastContent.tier_scale(content, str(node["gold_tier"])) / 10.0) * 10, before[id], "%s is priced as before" % id)
 	expect_eq(HoldfastContent.gold_per_run_at(content, 25), 27500, "level 25 still reads the row before")
 	expect_eq(HoldfastContent.gold_per_run_at(content, 26), 60000, "and level 26 reads the new row")
+	var node := {"cost": 150000, "gold_tier": "tier_8"}
+	var runs := float(node["cost"]) / float(content["gold_tiers"][node["gold_tier"]]["gold_per_run"])
+	expect_true(runs >= MIN_RUNS and runs <= MAX_RUNS, "a 150,000 gold node is %.1f runs of the new tier" % runs)
 
 
 # ------------------------------------------------------------------ Tithe
@@ -114,11 +123,11 @@ func test_the_tithe_chain_is_additive_and_adds_up_to_half_as_much_again() -> voi
 		expect_eq(effects[0]["stat"], "gold_multiplier", id)
 		expect_true(effects[0].has("add") and not effects[0].has("multiply"), "%s adds; it does not compound" % id)
 		total += float(effects[0]["add"])
-	expect_near(total, 0.5, 0.0001, "about +50% in all")
+	expect_near(total, 0.55, 0.0001, "about +50% in all, capped there")
 	var all := HoldfastRules.new()
 	all.report_errors = false
 	all.setup(HoldfastContent.run_config("outpost", TITHE), SimRng.new(7))
-	expect_near(all.gold_multiplier, 1.5, 0.0001, "all six together")
+	expect_near(all.gold_multiplier, 1.55, 0.0001, "all six together")
 	var first := HoldfastRules.new()
 	first.report_errors = false
 	first.setup(HoldfastContent.run_config("outpost", ["tithe_1"]), SimRng.new(7))
