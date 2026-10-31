@@ -183,14 +183,6 @@ func leave_run() -> void:
 	_apply(HoldfastMeta.set_run_open(data, false))
 
 
-func get_speed() -> int:
-	return int(data["speed"])
-
-
-func set_speed(speed: int) -> void:
-	_apply(HoldfastMeta.set_speed(data, speed))
-
-
 ## True once every level there is has been won.
 func is_content_cleared() -> bool:
 	return HoldfastMeta.content_cleared(_content, data)

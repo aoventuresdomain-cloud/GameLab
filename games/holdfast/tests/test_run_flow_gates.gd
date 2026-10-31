@@ -280,14 +280,28 @@ func test_a_run_that_ends_or_is_left_leaves_no_open_run_in_the_save() -> void:
 # ------------------------------------------------------------------ game speed
 
 func test_speed_is_one_or_two_and_survives_a_real_save() -> void:
-	var content := _content()
-	var profile := HoldfastMeta.new_profile(content)
-	expect_eq(profile["speed"], 1)
-	expect_eq(_through_json(HoldfastMeta.set_speed(profile, 2))["speed"], 2)
-	expect_eq(HoldfastMeta.set_speed(profile, 7)["speed"], 1, "anything else is 1x")
-	var damaged := profile.duplicate(true)
-	damaged["speed"] = "fast"
-	expect_eq(_through_json(damaged)["speed"], 1)
+	var path := _save_path("speed_setting")
+	var settings := HoldfastSettings.new()
+	settings.save_path = path
+	settings.load_settings()
+	expect_eq(settings.get_speed(), 1)
+	settings.set_speed(7)
+	expect_eq(settings.get_speed(), 1, "anything else is 1x")
+	settings.set_speed(2)
+	settings.free()
+	var again := HoldfastSettings.new()
+	again.save_path = path
+	again.load_settings()
+	expect_eq(again.get_speed(), 2, "after a reload")
+	again.free()
+	var damaged := _save_path("speed_damaged")
+	var service := SaveService.new(damaged, HoldfastSettings.SAVE_VERSION)
+	service.save({"speed": "fast"})
+	var third := HoldfastSettings.new()
+	third.save_path = damaged
+	third.load_settings()
+	expect_eq(third.get_speed(), 1, "a damaged value is 1x")
+	third.free()
 
 
 func test_the_rules_and_rewards_are_the_same_at_both_speeds() -> void:
@@ -313,21 +327,26 @@ func test_the_rules_and_rewards_are_the_same_at_both_speeds() -> void:
 	expect_true(results[1]["frames"] * 2 <= results[0]["frames"] + 2, "in half the frames")
 
 
-func test_the_button_flips_the_speed_and_the_profile_remembers_it() -> void:
-	var path := _save_path("speed")
-	var main := _run_started(path)
-	var source: HoldfastRunSource = main.get_node("RunSource")
+func test_the_button_flips_the_speed_and_the_settings_remember_it() -> void:
+	var path := _save_path("speed_button")
+	var main := Main.instantiate()
+	main.get_node("RunSource").auto_step = false
+	main.get_node("Settings").save_path = path
+	tree.root.add_child(main)
 	var profile: HoldfastProfile = main.get_node("Profile")
+	var source: HoldfastRunSource = main.get_node("RunSource")
+	ThroughLevelZero.apply(profile)
+	main.journey._buttons["outpost"].pressed.emit()
+	main.planning.auto_place()
+	main.planning.get_node("%StartButton").pressed.emit()
 	expect_eq(source.get_speed(), 1)
 	main.hud._speed_button.pressed.emit()
 	expect_eq(source.get_speed(), 2)
 	main.hud._refresh_hero()
 	expect_eq(main.hud._speed_button.text, "2x")
-	expect_eq(profile.get_speed(), 2)
 	main.free()
-	var again := HoldfastProfile.new()
+	var again := HoldfastSettings.new()
 	again.save_path = path
-	tree.root.add_child(again)
+	again.load_settings()
 	expect_eq(again.get_speed(), 2, "after a reload")
-	again.leave_run()
 	again.free()

@@ -21,7 +21,6 @@ extends RefCounted
 ##   stars_line_seen: bool the one line on what stars buy has been shown (once only)
 ##   paths_kept: [ids]     Hero paths a save was already playing before they were gated (they stay open)
 ##   run_open: bool        a run was started and has not ended or been left (a reload then finds it lost)
-##   speed: int            game speed on the run screen, 1 or 2
 ##   gear_seen: [item ids] the gear pieces the player has looked at on the Hero page
 ##   recruits: {...}       the roster, the squad and the board (see RecruitMeta)
 ##   names: {keep, hero}   what the player has called the keep and the Hero ("" for the default)
@@ -105,7 +104,6 @@ static func new_profile(content: Dictionary) -> Dictionary:
 		"stars_line_seen": false,
 		"paths_kept": [],
 		"run_open": false,
-		"speed": 1,
 		"gear_seen": [],
 		"recruits": RecruitMeta.new_state(content),
 		"names": {"keep": "", "hero": ""},
@@ -193,7 +191,6 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 	if not path_open(content, profile, str(profile["pillar"])) and not data.is_empty():
 		profile["paths_kept"].append(str(profile["pillar"]))
 	profile["run_open"] = data.get("run_open") == true
-	profile["speed"] = 2 if _whole(data.get("speed")) == 2 else 1
 	RecruitMeta.from_save(content, profile, data)
 	return profile
 
@@ -1074,13 +1071,6 @@ static func paths_opened_by(content: Dictionary, level: String) -> Array:
 static func set_run_open(profile: Dictionary, open: bool) -> Dictionary:
 	var out := profile.duplicate(true)
 	out["run_open"] = open
-	return out
-
-
-## The profile with the game speed set: 2 for double speed, anything else 1.
-static func set_speed(profile: Dictionary, speed: int) -> Dictionary:
-	var out := profile.duplicate(true)
-	out["speed"] = 2 if speed == 2 else 1
 	return out
 
 
