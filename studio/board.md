@@ -615,7 +615,7 @@
 
 ### HF-M2-60 Settings, sound, number formats, pause and speed (the logic half of feel)
 - **Owner:** UI Engineer
-- **Status:** Planned, Build 13 of 13 (from the Player Researcher's gap review, 2026-10-30); standing CEO go (2026-10-30), no further check
+- **Status:** Merged (#155, QA clear at 730dfb4; audio and feel not testable by QA, the CEO's ears are the check). Shown-once Hero-path hint is built but silent until HF-M2-64 lands the pillar lock; pause and speed moved to HF-M2-64
 - **QA:** screens (full if the save format changes)
 - **Done when:**
   - [ ] Settings screen replaces the "arrives later" notice: volume, screen shake and flashes, saved through KIT-07, each with a test (the Advisor dropped text size for now, 1280 by 720 is tight and the CEO declined an accessibility pass).
@@ -625,7 +625,7 @@
 
 ### HF-M2-61 Guidance and end of content (from the full play-through)
 - **Owner:** UI Engineer
-- **Status:** Planned, Build 13 of 13; standing CEO go (2026-10-30 "once you get it fix the gaps")
+- **Status:** Merged (#154, QA clear at 31b76e2). Pillar lock and unlock lines run on a stub until HF-M2-64; end-of-content state reads the pack order until then
 - **QA:** screens (full if the save format changes)
 - **Depends on:** HF-M2-03, HF-M2-04, HF-M2-64 (the end-of-content state)
 - **Done when:**
@@ -646,7 +646,7 @@
 
 ### HF-M2-63 Special button: auto-cast node and guided first press
 - **Owner:** Gameplay Engineer
-- **Status:** Planned, Build 13 of 13; standing CEO go (2026-10-30). From the Advisor's view `advisor-special-button.md` (F-137); taste default taken: press at first, buy the auto-cast later
+- **Status:** Merged (#157, QA clear at 7d35516, merged up to 63409fd with green CI); closes the Flare special_gap pin
 - **QA:** full (rules, tree and tutorial)
 - **Depends on:** HF-M2-28
 - **Done when:**
@@ -1058,9 +1058,14 @@
 | F-149 | HF-M2-61 | FOLLOW-UP from QA (db39607): once all seven droppable gear pieces are owned, a kill drops nothing, with no gold or other consolation | Minor | Game Design Advisor | Open, Advisor to say whether it feels flat and whether a salvage-for-gold rule is wanted |
 | F-150 | HF-M2-62 | FOLLOW-UP from QA (#152): a hand-typed plain 1e30 is refused whole by SaveService as corrupt before the clamps run, so progress is lost where a clamp would keep it; safe, reachable only by hand edits that also recompute the hash | Minor | Gameplay Engineer | Open, folded into HF-M2-64 only if trivial |
 | F-151 | HF-M2-62 | FOLLOW-UP from QA (#152): a float-encoded gold or Recruit XP loads as 0 instead of clamping; the game never writes one | Minor | Gameplay Engineer | Open, folded into HF-M2-64 only if trivial |
-| F-152 | HF-M2-61 | FOLLOW-UP from QA (#154): Plan "Start level" is greyed with no reason until a post is placed (Quick start has one) | Minor | UI Engineer | Open, rides the next UI PR |
-| F-153 | HF-M2-61 | FOLLOW-UP from QA (#154): after the Level 0 win "Play again" is the highlighted button while the note says to spend stars first | Minor | UI Engineer | Open, rides the next UI PR |
+| F-152 | HF-M2-61 | FOLLOW-UP from QA (#154): Plan "Start level" is greyed with no reason until a post is placed (Quick start has one) | Minor | UI Engineer | Closed: fixed in #155 (Start level reads "(place a post first)", QA 6b9c719) |
+| F-153 | HF-M2-61 | FOLLOW-UP from QA (#154): after the Level 0 win "Play again" is the highlighted button while the note says to spend stars first | Minor | UI Engineer | Closed: fixed in #155 (focus on Skill tree, QA 6b9c719) |
 | F-154 | HF-M2-64 | FOLLOW-UP from QA (#154): `profile.get_refund_gain` still reports -50 gold / 1 star for a blocked guided node; display only, the UI shows the reason | Minor | Gameplay Engineer | Open, fold into HF-M2-64 if trivial |
+| F-155 | HF-M2-60 | FOLLOW-UP from QA (#155): cut-down figures hide precision near a price (a 1,050 node and 1,000 gold both read "1K"); latent, no node costs over 600 today; show the exact price on the buy card when it first matters | Minor | UI Engineer | Open, M2b |
+| F-156 | HF-M2-60 | FOLLOW-UP from QA (#155): Settings has no reset to defaults (not requested); a one-time hint counts as seen when its page opens, by design | Minor | UI Engineer | Open, parked unless the CEO asks |
+| F-157 | HF-M2-60 | CI smoke-windows on #155: "1 resources still in use at exit" from a sound still fading as the run quits (about 1 run in 3 locally); fixed by not starting playback on a headless display, 10 of 10 clean runs (QA) | Major | UI Engineer | Closed (730dfb4) |
+| F-158 | HF-M2-63 | FOLLOW-UP from QA (#157): Keeper's Habit needs Boots and 300 gold, so a never-pressing player still meets the flare no_special/outpost 0% pin until it is bought; the guided press is the cover | Minor | Gameplay Engineer | Open, known pin (F-138) |
+| F-159 | HF-M2-63 | FOLLOW-UP from QA (#157): the guided press accepts only Space, click or touch; a gamepad player cannot answer it | Minor | UI Engineer | Open, folded into HF-M2-69 (on hold for the Steam Deck answer) |
 
 ## Test changes
 
@@ -1128,6 +1133,7 @@
 | 2026-10-30 | `test_build3`, `test_build5`, `test_radial_web`, `test_rework_b`, `test_tree_connected` (#148, Build 12b) | Node count 61 to 62, star-node list gains `link_posted_hand`, crossing and dashed lists two to three, Archer Post section 17 to 18, `posted_haste` joins the tower stats | Direct consequences of the Posted Hand node | Head of Engineering, after QA diff check at 16ebc6d |
 | 2026-10-31 | `test_build11b`, `test_build5`, `test_first_stand`, `test_guided_start`, `test_interface_tidy`, `test_radial_web`, `test_rework_b`, `test_stars_and_castle`, `test_tree_connected` (#154, HF-M2-61) | Expectations move from "a refund empties the tree and the guided buys come back" to "the two guided buys stay and Refund all asks first". Old to new for each is in the PR body (13 changes): star count 1 + 1 + 2 to 2; upgrades after refund `[]` to the two guided buys; gold change drops the `- 2 * 50` star fees; guided step after refund `castle_slot_1` to empty; free stars reduced by 2; Refund pressed alone to pressed then Confirm | The CEO's rule that guided buys are compulsory and not refundable, plus the Refund-all question; the code is the decision, not the other way round. QA read the arithmetic against node costs and fees on four saves (QA, 31b76e2) | Head of Engineering |
 | 2026-10-31 | `test_rework_a.gd:30` (#155, HF-M2-60) | `"Continue\nLevel 2 · Tideblade · 1,240 gold"` to `"... · 1.2K gold"`; nothing else in that test changes | Short number formats are the item; the Recruit hire price stays exact | Head of Engineering |
+| 2026-10-31 | `test_build3` (profile pin gains `special_taught` false; known hero stats gain `ability.auto_power`), `test_build5` (Flare nodes 12 to 13; reachable gold totals 40 to 41, four lines), `test_radial_web`, `test_rework_b`, `test_tree_connected` (node count 62 to 63), `test_pacing_bands` (sweep cells 16 to 17) (#157, HF-M2-63) | Expected values only, assertions unchanged in intent | The new Keeper's Habit node and its auto-cast cell add one node, one stat and one band cell; QA read each as a count or stat change with nothing loosened (QA, 7d35516) | Head of Engineering |
 
 ## Advisor views
 
