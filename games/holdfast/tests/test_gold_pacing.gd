@@ -177,7 +177,7 @@ func _kill_boss(rules: HoldfastRules) -> void:
 	rules.step(DT, {})
 
 
-func test_a_boss_drop_with_every_piece_owned_is_salvaged_for_about_a_runs_gold() -> void:
+func test_a_boss_drop_with_every_piece_owned_is_salvaged_for_a_quarter_of_a_runs_gold() -> void:
 	var rules := _boss_rules(DROPS + ["gull_feather_fletching", "storm_cap", "oilskin_vest", "wave_worn_boots", "tide_band"])
 	var before := rules.gold
 	_kill_boss(rules)
