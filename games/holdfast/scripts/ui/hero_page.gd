@@ -14,6 +14,7 @@ signal gear_wear_requested(id: String)
 signal gear_off_requested(slot: String)
 
 const Keep = preload("res://scripts/ui/keep_screen.gd")
+const Guidance = preload("res://scripts/ui/guidance.gd")
 const FONT_PX := 20
 const DEFAULT_INFO := ""
 const WEAR_HINT := "Bag: press a piece, or drag it onto its slot, to wear it."
@@ -59,6 +60,16 @@ func _ready() -> void:
 	for target in [_main, _bag, _slot_column]:
 		target.set_drag_forwarding(Callable(), _off_can_drop, _off_drop)
 	_info.text = DEFAULT_INFO
+
+
+## The page shows a one-time line when a new Hero path opens, and says the hint was shown.
+signal hint_seen(id: String)
+
+var _hints: Node
+
+
+func bind_hints(settings: Node) -> void:
+	_hints = settings
 
 
 func bind(profile: Node) -> void:
@@ -316,4 +327,7 @@ func _on_visibility_changed() -> void:
 	if is_visible_in_tree():
 		refresh()
 		_info.text = DEFAULT_INFO
+		if _profile != null and Guidance.has_pillar_news(_content, _profile, _hints):
+			_info.text = Guidance.PILLARS_LINE
+			hint_seen.emit(Guidance.HINT_PILLARS)
 		_back.grab_focus()

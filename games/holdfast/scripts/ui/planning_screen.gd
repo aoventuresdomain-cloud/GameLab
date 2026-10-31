@@ -32,7 +32,14 @@ const NOBODY := "Nobody"
 const QUICK_WHY := "Quick start needs a layout you have played here before."
 const BLESSING_HINT := "A blessing lasts one run. Take one, or none."
 const MAGE_HINT := "Drag a Mage Post onto a spot like an Archer Post."
+## The one-time lines (each said once, the first time the page has the thing to say it about).
+const HINT_BLESSINGS := "blessings"
+const HINT_MAGE_POST := "mage_post"
+const NEED_A_POST := "(place a post first)"
 const RECRUIT_TIP := "Who stands at this post. With Posted Hand, a post with a Recruit on it shoots faster."
+
+## A one-time hint was on the page as it opened; the run flow keeps it from showing again.
+signal hint_seen(id: String)
 
 @onready var _title: Label = %Title
 @onready var _hint: Label = %Hint
@@ -66,6 +73,10 @@ var _site_buttons: Dictionary = {}
 ## The blessing picked for the run ("" for none), and each blessing on offer's button by id.
 var _blessing := ""
 var _blessing_buttons: Dictionary = {}
+## The one-time hint on the page now ("" for none), and where they are kept.
+var _extra_hint := ""
+var _hints: Node
+
 ## The hint's own line and the squad's, which sits under it.
 var _hint_text := ""
 var _squad_line := ""
@@ -212,17 +223,28 @@ func _posted_name(site: String) -> String:
 	return NOBODY
 
 
+func bind_hints(settings: Node) -> void:
+	_hints = settings
+
+
+func _seen(id: String) -> bool:
+	return _hints != null and _hints.has_seen_hint(id)
+
+
 ## The hint line, then in the same paragraph one thing the page has not said yet (the Mage Post cards
 ## in hand, the blessings, or why Quick start is shut), and under it the squad.
 func _show_hint(text: String) -> void:
 	_hint_text = text
 	var extra := ""
+	_extra_hint = ""
 	# A reason (why "+ Tower" is shut) stands alone.
 	if text == HINT:
-		if _mage_cards > 0 and _placed(MAGE_ID) == 0:
+		if _mage_cards > 0 and _placed(MAGE_ID) == 0 and not _seen(HINT_MAGE_POST):
 			extra = MAGE_HINT
-		elif _blessings.visible:
+			_extra_hint = HINT_MAGE_POST
+		elif _blessings.visible and not _seen(HINT_BLESSINGS):
 			extra = BLESSING_HINT
+			_extra_hint = HINT_BLESSINGS
 		elif _saved.is_empty():
 			extra = QUICK_WHY
 	var line := "%s %s" % [text, extra] if extra != "" else text
@@ -318,6 +340,7 @@ func _refresh() -> void:
 		picker.reset_size()
 	_count.text = "Posts: %d of %d" % [_chosen.size(), mini(_slots, _cards + _mage_cards)]
 	_start.disabled = _chosen.is_empty()
+	_start.text = "Start level" if not _chosen.is_empty() else "Start level\n%s" % NEED_A_POST
 	_quick.disabled = _saved.is_empty()
 	_quick.text = "Quick start" if not _saved.is_empty() else "Quick start (no layout yet)"
 	_quick.tooltip_text = QUICK_WHY if _saved.is_empty() else ""
@@ -465,3 +488,5 @@ func _draw_map() -> void:
 func _on_visibility_changed() -> void:
 	if is_visible_in_tree():
 		_start.grab_focus()
+		if _extra_hint != "":
+			hint_seen.emit(_extra_hint)

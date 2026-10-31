@@ -221,7 +221,7 @@ func _fill_board() -> void:
 	for offer in offers:
 		var cls: Dictionary = _content["recruit_classes"][offer["class"]]
 		var trait_data: Dictionary = _content["recruit_traits"][offer["traits"][0]]
-		var button := _button("Hire %s, %s (%s gold)\n%s: %s" % [offer["name"], cls["name"], Hud.format_number(int(offer["cost"])), trait_data["name"], trait_data["text"]])
+		var button := _button("Hire %s, %s (%s gold)\n%s: %s" % [offer["name"], cls["name"], ShortNumber.exact(int(offer["cost"])), trait_data["name"], trait_data["text"]])
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.icon = shape_icon(cls)
 		var why: String = _profile.why_not_hire(int(offer["index"]))

@@ -66,6 +66,8 @@ var _seen_buyable: Array = []
 ## The drawn Hero is a button too (transparent), so the figure itself can be tapped.
 var _hero_figure: Button
 var _next := ""
+## The HoldfastSettings, which remembers the hints already shown.
+var _hints: Node
 ## What the info line says when nothing is hovered: the next goal.
 var _default_info := ""
 ## The guided purchase on offer ("" when there is none).
@@ -95,6 +97,12 @@ func _on_guide_pressed() -> void:
 		stand_requested.emit()
 	else:
 		buy_requested.emit(_guided)
+
+
+## Tells the map where the one-time hints are kept, so the Hero tab's dot clears once its line was shown.
+func bind_hints(settings: Node) -> void:
+	_hints = settings
+	settings.changed.connect(refresh)
 
 
 func bind(profile: Node) -> void:
@@ -131,7 +139,7 @@ func refresh() -> void:
 	# The guided buy comes first: until it is made the tree and the Hero page stay shut.
 	var locked: bool = _profile.get_guided_step() != ""
 	_tree_dot.visible = not locked and _profile.get_buyable_nodes().any(func(id: String) -> bool: return not id in _seen_buyable)
-	_hero_dot.visible = not locked and _profile.has_unseen_gear()
+	_hero_dot.visible = not locked and (_profile.has_unseen_gear() or Guidance.has_pillar_news(_content, _profile, _hints))
 	_tree.disabled = locked
 	_plan.disabled = locked or _guide.visible or _plan_target() == ""
 	_hero_button.disabled = locked
