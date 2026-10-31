@@ -517,6 +517,8 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 	var stats := HoldfastRules.upgrade_stats(nodes, purchased)
 	# Stars are judged on the Keep as the tree builds it, so a blessing never changes them.
 	_keep_star_max = _apply(stats, "keep_health", float(level["keep_health"]))
+	var star_nodes: Dictionary = nodes.duplicate()
+	var star_purchased: Array = purchased.duplicate()
 	var blessing_id := str(config.get("blessing", ""))
 	if blessing_id != "":
 		if not content.get("blessings", {}).has(blessing_id):
@@ -540,6 +542,9 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 			nodes["modifiers"] = {"effects": changes}
 			purchased.append("modifiers")
 			stats = HoldfastRules.upgrade_stats(nodes, purchased)
+			# Stars read against the Keep the player actually had: the tree's and the modifiers', never a blessing's.
+			star_nodes["modifiers"] = {"effects": changes}
+			_keep_star_max = _apply(HoldfastRules.upgrade_stats(star_nodes, star_purchased + ["modifiers"]), "keep_health", float(level["keep_health"]))
 	keep_health_max = roundi(_apply(stats, "keep_health", float(level["keep_health"])))
 	keep_health = keep_health_max
 	enemy_speed = _apply(stats, "enemy_speed", 1.0)
