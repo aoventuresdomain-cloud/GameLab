@@ -691,6 +691,12 @@
           "items": {
             "$ref": "#/$defs/recruit_prices"
           }
+        },
+        "achievements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/achievement"
+          }
         }
       }
     },
@@ -1722,6 +1728,53 @@
             "type": "integer",
             "minimum": 0
           }
+        }
+      }
+    },
+    "achievement": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "text",
+        "counter",
+        "goal",
+        "steam"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "counter": {
+          "enum": [
+            "levels_cleared",
+            "bosses_beaten",
+            "clean_wins",
+            "best_stars",
+            "level_stars",
+            "node_kinds",
+            "nodes_owned",
+            "recruits_hired",
+            "gear_worn",
+            "gear_owned",
+            "runs"
+          ]
+        },
+        "goal": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "steam": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{2,63}$"
         }
       }
     }

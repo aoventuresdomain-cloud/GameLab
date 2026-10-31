@@ -74,6 +74,13 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Flashes"
 
+[node name="AchievementsButton" type="Button" parent="Centre/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Achievements"
+
 [node name="Note" type="Label" parent="Centre/Column"]
 unique_name_in_owner = true
 layout_mode = 2

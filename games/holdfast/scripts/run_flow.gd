@@ -4,13 +4,14 @@ extends Node
 ## only place that starts a run or changes the profile. Screens ask through their
 ## signals and the flow acts, so a screen never writes progress itself.
 
-enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY, RECRUITS, SETTINGS }
+enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY, RECRUITS, SETTINGS, ACHIEVEMENTS }
 
 @export var source_path: NodePath
 @export var profile_path: NodePath
 @export var home_path: NodePath
 @export var settings_path: NodePath
 @export var settings_screen_path: NodePath
+@export var achievements_screen_path: NodePath
 @export var journey_path: NodePath
 @export var hero_page_path: NodePath
 @export var recruits_path: NodePath
@@ -25,6 +26,8 @@ enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY, RECRUITS, SETTINGS }
 ## The player's settings and the screen that changes them.
 @onready var settings: HoldfastSettings = get_node(settings_path)
 @onready var settings_screen: Control = get_node(settings_screen_path)
+## The achievements list, opened from the settings.
+@onready var achievements_screen: Control = get_node(achievements_screen_path)
 @onready var journey: Control = get_node(journey_path)
 @onready var hero_page: Control = get_node(hero_page_path)
 ## The Recruits page: board, roster and squad.
@@ -52,6 +55,7 @@ func _ready() -> void:
 	hud.special_requested.connect(_on_special_requested)
 	home.bind(profile)
 	settings_screen.bind(settings)
+	achievements_screen.bind(profile)
 	for screen_with_hints in [planning, hero_page]:
 		screen_with_hints.bind_hints(settings)
 		screen_with_hints.hint_seen.connect(settings.see_hint)
@@ -67,6 +71,8 @@ func _ready() -> void:
 	settings_screen.shake_requested.connect(settings.set_shake)
 	settings_screen.flashes_requested.connect(settings.set_flashes)
 	settings_screen.back_requested.connect(_show.bind(Screen.HOME))
+	settings_screen.achievements_requested.connect(_show.bind(Screen.ACHIEVEMENTS))
+	achievements_screen.back_requested.connect(_show.bind(Screen.SETTINGS))
 	home.quit_requested.connect(get_tree().quit)
 	journey.home_requested.connect(_show.bind(Screen.HOME))
 	journey.tree_requested.connect(_show.bind(Screen.TREE))
@@ -344,6 +350,7 @@ func _show(next: Screen) -> void:
 		profile.see_gear()
 	home.visible = next == Screen.HOME
 	settings_screen.visible = next == Screen.SETTINGS
+	achievements_screen.visible = next == Screen.ACHIEVEMENTS
 	journey.visible = next == Screen.MAP
 	hero_page.visible = next == Screen.HERO
 	recruits_page.visible = next == Screen.RECRUITS

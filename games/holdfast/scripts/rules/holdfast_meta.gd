@@ -9,6 +9,8 @@ extends RefCounted
 ##   gold: int,            banked gold, spent on upgrades
 ##   upgrades: [ids],      bought upgrade nodes, in the order bought
 ##   stars: {level: int}   the most stars each level has paid (1 to 3; a tutorial pays its reward)
+##   achievements: [ids]   the achievements unlocked, in order (see HoldfastAchievements)
+##   counters: {name: int} what the profile cannot work out from the rest: clean_wins, the levels won with no tower lost
 ##   hard_stars: {level: int} the most stars each cleared level's Hard replay has paid (1 to 3), on top of `stars`
 ##   levels_won: [ids],
 ##   unlocked: [ids],      levels opened beyond the first, by winning the one before
@@ -95,6 +97,8 @@ static func new_profile(content: Dictionary) -> Dictionary:
 		"gold": 0,
 		"upgrades": [],
 		"stars": {},
+		"achievements": [],
+		"counters": {"clean_wins": 0},
 		"hard_stars": {},
 		"levels_won": [],
 		"unlocked": [],
@@ -206,7 +210,16 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 		profile["paths_kept"].append(str(profile["pillar"]))
 	profile["run_open"] = data.get("run_open") == true
 	RecruitMeta.from_save(content, profile, data)
-	return profile
+	# Unlocks the save names (known ones only), then any the profile has met since: a save from before
+	# achievements, or one whose game was closed mid-way, gets what it has earned.
+	var saved_unlocks: Variant = data.get("achievements")
+	for id in saved_unlocks if saved_unlocks is Array else []:
+		if content.get("achievements", {}).has(id) and not id in profile["achievements"]:
+			profile["achievements"].append(id)
+	var saved_counters: Variant = data.get("counters")
+	if saved_counters is Dictionary:
+		profile["counters"]["clean_wins"] = maxi(_whole(saved_counters.get("clean_wins")), 0)
+	return HoldfastAchievements.unlock(content, profile)
 
 
 ## `levels_won` and `unlocked` from a save. The first level is always open; a later level stays in
@@ -1167,6 +1180,10 @@ static func bank_run(content: Dictionary, profile: Dictionary, result: Dictionar
 		if item.is_empty() or id in out["gear"]["owned"]:
 			continue
 		out["gear"]["owned"].append(id)
+	# A win that lost no tower counts toward "Not a Stone Lost" (a run result with no towers_lost does not).
+	if result.get("outcome") == HoldfastRules.OUTCOME_WON and result.has("towers_lost") and int(result["towers_lost"]) == 0 and not _tutorial(content.get("levels", {}).get(level, {})):
+		out["counters"] = out.get("counters", {}).duplicate()
+		out["counters"]["clean_wins"] = int(out["counters"].get("clean_wins", 0)) + 1
 	var next := next_level(content, level) if result.get("outcome") == HoldfastRules.OUTCOME_WON and not hard else ""
 	if next != "" and not next in out["unlocked"]:
 		out["unlocked"].append(next)

@@ -6,6 +6,7 @@ signal volume_requested(value: float)
 signal shake_requested(on: bool)
 signal flashes_requested(on: bool)
 signal back_requested
+signal achievements_requested
 
 @onready var _volume: HSlider = %VolumeSlider
 @onready var _volume_value: Label = %VolumeValue
@@ -13,6 +14,7 @@ signal back_requested
 @onready var _flashes: CheckButton = %FlashesButton
 @onready var _note: Label = %Note
 @onready var _back: Button = %BackButton
+@onready var _achievements: Button = %AchievementsButton
 
 var _settings: Node
 
@@ -22,6 +24,7 @@ func _ready() -> void:
 	_shake.toggled.connect(shake_requested.emit)
 	_flashes.toggled.connect(flashes_requested.emit)
 	_back.pressed.connect(back_requested.emit)
+	_achievements.pressed.connect(achievements_requested.emit)
 	visibility_changed.connect(_on_visibility_changed)
 
 

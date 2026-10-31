@@ -1,0 +1,16 @@
+{
+  "achievements": [
+    {"id": "first_clear", "name": "First Light", "text": "Clear a level.", "counter": "levels_cleared", "goal": 1, "steam": "HF_FIRST_CLEAR"},
+    {"id": "all_five", "name": "Five Fires", "text": "Clear all five levels.", "counter": "levels_cleared", "goal": 5, "steam": "HF_ALL_FIVE"},
+    {"id": "boss_down", "name": "Fog Lifted", "text": "Beat a boss.", "counter": "bosses_beaten", "goal": 1, "steam": "HF_BOSS_DOWN"},
+    {"id": "clean_win", "name": "Not a Stone Lost", "text": "Win a level without losing a tower.", "counter": "clean_wins", "goal": 1, "steam": "HF_CLEAN_WIN"},
+    {"id": "three_stars", "name": "Bright Keep", "text": "Earn 3 stars on a level.", "counter": "best_stars", "goal": 3, "steam": "HF_THREE_STARS"},
+    {"id": "every_star", "name": "Every Star", "text": "Earn 15 stars from levels.", "counter": "level_stars", "goal": 15, "steam": "HF_EVERY_STAR"},
+    {"id": "each_kind", "name": "A Little of Everything", "text": "Own a gold node, a star node and a Hero node.", "counter": "node_kinds", "goal": 3, "steam": "HF_EACH_KIND"},
+    {"id": "ten_nodes", "name": "Well Stocked", "text": "Own 10 nodes.", "counter": "nodes_owned", "goal": 10, "steam": "HF_TEN_NODES"},
+    {"id": "hire_recruit", "name": "Another Pair of Hands", "text": "Hire a Recruit.", "counter": "recruits_hired", "goal": 1, "steam": "HF_HIRE_RECRUIT"},
+    {"id": "full_set", "name": "Dressed for the Fog", "text": "Wear a piece of gear in every slot.", "counter": "gear_worn", "goal": 5, "steam": "HF_FULL_SET"},
+    {"id": "collector", "name": "Magpie", "text": "Find 6 pieces of gear.", "counter": "gear_owned", "goal": 6, "steam": "HF_COLLECTOR"},
+    {"id": "regular", "name": "Keeper's Regular", "text": "Play 25 runs.", "counter": "runs", "goal": 25, "steam": "HF_REGULAR"}
+  ]
+}
