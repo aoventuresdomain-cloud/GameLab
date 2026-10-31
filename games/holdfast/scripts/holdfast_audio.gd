@@ -90,7 +90,10 @@ func play(sound: String) -> bool:
 		return false
 	if not _players.has(sound):
 		return false
-	_players[sound].play()
+	# Headless runs (tests, CI, the smoke run) have no sound device. A playback still fading out when
+	# the game quits is reported by the engine as a leaked resource, so none is started there.
+	if DisplayServer.get_name() != "headless":
+		_players[sound].play()
 	played.emit(sound)
 	return true
 

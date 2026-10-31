@@ -287,6 +287,17 @@ func test_a_zero_volume_run_plays_no_sound_at_all() -> void:
 	main.free()
 
 
+func test_a_headless_run_starts_no_playback_so_nothing_is_left_playing_at_quit() -> void:
+	var main := _main()
+	var audio: HoldfastAudio = main.get_node("Audio")
+	var heard := []
+	audio.played.connect(func(sound: String) -> void: heard.append(sound))
+	expect_true(audio.play("boss"), "the event is still counted")
+	expect_eq(heard, ["boss"])
+	expect_false(audio._players["boss"].playing, "but no sound is started without a sound device")
+	main.free()
+
+
 func test_every_sound_file_is_listed_in_the_credits() -> void:
 	var credits := FileAccess.get_file_as_string("res://assets/CREDITS.md")
 	for sound in HoldfastAudio.SOUNDS:
