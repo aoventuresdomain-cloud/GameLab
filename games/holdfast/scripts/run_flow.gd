@@ -48,6 +48,10 @@ func _ready() -> void:
 	hud.begin_requested.connect(source.release_hold)
 	home.bind(profile)
 	settings_screen.bind(settings)
+	for screen_with_hints in [planning, hero_page]:
+		screen_with_hints.bind_hints(settings)
+		screen_with_hints.hint_seen.connect(settings.see_hint)
+	journey.bind_hints(settings)
 	journey.bind(profile)
 	hero_page.bind(profile)
 	recruits_page.bind(profile)
