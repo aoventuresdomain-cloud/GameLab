@@ -100,6 +100,7 @@ const STAT_TEXT := {
 	"ability.burn_dps": "burn damage a second",
 	"ability.burn_seconds": "burn seconds",
 	"ability.cooldown": "barrage cooldown (seconds)",
+	"ability.auto_power": "barrage power when it fires itself",
 	"armour": "percent of damage turned away",
 	"getup_time": "time to get up",
 	"pickup_radius": "XP pickup reach",

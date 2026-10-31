@@ -67,6 +67,21 @@ func release_hold() -> void:
 	pass
 
 
+## True while the run waits, mid-fight, for the player's first press of the Hero's special.
+func is_teaching_special() -> bool:
+	return false
+
+
+## The player's press while the special's prompt waits: the Hero fires it and the run moves on.
+func press_special() -> void:
+	pass
+
+
+## What the special's first-time prompt says while it waits, "" when it is not up.
+func get_special_note() -> String:
+	return ""
+
+
 ## What a boss on the field says about its shroud, "" when there is none.
 func get_boss_note() -> String:
 	return ""

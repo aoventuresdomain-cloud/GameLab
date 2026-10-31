@@ -73,14 +73,13 @@
     "how": "the Dusk Mage with only the first castle slot bought, average bot, 12 players"
   },
   "known_misses": {
-    "flare_archer/special_gap/mean": 0.65,
     "flare_archer/no_special/outpost": 0.0,
     "flare_archer/fork_feel/tidewrack_cove": 0.026,
     "dusk_mage/average/gull_rock": 0.6667,
     "tideblade/special_gap/mean": 0.5,
     "tideblade/poor/gull_rock": 0.0
   },
-  "known_misses_note": "A pinned miss may not get worse, and CI fails if it comes back inside its band (delete the pin then). Build 12a (HF-M2-28) removed every pin that levels and data could fix and pinned what remains, each with its cause. flare_archer/special_gap/mean and flare_archer/no_special/outpost: the Flare special is about three times the arrow and a win rate falls from near 100% to near 0% within about 10% of enemy strength, so the gap is close to the win rate on any level that is not trivial, and at Outpost (kept as it was, so a player who does nothing still loses) the special carries the fight; fixed by the arrow and special rebalance (HF-M2-63), which also brings the per-level +15 to +35 target. flare_archer/fork_feel/tidewrack_cove: the two Archer sides play within 3% of each other at Tidewrack Cove; the fork nodes are rebalanced with HF-M2-63. dusk_mage/average/gull_rock, tideblade/special_gap/mean and tideblade/poor/gull_rock: Levels 1 to 5 are shared by all three pillars, so Gull Rock cannot be tuned for the Dusk Mage and the Tideblade without taking the Flare Archer out of band, and monsters must not depend on the Hero picked; they are tuned when the biome they unlock into exists.",
+  "known_misses_note": "A pinned miss may not get worse, and CI fails if it comes back inside its band (delete the pin then). Build 12a (HF-M2-28) removed every pin that levels and data could fix and pinned what remains, each with its cause. flare_archer/special_gap/mean is fixed by Keeper's Habit (HF-M2-63): a player who never presses the special saves up for it (300 gold after Light feet, a few runs of Outpost) and then has it firing on its own, and the gap is now the special pressed against never pressed with the Habit (about 35 points, in band); its pin is deleted. flare_archer/no_special/outpost: no node can be bought before the first fight (the tutorial pays 150 gold), so a player who never presses the special and has not bought the Habit still loses Outpost; the guided first press (HF-M2-63) teaches the button before that fight. flare_archer/fork_feel/tidewrack_cove: the two Archer sides play within 3% of each other at Tidewrack Cove; the fork nodes are rebalanced with HF-M2-63. dusk_mage/average/gull_rock, tideblade/special_gap/mean and tideblade/poor/gull_rock: Levels 1 to 5 are shared by all three pillars, so Gull Rock cannot be tuned for the Dusk Mage and the Tideblade without taking the Flare Archer out of band, and monsters must not depend on the Hero picked; they are tuned when the biome they unlock into exists.",
   "fork_feel": {
     "min": 0.05,
     "first_level": "shingle_beach",

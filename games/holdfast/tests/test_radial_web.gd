@@ -57,7 +57,7 @@ func _rect(control: Control) -> Rect2:
 
 func test_the_positions_are_a_web_from_the_middle_with_room_between_nodes() -> void:
 	var ids: Array = _nodes().keys()
-	expect_eq(ids.size(), 62, "no node was lost")
+	expect_eq(ids.size(), 63, "no node was lost")
 	var low := Vector2.ZERO
 	var high := Vector2.ZERO
 	var closest := INF
