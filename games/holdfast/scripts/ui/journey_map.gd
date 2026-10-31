@@ -18,6 +18,7 @@ signal stand_requested
 signal plan_requested(id: String)
 
 const Hud = preload("res://scripts/ui/hud.gd")
+const Guidance = preload("res://scripts/ui/guidance.gd")
 const FONT_PX := 20
 const NODE_RADIUS := 32.0
 const PATH_STEPS := 12
@@ -35,8 +36,6 @@ const HERO_FIGURE := Vector2(44, 64)
 ## The small dot on the Skill tree and Hero tabs: something new to look at.
 const COLOUR_DOT := Color(0.95, 0.7, 0.25)
 const DOT_PX := 16.0
-const STAND_LINE := "Your post is up. Try it out."
-const DEFAULT_INFO := ""
 const HERO_INFO := "Hero and gear"
 const RECRUITS_INFO := "Recruits, the squad and the board"
 
@@ -67,6 +66,8 @@ var _seen_buyable: Array = []
 ## The drawn Hero is a button too (transparent), so the figure itself can be tapped.
 var _hero_figure: Button
 var _next := ""
+## What the info line says when nothing is hovered: the next goal.
+var _default_info := ""
 ## The guided purchase on offer ("" when there is none).
 var _guided := ""
 
@@ -84,7 +85,7 @@ func _ready() -> void:
 	_tree_dot = _make_dot(_tree)
 	_hero_dot = _make_dot(_hero_button)
 	_recruits_dot = _make_dot(_recruits_button)
-	_info.text = DEFAULT_INFO
+	_info.text = _default_info
 	visibility_changed.connect(_on_visibility_changed)
 
 
@@ -109,6 +110,8 @@ func refresh() -> void:
 	_gold.text = Hud.format_number(_profile.get_gold())
 	_stars.text = str(_profile.get_stars())
 	_refresh_guide()
+	_default_info = Guidance.next_goal(_content, _profile)
+	_info.text = _default_info
 	_next = ""
 	for id in _ids:
 		if _is_open(id) and not _profile.is_level_won(id):
@@ -163,32 +166,15 @@ func _is_open(id: String) -> bool:
 ## tutorial is won, until the castle has a tower; then one Start button for the short fight,
 ## which waits for a press.
 func _refresh_guide() -> void:
-	_guided = _profile.get_guide_node()
-	var stand: bool = _guided == "" and _profile.is_stand_due()
-	_guide.visible = _guided != "" or stand
-	if stand:
-		_guide_label.text = STAND_LINE
-		_guide_button.text = "Start"
-		_guide_button.disabled = false
+	var guide := Guidance.guide(_content, _profile)
+	_guide.visible = not guide.is_empty()
+	if guide.is_empty():
+		_guided = ""
 		return
-	if _guided == "":
-		return
-	var node: Dictionary = _content["upgrade_nodes"][_guided]
-	var why: String = _profile.why_not_buy(_guided)
-	if why == "Not enough stars":
-		why = "Refund a node to free a star"
-	_guide_label.text = "Spend a star on %s: %s.%s" % [node["name"], _grant_text(node), "" if why == "" else " " + why + "."]
-	_guide_button.text = "Buy %s (%s)" % [node["name"], HoldfastMeta.cost_text(node)]
-	_guide_button.disabled = why != ""
-
-
-static func _grant_text(node: Dictionary) -> String:
-	var parts: PackedStringArray = []
-	if int(node.get("grants", {}).get("slots", 0)) > 0:
-		parts.append("a place on the castle ring for a post")
-	if int(node.get("grants", {}).get("cards", 0)) > 0:
-		parts.append("an Archer Post to put in it")
-	return " and ".join(parts)
+	_guided = str(guide["node"])
+	_guide_label.text = str(guide["text"])
+	_guide_button.text = str(guide["button"])
+	_guide_button.disabled = bool(guide["disabled"])
 
 
 ## How many tree nodes the player could buy right now.
@@ -259,7 +245,7 @@ func _build_nodes() -> void:
 		button.add_theme_font_size_override("font_size", 24)
 		button.pressed.connect(func() -> void: level_requested.emit(id))
 		button.mouse_entered.connect(func() -> void: _info.text = _level_text(id))
-		button.mouse_exited.connect(func() -> void: _info.text = DEFAULT_INFO)
+		button.mouse_exited.connect(func() -> void: _info.text = _default_info)
 		_map.add_child(button)
 		_buttons[id] = button
 		var caption := Label.new()
@@ -272,14 +258,14 @@ func _build_nodes() -> void:
 	_hero_button.add_theme_font_size_override("font_size", FONT_PX)
 	_hero_button.pressed.connect(hero_requested.emit)
 	_hero_button.mouse_entered.connect(func() -> void: _info.text = HERO_INFO)
-	_hero_button.mouse_exited.connect(func() -> void: _info.text = DEFAULT_INFO)
+	_hero_button.mouse_exited.connect(func() -> void: _info.text = _default_info)
 	_map.add_child(_hero_button)
 	_recruits_button = Button.new()
 	_recruits_button.text = "Recruits"
 	_recruits_button.add_theme_font_size_override("font_size", FONT_PX)
 	_recruits_button.pressed.connect(recruits_requested.emit)
 	_recruits_button.mouse_entered.connect(func() -> void: _info.text = RECRUITS_INFO)
-	_recruits_button.mouse_exited.connect(func() -> void: _info.text = DEFAULT_INFO)
+	_recruits_button.mouse_exited.connect(func() -> void: _info.text = _default_info)
 	_map.add_child(_recruits_button)
 	_hero_figure = Button.new()
 	for style_name in ["normal", "hover", "pressed", "focus", "disabled"]:
@@ -290,7 +276,7 @@ func _build_nodes() -> void:
 	_hero_figure.focus_exited.connect(_map.queue_redraw)
 	_hero_figure.pressed.connect(hero_requested.emit)
 	_hero_figure.mouse_entered.connect(func() -> void: _info.text = HERO_INFO)
-	_hero_figure.mouse_exited.connect(func() -> void: _info.text = DEFAULT_INFO)
+	_hero_figure.mouse_exited.connect(func() -> void: _info.text = _default_info)
 	_map.add_child(_hero_figure)
 
 
@@ -384,7 +370,7 @@ func _draw_map() -> void:
 func _on_visibility_changed() -> void:
 	if is_visible_in_tree():
 		refresh()
-		_info.text = DEFAULT_INFO
+		_info.text = _default_info
 		var target: Button = _buttons.get(_next)
 		if _guide.visible and not _guide_button.disabled:
 			_guide_button.grab_focus()

@@ -284,6 +284,10 @@ func test_an_old_save_draws_the_same_nodes_with_the_new_layout() -> void:
 		if bought:
 			expect_true(page._node_buttons[id].visible, "%s shows" % id)
 	profile.respec()
+	var guided: Array = HoldfastMeta.castle_rules(HoldfastContent.base())["guided"]
 	for id in owned:
-		expect_ne(page._marks[id].get_meta("state"), "owned", "%s is no longer drawn owned after a refund" % id)
+		if id in guided:
+			expect_eq(page._marks[id].get_meta("state"), "owned", "%s stays drawn owned: a refund leaves the two guided buys" % id)
+		else:
+			expect_ne(page._marks[id].get_meta("state"), "owned", "%s is no longer drawn owned after a refund" % id)
 	main.free()

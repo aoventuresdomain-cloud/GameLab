@@ -70,6 +70,24 @@ layout_mode = 2
 theme_type_variation = &"HudValue"
 text = "0"
 
+[node name="Guide" type="HBoxContainer" parent="Margin/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="GuideLabel" type="Label" parent="Margin/Column/Guide"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+autowrap_mode = 2
+
+[node name="GuideButton" type="Button" parent="Margin/Column/Guide"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+
 [node name="TabRow" type="HBoxContainer" parent="Margin/Column"]
 layout_mode = 2
 theme_override_constants/separation = 8
@@ -123,6 +141,20 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Refund all"
+
+[node name="ConfirmButton" type="Button" parent="Margin/Column/Footer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Yes, refund all"
+
+[node name="CancelButton" type="Button" parent="Margin/Column/Footer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Keep my upgrades"
 
 [node name="BackButton" type="Button" parent="Margin/Column/Footer"]
 unique_name_in_owner = true

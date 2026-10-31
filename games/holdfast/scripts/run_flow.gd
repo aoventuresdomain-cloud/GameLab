@@ -35,6 +35,8 @@ enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY, RECRUITS, SETTINGS }
 @onready var summary: Control = get_node(summary_path)
 @onready var planning: Control = get_node(planning_path)
 
+const Guidance = preload("res://scripts/ui/guidance.gd")
+
 ## Shown once, on the summary that first pays stars.
 const STARS_LINE := "Stars buy slots and towers. Gold buys upgrades."
 
@@ -81,6 +83,7 @@ func _ready() -> void:
 	keep_screen.buy_requested.connect(profile.buy)
 	keep_screen.respec_requested.connect(_respec_requested)
 	keep_screen.refund_requested.connect(_refund_requested)
+	keep_screen.stand_requested.connect(_begin_stand)
 	summary.play_again_requested.connect(_plan_run)
 	planning.start_requested.connect(_planned)
 	planning.back_requested.connect(_show.bind(Screen.MAP))
@@ -178,7 +181,7 @@ func _open_plan() -> void:
 
 ## Tells the Plan page who is on the squad and who is set on which post.
 func _show_posted() -> void:
-	planning.set_posted(profile.get_squad().map(func(recruit: Dictionary) -> Dictionary: return {"id": recruit["id"], "name": recruit["name"]}), profile.get_posted())
+	planning.set_posted(profile.get_squad().map(func(recruit: Dictionary) -> Dictionary: return {"id": recruit["id"], "name": recruit["name"]}), profile.get_posted(), "link_posted_hand" in profile.get_upgrades())
 
 
 func _recruit_posted(site: String, id: String) -> void:
@@ -281,6 +284,12 @@ func _on_run_ended(result: Dictionary) -> void:
 			profile.show_stars_line()
 		if result["result"].get("outcome") == HoldfastRules.OUTCOME_WON:
 			next = profile.get_next_level(level)
+			# While the guided buys are due no level can be planned: the guide comes first.
+			if profile.get_guide_node() != "":
+				next = ""
+		result["notes"] = Guidance.summary_notes(HoldfastContent.base(), profile, result["result"], next)
+		if profile.get_guide_node() != "":
+			result["notes"]["guide_note"] = Guidance.GUIDE_NOTE
 	summary.show_summary(result, next)
 	summary.set_picks(profile.get_pending_picks() if result.has("result") else [])
 	_show(Screen.SUMMARY)

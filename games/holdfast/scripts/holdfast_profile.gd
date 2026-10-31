@@ -96,6 +96,11 @@ func why_not_respec() -> String:
 	return HoldfastMeta.why_not_respec(_content, data)
 
 
+## The nodes a respec would take back (the guided first buys stay).
+func get_respec_nodes() -> Array:
+	return HoldfastMeta.respec_nodes(_content, data)
+
+
 ## What a respec would do to the gold: the refunds less the fees (negative when fees win).
 func get_respec_gold_change() -> int:
 	return HoldfastMeta.respec_gold_change(_content, data)

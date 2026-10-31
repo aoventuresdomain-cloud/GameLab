@@ -80,7 +80,7 @@ func test_respec_stars_counts_the_star_nodes_owned() -> void:
 	var content := _content()
 	var profile := HoldfastMeta.new_profile(content)
 	profile["upgrades"] = ["castle_slot_1", "castle_archer_1", "squad_hand_3"]
-	expect_eq(HoldfastMeta.respec_stars(content, profile), 1 + 1 + 2, "two stars for Third Hand on top of the castle nodes")
+	expect_eq(HoldfastMeta.respec_stars(content, profile), 2, "two stars for Third Hand; the castle nodes stay")
 	profile["upgrades"] = []
 	expect_eq(HoldfastMeta.respec_stars(content, profile), 0, "nothing bought, nothing back")
 

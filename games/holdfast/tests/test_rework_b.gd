@@ -215,7 +215,8 @@ func test_every_node_is_on_the_web_and_buying_and_respec_work_from_it() -> void:
 	expect_eq(page._labels["flare_focus"].text, "Steady aim", "the name is under it")
 	expect_true(page._node_buttons["flare_focus"].get_theme_stylebox("disabled") == page._owned_style, "an owned node glows green")
 	page.get_node("%RespecButton").pressed.emit()
-	expect_true(profile.get_upgrades().is_empty(), "respec works")
+	page.get_node("%ConfirmButton").pressed.emit()
+	expect_eq(profile.get_upgrades(), ["castle_slot_1", "castle_archer_1"], "respec works and leaves the two guided buys")
 	main.free()
 
 

@@ -16,6 +16,8 @@ signal gear_off_requested(slot: String)
 const Keep = preload("res://scripts/ui/keep_screen.gd")
 const FONT_PX := 20
 const DEFAULT_INFO := ""
+const WEAR_HINT := "Bag: press a piece, or drag it onto its slot, to wear it."
+const LOCKED_ALPHA := 0.5
 const COLOUR_HERO := Color(0.95, 0.6, 0.2)
 const COLOUR_WORN := Color(0.2, 0.5, 0.3)
 const COLOUR_WORN_EDGE := Color(0.45, 0.85, 0.55)
@@ -77,6 +79,9 @@ func refresh() -> void:
 	selected_pillar = _profile.get_pillar()
 	for id in _pillar_buttons:
 		_pillar_buttons[id].set_pressed_no_signal(id == selected_pillar)
+		var reason := _lock_reason(id)
+		_pillar_buttons[id].text = "%s (locked)" % _content["hero_paths"][id]["name"] if reason != "" else str(_content["hero_paths"][id]["name"])
+		_pillar_buttons[id].modulate = Color(1, 1, 1, LOCKED_ALPHA) if reason != "" else Color.WHITE
 	var path: Dictionary = _content["hero_paths"][selected_pillar]
 	_pillar_info.text = "%s: %s" % [path["name"], path.get("blurb", "")]
 	_refresh_gear()
@@ -94,7 +99,8 @@ func _refresh_gear() -> void:
 		_bag.remove_child(child)
 		child.queue_free()
 	var owned: Array = _profile.get_gear_owned()
-	_bag_hint.text = "Gear: none yet. Each level's first win gives a piece, and elites and bosses may drop more." if owned.is_empty() else "Bag"
+	# The how-to shows until the first piece is on.
+	_bag_hint.text = "Gear: none yet. Each level's first win gives a piece, and elites and bosses may drop more." if owned.is_empty() else (WEAR_HINT if worn.is_empty() else "Bag")
 	for id in owned:
 		var item: Dictionary = _content["gear_items"][id]
 		# A worn piece is on its slot, not in the bag.
@@ -271,11 +277,34 @@ func _build_pillars() -> void:
 		button.toggle_mode = true
 		button.button_group = group
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.pressed.connect(func() -> void: pillar_requested.emit(id))
-		button.mouse_entered.connect(func() -> void: _info.text = "%s: %s" % [path["name"], path.get("blurb", "")])
+		button.pressed.connect(_pillar_pressed.bind(id))
+		button.mouse_entered.connect(func() -> void: _info.text = _pillar_text(id))
 		button.mouse_exited.connect(func() -> void: _info.text = DEFAULT_INFO)
 		_pillar_row.add_child(button)
 		_pillar_buttons[id] = button
+
+
+## "" when the Hero path can be picked, else what opens it.
+## shortcut: the profile has no pillar gating yet (HF-M2-64); it names `get_pillar_lock_reason(id)` when it does.
+func _lock_reason(id: String) -> String:
+	return str(_profile.get_pillar_lock_reason(id)) if _profile != null and _profile.has_method("get_pillar_lock_reason") else ""
+
+
+## A locked path says what opens it and changes nothing; the pick that was held stays held.
+func _pillar_pressed(id: String) -> void:
+	var reason := _lock_reason(id)
+	if reason == "":
+		pillar_requested.emit(id)
+		return
+	_pillar_buttons[id].set_pressed_no_signal(false)
+	_pillar_buttons[selected_pillar].set_pressed_no_signal(true)
+	_info.text = _pillar_text(id)
+
+
+func _pillar_text(id: String) -> String:
+	var path: Dictionary = _content["hero_paths"][id]
+	var reason := _lock_reason(id)
+	return "%s: %s" % [path["name"], reason if reason != "" else path.get("blurb", "")]
 
 
 func _gear_text(id: String) -> String:

@@ -12,8 +12,11 @@ signal buy_requested(id: String)
 signal respec_requested
 ## One bought node taken back, from its card.
 signal refund_requested(id: String)
+## The Start button of the guide, once both guided buys are made: the short fight with the new post.
+signal stand_requested
 
 const Hud = preload("res://scripts/ui/hud.gd")
+const Guidance = preload("res://scripts/ui/guidance.gd")
 const FONT_PX := 20
 const DIMMED := Color(1, 1, 1, 0.45)
 const OWNED_FILL := Color(0.2, 0.5, 0.3)
@@ -131,6 +134,11 @@ var selected_pillar := ""
 @onready var _zoom_in: Button = %ZoomIn
 @onready var _info: Label = %Info
 @onready var _respec: Button = %RespecButton
+@onready var _confirm: Button = %ConfirmButton
+@onready var _cancel: Button = %CancelButton
+@onready var _guide: Control = %Guide
+@onready var _guide_label: Label = %GuideLabel
+@onready var _guide_button: Button = %GuideButton
 @onready var _back: Button = %BackButton
 
 var _profile: Node
@@ -162,6 +170,8 @@ var _panning := false
 var _held := false
 var _moved := 0.0
 var _dragged := false
+## The upgrade the guide offers ("" for the fight).
+var _guide_node := ""
 var _card: Control
 var _card_id := ""
 var _card_title: Label
@@ -185,7 +195,10 @@ var _glowing: Array = []
 func _ready() -> void:
 	_content = HoldfastContent.base()
 	_back.pressed.connect(back_requested.emit)
-	_respec.pressed.connect(respec_requested.emit)
+	_respec.pressed.connect(_ask_refund_all)
+	_confirm.pressed.connect(_refund_all_confirmed)
+	_cancel.pressed.connect(_cancel_refund_all)
+	_guide_button.pressed.connect(_on_guide_pressed)
 	_zoom_out.pressed.connect(zoom_by.bind(1.0 / ZOOM_STEP))
 	_zoom_in.pressed.connect(zoom_by.bind(ZOOM_STEP))
 	_view.gui_input.connect(_on_view_input)
@@ -243,11 +256,62 @@ func refresh() -> void:
 	_refresh_tabs()
 	_sync_labels()
 	_web.queue_redraw()
-	_respec.disabled = owned.is_empty()
-	_respec.text = refund_all_text(_profile.get_respec_stars(), _profile.get_respec_gold_change()) if not owned.is_empty() else "Refund all"
+	var takes_back: bool = not _profile.get_respec_nodes().is_empty()
+	_respec.disabled = not takes_back
+	_respec.text = refund_all_text(_profile.get_respec_stars(), _profile.get_respec_gold_change()) if takes_back else "Refund all"
+	_end_refund_ask()
+	_refresh_guide()
 	_info.text = ""
 	if _card.visible:
 		_fill_card()
+
+
+## The same guide the Journey map shows, so a player who comes to the tree first is told the same thing.
+func _refresh_guide() -> void:
+	var guide := Guidance.guide(_content, _profile)
+	_guide.visible = not guide.is_empty()
+	if guide.is_empty():
+		return
+	_guide_label.text = str(guide["text"])
+	_guide_button.text = str(guide["button"])
+	_guide_button.disabled = bool(guide["disabled"])
+	_guide_node = str(guide["node"])
+
+
+## "Refund all" asks first: the line says what comes back and what stays, and the two buttons that
+## replace it and Back answer it.
+func _ask_refund_all() -> void:
+	_info.text = "Take back every upgrade? The first castle slot and Archer Post stay. %s" % _respec.text.replace("Refund all:", "You get")
+	_respec.visible = false
+	_back.visible = false
+	_confirm.visible = true
+	_cancel.visible = true
+	_cancel.grab_focus()
+
+
+func _refund_all_confirmed() -> void:
+	_end_refund_ask()
+	respec_requested.emit()
+
+
+func _cancel_refund_all() -> void:
+	_end_refund_ask()
+	_info.text = ""
+	_respec.grab_focus()
+
+
+func _end_refund_ask() -> void:
+	_respec.visible = true
+	_back.visible = true
+	_confirm.visible = false
+	_cancel.visible = false
+
+
+func _on_guide_pressed() -> void:
+	if _guide_node == "":
+		stand_requested.emit()
+	else:
+		buy_requested.emit(_guide_node)
 
 
 static func _make_owned_style(edge := OWNED_EDGE, bordered := true) -> StyleBoxFlat:
@@ -907,17 +971,8 @@ func _fill_card() -> void:
 	_card_title.text = str(node["name"])
 	_clear(_card_lines)
 	_clear(_card_extra)
-	var lines: Array = _profile.get_effect_lines(id)
-	for line in lines:
-		var change := _num(float(line["after"])) if owned else "%s -> %s" % [_num(float(line["before"])), _num(float(line["after"]))]
-		# A Recruit's stat has no one number to start from (each class has its own), so a card says how much it multiplies.
-		if str(line["stat"]).begins_with("recruit.") and float(line["before"]) > 0.0:
-			change = "x%s" % _num(float(line["after"]) / float(line["before"]))
-		_card_lines.add_child(_card_label("%s %s" % [_capital(_stat_text(str(line["stat"]))), change]))
-	if lines.is_empty() or node.has("text"):
-		var text := _effect_text(id)
-		if text != "":
-			_card_lines.add_child(_card_label(_capital(text)))
+	for line in _change_lines(id, owned):
+		_card_lines.add_child(_card_label(_capital(line)))
 	if node.has("excludes"):
 		var names: PackedStringArray = []
 		for other in node["excludes"]:
@@ -947,6 +1002,28 @@ func _fill_card() -> void:
 			_card_price.text += "  (need %s more)" % Hud.format_number(shortfall)
 			_card_price.add_theme_color_override("font_color", COLOUR_SHORT)
 		_card_buy.disabled = reason != ""
+
+
+## What a node does, one line each, in numbers that can be set beside another node's: each stat it
+## changes with the value before and after (just the value once owned). A node with its own
+## description (a link, a gate) says that, with the numbers that start above zero: a bonus that
+## starts from nothing is already in the description, so it is not told twice.
+func _change_lines(id: String, owned: bool) -> PackedStringArray:
+	var node: Dictionary = _content["upgrade_nodes"][id]
+	var out := PackedStringArray()
+	for line in _profile.get_effect_lines(id):
+		if node.has("text") and float(line["before"]) <= 0.0:
+			continue
+		var change := _num(float(line["after"])) if owned else "%s -> %s" % [_num(float(line["before"])), _num(float(line["after"]))]
+		# A Recruit's stat has no one number to start from (each class has its own), so a card says how much it multiplies.
+		if str(line["stat"]).begins_with("recruit.") and float(line["before"]) > 0.0:
+			change = "x%s" % _num(float(line["after"]) / float(line["before"]))
+		out.append("%s %s" % [_stat_text(str(line["stat"])), change])
+	if out.is_empty() or node.has("text"):
+		var text := _effect_text(id)
+		if text != "":
+			out.append(text)
+	return out
 
 
 ## How much gold or stars short the player is for a node refused only for want of them (else 0).
@@ -1096,6 +1173,11 @@ func _on_visibility_changed() -> void:
 			show_tab(tab_names()[0], false)
 			show_overview()
 		_info.text = ""
-		_back.grab_focus()
+		_end_refund_ask()
+		if _guide.visible and not _guide_button.disabled:
+			_guide_button.grab_focus()
+		else:
+			_back.grab_focus()
 	else:
+		_end_refund_ask()
 		close_card()
