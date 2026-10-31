@@ -1,7 +1,7 @@
 extends KitTestCase
 ## HF-M2-70: node gold prices follow the pack's tier table (priced from the gold a run pays where each tier
 ## opens), the Tithe chain is additive and capped, and a gear drop with nothing left to give is salvaged for
-## about one run's gold and said on the result panel (F-149).
+## a quarter of a run's gold (HF-M2-71; the share is pack data) and said on the result panel (F-149).
 
 const Main := preload("res://scenes/main.tscn")
 const Hud = preload("res://scripts/ui/hud.gd")
@@ -104,7 +104,7 @@ func test_a_node_in_a_later_tier_costs_more_than_any_in_an_earlier_one() -> void
 func test_a_new_tier_is_a_row_and_checks_the_nodes_that_name_it() -> void:
 	# Levels past the ones built add a row; a node in it is checked against that row's gold with no change to the old ones.
 	var content := _content().duplicate(true)
-	content["gold_tiers"]["tier_8"] = {"id": "tier_8", "name": "Tier 8", "first_level": 26, "gold_per_run": 60000}
+	content["gold_tiers"]["tier_8"] = {"id": "tier_8", "name": "Tier 8", "first_level": 26, "gold_per_run": 60000, "salvage_share": 0.25}
 	expect_eq(HoldfastContent.gold_per_run_at(content, 25), 27500, "level 25 still reads the row before")
 	expect_eq(HoldfastContent.gold_per_run_at(content, 26), 60000, "and level 26 reads the new row")
 	var node := {"cost": 150000, "gold_tier": "tier_8"}
@@ -136,6 +136,21 @@ func test_the_tithe_chain_is_additive_and_adds_up_to_half_as_much_again() -> voi
 
 # ------------------------------------------------------------------ salvage
 
+func test_every_tier_names_its_salvage_share_a_quarter_or_less_of_a_runs_gold() -> void:
+	for tier in _tiers():
+		var share := float(tier["salvage_share"])
+		expect_true(share > 0.0 and share <= 0.25, "%s salvages %.2f of a run" % [tier["id"], share])
+
+
+func test_salvage_is_the_tiers_share_of_the_gold_a_run_pays_there() -> void:
+	var content := _content()
+	expect_eq(HoldfastContent.salvage_at(content, 1), 63, "a quarter of 250, rounded up")
+	expect_eq(HoldfastContent.salvage_at(content, 5), 300, "Gull Rock")
+	expect_eq(HoldfastContent.salvage_at(content, 6), 650, "the next biome")
+	var edited := content.duplicate(true)
+	edited["gold_tiers"]["tier_3"]["salvage_share"] = 0.1
+	expect_eq(HoldfastContent.salvage_at(edited, 5), 120, "the share is read from the pack, not the code")
+
 func _boss_rules(owned: Array) -> HoldfastRules:
 	var rules := HoldfastRules.new()
 	rules.report_errors = false
@@ -162,14 +177,14 @@ func _kill_boss(rules: HoldfastRules) -> void:
 	rules.step(DT, {})
 
 
-func test_a_boss_drop_with_every_piece_owned_is_salvaged_for_about_a_runs_gold() -> void:
+func test_a_boss_drop_with_every_piece_owned_is_salvaged_for_a_quarter_of_a_runs_gold() -> void:
 	var rules := _boss_rules(DROPS + ["gull_feather_fletching", "storm_cap", "oilskin_vest", "wave_worn_boots", "tide_band"])
 	var before := rules.gold
 	_kill_boss(rules)
 	expect_eq(rules.gear_found, [], "nothing to find")
-	expect_eq(rules.salvaged, 1200, "one run's gold at Gull Rock (its tier)")
-	expect_eq(rules.gold - before, 1200, "paid into the run's gold")
-	expect_eq(rules.result()["salvaged"], 1200, "and said in the result")
+	expect_eq(rules.salvaged, 300, "a quarter of the 1,200 a run pays at Gull Rock (its tier)")
+	expect_eq(rules.gold - before, 300, "paid into the run's gold")
+	expect_eq(rules.result()["salvaged"], 300, "and said in the result")
 	expect_eq(rules.result()["gold"], rules.gold, "which banks it")
 
 
@@ -192,3 +207,35 @@ func test_the_result_panel_says_what_was_salvaged() -> void:
 	main.summary.show_summary({"gold_earned": 300, "waves_cleared": 8, "total_waves": 8, "keep_fell": false, "result": {"gear_found": []}}, "")
 	expect_false(label.visible, "nothing salvaged, nothing said")
 	main.free()
+
+
+## A save as the game writes and reads it: the gear the player owns goes through JSON text and back.
+func _owned_from_a_save(owned: Array) -> Array:
+	var content := _content()
+	var profile := HoldfastMeta.new_profile(content)
+	profile["gear"]["owned"] = owned.duplicate()
+	var loaded := HoldfastMeta.from_save(content, JSON.parse_string(JSON.stringify(profile)))
+	return loaded["gear"]["owned"]
+
+
+func test_a_finished_set_at_gull_rock_adds_no_more_than_a_quarter_to_a_runs_gold() -> void:
+	var content := _content()
+	var everything: Array = content["gear_items"].keys()
+	var owned := _owned_from_a_save(everything)
+	expect_eq(owned.size(), everything.size(), "the whole set comes back from the save")
+	var rules := _boss_rules(owned)
+	_kill_boss(rules)
+	var run_gold := HoldfastContent.gold_per_run_at(content, 5)
+	expect_eq(rules.gear_found, [], "nothing left to find")
+	expect_true(rules.salvaged > 0, "the drop is still paid")
+	expect_true(float(rules.salvaged) <= 0.25 * run_gold, "%d on a run that pays about %d is at most +25%%" % [rules.salvaged, run_gold])
+
+
+func test_a_save_with_a_piece_missing_still_drops_it_and_salvages_nothing() -> void:
+	var content := _content()
+	var owned := _owned_from_a_save(Array(DROPS.slice(1)))
+	expect_eq(owned, Array(DROPS.slice(1)), "the save keeps what was owned")
+	var rules := _boss_rules(owned)
+	_kill_boss(rules)
+	expect_eq(rules.gear_found, [DROPS[0]], "the missing piece drops")
+	expect_eq(rules.salvaged, 0, "and nothing is salvaged")
