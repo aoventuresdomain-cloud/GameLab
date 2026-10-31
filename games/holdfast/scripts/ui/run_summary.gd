@@ -120,4 +120,5 @@ func set_picks(waiting: Array) -> void:
 
 func _on_visibility_changed() -> void:
 	if is_visible_in_tree():
-		(_next_level_button if _next_level_button.visible else _play_again_button).grab_focus()
+		# While the note says to spend stars first, the pointer is on the Skill tree, not on another run.
+		(_tree_button if _guide_note.visible else _next_level_button if _next_level_button.visible else _play_again_button).grab_focus()
