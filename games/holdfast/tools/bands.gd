@@ -34,7 +34,7 @@ func _initialize() -> void:
 	if wall > budget:
 		failures.append("took %.0f s of wall-clock time, budget %.0f s" % [wall, budget])
 
-	var text := HoldfastBands.report(bands, judged) + "\nSweep time: %.0f s (budget %.0f s)\n" % [wall, budget]
+	var text := HoldfastBands.report(bands, judged, cells) + "\nSweep time: %.0f s (budget %.0f s)\n" % [wall, budget]
 	print(text)
 	_write(out_dir, "bands.json", JSON.stringify(judged, "  ", false))
 	_write(out_dir, "bands.md", text)

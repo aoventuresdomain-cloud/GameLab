@@ -5,7 +5,15 @@
     "band": 24,
     "fork": 12,
     "special": 12,
-    "one_post": 12
+    "one_post": 12,
+    "tree": 3
+  },
+  "tree": {
+    "sim_hours": 16,
+    "hours_min": 10,
+    "hours_max": 15,
+    "dry_max": 3,
+    "how": "the average bot plays on from the end of the tutorial, spending stars and gold between runs and replaying its latest level; the hours are the play time until it owns every gold node its Hero can reach (the whole budget if it never does), and a dry run is a return to the tree with nothing affordable. The stars the five levels pay cannot fill the tree, so the star side is reported, not judged, until more levels exist."
   },
   "first_time_floor": 0.3,
   "pillar_levels": {
@@ -78,9 +86,12 @@
     "flare_archer/fork_feel/tidewrack_cove": 0.026,
     "dusk_mage/average/gull_rock": 0.6667,
     "tideblade/special_gap/mean": 0.5,
-    "tideblade/poor/gull_rock": 0.0
+    "tideblade/poor/gull_rock": 0.0,
+    "flare_archer/tree/hours": 0.7156,
+    "dusk_mage/tree/hours": 0.8042,
+    "tideblade/tree/hours": 0.6803
   },
-  "known_misses_note": "A pinned miss may not get worse, and CI fails if it comes back inside its band (delete the pin then). Build 12a (HF-M2-28) removed every pin that levels and data could fix and pinned what remains, each with its cause. flare_archer/special_gap/mean and flare_archer/no_special/outpost: the Flare special is about three times the arrow and a win rate falls from near 100% to near 0% within about 10% of enemy strength, so the gap is close to the win rate on any level that is not trivial, and at Outpost (kept as it was, so a player who does nothing still loses) the special carries the fight; fixed by the arrow and special rebalance (HF-M2-63), which also brings the per-level +15 to +35 target. flare_archer/fork_feel/tidewrack_cove: the two Archer sides play within 3% of each other at Tidewrack Cove; the fork nodes are rebalanced with HF-M2-63. dusk_mage/average/gull_rock, tideblade/special_gap/mean and tideblade/poor/gull_rock: Levels 1 to 5 are shared by all three pillars, so Gull Rock cannot be tuned for the Dusk Mage and the Tideblade without taking the Flare Archer out of band, and monsters must not depend on the Hero picked; they are tuned when the biome they unlock into exists.",
+  "known_misses_note": "A pinned miss may not get worse, and CI fails if it comes back inside its band (delete the pin then). Build 12a (HF-M2-28) removed every pin that levels and data could fix and pinned what remains, each with its cause. flare_archer/special_gap/mean and flare_archer/no_special/outpost: the Flare special is about three times the arrow and a win rate falls from near 100% to near 0% within about 10% of enemy strength, so the gap is close to the win rate on any level that is not trivial, and at Outpost (kept as it was, so a player who does nothing still loses) the special carries the fight; fixed by the arrow and special rebalance (HF-M2-63), which also brings the per-level +15 to +35 target. flare_archer/fork_feel/tidewrack_cove: the two Archer sides play within 3% of each other at Tidewrack Cove; the fork nodes are rebalanced with HF-M2-63. dusk_mage/average/gull_rock, tideblade/special_gap/mean and tideblade/poor/gull_rock: Levels 1 to 5 are shared by all three pillars, so Gull Rock cannot be tuned for the Dusk Mage and the Tideblade without taking the Flare Archer out of band, and monsters must not depend on the Hero picked; they are tuned when the biome they unlock into exists. The three tree/hours pins (HF-M2-68): the 40 gold nodes of the tree are all bought within an hour of play, against the 10 to 15 hours the Advisor's tree rules ask for of a tree of about 100 nodes over about 25 levels; the tree and the gold curve are tuned to that when the later biomes exist (M3), so the pin may not fall further and CI fails once it reaches the band.",
   "fork_feel": {
     "min": 0.05,
     "first_level": "shingle_beach",

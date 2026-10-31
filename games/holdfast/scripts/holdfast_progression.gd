@@ -93,13 +93,19 @@ static func _requirements_met(node: Dictionary, owned: Array) -> bool:
 ## Plays up to `sim_hours` of progression from `p_seed` and returns the report. It
 ## stops early once every upgrade is bought, since later runs would only repeat.
 ## Each run plays `level`, or the latest level the wins so far have unlocked
-## when it is "". `avoid` lists nodes the bot never buys (the other side of a fork).
-static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array = []) -> Dictionary:
+## when it is "". `avoid` lists nodes the bot never buys (the other side of a fork). `pillar` is
+## the Hero it plays ("" keeps the profile's), `model` a skilled bot's reaction model (HoldfastSkilledBot.AVERAGE;
+## {} keeps the plain Hero bot). The report also says when the tree was filled (`filled_at`, -1 if
+## not), the longest run of returns with nothing affordable (`dry_runs`), and when the first star, the
+## first new tower (the Tower Gate) and the first boss came, in simulated seconds (-1 if never).
+static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array = [], pillar := "", model: Dictionary = {}) -> Dictionary:
 	var content := HoldfastContent.base()
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	var budget := sim_hours * 3600.0
 	var sim_time := 0.0
 	var profile := HoldfastMeta.new_profile(content)
+	if pillar != "":
+		profile["pillar"] = pillar
 	avoid = avoid + other_hero_nodes(nodes, str(profile["pillar"]))
 	# The bot plays as a player past the tutorial, so it starts on the first real level.
 	profile = HoldfastMeta.bank_run(content, profile, {"outcome": HoldfastRules.OUTCOME_WON, "level": HoldfastMeta.tutorial_level(content), "gold": 0})
@@ -107,22 +113,44 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 	var star_unlocks := []
 	var runs := []
 	var outcomes := {}
+	var stars_at_start := HoldfastMeta.stars_earned(profile)
+	var dry := 0
+	var worst_dry := 0
+	var filled_at := -1.0
+	var first := {"star": -1.0, "tower": -1.0, "boss": -1.0}
 	while sim_time < budget:
 		# Between runs, as a player does: spend the stars and the gold, then plan and play.
+		var bought_now := 0
 		for bought in buy_for_profile(content, profile, avoid):
 			profile = bought["profile"]
+			bought_now += 1
 			var entry := {"id": bought["id"], "cost": int(nodes[bought["id"]]["cost"]), "at_seconds": sim_time, "after_run": runs.size()}
 			(star_unlocks if HoldfastMeta.is_star_node(nodes[bought["id"]]) else unlocks).append(entry)
+			if first["tower"] < 0.0 and nodes[bought["id"]].get("grants", {}).has("mage_cards"):
+				first["tower"] = sim_time
 		if _gold_nodes(nodes, profile["upgrades"]) == reachable_total(nodes, profile["upgrades"], avoid):
+			filled_at = sim_time
 			break
+		# A run that came back to nothing affordable is a dry one; the streak is what the player feels.
+		dry = 0 if bought_now > 0 else dry + 1
+		worst_dry = maxi(worst_dry, dry)
 		var run_seed := p_seed * 100003 + runs.size()
 		var run_level := level if level != "" else str(HoldfastMeta.unlocked_levels(content, profile)[-1])
 		var layout := HoldfastMeta.layout_for(content, profile, run_level)
-		var report := HoldfastSim.run_headless(run_seed, HoldfastContent.run_config(run_level, profile["upgrades"], content, "", layout, HoldfastMeta.worn_gear(profile), profile["gear"]["owned"], false, RecruitMeta.bot_squad(content, profile)))
+		var config := HoldfastContent.run_config(run_level, profile["upgrades"], content, pillar, layout, HoldfastMeta.worn_gear(profile), profile["gear"]["owned"], false, RecruitMeta.bot_squad(content, profile))
+		var report: Dictionary
+		if model.is_empty():
+			report = HoldfastSim.run_headless(run_seed, config)
+		else:
+			report = SimBotRunner.run(HoldfastRules.new(), HoldfastSkilledBot.new(model), run_seed, config, HoldfastCurve.MAX_TICKS, HoldfastRules.TICK_RATE)
 		var result: Dictionary = report["result"]
 		sim_time += float(report["seconds"]) + BETWEEN_RUNS_SECONDS
 		profile = RecruitMeta.bot_picks(content, HoldfastMeta.bank_run(content, profile, result))
 		profile = HoldfastMeta.wear_free_slots(content, profile)
+		if first["star"] < 0.0 and HoldfastMeta.stars_earned(profile) > stars_at_start:
+			first["star"] = sim_time
+		if first["boss"] < 0.0 and result["outcome"] == HoldfastRules.OUTCOME_WON and has_boss(content, run_level):
+			first["boss"] = sim_time
 		var outcome := str(result["outcome"])
 		outcomes[outcome] = int(outcomes.get(outcome, 0)) + 1
 		runs.append({
@@ -150,9 +178,34 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 		"gold_per_run": gold_per_run,
 		"bank": int(profile["gold"]),
 		"runs": runs,
+		"filled_at": filled_at,
+		"dry_runs": worst_dry,
+		"first_star_at": first["star"],
+		"first_new_tower_at": first["tower"],
+		"first_boss_at": first["boss"],
+		"stars_earned": HoldfastMeta.stars_earned(profile),
+		"stars_in_tree": _star_price(nodes, avoid),
 	}
 	report["hash"] = SimEngine.hash_data(report)
 	return report
+
+
+## What every star node the bot may buy costs in all, in stars.
+static func _star_price(nodes: Dictionary, avoid: Array) -> int:
+	var total := 0
+	for id in nodes:
+		if HoldfastMeta.is_star_node(nodes[id]) and not id in avoid:
+			total += int(nodes[id]["cost"])
+	return total
+
+
+## True when a wave of `level` sends an enemy of the boss tier.
+static func has_boss(content: Dictionary, level: String) -> bool:
+	for wave in content["levels"][level]["waves"]:
+		for spawn in wave["spawns"]:
+			if str(content["enemies"][spawn["enemy"]].get("tier", "normal")) == "boss":
+				return true
+	return false
 
 
 ## The nodes that belong to another Hero than `pillar`, which the bot never buys.
