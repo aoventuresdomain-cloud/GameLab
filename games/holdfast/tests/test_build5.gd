@@ -651,6 +651,7 @@ func test_the_keep_screen_shows_sections_dims_the_far_nodes_and_lists_the_next_u
 	var forked := _forked()
 	profile._content = forked
 	keep._content = forked
+	profile.data["paths_kept"] = ["dusk_mage"]
 	main.hero_page.select_pillar("dusk_mage")
 	expect_false(keep._section_columns["flare_archer"].visible, "another Hero: the Flare Archer's section is hidden")
 	profile.bank_run({"gold": 5000, "outcome": "lost", "level": "outpost"})
