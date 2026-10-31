@@ -369,7 +369,7 @@ func _point(id: String) -> Vector2:
 
 ## What a node's button says: its price, with room above it for the star of a star price.
 func _face(node: Dictionary) -> String:
-	return ("\n%d" if HoldfastMeta.is_star_node(node) else "%d") % int(node["cost"])
+	return ("\n%d" % int(node["cost"])) if HoldfastMeta.is_star_node(node) else Hud.format_number(int(node["cost"]))
 
 
 func _build_tree() -> void:
@@ -992,14 +992,14 @@ func _fill_card() -> void:
 	_card_note.text = "" if reason == "" or shortfall > 0 else reason
 	if owned:
 		var gain: Dictionary = _profile.get_refund_gain(id)
-		_card_price.text = "+%d gold" % int(gain["gold"]) if int(gain["stars"]) == 0 else "+%d %s, fee %d gold" % [int(gain["stars"]), "star" if int(gain["stars"]) == 1 else "stars", -int(gain["gold"])]
+		_card_price.text = "+%s gold" % Hud.format_number(int(gain["gold"])) if int(gain["stars"]) == 0 else "+%d %s, fee %s gold" % [int(gain["stars"]), "star" if int(gain["stars"]) == 1 else "stars", Hud.format_number(-int(gain["gold"]))]
 		_card_price.add_theme_font_override("font", _bold_font())
 		_card_refund.disabled = reason != ""
 	else:
 		_card_price.text = _price(node) + (" gold" if not HoldfastMeta.is_star_node(node) else "")
 		if shortfall > 0:
 			# A cue besides the red: the words say how much is missing.
-			_card_price.text += "  (need %d more)" % shortfall
+			_card_price.text += "  (need %s more)" % Hud.format_number(shortfall)
 			_card_price.add_theme_color_override("font_color", COLOUR_SHORT)
 		_card_buy.disabled = reason != ""
 
@@ -1121,7 +1121,7 @@ func _effect_text(id: String) -> String:
 
 ## What a node costs as its button and the Next line say it: a gold price as a bare number.
 static func _price(node: Dictionary) -> String:
-	return HoldfastMeta.cost_text(node) if HoldfastMeta.is_star_node(node) else str(int(node["cost"]))
+	return HoldfastMeta.cost_text(node) if HoldfastMeta.is_star_node(node) else Hud.format_number(int(node["cost"]))
 
 
 static func _effects_text(effects: Array) -> String:

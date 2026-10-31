@@ -321,7 +321,8 @@ func get_next_tower_node() -> String:
 
 
 func get_cost_text(id: String) -> String:
-	return HoldfastMeta.cost_text(_content["upgrade_nodes"][id])
+	var node: Dictionary = _content["upgrade_nodes"][id]
+	return HoldfastMeta.cost_text(node) if HoldfastMeta.is_star_node(node) else "%s gold" % ShortNumber.of(int(node["cost"]))
 
 
 ## True once the player has a slot and an Archer Post to put in it, so any level can be planned.

@@ -28,7 +28,7 @@ func test_continue_says_where_the_player_is_and_is_plain_with_no_save() -> void:
 	profile.select_pillar("tideblade")
 	profile.select_level("shingle_beach")
 	profile.bank_run({"gold": 1240, "outcome": "lost", "level": "shingle_beach"})
-	expect_eq(button.text, "Continue\nLevel 2 · Tideblade · 1,240 gold")
+	expect_eq(button.text, "Continue\nLevel 2 · Tideblade · 1.2K gold")
 	main.free()
 
 

@@ -7,6 +7,9 @@ const Hud = preload("res://scripts/ui/hud.gd")
 const MORE_COMING := "You have cleared every level there is. More are coming."
 const STAND_LINE := "Your post is up. Try it out."
 const GUIDE_NOTE := "Next: spend your stars in the Skill tree on a castle slot and an Archer Post. Then you can take on the next level."
+## The one-time hint ids kept in the settings file, and the line each one says.
+const HINT_PILLARS := "pillars"
+const PILLARS_LINE := "A new Hero path is open. Pick one above to try it."
 const FALLBACK_TIP := "Try the posts on other spots, or send the Hero to where the monsters come in."
 
 
@@ -97,6 +100,22 @@ static func unlock_lines(content: Dictionary, profile: Node, level: String) -> A
 	for id in profile.get_paths_opened_by(level):
 		out.append("The %s path is open on the Hero page." % content["hero_paths"][id]["name"])
 	return out
+
+
+## True while a Hero path beyond the first is open and its one line has not been shown (the dot on
+## the Hero tab and the line on the Hero page). `settings` is the HoldfastSettings, or null.
+## shortcut: says nothing until the profile names `get_pillar_lock_reason(id)` (HF-M2-64), because
+## until then every path is open from the start and there is nothing new to point at.
+static func has_pillar_news(content: Dictionary, profile: Node, settings: Node) -> bool:
+	if settings != null and settings.has_seen_hint(HINT_PILLARS):
+		return false
+	if not profile.has_method("get_pillar_lock_reason"):
+		return false
+	var first: String = content["hero_paths"].keys()[0]
+	for id in content["hero_paths"]:
+		if id != first and str(profile.get_pillar_lock_reason(id)) == "":
+			return true
+	return false
 
 
 ## One tip for a lost run, by what the player has not used yet: stars, gold, gear, else a general one.

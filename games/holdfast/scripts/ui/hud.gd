@@ -157,7 +157,7 @@ func _refresh_hero() -> void:
 	if down > 0.0:
 		_hero_value.text = "Down %d s" % ceili(down)
 	else:
-		_hero_value.text = "%d / %d" % [_source.get_hero_health(), _source.get_hero_health_max()]
+		_hero_value.text = "%s / %s" % [format_number(_source.get_hero_health()), format_number(_source.get_hero_health_max())]
 	var wait: float = _source.get_ability_wait()
 	_ability_value.text = "Ready" if wait <= 0.0 else "%.1f s" % wait
 	_lost_value.text = "%d / %d" % [_source.get_towers_lost(), _source.get_recruits_lost()]
@@ -198,11 +198,6 @@ func _on_wave_changed(wave: int, total: int) -> void:
 	_wave_value.text = "%d / %d" % [wave, total]
 
 
-## 1234567 -> "1,234,567".
+## 1234 -> "1.2K" (see ShortNumber).
 static func format_number(value: int) -> String:
-	var digits := str(absi(value))
-	var out := ""
-	while digits.length() > 3:
-		out = "," + digits.substr(digits.length() - 3) + out
-		digits = digits.substr(0, digits.length() - 3)
-	return ("-" if value < 0 else "") + digits + out
+	return ShortNumber.of(value)

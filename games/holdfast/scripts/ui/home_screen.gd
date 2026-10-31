@@ -4,10 +4,10 @@ extends Control
 
 signal continue_requested
 signal new_game_requested
+signal settings_requested
 signal quit_requested
 
 const Hud = preload("res://scripts/ui/hud.gd")
-const SETTINGS_NOTICE := "Settings (volume, screen shake, flashes) arrive in a later build."
 const CONFIRM_TEXT := "Erase your progress?\nClick again to start over"
 
 @onready var _continue: Button = %ContinueButton
@@ -73,7 +73,7 @@ func _on_new_game() -> void:
 
 func _on_settings() -> void:
 	_cancel_confirm()
-	show_notice(SETTINGS_NOTICE)
+	settings_requested.emit()
 
 
 func _cancel_confirm() -> void:
