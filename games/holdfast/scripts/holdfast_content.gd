@@ -16,7 +16,45 @@ static func base() -> Dictionary:
 		_base = PackLoader.load_pack(BASE_PACK, SCHEMA)
 		for error in _base.errors:
 			push_error("content pack: " + error)
+		price_by_tier(_base.content)
 	return _base.content
+
+
+## Prices the gold nodes from the pack's `gold_tiers`. A node's `cost` in the pack is its price at the first
+## tier (its weight); it is scaled by the gold a run pays where its `gold_tier` opens over what the first tier
+## pays, to the nearest 10, and the pack's figure is kept as `base_cost`. Levels past the ones built add
+## tiers (rows in gold_tiers.json), not new prices for the old nodes. Star nodes and nodes with no tier keep their cost.
+static func price_by_tier(content: Dictionary) -> void:
+	for id in content.get("upgrade_nodes", {}):
+		var node: Dictionary = content["upgrade_nodes"][id]
+		if not node.has("gold_tier") or node.has("base_cost"):
+			continue
+		node["base_cost"] = node["cost"]
+		node["cost"] = roundi(float(node["cost"]) * tier_scale(content, str(node["gold_tier"])) / 10.0) * 10
+
+
+## How much a tier's prices are over the first tier's: the gold a run pays where it opens, over the first tier's.
+static func tier_scale(content: Dictionary, tier: String) -> float:
+	var tiers: Dictionary = content.get("gold_tiers", {})
+	var first := 0.0
+	var first_level := 1 << 30
+	for id in tiers:
+		if int(tiers[id]["first_level"]) < first_level:
+			first_level = int(tiers[id]["first_level"])
+			first = float(tiers[id]["gold_per_run"])
+	return float(tiers[tier]["gold_per_run"]) / first if first > 0.0 and tiers.has(tier) else 1.0
+
+
+## About what one run pays at level number `number`: the gold_per_run of the last tier opened by then.
+static func gold_per_run_at(content: Dictionary, number: int) -> int:
+	var best := -1
+	var out := 0
+	for id in content.get("gold_tiers", {}):
+		var tier: Dictionary = content["gold_tiers"][id]
+		if int(tier["first_level"]) <= number and int(tier["first_level"]) > best:
+			best = int(tier["first_level"])
+			out = int(tier["gold_per_run"])
+	return out
 
 
 ## Rules config for one run. `hero` is the Hero path to play ("" for the level's own).

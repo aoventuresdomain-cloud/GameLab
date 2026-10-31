@@ -544,6 +544,10 @@
         },
         "needs_recruit": {
           "type": "boolean"
+        },
+        "gold_tier": {
+          "type": "string",
+          "x-ref": "gold_tiers"
         }
       }
     },
@@ -690,6 +694,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/recruit_prices"
+          }
+        },
+        "gold_tiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gold_tier"
           }
         }
       }
@@ -1722,6 +1732,32 @@
             "type": "integer",
             "minimum": 0
           }
+        }
+      }
+    },
+    "gold_tier": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "first_level",
+        "gold_per_run"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "first_level": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "gold_per_run": {
+          "type": "integer",
+          "minimum": 1
         }
       }
     }

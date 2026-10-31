@@ -387,6 +387,8 @@ var recruits_revived := 0
 var outcome := OUTCOME_RUNNING
 ## Gear dropped this run by an elite or the boss: item ids, none twice.
 var gear_found: Array = []
+## Gold a gear drop paid because the player owns every piece that can drop (HF-M2-70); in `gold` already.
+var salvaged := 0
 ## 1-based number of the latest wave that has started; 0 before the first.
 var wave := 0
 ## Waves whose every enemy was killed. A wave with an enemy that reached the
@@ -428,6 +430,8 @@ var _gear_items: Dictionary = {}
 var _gear_rules: Dictionary = {}
 var _gear_owned: Array = []
 var _level_number := 0
+## What a gear drop with nothing left to give pays: about one run's gold at this level (the pack's gold tiers).
+var _salvage := 0
 ## The item a first win of this level gives ("" for none).
 var _first_clear_gear := ""
 var _levels_data: Dictionary = {}
@@ -485,6 +489,7 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		break
 	_gear_owned = config.get("gear_owned", [])
 	_level_number = int(level.get("number", 0))
+	_salvage = HoldfastContent.gold_per_run_at(content, _level_number)
 	_first_clear_gear = str(level.get("first_clear_gear", ""))
 	_levels_data = content.get("levels", {})
 	tutorial = bool(level.get("tutorial", false))
@@ -1895,6 +1900,10 @@ func _drop_gear(enemy: Enemy) -> void:
 	var item := HeroGear.pick_item(pool, pick)
 	if item != "":
 		gear_found.append(item)
+	elif not _gear_items.is_empty():
+		# Every piece that can drop is owned: the drop is salvaged for gold, never nothing.
+		salvaged += _salvage
+		gold += _salvage
 
 
 ## True when some level hands this item out for a first win, so a drop never takes it.
@@ -2002,6 +2011,8 @@ func result() -> Dictionary:
 		"gear_found": gear_found.duplicate(),
 		"recruit_xp": _recruit_xp(),
 	}
+	if salvaged > 0:
+		out["salvaged"] = salvaged
 	if hard:
 		out["hard"] = true
 	if _blessed or hard:
