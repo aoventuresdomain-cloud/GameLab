@@ -81,6 +81,9 @@ static func summary_notes(content: Dictionary, profile: Node, result: Dictionary
 	var level := str(result.get("level", ""))
 	if not content["levels"].has(level) or content["levels"][level].get("tutorial", false):
 		return notes
+	# A Hard replay opens and unlocks nothing new, so it has no news to give.
+	if result.get("hard", false) and result.get("outcome") == HoldfastRules.OUTCOME_WON:
+		return notes
 	if result.get("outcome") != HoldfastRules.OUTCOME_WON:
 		notes["tip"] = loss_tip(content, profile)
 		return notes

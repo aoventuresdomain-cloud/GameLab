@@ -20,8 +20,9 @@ const MAX_TICKS := 200000
 ## A level the player never wins ends the climb. `skip` lists nodes the player never buys (one
 ## side of a fork). `first_only` is for a caller that reads only the first attempts: the last level is
 ## played once, as nothing comes after it. `prefer` is a chain the player saves up for (see
-## HoldfastProgression.buy_for_profile).
-static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", level_count := 5, skip: Array = [], first_only := false, prefer: Array = []) -> Dictionary:
+## HoldfastProgression.buy_for_profile). `hard_replay` has the player play each level's Hard replay once
+## (first attempt, win or lose) right after clearing it, and adds "hard" (won it) to the level's row.
+static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", level_count := 5, skip: Array = [], first_only := false, prefer: Array = [], hard_replay := false) -> Dictionary:
 	var content := HoldfastContent.base()
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	var avoid := HoldfastProgression.other_hero_nodes(nodes, pillar) + skip
@@ -59,7 +60,26 @@ static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", leve
 		levels[level]["cleared"] = won
 		if not won:
 			break
+		if hard_replay and HoldfastMeta.hard_open(content, profile, level):
+			var replay := _play(content, profile, avoid, prefer, level, pillar, model, p_seed * 100003 + runs, true)
+			profile = replay["profile"]
+			levels[level]["hard"] = replay["won"]
+			levels[level]["hard_keep"] = replay["keep"]
+			runs += 1
 	return {"levels": levels, "dry_runs": worst_dry, "gaps": gaps, "runs": runs}
+
+
+## One run on `level` after the player's buying: Normal or `hard`. Returns {profile (the run banked), won, keep (the
+## share of the Keep's health left)}.
+static func _play(content: Dictionary, profile: Dictionary, avoid: Array, prefer: Array, level: String, pillar: String, model: Dictionary, run_seed: int, hard: bool) -> Dictionary:
+	var bought := HoldfastProgression.buy_for_profile(content, profile, avoid, prefer)
+	if not bought.is_empty():
+		profile = bought[-1]["profile"]
+	var config := HoldfastContent.run_config(level, profile["upgrades"], content, pillar, HoldfastMeta.layout_for(content, profile, level), HoldfastMeta.worn_gear(profile), profile["gear"]["owned"], false, RecruitMeta.bot_squad(content, profile), "", {}, hard)
+	var result: Dictionary = SimBotRunner.run(HoldfastRules.new(), HoldfastSkilledBot.new(model), run_seed, config, MAX_TICKS, HoldfastRules.TICK_RATE)["result"]
+	profile = RecruitMeta.bot_picks(content, HoldfastMeta.bank_run(content, profile, result))
+	profile = HoldfastMeta.wear_free_slots(content, profile)
+	return {"profile": profile, "won": result["outcome"] == HoldfastRules.OUTCOME_WON, "keep": float(result.get("keep_health", 0.0)) / maxf(float(result.get("keep_health_max", 1.0)), 1.0)}
 
 
 ## The level ids in play order, without the tutorial.

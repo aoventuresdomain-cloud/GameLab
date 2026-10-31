@@ -28,6 +28,8 @@ var layout: Variant = null
 var stand := false
 ## The blessing picked for the run ("" for none).
 var blessing := ""
+## The run is the level's Hard replay.
+var hard := false
 ## The Recruits that go on the run (null: the level's own two, as the rules tests have them).
 var squad: Variant = null
 ## The Recruit set on each castle spot's post, {spot id: Recruit id} (see RecruitMeta).
@@ -86,7 +88,7 @@ func start_run() -> void:
 	var controller: SimController = controller_override
 	if controller == null:
 		controller = HoldfastHeroBot.new() if use_bot else _player
-	var engine := SimEngine.new(rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content, hero_path, layout, gear, gear_owned, stand, squad, blessing, posted), HoldfastRules.TICK_RATE)
+	var engine := SimEngine.new(rules, controller, run_seed, HoldfastContent.run_config(level_id, upgrades, content, hero_path, layout, gear, gear_owned, stand, squad, blessing, posted, hard), HoldfastRules.TICK_RATE)
 	if rules.setup_error != "":
 		if report_errors:
 			push_error("Holdfast: cannot start a run: " + rules.setup_error)

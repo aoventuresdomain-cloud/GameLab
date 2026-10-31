@@ -1,0 +1,6 @@
+{
+  "modes": [
+    {"id": "hard", "name": "Hard", "built": true, "unlock": "level_won", "text": "Replay a cleared level with its modifier. Pays its stars again, once."},
+    {"id": "nightmare", "name": "Nightmare", "built": false, "unlock": "hard_cleared", "text": "Not built. Goes after Hard: a second modifier on the same level, paying stars once more."}
+  ]
+}

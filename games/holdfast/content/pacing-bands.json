@@ -5,7 +5,16 @@
     "band": 24,
     "fork": 12,
     "special": 12,
-    "one_post": 12
+    "one_post": 12,
+    "hard": 12
+  },
+  "hard": {
+    "about": "First-attempt win rate of each level's Hard replay for the average bot, played once right after the level is first cleared (the same players as the climbs). The modifier changes how the level is played (faster, tougher or more dangerous monsters, a frailer Keep, leaner pay), so Hard is a different fight and not the same one with bigger numbers. The bands are the first measurement with room each way; the Advisor and the Head of Engineering set the final ones.",
+    "outpost": {"average": [0.25, 0.75]},
+    "shingle_beach": {"average": [0.15, 0.6]},
+    "tidewrack_cove": {"average": [0.25, 0.75]},
+    "old_pier": {"average": [0.4, 0.9]},
+    "gull_rock": {"average": [0.15, 0.55]}
   },
   "first_time_floor": 0.3,
   "pillar_levels": {

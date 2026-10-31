@@ -225,6 +225,13 @@
           "type": "string",
           "x-ref": "gear_items"
         },
+        "modifiers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "x-ref": "modifiers"
+          }
+        },
         "reward": {
           "type": "object",
           "required": [
@@ -629,6 +636,18 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/blessing"
+          }
+        },
+        "modifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/modifier"
+          }
+        },
+        "modes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/mode"
           }
         },
         "castle_rules": {
@@ -1139,6 +1158,90 @@
               }
             }
           }
+        }
+      }
+    },
+    "modifier": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "icon",
+        "text",
+        "effects"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "icon": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effects": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "stat"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "stat": {
+                "type": "string",
+                "pattern": "^(gold_multiplier|keep_health|enemy_speed|enemy_health|enemy_damage)$"
+              },
+              "add": {
+                "type": "number"
+              },
+              "multiply": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "mode": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "built",
+        "unlock",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "built": {
+          "type": "boolean"
+        },
+        "unlock": {
+          "enum": [
+            "level_won",
+            "hard_cleared"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },
