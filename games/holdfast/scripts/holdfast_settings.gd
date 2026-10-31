@@ -1,6 +1,6 @@
 class_name HoldfastSettings
 extends Node
-## The player's settings: volume, screen shake and flashes, and which one-time hints they have
+## The player's settings: volume, screen shake, flashes, game speed, and which one-time hints they have
 ## seen. Saved through the kit's SaveService in a file of their own, apart from the profile, so
 ## "New game" keeps them and a profile reset cannot lose them. Screens read it through get_/is_/
 ## are_ accessors; the run flow is the only caller of the setters.
@@ -23,6 +23,7 @@ var load_message := ""
 var _volume := DEFAULT_VOLUME
 var _shake := true
 var _flashes := true
+var _speed := 1
 var _hints_seen: Array = []
 var _service: SaveService
 
@@ -38,6 +39,7 @@ func load_settings() -> void:
 	_volume = DEFAULT_VOLUME
 	_shake = true
 	_flashes = true
+	_speed = 1
 	_hints_seen = []
 	load_message = ""
 	_service = null
@@ -50,6 +52,8 @@ func load_settings() -> void:
 		_volume = clampf(float(volume), 0.0, 1.0) if volume is float or volume is int else DEFAULT_VOLUME
 		_shake = saved.get("shake") if saved.get("shake") is bool else true
 		_flashes = saved.get("flashes") if saved.get("flashes") is bool else true
+		var speed: Variant = saved.get("speed")
+		_speed = 2 if (speed is int or speed is float) and int(speed) == 2 else 1
 		var seen: Variant = saved.get("hints_seen", [])
 		for id in seen if seen is Array else []:
 			if id is String and not id in _hints_seen:
@@ -72,6 +76,11 @@ func are_flashes_on() -> bool:
 	return _flashes
 
 
+## The game speed on the run screen: 1 or 2 times.
+func get_speed() -> int:
+	return _speed
+
+
 func has_seen_hint(id: String) -> bool:
 	return id in _hints_seen
 
@@ -92,6 +101,12 @@ func set_flashes(on: bool) -> void:
 	_commit()
 
 
+## 2 for double speed, anything else 1.
+func set_speed(speed: int) -> void:
+	_speed = 2 if speed == 2 else 1
+	_commit()
+
+
 ## A one-time hint has been shown; it is not shown again.
 func see_hint(id: String) -> void:
 	if id in _hints_seen:
@@ -107,6 +122,6 @@ func _apply_volume() -> void:
 
 
 func _commit() -> void:
-	if _service != null and not _service.save({"volume": _volume, "shake": _shake, "flashes": _flashes, "hints_seen": _hints_seen}):
+	if _service != null and not _service.save({"volume": _volume, "shake": _shake, "flashes": _flashes, "speed": _speed, "hints_seen": _hints_seen}):
 		notice.emit("Your settings could not be saved.")
 	changed.emit()

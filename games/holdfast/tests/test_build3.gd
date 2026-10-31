@@ -139,7 +139,7 @@ func test_the_pack_schema_refuses_a_node_that_sells_a_level() -> void:
 
 func test_a_new_profile_starts_empty_on_the_first_level_and_pillar() -> void:
 	var profile := HoldfastMeta.new_profile(_meta_content())
-	expect_eq(profile, {"gold": 0, "upgrades": [], "stars": {}, "levels_won": [], "unlocked": [], "level": "first_watch", "pillar": "flare_archer", "runs": 0, "layouts": {}, "gear": {"owned": [], "equipped": {"weapon": "", "helmet": "", "armour": "", "boots": "", "ring": ""}}, "stand_done": false, "stars_line_seen": false, "special_taught": false, "hard_stars": {}, "gear_seen": [], "recruits": {"roster": [], "squad": [], "round": 0, "hired": [], "next": 1, "bought": 0}, "names": {"keep": "", "hero": ""}})
+	expect_eq(profile, {"gold": 0, "upgrades": [], "stars": {}, "levels_won": [], "unlocked": [], "level": "first_watch", "pillar": "flare_archer", "runs": 0, "layouts": {}, "gear": {"owned": [], "equipped": {"weapon": "", "helmet": "", "armour": "", "boots": "", "ring": ""}}, "stand_done": false, "stars_line_seen": false, "special_taught": false, "paths_kept": [], "run_open": false, "hard_stars": {}, "gear_seen": [], "recruits": {"roster": [], "squad": [], "round": 0, "hired": [], "next": 1, "bought": 0}, "names": {"keep": "", "hero": ""}})
 
 
 func test_buying_pays_the_cost_and_records_the_upgrade_without_changing_the_old_profile() -> void:
@@ -212,6 +212,7 @@ func test_winning_each_level_in_order_opens_the_next_and_the_last_opens_nothing(
 func test_picking_a_pillar_needs_a_real_one() -> void:
 	var content := _meta_content()
 	var profile := HoldfastMeta.new_profile(content)
+	profile["paths_kept"] = ["tideblade"]
 	expect_eq(HoldfastMeta.select_pillar(content, profile, "tideblade")["pillar"], "tideblade")
 	expect_eq(HoldfastMeta.select_pillar(content, profile, "not_a_pillar"), profile)
 	expect_eq(profile["pillar"], "flare_archer", "the profile given is untouched")
@@ -266,6 +267,7 @@ func test_the_profile_saves_after_each_change_and_reloads_exactly() -> void:
 	profile.bank_run({"gold": 300, "outcome": "won", "level": "outpost"})
 	expect_true(profile.buy("keep_walls_1"))          # 60
 	profile.select_level("shingle_beach")
+	profile.data["paths_kept"] = ["tideblade"]
 	profile.select_pillar("tideblade")
 	var expected := profile.data.duplicate(true)
 	expect_eq(expected["gold"], 240)
@@ -809,6 +811,7 @@ func test_level_and_pillar_picks_start_the_next_run_with_the_bought_upgrades() -
 	TreeCard.buy(keep, "keep_beam_1")             # 200
 	TreeCard.buy(keep, "post_timbers")            # 70
 	expect_false(map._buttons["shingle_beach"].disabled, "open now")
+	profile.data["paths_kept"] = ["dusk_mage"]
 	main.hero_page.select_pillar("dusk_mage")
 	main.hero_page.select_pillar("not_a_pillar")
 	expect_eq(main.hero_page.selected_pillar, "dusk_mage", "an unknown pillar changes nothing")

@@ -6,7 +6,8 @@
     "fork": 12,
     "special": 12,
     "one_post": 12,
-    "hard": 12
+    "hard": 12,
+    "tree": 3
   },
   "hard": {
     "about": "First-attempt win rate of each level's Hard replay for the average bot, played once right after the level is first cleared (the same players as the climbs). The modifier changes how the level is played (faster, tougher or more dangerous monsters, a frailer Keep, leaner pay), so Hard is a different fight and not the same one with bigger numbers. The bands are the first measurement with room each way; the Advisor and the Head of Engineering set the final ones.",
@@ -15,6 +16,13 @@
     "tidewrack_cove": {"average": [0.25, 0.75]},
     "old_pier": {"average": [0.4, 0.9]},
     "gull_rock": {"average": [0.15, 0.55]}
+  },
+  "tree": {
+    "sim_hours": 16,
+    "hours_min": 10,
+    "hours_max": 15,
+    "dry_max": 3,
+    "how": "the average bot plays on from the end of the tutorial, spending stars and gold between runs and replaying its latest level; the hours are the play time until it owns every gold node its Hero can reach (the whole budget if it never does), and a dry run is a return to the tree with nothing affordable. The stars the five levels pay cannot fill the tree, so the star side is reported, not judged, until more levels exist."
   },
   "first_time_floor": 0.3,
   "pillar_levels": {
@@ -86,9 +94,12 @@
     "flare_archer/fork_feel/tidewrack_cove": 0.026,
     "dusk_mage/average/gull_rock": 0.6667,
     "tideblade/special_gap/mean": 0.5,
-    "tideblade/poor/gull_rock": 0.0
+    "tideblade/poor/gull_rock": 0.0,
+    "flare_archer/tree/hours": 0.7156,
+    "dusk_mage/tree/hours": 0.8042,
+    "tideblade/tree/hours": 0.6803
   },
-  "known_misses_note": "A pinned miss may not get worse, and CI fails if it comes back inside its band (delete the pin then). Build 12a (HF-M2-28) removed every pin that levels and data could fix and pinned what remains, each with its cause. flare_archer/special_gap/mean is fixed by Keeper's Habit (HF-M2-63): a player who never presses the special saves up for it (300 gold after Light feet, a few runs of Outpost) and then has it firing on its own, and the gap is now the special pressed against never pressed with the Habit (about 35 points, in band); its pin is deleted. flare_archer/no_special/outpost: no node can be bought before the first fight (the tutorial pays 150 gold), so a player who never presses the special and has not bought the Habit still loses Outpost; the guided first press (HF-M2-63) teaches the button before that fight. flare_archer/fork_feel/tidewrack_cove: the two Archer sides play within 3% of each other at Tidewrack Cove; the fork nodes are rebalanced with HF-M2-63. dusk_mage/average/gull_rock, tideblade/special_gap/mean and tideblade/poor/gull_rock: Levels 1 to 5 are shared by all three pillars, so Gull Rock cannot be tuned for the Dusk Mage and the Tideblade without taking the Flare Archer out of band, and monsters must not depend on the Hero picked; they are tuned when the biome they unlock into exists.",
+  "known_misses_note": "A pinned miss may not get worse, and CI fails if it comes back inside its band (delete the pin then). Build 12a (HF-M2-28) removed every pin that levels and data could fix and pinned what remains, each with its cause. flare_archer/special_gap/mean is fixed by Keeper's Habit (HF-M2-63): a player who never presses the special saves up for it (300 gold after Light feet, a few runs of Outpost) and then has it firing on its own, and the gap is now the special pressed against never pressed with the Habit (about 35 points, in band); its pin is deleted. flare_archer/no_special/outpost: no node can be bought before the first fight (the tutorial pays 150 gold), so a player who never presses the special and has not bought the Habit still loses Outpost; the guided first press (HF-M2-63) teaches the button before that fight. flare_archer/fork_feel/tidewrack_cove: the two Archer sides play within 3% of each other at Tidewrack Cove; the fork nodes are rebalanced with HF-M2-63. dusk_mage/average/gull_rock, tideblade/special_gap/mean and tideblade/poor/gull_rock: Levels 1 to 5 are shared by all three pillars, so Gull Rock cannot be tuned for the Dusk Mage and the Tideblade without taking the Flare Archer out of band, and monsters must not depend on the Hero picked; they are tuned when the biome they unlock into exists. The three tree/hours pins (HF-M2-68): the 40 gold nodes of the tree are all bought within an hour of play, against the 10 to 15 hours the Advisor's tree rules ask for of a tree of about 100 nodes over about 25 levels; the tree and the gold curve are tuned to that when the later biomes exist (M3), so the pin may not fall further and CI fails once it reaches the band.",
   "fork_feel": {
     "min": 0.05,
     "first_level": "shingle_beach",

@@ -250,10 +250,10 @@ func test_a_locked_path_looks_locked_says_what_opens_it_and_a_press_changes_noth
 	profile.free()
 
 
-func test_every_path_is_open_while_the_profile_has_no_gating() -> void:
+func test_only_the_first_path_is_open_on_a_new_game() -> void:
 	var main := _main()
 	for id in main.hero_page._pillar_buttons:
-		expect_false(main.hero_page._pillar_buttons[id].text.contains("locked"), id)
+		expect_eq(main.hero_page._pillar_buttons[id].text.contains("locked"), id != "flare_archer", id)
 	main.free()
 
 

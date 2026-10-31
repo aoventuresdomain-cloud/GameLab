@@ -20,6 +20,8 @@ extends RefCounted
 ##   gear: {owned: [item ids], equipped: {slot: item id or ""}}   the Hero's gear (the Hero only)
 ##   stand_done: bool      the tutorial's short fight after the two guided buys has begun (once only)
 ##   stars_line_seen: bool the one line on what stars buy has been shown (once only)
+##   paths_kept: [ids]     Hero paths a save was already playing before they were gated (they stay open)
+##   run_open: bool        a run was started and has not ended or been left (a reload then finds it lost)
 ##   special_taught: bool  the first-time prompt for the Hero's special has been answered (once only)
 ##   gear_seen: [item ids] the gear pieces the player has looked at on the Hero page
 ##   recruits: {...}       the roster, the squad and the board (see RecruitMeta)
@@ -103,6 +105,8 @@ static func new_profile(content: Dictionary) -> Dictionary:
 		"gear": {"owned": [], "equipped": HeroGear.new_unit("hero", gear_slots(content))["slots"]},
 		"stand_done": false,
 		"stars_line_seen": false,
+		"paths_kept": [],
+		"run_open": false,
 		"special_taught": false,
 		"gear_seen": [],
 		"recruits": RecruitMeta.new_state(content),
@@ -194,6 +198,13 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 		profile["level"] = str(data["level"])
 	if content.get("hero_paths", {}).has(str(data.get("pillar", ""))):
 		profile["pillar"] = str(data["pillar"])
+	for id in _list(data.get("paths_kept")):
+		if content.get("hero_paths", {}).has(id) and not id in profile["paths_kept"]:
+			profile["paths_kept"].append(id)
+	# A save already playing a path that is gated keeps it (a save from before the gate).
+	if not path_open(content, profile, str(profile["pillar"])) and not data.is_empty():
+		profile["paths_kept"].append(str(profile["pillar"]))
+	profile["run_open"] = data.get("run_open") == true
 	RecruitMeta.from_save(content, profile, data)
 	return profile
 
@@ -1069,9 +1080,59 @@ static func select_level(content: Dictionary, profile: Dictionary, id: String) -
 	return out
 
 
-## An unknown pillar changes nothing.
+## True once every level of the pack beyond the tutorial is won: the end of the content there is. The
+## run summary and the Journey map then say more is coming instead of offering a next level.
+static func content_cleared(content: Dictionary, profile: Dictionary) -> bool:
+	var any := false
+	for id in content.get("levels", {}):
+		if _tutorial(content["levels"][id]):
+			continue
+		any = true
+		if not id in profile["levels_won"]:
+			return false
+	return any
+
+
+## True when the Hero path can be picked: it has no gate, its level has been won, or the save was
+## already playing it.
+static func path_open(content: Dictionary, profile: Dictionary, id: String) -> bool:
+	var opens: Dictionary = content.get("hero_paths", {}).get(id, {}).get("opens", {})
+	if opens.is_empty() or id in profile.get("paths_kept", []):
+		return true
+	return str(opens.get("after", "")) != "" and str(opens["after"]) in profile.get("levels_won", [])
+
+
+## "" when the path is open, else what opens it.
+static func path_lock_reason(content: Dictionary, profile: Dictionary, id: String) -> String:
+	if path_open(content, profile, id):
+		return ""
+	var opens: Dictionary = content["hero_paths"][id]["opens"]
+	var after := str(opens.get("after", ""))
+	if after != "" and content["levels"].has(after):
+		return "Opens when you win %s." % str(content["levels"][after]["name"])
+	return str(opens.get("reason", "Not open yet."))
+
+
+## The Hero paths that winning `level` opens.
+static func paths_opened_by(content: Dictionary, level: String) -> Array:
+	var out := []
+	for id in content.get("hero_paths", {}):
+		if str(content["hero_paths"][id].get("opens", {}).get("after", "")) == level and level != "":
+			out.append(id)
+	return out
+
+
+## The profile with a run open (started, not yet banked or left), or closed again. Saved at once, so
+## a reload that finds it open knows the run was lost.
+static func set_run_open(profile: Dictionary, open: bool) -> Dictionary:
+	var out := profile.duplicate(true)
+	out["run_open"] = open
+	return out
+
+
+## An unknown or closed pillar changes nothing.
 static func select_pillar(content: Dictionary, profile: Dictionary, id: String) -> Dictionary:
-	if not content.get("hero_paths", {}).has(id):
+	if not content.get("hero_paths", {}).has(id) or not path_open(content, profile, id):
 		return profile
 	var out := profile.duplicate(true)
 	out["pillar"] = id
@@ -1083,6 +1144,7 @@ static func select_pillar(content: Dictionary, profile: Dictionary, id: String) 
 ## level has not paid before and, on the first win of a tutorial, its reward gold.
 static func bank_run(content: Dictionary, profile: Dictionary, result: Dictionary) -> Dictionary:
 	var out := profile.duplicate(true)
+	out["run_open"] = false
 	out["gold"] = int(out["gold"]) + maxi(int(result.get("gold", 0)), 0)
 	out["runs"] = int(out["runs"]) + 1
 	var level := str(result.get("level", ""))

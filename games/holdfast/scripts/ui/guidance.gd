@@ -66,11 +66,9 @@ static func boss_name(content: Dictionary, level: String) -> String:
 	return ""
 
 
-## True once the last level of the pack is won.
-## shortcut: reads the pack's level order; swap for the end-of-content state of HF-M2-64 when it lands.
-static func _last_won(content: Dictionary, profile: Node) -> bool:
-	var ids: Array = content["levels"].keys()
-	return not ids.is_empty() and profile.is_level_won(str(ids[-1]))
+## True once every level of the pack is won (the profile's end-of-content state).
+static func _last_won(_content: Dictionary, profile: Node) -> bool:
+	return profile.is_content_cleared()
 
 
 ## The notes for a finished run, to go with the run flow's summary: {"boss", "unlocked", "way_on",
@@ -91,7 +89,7 @@ static func summary_notes(content: Dictionary, profile: Node, result: Dictionary
 	if boss != "":
 		notes["boss"] = "%s is beaten." % boss
 	notes["unlocked"] = unlock_lines(content, profile, level)
-	if next == "" and level == str(content["levels"].keys()[-1]):
+	if next == "" and profile.is_content_cleared():
 		notes["way_on"] = MORE_COMING
 	return notes
 

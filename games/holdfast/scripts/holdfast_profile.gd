@@ -33,6 +33,10 @@ func _ready() -> void:
 	load_profile()
 
 
+## Shown once when a reload finds that a run was open: the run is gone and nothing came of it.
+const RUN_LOST_NOTICE := "The run you had open was lost when the game closed. Nothing was banked, spent or lost."
+
+
 ## Reads the save (if any) into `data`. A missing or unreadable save gives a new profile.
 func load_profile() -> void:
 	_content = HoldfastContent.base()
@@ -49,6 +53,11 @@ func load_profile() -> void:
 	load_message = str(loaded["message"])
 	if loaded["data"] is Dictionary and not (loaded["data"] as Dictionary).is_empty():
 		data = HoldfastMeta.from_save(_content, loaded["data"])
+		if data["run_open"]:
+			# The save was written when a run began and never saw it end: it is gone, and nothing was banked.
+			data["run_open"] = false
+			load_message = (load_message + "\n" if load_message != "" else "") + RUN_LOST_NOTICE
+			_save()
 	print("[profile] loaded %s, gold %d, %d upgrades" % [load_status, get_gold(), get_upgrades().size()])
 	if load_message != "":
 		notice.emit(load_message)
@@ -164,6 +173,31 @@ func take_off_gear(slot: String) -> void:
 
 func select_level(id: String) -> void:
 	_apply(HoldfastMeta.select_level(_content, data, id))
+
+
+## A run begins: saved at once as open, so a reload mid-run can say the run is gone.
+func mark_run_open() -> void:
+	_apply(HoldfastMeta.set_run_open(data, true))
+
+
+## A run was left from the pause screen: it banks nothing and is closed.
+func leave_run() -> void:
+	_apply(HoldfastMeta.set_run_open(data, false))
+
+
+## True once every level there is has been won.
+func is_content_cleared() -> bool:
+	return HoldfastMeta.content_cleared(_content, data)
+
+
+## "" when the Hero path can be picked, else what opens it.
+func get_pillar_lock_reason(id: String) -> String:
+	return HoldfastMeta.path_lock_reason(_content, data, id)
+
+
+## The Hero paths that winning `level` opens.
+func get_paths_opened_by(level: String) -> Array:
+	return HoldfastMeta.paths_opened_by(_content, level)
 
 
 func select_pillar(id: String) -> void:

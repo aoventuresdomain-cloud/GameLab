@@ -14,13 +14,97 @@ extends Control
 
 ## The player pressed while a teaching run waited; the run flow lifts the hold.
 signal begin_requested
+## The player asked to pause (true) or resume (false) the run.
+signal pause_requested(paused: bool)
+## The player asked for 1x or 2x game speed.
+signal speed_requested(speed: int)
+## The player confirmed leaving the run from the pause screen.
+signal leave_requested
 ## The player pressed while the special's first-time prompt waited; the run flow lets the Hero fire.
 signal special_requested
 
 ## Under a teaching note while the run waits.
 const HOLD_HINT := "Click, tap or press a key to begin."
 
+const LEAVE_TEXT := "Leave run"
+const LEAVE_CONFIRM_TEXT := "Leave? Nothing is banked.\nClick again to leave"
+
 var _source: Node
+var _pause_button: Button
+var _speed_button: Button
+var _pause_screen: Control
+var _leave_button: Button
+var _confirming_leave := false
+
+
+func _ready() -> void:
+	_build_controls()
+
+
+## The Pause and Speed buttons under the top bar's right end, and the pause screen over the run.
+func _build_controls() -> void:
+	var box := HBoxContainer.new()
+	_pause_button = Button.new()
+	_pause_button.text = "II"
+	_pause_button.tooltip_text = "Pause (Esc or P)"
+	_pause_button.focus_mode = Control.FOCUS_NONE
+	_pause_button.pressed.connect(func() -> void: pause_requested.emit(not _paused()))
+	box.add_child(_pause_button)
+	_speed_button = Button.new()
+	_speed_button.text = "1x"
+	_speed_button.tooltip_text = "Game speed"
+	_speed_button.focus_mode = Control.FOCUS_NONE
+	_speed_button.pressed.connect(func() -> void: speed_requested.emit(1 if _speed() == 2 else 2))
+	box.add_child(_speed_button)
+	box.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	box.offset_top = 104.0
+	box.offset_right = -16.0
+	add_child(box)
+	_pause_screen = ColorRect.new()
+	(_pause_screen as ColorRect).color = Color(0, 0, 0, 0.6)
+	_pause_screen.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_pause_screen.mouse_filter = Control.MOUSE_FILTER_STOP
+	_pause_screen.visible = false
+	var centre := CenterContainer.new()
+	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_pause_screen.add_child(centre)
+	var column := VBoxContainer.new()
+	column.custom_minimum_size = Vector2(320, 0)
+	centre.add_child(column)
+	var title := Label.new()
+	title.text = "Paused"
+	title.theme_type_variation = &"HudValue"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(title)
+	var resume := Button.new()
+	resume.text = "Resume"
+	resume.pressed.connect(func() -> void: pause_requested.emit(false))
+	column.add_child(resume)
+	_leave_button = Button.new()
+	_leave_button.text = LEAVE_TEXT
+	_leave_button.pressed.connect(_on_leave_pressed)
+	column.add_child(_leave_button)
+	add_child(_pause_screen)
+
+
+func _paused() -> bool:
+	return _source != null and _source.is_paused()
+
+
+func _speed() -> int:
+	return _source.get_speed() if _source != null else 1
+
+
+## The first press asks; the second leaves.
+func _on_leave_pressed() -> void:
+	if not _confirming_leave:
+		_confirming_leave = true
+		_leave_button.text = LEAVE_CONFIRM_TEXT
+		return
+	_confirming_leave = false
+	_leave_button.text = LEAVE_TEXT
+	leave_requested.emit()
 
 
 func bind(source: Node) -> void:
@@ -46,6 +130,10 @@ func _process(_delta: float) -> void:
 
 ## A click, tap or key asks to lift a teaching run's hold; the press is spent on that and nothing else.
 func _input(event: InputEvent) -> void:
+	if visible and _source != null and _source.is_running() and not _source.is_held() and event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_ESCAPE or event.physical_keycode == KEY_P):
+		pause_requested.emit(not _paused())
+		get_viewport().set_input_as_handled()
+		return
 	if not visible or _source == null or not _source.is_held():
 		return
 	if _source.is_teaching_special():
@@ -68,6 +156,14 @@ func _input(event: InputEvent) -> void:
 ## The Hero's health, ability wait and knock-down timer, and what has been lost
 ## so far. Read every frame: the run changes them every tick.
 func _refresh_hero() -> void:
+	var paused := _paused()
+	if _pause_screen != null:
+		_pause_screen.visible = paused
+		if not paused and _confirming_leave:
+			_confirming_leave = false
+			_leave_button.text = LEAVE_TEXT
+		_pause_button.text = ">" if paused else "II"
+		_speed_button.text = "%dx" % _speed()
 	var down: float = _source.get_hero_down_seconds()
 	if down > 0.0:
 		_hero_value.text = "Down %d s" % ceili(down)

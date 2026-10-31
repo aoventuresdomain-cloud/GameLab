@@ -177,11 +177,14 @@ func test_one_player_of_every_cell_is_played() -> void:
 	bands.erase("pillar_levels")
 	for key in bands["seeds"]:
 		bands["seeds"][key] = 1
+	bands["tree"]["sim_hours"] = 0.3
 	var cells := HoldfastBands.measure(bands)
-	expect_eq(cells.size(), 3 * 6 + 2, "six cells for each pillar (two bots, two fork sides, no special, the Hard replays), the Flare Archer's auto-cast cell and the one-post cell")
+	expect_eq(cells.size(), 3 * 7 + 2, "seven cells for each pillar (two bots, two fork sides, no special, the Hard replays, the tree), the Flare Archer's auto-cast cell and the one-post cell")
 	for name in cells:
 		expect_eq(cells[name].size(), 1, "%s: one climb" % name)
-		if name.ends_with("/hard"):
+		if name.ends_with("/tree"):
+			expect_true(cells[name][0].has("hours"), "%s: the progression was summarised" % name)
+		elif name.ends_with("/hard"):
 			expect_true(cells[name][0] is Dictionary, "%s: one row of Hard replays (a level not cleared has none)" % name)
 		else:
 			expect_true(cells[name][0].has(HoldfastBands.levels()[0]), "%s: the climb played level 1" % name)
