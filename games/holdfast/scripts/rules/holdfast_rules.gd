@@ -56,6 +56,10 @@ const FLEE_RECOVERY := 0.25
 ## The most damage armour can turn away, and the shortest a get-up wait can become (a share of base).
 const HERO_ARMOUR_CAP := 0.7
 const HERO_GETUP_MIN := 0.5
+## Enemies within the barrage's reach that set off Keeper's Habit, and how long they must have been
+## there: the player's own press gets that long to come first, and fires at full power.
+const HABIT_ENEMIES := 3
+const HABIT_DELAY := 0.3
 ## Crossfire: a second shot from another post counts when it lands this soon after the first.
 const CROSSFIRE_SECONDS := 1.0
 ## Last Light flares when a post is down to this share of its health.
@@ -334,6 +338,10 @@ var hero_ability_ready_in := 0.0
 ## Seconds left of a rapid-fire ability, and the wait until its next arrow.
 var hero_rapid_left := 0.0
 var hero_rapid_ready_in := 0.0
+## How much of the barrage's power the cast in progress has: 1 for a press, the Habit's `auto_power` when it fired itself.
+var hero_rapid_power := 1.0
+## Seconds the barrage has been ready with enough enemies in reach, for Keeper's Habit.
+var hero_habit_for := 0.0
 ## An Eclipse zone: seconds left, and where. Enemies in it are pulled in and slowed; it collapses at the end.
 var zone_left := 0.0
 var zone_position := Vector2.ZERO
@@ -1254,6 +1262,7 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 	hero_holding = false
 	if hero_state["downed"]:
 		hero_rapid_left = 0.0
+		hero_habit_for = 0.0
 		hero_state = HeroKnockdown.tick(hero_state, dt)
 		if not hero_state["downed"]:
 			# The square round the keep (with the Hero's own width) is ground they cannot stand on.
@@ -1281,23 +1290,46 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 		_use(hero_attack, target)
 	var ability: Variant = input.get("ability")
 	if ability is bool and ability and hero_ability_ready_in <= 0.0:
-		hero_ability_ready_in = float(hero_ability["cooldown"])
-		_expose_bosses()
-		if float(hero_ability.get("rapid_seconds", 0.0)) > 0.0:
-			hero_rapid_left = float(hero_ability["rapid_seconds"])
-		elif float(hero_ability.get("dash_seconds", 0.0)) > 0.0:
-			hero_dash_left = float(hero_ability["dash_seconds"])
-			hero_grace_left = maxf(hero_grace_left, hero_dash_left)
-			_start_dash(target)
-		elif float(hero_ability.get("zone_seconds", 0.0)) > 0.0:
-			zone_left = float(hero_ability["zone_seconds"])
-			zone_position = hero_position if target == null else target.position
-			zone_scale = _eclipse_scale(zone_position)
-		else:
-			_use(hero_ability, target)
+		_cast_ability(target, 1.0)
+	elif _habit_waited(dt):
+		_cast_ability(target, float(hero_ability["auto_power"]))
 	if hero_rapid_left > 0.0 and hero_rapid_ready_in <= 0.0:
 		hero_rapid_ready_in = float(hero_ability.get("rapid_interval", hero_attack["cooldown"]))
-		_fire(hero_ability)
+		_fire(hero_ability, hero_rapid_power)
+
+
+## Keeper's Habit: a barrage the Hero has the stat for (`auto_power` above 0) fires on its own, at
+## that share of its power, once HABIT_ENEMIES or more enemies have been within its reach for
+## HABIT_DELAY seconds with it ready. True on the tick it should.
+func _habit_waited(dt: float) -> bool:
+	if hero_ability_ready_in > 0.0 or float(hero_ability.get("auto_power", 0.0)) <= 0.0 or float(hero_ability.get("rapid_seconds", 0.0)) <= 0.0:
+		hero_habit_for = 0.0
+		return false
+	var close := 0
+	for enemy in enemies:
+		if enemy.health > 0.0 and enemy.position.distance_to(hero_position) <= float(hero_ability["range"]) + enemy.radius:
+			close += 1
+	hero_habit_for = hero_habit_for + dt if close >= HABIT_ENEMIES else 0.0
+	return hero_habit_for >= HABIT_DELAY - TIME_EPSILON
+
+
+## Casts the ability: the cooldown starts, and the kind says what happens. `power` scales a barrage's arrows.
+func _cast_ability(target: Enemy, power: float) -> void:
+	hero_ability_ready_in = float(hero_ability["cooldown"])
+	_expose_bosses()
+	if float(hero_ability.get("rapid_seconds", 0.0)) > 0.0:
+		hero_rapid_left = float(hero_ability["rapid_seconds"])
+		hero_rapid_power = power
+	elif float(hero_ability.get("dash_seconds", 0.0)) > 0.0:
+		hero_dash_left = float(hero_ability["dash_seconds"])
+		hero_grace_left = maxf(hero_grace_left, hero_dash_left)
+		_start_dash(target)
+	elif float(hero_ability.get("zone_seconds", 0.0)) > 0.0:
+		zone_left = float(hero_ability["zone_seconds"])
+		zone_position = hero_position if target == null else target.position
+		zone_scale = _eclipse_scale(zone_position)
+	else:
+		_use(hero_ability, target)
 
 
 ## The Hero's ability lifts every boss's shroud for the seconds its pack names.
@@ -1419,7 +1451,7 @@ func _use(action: Dictionary, target: Enemy) -> void:
 
 ## Launches the arrows of an attack or ability from the Hero along their facing:
 ## `count` of them (default 1), spread evenly across `spread_degrees`.
-func _fire(action: Dictionary) -> void:
+func _fire(action: Dictionary, power := 1.0) -> void:
 	var count := int(action.get("count", 1))
 	var spread := deg_to_rad(float(action.get("spread_degrees", 0.0)))
 	for i in count:
@@ -1427,11 +1459,11 @@ func _fire(action: Dictionary) -> void:
 		var arrow := Projectile.new()
 		arrow.position = hero_position
 		arrow.velocity = hero_facing.rotated(offset) * float(action["speed"])
-		arrow.damage = float(action["damage"])
+		arrow.damage = float(action["damage"]) * power
 		arrow.radius = float(action["radius"])
 		arrow.distance_left = float(action["range"]) + _watch_bonus()
 		arrow.pierce_left = int(action.get("pierce", 1))
-		arrow.burn_dps = float(action.get("burn_dps", 0.0))
+		arrow.burn_dps = float(action.get("burn_dps", 0.0)) * power
 		arrow.burn_seconds = float(action.get("burn_seconds", 0.0))
 		arrow.colour = str(action.get("colour", ""))
 		projectiles.append(arrow)

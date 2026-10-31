@@ -34,6 +34,9 @@ var squad: Variant = null
 var posted: Dictionary = {}
 ## True when a run that has a teaching note waits for a click, tap or key before it starts moving.
 var wait_for_press := false
+## True when this run teaches the Hero's special: the first time an enemy comes within its reach with
+## the special ready, the run waits for the press. The run flow sets it only until the player has pressed once.
+var teach_special := false
 ## What the Hero wears ({slot: item id}) and what the player owns, so a drop is new.
 var gear: Dictionary = {}
 var gear_owned: Array = []
@@ -48,6 +51,8 @@ var _held := false
 var _paused := false
 ## 1 or 2: how much game time passes for each frame of real time.
 var _speed := 1
+## The hold is the special's prompt, not a teaching run's note.
+var _teaching := false
 var _runs := 0
 var _last := {}
 
@@ -55,6 +60,9 @@ var _last := {}
 ## Longest frame time fed to the engine at once; a longer hitch slows the game
 ## down rather than letting it jump ahead.
 const MAX_FRAME_SECONDS := 0.25
+
+## The one-off prompt for the special, up while the run waits for the press.
+const SPECIAL_NOTE := "Your special is ready: a burst of fire, far stronger than your arrows.\nPress Space (or click) to fire it."
 
 
 func _ready() -> void:
@@ -92,6 +100,7 @@ func start_run() -> void:
 	_running = true
 	_held = wait_for_press and (rules.tutorial or rules.stand)
 	_paused = false
+	_teaching = false
 	_last = {}
 	run_started.emit()
 	_emit_changes()
@@ -107,6 +116,10 @@ func step(delta: float) -> void:
 		var slice := minf(left, MAX_FRAME_SECONDS)
 		_engine.advance(slice)
 		left -= slice
+		if teach_special and _special_worth_a_press():
+			_held = true
+			_teaching = true
+			break
 	_emit_changes()
 	if _rules.is_finished():
 		_running = false
@@ -179,6 +192,36 @@ func leave_run() -> void:
 ## The player's click, tap or key: the run starts moving.
 func release_hold() -> void:
 	_held = false
+
+
+## True while the run waits, mid-fight, for the first press of the special.
+func is_teaching_special() -> bool:
+	return _teaching
+
+
+## The press the prompt waited for: the run moves on and the Hero fires, once; the prompt never comes back.
+func press_special() -> void:
+	if not _teaching:
+		return
+	_teaching = false
+	_held = false
+	teach_special = false
+	_player.ability_pressed = true
+
+
+## What the prompt says while it waits, else "".
+func get_special_note() -> String:
+	return SPECIAL_NOTE if _teaching else ""
+
+
+## The special is ready and an enemy is within its reach: the moment a first-time player is shown the button.
+func _special_worth_a_press() -> bool:
+	if _rules.hero_state["downed"] or _rules.hero_ability_ready_in > 0.0:
+		return false
+	for enemy in _rules.enemies:
+		if enemy.health > 0.0 and enemy.position.distance_to(_rules.hero_position) <= float(_rules.hero_ability.get("range", 0.0)) + enemy.radius:
+			return true
+	return false
 
 
 func get_gold() -> int:

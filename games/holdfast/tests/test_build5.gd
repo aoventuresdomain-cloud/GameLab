@@ -405,7 +405,7 @@ func test_the_post_section_has_eighteen_nodes_and_no_fork() -> void:
 	var flare := 0
 	for id in nodes:
 		flare += 1 if nodes[id]["branch"] == "flare_archer" else 0
-	expect_eq(flare, 12, "the Flare Archer's twelve nodes")
+	expect_eq(flare, 13, "the Flare Archer's thirteen nodes")
 	for id in nodes:
 		if nodes[id].has("tower"):
 			expect_eq(nodes[id]["branch"], nodes[id]["tower"], id)
@@ -693,13 +693,13 @@ func test_the_progression_bot_never_buys_both_sides_of_a_fork_and_can_avoid_one(
 	var twin := HoldfastProgression.buy_cheapest(nodes, castle, 999999, ["post_scope"])
 	expect_true("post_twin" in twin and "post_burst" in twin and not "post_scope" in twin, "avoiding Scope takes the Volley side")
 	expect_true("post_storm" in HoldfastProgression.buy_cheapest(nodes, castle + twin, 0, ["post_scope"], 99), "and its star capstone with the stars")
-	expect_eq(HoldfastProgression.reachable_total(nodes, [], []), 40 - 0, "an empty profile can still reach every gold node")
-	expect_eq(HoldfastProgression.reachable_total(nodes, ["post_scope"]), 40 - 2, "Scope closes Twin and Burst fire (Arrow storm is a star node, not counted)")
-	expect_eq(HoldfastProgression.reachable_total(nodes, [], ["post_scope"]), 40 - 2, "avoiding it does the same")
+	expect_eq(HoldfastProgression.reachable_total(nodes, [], []), 41 - 0, "an empty profile can still reach every gold node")
+	expect_eq(HoldfastProgression.reachable_total(nodes, ["post_scope"]), 41 - 2, "Scope closes Twin and Burst fire (Arrow storm is a star node, not counted)")
+	expect_eq(HoldfastProgression.reachable_total(nodes, [], ["post_scope"]), 41 - 2, "avoiding it does the same")
 	var real: Dictionary = HoldfastContent.base()["upgrade_nodes"]
 	var both := HoldfastProgression.buy_cheapest(real, castle, 999999)
 	expect_true("post_scope" in both and "post_twin" in both, "the real tree has no fork: the bot buys both sides")
-	expect_eq(HoldfastProgression.reachable_total(real, ["post_scope"]), 40, "and Scope closes nothing")
+	expect_eq(HoldfastProgression.reachable_total(real, ["post_scope"]), 41, "and Scope closes nothing")
 
 
 func test_the_bots_play_the_planning_choice() -> void:

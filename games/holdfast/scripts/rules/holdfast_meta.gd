@@ -21,6 +21,7 @@ extends RefCounted
 ##   stars_line_seen: bool the one line on what stars buy has been shown (once only)
 ##   paths_kept: [ids]     Hero paths a save was already playing before they were gated (they stay open)
 ##   run_open: bool        a run was started and has not ended or been left (a reload then finds it lost)
+##   special_taught: bool  the first-time prompt for the Hero's special has been answered (once only)
 ##   gear_seen: [item ids] the gear pieces the player has looked at on the Hero page
 ##   recruits: {...}       the roster, the squad and the board (see RecruitMeta)
 ##   names: {keep, hero}   what the player has called the keep and the Hero ("" for the default)
@@ -104,6 +105,7 @@ static func new_profile(content: Dictionary) -> Dictionary:
 		"stars_line_seen": false,
 		"paths_kept": [],
 		"run_open": false,
+		"special_taught": false,
 		"gear_seen": [],
 		"recruits": RecruitMeta.new_state(content),
 		"names": {"keep": "", "hero": ""},
@@ -179,6 +181,9 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 	for key in ["stand_done", "stars_line_seen"]:
 		var saved_flag: Variant = data.get(key)
 		profile[key] = saved_flag if saved_flag is bool else not data.is_empty()
+	# A save that has won a level beyond the tutorial has long since met the special.
+	var taught: Variant = data.get("special_taught")
+	profile["special_taught"] = taught if taught is bool else profile["levels_won"].any(func(id: String) -> bool: return not _tutorial(levels[id]))
 	var unlocked := unlocked_levels(content, profile)
 	if str(data.get("level", "")) in unlocked:
 		profile["level"] = str(data["level"])
@@ -657,6 +662,20 @@ static func stand_layout(content: Dictionary, profile: Dictionary) -> Array:
 static func begin_stand(profile: Dictionary) -> Dictionary:
 	var out := profile.duplicate(true)
 	out["stand_done"] = true
+	return out
+
+
+## True when the run on `level` is the one that teaches the special: not the tutorial, and the
+## player has not pressed it yet.
+static func special_due(content: Dictionary, profile: Dictionary, level: String) -> bool:
+	var data: Dictionary = content.get("levels", {}).get(level, {})
+	return not data.is_empty() and not _tutorial(data) and not profile["special_taught"]
+
+
+## The profile with the special's prompt answered, so it never comes back.
+static func teach_special(profile: Dictionary) -> Dictionary:
+	var out := profile.duplicate(true)
+	out["special_taught"] = true
 	return out
 
 

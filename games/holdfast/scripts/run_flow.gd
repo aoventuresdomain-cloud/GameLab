@@ -49,6 +49,7 @@ func _ready() -> void:
 	hud.pause_requested.connect(source.set_paused)
 	hud.speed_requested.connect(_on_speed_requested)
 	hud.leave_requested.connect(_leave_run)
+	hud.special_requested.connect(_on_special_requested)
 	home.bind(profile)
 	settings_screen.bind(settings)
 	for screen_with_hints in [planning, hero_page]:
@@ -261,6 +262,9 @@ func _start_run(stand := false, blessing := "") -> void:
 		source.posted = profile.get_posted()
 		# A bot-driven run (the CI smoke) has nobody to press a key.
 		source.wait_for_press = not source.use_bot
+		# The first run after the tutorial stops at the special's first fight until the player presses it
+		# (a run nobody plays, a bot's or a test's stepped one, has nobody to press).
+		source.teach_special = source.auto_step and not source.use_bot and not stand and profile.is_special_due(profile.get_level())
 		source.layout = profile.get_stand_layout() if stand else profile.get_layout(profile.get_level())
 		source.gear = profile.get_gear_worn()
 		source.gear_owned = profile.get_gear_owned().duplicate()
@@ -283,6 +287,12 @@ func _leave_run() -> void:
 	source.leave_run()
 	profile.leave_run()
 	_show(Screen.MAP)
+
+
+## The player pressed the special at its prompt: the Hero fires and the prompt is not shown again.
+func _on_special_requested() -> void:
+	source.press_special()
+	profile.teach_special()
 
 
 ## Plays the level the summary offered after a win.
