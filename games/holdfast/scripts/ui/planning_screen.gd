@@ -29,6 +29,10 @@ const EMPTY_SPOT := "Empty"
 const HINT := "Drag a post onto a spot, or press a spot."
 const NO_BLESSING := "No blessing"
 const NOBODY := "Nobody"
+const QUICK_WHY := "Quick start needs a layout you have played here before."
+const BLESSING_HINT := "A blessing lasts one run. Take one, or none."
+const MAGE_HINT := "Drag a Mage Post onto a spot like an Archer Post."
+const RECRUIT_TIP := "Who stands at this post. With Posted Hand, a post with a Recruit on it shoots faster."
 
 @onready var _title: Label = %Title
 @onready var _hint: Label = %Hint
@@ -69,6 +73,8 @@ var _squad_line := ""
 ## button under each spot that picks one.
 var _squad_picks: Array = []
 var _posted: Dictionary = {}
+## False while the player does not own what a Recruit on a post is for (Posted Hand): no pickers then.
+var _posting := true
 var _recruit_buttons: Dictionary = {}
 
 
@@ -126,6 +132,8 @@ func set_castle(spots: Array, cards: int, mage_cards := 0, slots := -1) -> void:
 		_map.add_child(button)
 		_site_buttons[id] = button
 		var picker := MenuButton.new()
+		picker.flat = false
+		picker.tooltip_text = RECRUIT_TIP
 		picker.add_theme_font_size_override("font_size", FONT_PX)
 		picker.get_popup().add_theme_font_size_override("font_size", FONT_PX)
 		picker.get_popup().id_pressed.connect(_pick_recruit.bind(id))
@@ -155,6 +163,7 @@ func set_blessings(offer: Array) -> void:
 	_blessing = ""
 	_blessings.visible = not offer.is_empty()
 	_blessing_text.visible = not offer.is_empty()
+	_show_hint(_hint_text)
 	if offer.is_empty():
 		return
 	var group := ButtonGroup.new()
@@ -182,10 +191,12 @@ func set_squad(names: Array, known := -1) -> void:
 
 
 ## The squad's Recruits ([{id, name}]) and who is set on which spot ({spot id: Recruit id}): a placed post
-## gets a button to pick one, who then stands at that post on the run.
-func set_posted(squad: Array, posted: Dictionary) -> void:
+## gets a button to pick one, who then stands at that post on the run. `offered` is false while that
+## would do nothing (Posted Hand is not owned), which hides the buttons.
+func set_posted(squad: Array, posted: Dictionary, offered := true) -> void:
 	_squad_picks = squad
 	_posted = posted
+	_posting = offered
 	_refresh()
 
 
@@ -201,9 +212,21 @@ func _posted_name(site: String) -> String:
 	return NOBODY
 
 
+## The hint line, then in the same paragraph one thing the page has not said yet (the Mage Post cards
+## in hand, the blessings, or why Quick start is shut), and under it the squad.
 func _show_hint(text: String) -> void:
 	_hint_text = text
-	_hint.text = "%s\n%s" % [text, _squad_line] if _squad_line != "" else text
+	var extra := ""
+	# A reason (why "+ Tower" is shut) stands alone.
+	if text == HINT:
+		if _mage_cards > 0 and _placed(MAGE_ID) == 0:
+			extra = MAGE_HINT
+		elif _blessings.visible:
+			extra = BLESSING_HINT
+		elif _saved.is_empty():
+			extra = QUICK_WHY
+	var line := "%s %s" % [text, extra] if extra != "" else text
+	_hint.text = "%s\n%s" % [line, _squad_line] if _squad_line != "" else line
 
 
 ## The blessing picked for the run: an id, or "" for none.
@@ -285,7 +308,7 @@ func _refresh() -> void:
 		_site_buttons[id].reset_size()
 	for id in _recruit_buttons:
 		var picker: MenuButton = _recruit_buttons[id]
-		picker.visible = _index_of(id) >= 0 and not _squad_picks.is_empty()
+		picker.visible = _posting and _index_of(id) >= 0 and not _squad_picks.is_empty()
 		picker.text = _posted_name(id)
 		var popup := picker.get_popup()
 		popup.clear()
@@ -296,6 +319,9 @@ func _refresh() -> void:
 	_count.text = "Posts: %d of %d" % [_chosen.size(), mini(_slots, _cards + _mage_cards)]
 	_start.disabled = _chosen.is_empty()
 	_quick.disabled = _saved.is_empty()
+	_quick.text = "Quick start" if not _saved.is_empty() else "Quick start (no layout yet)"
+	_quick.tooltip_text = QUICK_WHY if _saved.is_empty() else ""
+	_show_hint(_hint_text)
 	_refresh_cards()
 	_place_buttons()
 	_map.queue_redraw()
@@ -378,6 +404,9 @@ func _slot_drop(_at: Vector2, data: Variant, id: String) -> void:
 	else:
 		var at := _index_of(from)
 		_chosen[at] = HoldfastRules.layout_entry(id, _tower_of(_chosen[at]))
+		# A moved post takes its Recruit with it.
+		if _posted.has(from):
+			recruit_posted.emit(id, str(_posted[from]))
 	_refresh()
 
 

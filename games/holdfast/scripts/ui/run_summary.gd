@@ -16,6 +16,11 @@ const Hud = preload("res://scripts/ui/hud.gd")
 @onready var _stars_value: Label = %StarsValue
 @onready var _reward: Label = %Reward
 @onready var _waves_value: Label = %WavesValue
+@onready var _moment: Label = %Moment
+@onready var _unlocked: Label = %UnlockedLine
+@onready var _way_on: Label = %WayOn
+@onready var _tip: Label = %Tip
+@onready var _guide_note: Label = %GuideNote
 @onready var _stars_note: Label = %StarsNote
 @onready var _gear_found: Label = %GearFound
 @onready var _card: PanelContainer = %CardPanel
@@ -40,7 +45,8 @@ func _ready() -> void:
 ## summary is the run_ended payload of a RunStateSource, with the run flow's `stars_paid` and
 ## `reward_gold` (what banking it gave that the level had not given before) and, once, `stars_note`
 ## (the line on what stars buy). `next_level` is the level
-## to offer after a win ("" offers none: a loss, or the last level).
+## to offer after a win ("" offers none: a loss, or the last level). `summary["notes"]` is the run
+## flow's Guidance.summary_notes: the boss beaten, what the win opened, the way on and a tip.
 func show_summary(summary: Dictionary, next_level: String = "") -> void:
 	_next_level = next_level
 	_next_level_button.visible = _next_level != ""
@@ -53,6 +59,15 @@ func show_summary(summary: Dictionary, next_level: String = "") -> void:
 	_stars_note.text = str(summary.get("stars_note", ""))
 	_stars_note.visible = _stars_note.text != ""
 	_waves_value.text = "%d / %d" % [int(summary.get("waves_cleared", 0)), int(summary.get("total_waves", 0))]
+	var notes: Dictionary = summary.get("notes", {})
+	var moment := str(notes.get("boss", ""))
+	if summary.get("keep_fell", false) and int(summary.get("total_waves", 0)) > 0:
+		moment = "The keep fell in wave %d of %d." % [mini(int(summary.get("waves_cleared", 0)) + 1, int(summary["total_waves"])), int(summary["total_waves"])]
+	_set_line(_moment, moment)
+	_set_line(_unlocked, " ".join(PackedStringArray(notes.get("unlocked", []))))
+	_set_line(_way_on, str(notes.get("way_on", "")))
+	_set_line(_tip, str(notes.get("tip", "")))
+	_set_line(_guide_note, str(notes.get("guide_note", "")))
 	var found: PackedStringArray = []
 	var items: Dictionary = HoldfastContent.base().get("gear_items", {})
 	for id in summary.get("result", {}).get("gear_found", []):
@@ -71,6 +86,11 @@ func show_summary(summary: Dictionary, next_level: String = "") -> void:
 	_levelled.text = ". ".join(levelled) + "." if not levelled.is_empty() else ""
 	_levelled.visible = not levelled.is_empty()
 	_card.visible = _levelled.visible or _pick_card.visible
+
+
+func _set_line(label: Label, text: String) -> void:
+	label.text = text
+	label.visible = text != ""
 
 
 ## The level-up card: the first Recruit with a skill to pick, and the two choices (from the profile's

@@ -850,12 +850,19 @@ static func respec_fee(node: Dictionary) -> int:
 	return maxi(RESPEC_MIN_FEE, int(round(float(node.get("cost", 0)) * RESPEC_FEE_SHARE)))
 
 
+## The nodes a respec takes back: all that are bought but the guided first buys (the castle's first
+## slot and Archer Post), which stay because the player needs them to start.
+static func respec_nodes(content: Dictionary, profile: Dictionary) -> Array:
+	var guided: Array = castle_rules(content).get("guided", [])
+	return profile["upgrades"].filter(func(id: String) -> bool: return not id in guided)
+
+
 ## The gold a respec changes the purse by: each gold node's price less its fee, less the fee of
 ## each star node. Negative when the fees are more than the refunds.
 static func respec_gold_change(content: Dictionary, profile: Dictionary) -> int:
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	var change := 0
-	for id in profile["upgrades"]:
+	for id in respec_nodes(content, profile):
 		if not nodes.has(id):
 			continue
 		change -= respec_fee(nodes[id])
@@ -864,11 +871,11 @@ static func respec_gold_change(content: Dictionary, profile: Dictionary) -> int:
 	return change
 
 
-## The stars a respec gives back: the price of every star node bought.
+## The stars a respec gives back: the price of every star node it takes back.
 static func respec_stars(content: Dictionary, profile: Dictionary) -> int:
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	var stars := 0
-	for id in profile["upgrades"]:
+	for id in respec_nodes(content, profile):
 		if nodes.has(id) and is_star_node(nodes[id]):
 			stars += int(nodes[id]["cost"])
 	return stars
@@ -876,14 +883,14 @@ static func respec_stars(content: Dictionary, profile: Dictionary) -> int:
 
 ## "" when a respec can go ahead, else why not.
 static func why_not_respec(content: Dictionary, profile: Dictionary) -> String:
-	if profile["upgrades"].is_empty():
+	if respec_nodes(content, profile).is_empty():
 		return "Nothing to refund"
 	if int(profile["gold"]) + respec_gold_change(content, profile) < 0:
 		return "Not enough gold for the refund fee"
 	return ""
 
 
-## The profile with every upgrade taken back and the tree empty, so the choices can be made
+## The profile with every upgrade but the guided first buys taken back, so the choices can be made
 ## again: each gold node's price comes back less its fee, a star node costs its fee in gold and
 ## frees its stars. Unchanged when `why_not_respec` says no.
 static func respec(content: Dictionary, profile: Dictionary) -> Dictionary:
@@ -891,7 +898,8 @@ static func respec(content: Dictionary, profile: Dictionary) -> Dictionary:
 		return profile
 	var out := profile.duplicate(true)
 	out["gold"] = int(out["gold"]) + respec_gold_change(content, profile)
-	out["upgrades"] = []
+	var taken := respec_nodes(content, profile)
+	out["upgrades"] = profile["upgrades"].filter(func(id: String) -> bool: return not id in taken)
 	return out
 
 
