@@ -211,6 +211,16 @@ func show_stars_line() -> void:
 	_apply(HoldfastMeta.show_stars_line(data))
 
 
+## True when a run on `level` should stop at the special's first-time prompt.
+func is_special_due(level: String) -> bool:
+	return HoldfastMeta.special_due(_content, data, level)
+
+
+## Marks the special's prompt as answered.
+func teach_special() -> void:
+	_apply(HoldfastMeta.teach_special(data))
+
+
 func bank_run(result: Dictionary) -> void:
 	_apply(HoldfastMeta.bank_run(_content, data, result))
 

@@ -24,6 +24,35 @@ const FORK_PREFER := {
 	"volley": ["post_sight", "post_scope", "post_marksman", "post_piercing"],
 	"sniper": ["post_drills", "post_twin", "post_burst", "post_storm"],
 }
+## The nodes that make a Hero's special fire on its own (Keeper's Habit). The player who never presses
+## the special is measured twice: without these ("no_special", the button taught and ignored) and
+## with them saved up for ("auto", like the Fork sides' chains).
+static func auto_nodes() -> Array:
+	var out := []
+	var nodes: Dictionary = HoldfastContent.base().get("upgrade_nodes", {})
+	for id in nodes:
+		for effect in nodes[id].get("effects", []):
+			if str(effect["stat"]).ends_with("ability.auto_power"):
+				out.append(id)
+	return out
+
+
+## What the player who never presses the special saves up for: each auto-cast node with the nodes it needs, in order.
+static func auto_chain() -> Array:
+	var nodes: Dictionary = HoldfastContent.base().get("upgrade_nodes", {})
+	var out := []
+	for id in auto_nodes():
+		_with_requirements(nodes, id, out)
+	return out
+
+
+static func _with_requirements(nodes: Dictionary, id: String, out: Array) -> void:
+	for need in nodes[id].get("requires", []):
+		_with_requirements(nodes, need, out)
+	if not id in out:
+		out.append(id)
+
+
 ## One post at a time: the second castle slot is never bought.
 const ONE_POST_SKIP := ["castle_slot_2"]
 ## Pins are written to four places; a rate is a whole number of players, so a real change is far bigger.
@@ -122,14 +151,25 @@ static func measure(bands: Dictionary) -> Dictionary:
 		for bot in BOTS:
 			out["%s/%s" % [pillar, bot]] = cell(BOTS[bot], pillar, int(seeds["band"]))
 		for side in FORK_SKIPS:
-			out["%s/%s" % [pillar, side]] = cell(HoldfastSkilledBot.AVERAGE, pillar, int(seeds["fork"]), FORK_SKIPS[side], FORK_PREFER[side] if pillar == FORK_PREFER_PILLAR else [])
-		out["%s/no_special" % pillar] = cell(HoldfastSkilledBot.AVERAGE_NO_SPECIAL, pillar, int(seeds["special"]))
+			out["%s/%s" % [pillar, side]] = cell(HoldfastSkilledBot.AVERAGE, pillar, int(seeds["fork"]), FORK_SKIPS[side] + auto_nodes(), FORK_PREFER[side] if pillar == FORK_PREFER_PILLAR else [])
+		out["%s/no_special" % pillar] = cell(HoldfastSkilledBot.AVERAGE_NO_SPECIAL, pillar, int(seeds["special"]), auto_nodes())
+		if _has_auto_node(pillar):
+			out["%s/auto" % pillar] = cell(HoldfastSkilledBot.AVERAGE_NO_SPECIAL, pillar, int(seeds["special"]), [], auto_chain())
 		if bands.has("tree"):
 			out["%s/tree" % pillar] = tree_cell(pillar, int(seeds["tree"]), float(bands["tree"]["sim_hours"]))
 	var one_post: Dictionary = bands["one_post"]
 	if str(one_post["level"]) in scope(bands, str(one_post["pillar"])):
 		out["%s/one_post" % one_post["pillar"]] = cell(HoldfastSkilledBot.AVERAGE, str(one_post["pillar"]), int(seeds["one_post"]), ONE_POST_SKIP)
 	return out
+
+
+## True when the pillar has a node that fires its special for it.
+static func _has_auto_node(pillar: String) -> bool:
+	var nodes: Dictionary = HoldfastContent.base().get("upgrade_nodes", {})
+	for id in auto_nodes():
+		if not nodes[id].has("hero") or str(nodes[id]["hero"]) == pillar:
+			return true
+	return false
 
 
 ## First-time win rate of the first `seeds` climbs at `level` (0 means all), over the players who
@@ -179,6 +219,7 @@ static func figures(bands: Dictionary, cells: Dictionary) -> Dictionary:
 		var inside := scope(bands, pillar)
 		var low := 1.0
 		var gaps := []
+		var never: Array = cells.get("%s/auto" % pillar, cells["%s/no_special" % pillar])
 		for level in inside:
 			var avg: Array = bands["bands"][level]["average"]
 			var poor_min := float(bands["bands"][level]["poor_min"])
@@ -190,14 +231,19 @@ static func figures(bands: Dictionary, cells: Dictionary) -> Dictionary:
 			out["%s/fork_gap/%s" % [pillar, level]] = {"value": gap, "lo": 0.0, "hi": fork_max, "how": "Volley against Sniper, average bot, %d players each" % seeds["fork"]}
 			if levels().find(level) >= feel_from:
 				out["%s/fork_feel/%s" % [pillar, level]] = {"value": feel_gap(cells["%s/volley" % pillar], cells["%s/sniper" % pillar], level), "lo": feel_min, "hi": 1.0, "how": "Volley against Sniper: the larger of the gap in Keep health left and in clear time, first attempts"}
-			var diff := rate(cells["%s/average" % pillar], level, int(seeds["special"])) - rate(cells["%s/no_special" % pillar], level)
+			var pressed := rate(cells["%s/average" % pillar], level, int(seeds["special"]))
+			var diff := pressed - rate(never, level)
 			gaps.append(diff)
-			out["%s/special_gap/%s" % [pillar, level]] = {"value": diff, "lo": float(special["level_min"]), "hi": float(special["level_max"]), "how": "special on less special off, average bot, the same %d players" % seeds["special"]}
+			out["%s/special_gap/%s" % [pillar, level]] = {"value": diff, "lo": float(special["level_min"]), "hi": float(special["level_max"]), "how": "special pressed less never pressed (having saved up for Keeper's Habit, where the pillar has one), average bot, the same %d players" % seeds["special"]}
+			if cells.has("%s/auto" % pillar):
+				# The special's worth with and without the node, for the report (nothing to judge).
+				out["%s/special_worth/%s/without_node" % [pillar, level]] = {"value": pressed - rate(cells["%s/no_special" % pillar], level), "lo": -1.0, "hi": 1.0, "how": "special pressed less never pressed, no Keeper's Habit"}
+				out["%s/special_worth/%s/with_node" % [pillar, level]] = {"value": diff, "lo": -1.0, "hi": 1.0, "how": "special pressed less never pressed, saved up for Keeper's Habit"}
 		out["%s/floor" % pillar] = {"value": low, "lo": float(bands["first_time_floor"]), "hi": 1.0, "how": "the lowest average-bot first-time win rate over the levels judged"}
 		var mean := 0.0
 		for g in gaps:
 			mean += g
-		out["%s/special_gap/mean" % pillar] = {"value": mean / maxi(gaps.size(), 1), "lo": float(special["mean_min"]), "hi": float(special["mean_max"]), "how": "special on less special off, averaged over the levels judged"}
+		out["%s/special_gap/mean" % pillar] = {"value": mean / maxi(gaps.size(), 1), "lo": float(special["mean_min"]), "hi": float(special["mean_max"]), "how": "special pressed less never pressed, averaged over the levels judged"}
 		var first: String = levels()[0]
 		if first in inside:
 			out["%s/no_special/%s" % [pillar, first]] = {"value": rate(cells["%s/no_special" % pillar], first), "lo": float(special["first_level_off_min"]), "hi": 1.0, "how": "first-time win rate of the average bot that never presses the special, %d players" % seeds["special"]}

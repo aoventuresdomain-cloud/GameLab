@@ -14,6 +14,8 @@ extends Control
 
 ## The player pressed while a teaching run waited; the run flow lifts the hold.
 signal begin_requested
+## The player pressed while the special's first-time prompt waited; the run flow lets the Hero fire.
+signal special_requested
 
 ## Under a teaching note while the run waits.
 const HOLD_HINT := "Click, tap or press a key to begin."
@@ -46,6 +48,15 @@ func _process(_delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if not visible or _source == null or not _source.is_held():
 		return
+	if _source.is_teaching_special():
+		# Only the special's own key, or a click or tap, answers its prompt.
+		var fires: bool = event.is_action_pressed(HoldfastPlayerHero.ACTION_ABILITY, false) \
+			or (event is InputEventMouseButton and event.pressed) \
+			or (event is InputEventScreenTouch and event.pressed)
+		if fires:
+			special_requested.emit()
+			get_viewport().set_input_as_handled()
+		return
 	var pressed: bool = (event is InputEventKey and event.pressed and not event.echo) \
 		or (event is InputEventMouseButton and event.pressed) \
 		or (event is InputEventScreenTouch and event.pressed)
@@ -69,7 +80,9 @@ func _refresh_hero() -> void:
 	_wave_banner.text = banner
 	_wave_banner.visible = banner != ""
 	# A boss's note outranks the posts line (that one is only up before wave 1).
-	var note: String = _source.get_boss_note()
+	var note: String = _source.get_special_note()
+	if note == "":
+		note = _source.get_boss_note()
 	if note == "":
 		note = _source.get_posts_note()
 		if note != "" and _source.is_held():

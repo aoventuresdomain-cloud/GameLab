@@ -179,7 +179,7 @@ func test_one_player_of_every_cell_is_played() -> void:
 		bands["seeds"][key] = 1
 	bands["tree"]["sim_hours"] = 0.3
 	var cells := HoldfastBands.measure(bands)
-	expect_eq(cells.size(), 3 * 6 + 1, "six cells for each pillar (two bots, two fork sides, no special, the tree) and the one-post cell")
+	expect_eq(cells.size(), 3 * 6 + 2, "six cells for each pillar (two bots, two fork sides, no special, the tree), the Flare Archer's auto-cast cell and the one-post cell")
 	for name in cells:
 		expect_eq(cells[name].size(), 1, "%s: one climb" % name)
 		if name.ends_with("/tree"):
