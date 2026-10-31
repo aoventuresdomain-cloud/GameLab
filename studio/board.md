@@ -668,7 +668,7 @@
 
 ### HF-M2-65 Level modifiers and Hard replays
 - **Owner:** Gameplay Engineer
-- **Status:** Planned, Build 13b. From the Advisor's comparison (gap A). Default taken from the Advisor's pick (pull it forward from M5; Nightmare stays later, as data) unless the CEO says otherwise
+- **Status:** Merged (#163, QA clear at 817191f). From the Advisor's comparison (gap A). Default taken from the Advisor's pick (pull it forward from M5; Nightmare stays later, as data) unless the CEO says otherwise
 - **QA:** full (level data, rewards and saves)
 - **Depends on:** HF-M2-64
 - **Done when:**
@@ -679,7 +679,7 @@
 
 ### HF-M2-66 Achievements
 - **Owner:** Gameplay Engineer
-- **Status:** Planned, Build 13b. From the Advisor's comparison (gap B); standing CEO go
+- **Status:** Merged (#164, QA clear at 0b35c8e after one MUST FIX: the Hire a Recruit counter read the roster, so a rescued Recruit unlocked it; it now reads purchases). From the Advisor's comparison (gap B); standing CEO go
 - **QA:** full (Steam integration)
 - **Done when:**
   - [ ] About 12 achievements are defined as data (first clear, a boss, a level with no tower lost, three stars on a level, a node of each kind, hire a Recruit, wear a full set) with counters, each with a test that fires from a real event.
@@ -688,7 +688,7 @@
 
 ### HF-M2-67 A second biome is data only (proof)
 - **Owner:** Gameplay Engineer
-- **Status:** Planned, Build 13b. From the Advisor's comparison (gap C); standing CEO go
+- **Status:** Merged (#165, QA clear at 7027ea9). Only HoldfastBands changed; data gaps for a real second biome: a `bands` and a `hard` entry per level, `pillar_levels` widened, the Tideblade `opens.after` set to the biome boss, gear and `first_clear_gear`, `balance_check`, tree nodes. From the Advisor's comparison (gap C); standing CEO go
 - **QA:** sanity (tests only unless code changes)
 - **Done when:**
   - [ ] A throwaway second-biome stub in tests (a level, a boss and its unlock) loads and plays in the simulator with no code change; if code is needed, the list of changes is written in the PR and the data gaps are boarded.
@@ -696,7 +696,7 @@
 
 ### HF-M2-68 Pacing gate in numbers
 - **Owner:** Gameplay Engineer
-- **Status:** In review: #160 QA pass at 0faf0a9 (CI on the merged result pending). Finding: the gold tree fills in about 0.7 h for every Hero against the 10 to 15 h band, pinned as known misses (F-161); the Advisor's view is in HF-M2-70
+- **Status:** Merged (#160, QA clear at 0faf0a9; main a672bb0). Finding: the gold tree fills in about 0.7 h for every Hero against the 10 to 15 h band, pinned as known misses (F-161); the Advisor's view is in HF-M2-70
 - **QA:** full (core numbers)
 - **Done when:**
   - [ ] The simulator report measures the tree and stars: runs between affordable purchases (never more than 3 in a row) and the hours to fill the whole tree (10 to 15), with the first-time-to-first-star, tower and boss figures.
@@ -704,14 +704,24 @@
 
 ### HF-M2-70 Gold pacing: tiered cost curve and duplicate-gear salvage
 - **Owner:** Gameplay Engineer
-- **Status:** Planned, M2b (after HF-M2-65 to 67). From the Advisor's view `holdfast/m2/advisor-gold-pacing.md` (30 Oct 2026): aim today's tree at 3 to 4 hours of play with Hard replays counted, not 10 to 15 (that target was for about 25 levels and 100 nodes); standing CEO go (2026-10-30 "once you get it fix the gaps"); the CEO has not seen the Advisor's view yet
+- **Status:** Merged (#167, QA clear at a0d1e9a). Built to the Advisor's view `holdfast/m2/advisor-gold-pacing.md` (30 Oct 2026); standing CEO go (2026-10-30 "once you get it fix the gaps"). Result: tiers and additive Tithe (+55% in all) in, the two 1,400 Archer Post nodes stay in the Gull Rock tier (the fork-feel cells need them within reach), tree/dry_runs stays at 3 and tree/hours is pinned as a known miss (about 0.9 h for every Hero against the 3 to 4 h band; more nodes would be filler and a longer wait between buys feels worse). The Advisor agrees and now aims at about 2 to 3 h of real play (`advisor-salvage-and-gold-clock.md`); re-measure when Hard replays and the next arm land. The CEO has not seen the Advisor's gold views yet
 - **QA:** full (core numbers and rewards)
 - **Depends on:** HF-M2-65, HF-M2-68
 - **Done when:**
   - [ ] Node gold prices follow a tier table in pack data (each tier about 2 to 2.5 times the last, priced from the gold per run where the tier opens), so levels 6 to 25 only add rows; the first three runs' purchases are untouched; node effects, star prices and rules, the Level 0 reward and early kill gold are not changed.
   - [ ] The Tithe chain is additive and capped (about +50% income in total), and Tithe V and VI, Walls V and the two 1,400 Archer Post nodes sit in tiers that open in biomes 2 and 3.
-  - [ ] The pacing gate's tree/hours figure for each Hero lands in a re-set band of 3 to 4 hours (Advisor's pick; the band moves in `pacing-bands.json`, the pins for the old band go), with Hard replays counted, and tree/dry_runs stays within its limit.
+  - [ ] The pacing gate's tree/hours figure for each Hero is measured against a re-set band of 3 to 4 hours (Advisor's pick; the band moves in `pacing-bands.json`), with Hard replays counted, and tree/dry_runs stays within its limit. Met as a pinned known miss: 0.8884, 1.1668 and 0.9432 h, which may not worsen (HoE ruling 2026-10-31).
   - [ ] A gear piece that can no longer help (an owned duplicate) salvages to about one run's gold at that level, shown on the result panel, no new currency (F-149), with a test.
+### HF-M2-71 Salvage ceiling for a finished gear set
+- **Owner:** Gameplay Engineer
+- **Status:** Planned, Build 13c. From the Advisor's view `holdfast/m2/advisor-salvage-and-gold-clock.md` (31 Oct 2026) on F-165; standing CEO go
+- **QA:** full (rewards)
+- **Depends on:** HF-M2-70
+- **Done when:**
+  - [ ] Salvage for an owned duplicate is about a quarter of that level's run gold per piece (set in `HoldfastRules._drop_gear`), so a finished set adds roughly 23% at Gull Rock, not 91%; the fraction is pack data.
+  - [ ] A test through a real JSON save: a full set at Gull Rock pays no more than about +25% over a run with no duplicates; a missing piece still drops and is not salvaged.
+  - [ ] The pacing bands are unchanged or re-pinned with a reason; QA full round names a commit.
+
 ### HF-M2-69 Controller and keyboard input
 - **Owner:** UI Engineer
 - **Status:** On hold until the CEO answers whether the Steam Deck is a first-release target (the Advisor's pick: yes, its own build after Build 13 and before the demo); QA has not confirmed that no gamepad handling exists (F-148)
@@ -1076,9 +1086,17 @@
 | F-157 | HF-M2-60 | CI smoke-windows on #155: "1 resources still in use at exit" from a sound still fading as the run quits (about 1 run in 3 locally); fixed by not starting playback on a headless display, 10 of 10 clean runs (QA) | Major | UI Engineer | Closed (730dfb4) |
 | F-158 | HF-M2-63 | FOLLOW-UP from QA (#157): Keeper's Habit needs Boots and 300 gold, so a never-pressing player still meets the flare no_special/outpost 0% pin until it is bought; the guided press is the cover | Minor | Gameplay Engineer | Open, known pin (F-138) |
 | F-159 | HF-M2-63 | FOLLOW-UP from QA (#157): the guided press accepts only Space, click or touch; a gamepad player cannot answer it | Minor | UI Engineer | Open, folded into HF-M2-69 (on hold for the Steam Deck answer) |
-| F-160 | HF-M2-64 | FOLLOW-UP from QA (#158): `HoldfastMeta.from_save` `data.get("run_open") == true` raises a script error when run_open is an int or string with a valid checksum, and the profile comes back null; reachable only with a forged checksum. Fix: `is bool and` the value, plus a test | Minor | Gameplay Engineer | Open, rides the HF-M2-65 PR |
+| F-160 | HF-M2-64 | FOLLOW-UP from QA (#158): `HoldfastMeta.from_save` `data.get("run_open") == true` raises a script error when run_open is an int or string with a valid checksum, and the profile comes back null; reachable only with a forged checksum. Fix: `is bool and` the value, plus a test | Minor | Gameplay Engineer | Closed (#166, QA 0fc1442) |
 | F-161 | HF-M2-68 | The gold side of the tree fills in about 0.7 to 0.8 hours for all three Heroes (Flare 0.73 h, Dusk Mage 0.80, Tideblade 0.68; QA confirmed by summing node prices from content and running the older bot) against the 10 to 15 hour band; star side 13 to 15 earned against 40 to 43 priced. Pinned as known misses; the Advisor says aim at 3 to 4 h for the nodes that exist | Major | Gameplay Engineer | Open, HF-M2-70 (M2b) |
-| F-162 | HF-M2-68 | FOLLOW-UP from QA (#160): the pin note says "40 gold nodes"; Flare has 41 (32,380 gold), Dusk Mage and Tideblade 29 each (27,090 gold) | Minor | Gameplay Engineer | Open, rides the next engineer PR |
+| F-162 | HF-M2-68 | FOLLOW-UP from QA (#160): the pin note says "40 gold nodes"; Flare has 41 (32,380 gold), Dusk Mage and Tideblade 29 each (27,090 gold) | Minor | Gameplay Engineer | Closed (#166, QA 0fc1442) |
+| F-163 | HF-M2-65 | From QA (#163): Fragile stars were always 3 because the star yardstick used the Keep before the modifier; Hard stars are now taken after modifiers and never against a blessing | Minor | Gameplay Engineer | Closed (#166, QA 0fc1442) |
+| F-164 | HF-M2-65 | From QA (#163): the Plan title could run into "+ Tower" with the Hard label; shortened and tested at 1280x720 | Minor | UI Engineer (built by the Gameplay Engineer) | Closed (#166, QA 0fc1442) |
+| F-165 | HF-M2-70 | With every gear piece owned the guaranteed elite and boss drops all salvage, so Gull Rock pays 2,517 against 1,317 (about +91%) with no cap; the Advisor asks for about a quarter of a run's gold per piece | Major | Gameplay Engineer | Open, HF-M2-71 |
+| F-166 | HF-M2-70 | FOLLOW-UP from QA (#167): Reset all and Refund pay the current price, not the price paid, so repricing Walls V and Tithe IV to VI raised an old boosted save's Reset all payout from 28,317 to 46,227; only pre-release playtest saves are affected and refund then rebuy nets zero | Minor | Gameplay Engineer | Open, store the price paid or accept (HoE decides with the next economy change) |
+| F-167 | HF-M2-70 | FOLLOW-UP from QA (#167): tree/dry_runs worst streak is 3 on every Hero against a limit of 3, so no headroom (it was 2) | Minor | Gameplay Engineer | Open, watch; re-check with every cost change |
+| F-168 | HF-M2-70 | FOLLOW-UP from QA (#167): Walls V and Tithe IV to VI are priced for level 6 income but only five levels exist, so they sit ahead of any level 6 until the second biome | Minor | Gameplay Engineer | Open, closes with the second biome |
+| F-169 | HF-M2-70 | FOLLOW-UP from QA (#167): the "Salvaged" line shows on the result panel only; the Hero tab has nothing for it | Minor | UI Engineer | Open, add only if the CEO's play shows it is missed |
+| F-170 | HF-M2-66 | FOLLOW-UP from QA (#164): the twelve HF_ Steam achievement names do not exist on Steam's side yet, so a real Steam check needs Holdfast's own app | Minor | Setup Desk (via the Chief of Staff) | Open, needs the Steam app, CEO go for any fee |
 
 ## Test changes
 
@@ -1149,6 +1167,9 @@
 | 2026-10-31 | `test_build3` (profile pin gains `special_taught` false; known hero stats gain `ability.auto_power`), `test_build5` (Flare nodes 12 to 13; reachable gold totals 40 to 41, four lines), `test_radial_web`, `test_rework_b`, `test_tree_connected` (node count 62 to 63), `test_pacing_bands` (sweep cells 16 to 17) (#157, HF-M2-63) | Expected values only, assertions unchanged in intent | The new Keeper's Habit node and its auto-cast cell add one node, one stat and one band cell; QA read each as a count or stat change with nothing loosened (QA, 7d35516) | Head of Engineering |
 | 2026-10-31 | `test_build3` (profile pin gains `paths_kept` and `run_open`; `paths_kept` set before `select_pillar`), `test_build5`, `test_rework_a`, `test_rework_b`, `test_slice2` (same `paths_kept` setup), `test_guidance` (the all-paths-open test now asserts only the first path is open on a new game) (#158, HF-M2-64) | Setup and pin changes; assertions unchanged in intent apart from the guidance test, which follows the new rule | Dusk Mage and Tideblade are locked until their unlock, by the CEO's design; QA read each as a setup or pin change (QA, b87b9a3) | Head of Engineering |
 | 2026-10-31 | `test_pacing_bands.gd::test_one_player_of_every_cell_is_played` (#160, HF-M2-68) | Expects the extra tree cell per Hero (3 x 6 + 2 cells) and skips the level check for it; nothing loosened | The pacing gate now plays a progression per Hero (QA, 0faf0a9) | Head of Engineering |
+| 2026-10-31 | `test_build3` (profile pin gains `hard_stars`), `test_pacing_bands.gd::test_one_player_of_every_cell_is_played` (two more cells per Hero for Hard replays) (#163, HF-M2-65) | Expected lists extended for the new fields and cells; nothing loosened | Hard replays add a saved field and a measured cell (QA, 817191f) | Head of Engineering |
+| 2026-10-31 | `test_build3` (profile pin gains `achievements` and `counters.clean_wins`) (#164, HF-M2-66) | Expected profile pin extended for the new fields; nothing loosened | Achievements add saved fields (QA, 0b35c8e) | Head of Engineering |
+| 2026-10-31 | `test_tree_numbers` (hours band 10 to 15 h becomes 3 to 4 h, rows, means and boundary probes scaled, same assertions and margins), `test_build3` (Tithe total 1.55 additive, same tolerance) (#167, HF-M2-70) | Figures and the band re-set to the new design; assertion strength unchanged (QA checked) | Tithe additive and the Advisor's 3 to 4 h band (QA, a0d1e9a) | Head of Engineering |
 
 ## Advisor views
 
@@ -1243,3 +1264,4 @@
 - 2026-10-24: CEO tested the feedback build: seven comments logged as F-106 to F-112 and items HF-M2-46 to 52. Standing go: the engineer opens each PR at once and the Head of Engineering merges on green CI. Before the CEO sees the next build Head of QA plays a fresh game end to end at 1280x720 and 1920x1080 and the handoff carries a written pass list. Recruits stay parked.
 - 2026-10-24: CEO asks added after the test: a Plan entry on the journey map (HF-M2-53, folded into the fix batch) and a radial skill tree (design HF-M2-54 with one Advisor round, build HF-M2-55 only after the CEO accepts the mockup). The other fixes do not wait for the redesign.
 - 2026-10-24: HF-M2-46 to 53 merged (#127, #128) with QA clear at named commits; HF-M2-50 parks Bryn, Wren and the light posts behind a flag (Head of Engineering chose a data-only retune of Levels 1 to 5 over loosening the curve bands; interim, M2b rebalances). The CEO's standing rules: no idle gaps between steps, only the Chief of Staff runs stall checks, every 30 minutes. Radial skill web (HF-M2-55) waits for the CEO's acceptance of the mockup.
+- 2026-10-31: Build 13b merged: HF-M2-65 (#163), 66 (#164), 67 (#165), the follow-ups F-160/162/163/164 (#166) and HF-M2-70 (#167), each with a QA clear at a named commit. HoE rulings on HF-M2-70: dry_max stays 3; tree/hours pinned as a known miss (about 0.9 h) rather than adding filler nodes or a 12-minute wait between buys; the Advisor agrees and aims at 2 to 3 h of real play. The Advisor asked for a salvage ceiling, boarded as HF-M2-71.
