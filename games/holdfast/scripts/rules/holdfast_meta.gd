@@ -204,7 +204,8 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 	# A save already playing a path that is gated keeps it (a save from before the gate).
 	if not path_open(content, profile, str(profile["pillar"])) and not data.is_empty():
 		profile["paths_kept"].append(str(profile["pillar"]))
-	profile["run_open"] = data.get("run_open") == true
+	# Only a real boolean counts: a number or a word in a save (even one with a valid checksum) is not a run left open.
+	profile["run_open"] = data.get("run_open") is bool and data["run_open"]
 	RecruitMeta.from_save(content, profile, data)
 	return profile
 
