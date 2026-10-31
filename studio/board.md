@@ -657,7 +657,7 @@
 
 ### HF-M2-64 Run flow: pause and leave, pillar gating, end of content and next goal
 - **Owner:** Gameplay Engineer
-- **Status:** Planned, Build 13 of 13 (from QA's review round on db39607, F-142 to F-146); standing CEO go (2026-10-30 "once you get it fix the gaps"), no further check
+- **Status:** Merged (#158, QA pass at b87b9a3). Closes F-142, F-143, F-146; the stub lock lines and Hero-tab dot from #154 and #155 now run for real. Speed is saved in the settings file
 - **QA:** full (run flow and save data)
 - **Depends on:** HF-M2-03
 - **Done when:**
@@ -696,12 +696,22 @@
 
 ### HF-M2-68 Pacing gate in numbers
 - **Owner:** Gameplay Engineer
-- **Status:** Planned, Build 13b. From the Advisor's comparison (gap F), replaces the retired ten-hour report (F-127); standing CEO go
+- **Status:** In review: #160 QA pass at 0faf0a9 (CI on the merged result pending). Finding: the gold tree fills in about 0.7 h for every Hero against the 10 to 15 h band, pinned as known misses (F-161); the Advisor's view is in HF-M2-70
 - **QA:** full (core numbers)
 - **Done when:**
   - [ ] The simulator report measures the tree and stars: runs between affordable purchases (never more than 3 in a row) and the hours to fill the whole tree (10 to 15), with the first-time-to-first-star, tower and boss figures.
   - [ ] The bands gate fails CI when either number leaves its band, with a test for each failure; any known miss is pinned with a reason like the others.
 
+### HF-M2-70 Gold pacing: tiered cost curve and duplicate-gear salvage
+- **Owner:** Gameplay Engineer
+- **Status:** Planned, M2b (after HF-M2-65 to 67). From the Advisor's view `holdfast/m2/advisor-gold-pacing.md` (30 Oct 2026): aim today's tree at 3 to 4 hours of play with Hard replays counted, not 10 to 15 (that target was for about 25 levels and 100 nodes); standing CEO go (2026-10-30 "once you get it fix the gaps"); the CEO has not seen the Advisor's view yet
+- **QA:** full (core numbers and rewards)
+- **Depends on:** HF-M2-65, HF-M2-68
+- **Done when:**
+  - [ ] Node gold prices follow a tier table in pack data (each tier about 2 to 2.5 times the last, priced from the gold per run where the tier opens), so levels 6 to 25 only add rows; the first three runs' purchases are untouched; node effects, star prices and rules, the Level 0 reward and early kill gold are not changed.
+  - [ ] The Tithe chain is additive and capped (about +50% income in total), and Tithe V and VI, Walls V and the two 1,400 Archer Post nodes sit in tiers that open in biomes 2 and 3.
+  - [ ] The pacing gate's tree/hours figure for each Hero lands in a re-set band of 3 to 4 hours (Advisor's pick; the band moves in `pacing-bands.json`, the pins for the old band go), with Hard replays counted, and tree/dry_runs stays within its limit.
+  - [ ] A gear piece that can no longer help (an owned duplicate) salvages to about one run's gold at that level, shown on the result panel, no new currency (F-149), with a test.
 ### HF-M2-69 Controller and keyboard input
 - **Owner:** UI Engineer
 - **Status:** On hold until the CEO answers whether the Steam Deck is a first-release target (the Advisor's pick: yes, its own build after Build 13 and before the demo); QA has not confirmed that no gamepad handling exists (F-148)
@@ -1066,6 +1076,9 @@
 | F-157 | HF-M2-60 | CI smoke-windows on #155: "1 resources still in use at exit" from a sound still fading as the run quits (about 1 run in 3 locally); fixed by not starting playback on a headless display, 10 of 10 clean runs (QA) | Major | UI Engineer | Closed (730dfb4) |
 | F-158 | HF-M2-63 | FOLLOW-UP from QA (#157): Keeper's Habit needs Boots and 300 gold, so a never-pressing player still meets the flare no_special/outpost 0% pin until it is bought; the guided press is the cover | Minor | Gameplay Engineer | Open, known pin (F-138) |
 | F-159 | HF-M2-63 | FOLLOW-UP from QA (#157): the guided press accepts only Space, click or touch; a gamepad player cannot answer it | Minor | UI Engineer | Open, folded into HF-M2-69 (on hold for the Steam Deck answer) |
+| F-160 | HF-M2-64 | FOLLOW-UP from QA (#158): `HoldfastMeta.from_save` `data.get("run_open") == true` raises a script error when run_open is an int or string with a valid checksum, and the profile comes back null; reachable only with a forged checksum. Fix: `is bool and` the value, plus a test | Minor | Gameplay Engineer | Open, rides the HF-M2-65 PR |
+| F-161 | HF-M2-68 | The gold side of the tree fills in about 0.7 to 0.8 hours for all three Heroes (Flare 0.73 h, Dusk Mage 0.80, Tideblade 0.68; QA confirmed by summing node prices from content and running the older bot) against the 10 to 15 hour band; star side 13 to 15 earned against 40 to 43 priced. Pinned as known misses; the Advisor says aim at 3 to 4 h for the nodes that exist | Major | Gameplay Engineer | Open, HF-M2-70 (M2b) |
+| F-162 | HF-M2-68 | FOLLOW-UP from QA (#160): the pin note says "40 gold nodes"; Flare has 41 (32,380 gold), Dusk Mage and Tideblade 29 each (27,090 gold) | Minor | Gameplay Engineer | Open, rides the next engineer PR |
 
 ## Test changes
 
@@ -1134,6 +1147,8 @@
 | 2026-10-31 | `test_build11b`, `test_build5`, `test_first_stand`, `test_guided_start`, `test_interface_tidy`, `test_radial_web`, `test_rework_b`, `test_stars_and_castle`, `test_tree_connected` (#154, HF-M2-61) | Expectations move from "a refund empties the tree and the guided buys come back" to "the two guided buys stay and Refund all asks first". Old to new for each is in the PR body (13 changes): star count 1 + 1 + 2 to 2; upgrades after refund `[]` to the two guided buys; gold change drops the `- 2 * 50` star fees; guided step after refund `castle_slot_1` to empty; free stars reduced by 2; Refund pressed alone to pressed then Confirm | The CEO's rule that guided buys are compulsory and not refundable, plus the Refund-all question; the code is the decision, not the other way round. QA read the arithmetic against node costs and fees on four saves (QA, 31b76e2) | Head of Engineering |
 | 2026-10-31 | `test_rework_a.gd:30` (#155, HF-M2-60) | `"Continue\nLevel 2 · Tideblade · 1,240 gold"` to `"... · 1.2K gold"`; nothing else in that test changes | Short number formats are the item; the Recruit hire price stays exact | Head of Engineering |
 | 2026-10-31 | `test_build3` (profile pin gains `special_taught` false; known hero stats gain `ability.auto_power`), `test_build5` (Flare nodes 12 to 13; reachable gold totals 40 to 41, four lines), `test_radial_web`, `test_rework_b`, `test_tree_connected` (node count 62 to 63), `test_pacing_bands` (sweep cells 16 to 17) (#157, HF-M2-63) | Expected values only, assertions unchanged in intent | The new Keeper's Habit node and its auto-cast cell add one node, one stat and one band cell; QA read each as a count or stat change with nothing loosened (QA, 7d35516) | Head of Engineering |
+| 2026-10-31 | `test_build3` (profile pin gains `paths_kept` and `run_open`; `paths_kept` set before `select_pillar`), `test_build5`, `test_rework_a`, `test_rework_b`, `test_slice2` (same `paths_kept` setup), `test_guidance` (the all-paths-open test now asserts only the first path is open on a new game) (#158, HF-M2-64) | Setup and pin changes; assertions unchanged in intent apart from the guidance test, which follows the new rule | Dusk Mage and Tideblade are locked until their unlock, by the CEO's design; QA read each as a setup or pin change (QA, b87b9a3) | Head of Engineering |
+| 2026-10-31 | `test_pacing_bands.gd::test_one_player_of_every_cell_is_played` (#160, HF-M2-68) | Expects the extra tree cell per Hero (3 x 6 + 2 cells) and skips the level check for it; nothing loosened | The pacing gate now plays a progression per Hero (QA, 0faf0a9) | Head of Engineering |
 
 ## Advisor views
 
