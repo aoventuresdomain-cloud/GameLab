@@ -120,7 +120,8 @@ func open(level_id: String, layout: Array, saved: bool, spots: Array, cards: int
 
 ## Marks the page as a Hard replay of the level: the modifier's icon and word ("" for a Normal run).
 func set_hard(label: String) -> void:
-	_title.text = "Plan your defence: %s" % _level["name"] + (" (Hard: %s)" % label if label != "" else "")
+	# The shorter lead keeps the title clear of the "+ Tower" button at 1280 x 720 with the longest label.
+	_title.text = "Plan: %s (Hard: %s)" % [_level["name"], label] if label != "" else "Plan your defence: %s" % _level["name"]
 
 
 ## Sets what the player has: the ring's `spots`, the Archer Post `cards` and Mage Post
