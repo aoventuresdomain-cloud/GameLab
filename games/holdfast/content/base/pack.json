@@ -4,5 +4,5 @@
   "name": "Holdfast base content",
   "version": "0.1.0",
   "description": "One level with light posts, three enemies, one tower, two starting Recruits, four Recruit classes with eight traits and a skill fork each, three Hero paths (Flare Archer, Dusk Mage, Tideblade) and a stub upgrade tree. Placeholder numbers, tuned in M2.",
-  "files": ["enemies.json", "towers.json", "staff.json", "heroes.json", "role_effects.json", "levels.json", "upgrades.json", "gear.json", "castle.json", "blessings.json", "achievements.json", "recruit_classes.json", "recruit_extras.json"]
+  "files": ["enemies.json", "towers.json", "staff.json", "heroes.json", "role_effects.json", "levels.json", "upgrades.json", "gear.json", "castle.json", "blessings.json", "achievements.json", "modifiers.json", "modes.json", "recruit_classes.json", "recruit_extras.json"]
 }

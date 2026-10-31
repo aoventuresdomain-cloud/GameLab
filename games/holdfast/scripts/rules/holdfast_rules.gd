@@ -285,6 +285,11 @@ var gold_multiplier := 1.0
 ## that the Keep and every tower repair each second while no enemy is on the field.
 var enemy_speed := 1.0
 var repair_share := 0.0
+## A Hard replay's changes to every monster (multipliers on its health and damage), from the level's modifiers.
+var enemy_health_scale := 1.0
+var enemy_damage_scale := 1.0
+## This is a Hard replay: the level's modifiers apply.
+var hard := false
 ## Tower health restored per second while no enemy is on the field (between waves).
 var total_waves := 0
 
@@ -517,9 +522,24 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		nodes.merge(blessed)
 		purchased.append_array(blessed.keys())
 		stats = HoldfastRules.upgrade_stats(nodes, purchased)
+	# A Hard replay takes the level's modifiers on top of the tree, the gear and the blessing.
+	hard = bool(config.get("hard", false)) and not tutorial
+	if hard:
+		var changes := []
+		for modifier_id in level.get("modifiers", []):
+			if not content.get("modifiers", {}).has(modifier_id):
+				_fail("unknown modifier %s" % modifier_id)
+				return
+			changes.append_array(content["modifiers"][modifier_id]["effects"])
+		if not changes.is_empty():
+			nodes["modifiers"] = {"effects": changes}
+			purchased.append("modifiers")
+			stats = HoldfastRules.upgrade_stats(nodes, purchased)
 	keep_health_max = roundi(_apply(stats, "keep_health", float(level["keep_health"])))
 	keep_health = keep_health_max
 	enemy_speed = _apply(stats, "enemy_speed", 1.0)
+	enemy_health_scale = _apply(stats, "enemy_health", 1.0)
+	enemy_damage_scale = _apply(stats, "enemy_damage", 1.0)
 	repair_share = _add(stats, "repair_share")
 	keep_radius = float(level["keep_radius"])
 	# The fog edge is where the keep's beam reaches, and enemies spawn at it.
@@ -1630,11 +1650,11 @@ func _spawn_due() -> void:
 		enemy.wave = w
 		var angle := _spawn_angle()
 		enemy.position = _in_arena(Vector2(cos(angle), sin(angle)) * spawn_radius)
-		enemy.max_health = float(data["health"]) * _wave_health_scale[w]
+		enemy.max_health = float(data["health"]) * _wave_health_scale[w] * enemy_health_scale
 		enemy.health = enemy.max_health
 		enemy.speed = float(data["speed"]) * enemy_speed
 		enemy.radius = float(data["radius"])
-		enemy.damage = roundi(float(data["damage"]) * _wave_damage_scale[w])
+		enemy.damage = roundi(float(data["damage"]) * _wave_damage_scale[w] * enemy_damage_scale)
 		enemy.gold = int(data["gold"])
 		enemy.engage_distance = float(data["engage_distance"])
 		enemy.xp_chance = float(data.get("xp_chance", 0.0))
@@ -1982,8 +2002,10 @@ func result() -> Dictionary:
 		"gear_found": gear_found.duplicate(),
 		"recruit_xp": _recruit_xp(),
 	}
-	if _blessed:
-		# The Keep's health as the tree builds it, whatever the blessing did to it, for the stars.
+	if hard:
+		out["hard"] = true
+	if _blessed or hard:
+		# The Keep's health as the tree builds it, whatever a blessing or a modifier did to it, for the stars.
 		out["keep_left"] = 1.0 - float(_keep_damage) / _keep_star_max if _keep_star_max > 0.0 else 0.0
 	return out
 

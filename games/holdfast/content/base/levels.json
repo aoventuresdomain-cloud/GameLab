@@ -36,6 +36,7 @@
     },
     {
       "id": "outpost",
+      "modifiers": ["swift"],
       "name": "The Outpost",
       "number": 1,
       "first_clear_gear": "wave_worn_boots",
@@ -72,6 +73,7 @@
     },
     {
       "id": "shingle_beach",
+      "modifiers": ["armoured"],
       "name": "Shingle Beach",
       "number": 2,
       "first_clear_gear": "gull_feather_fletching",
@@ -110,6 +112,7 @@
     },
     {
       "id": "tidewrack_cove",
+      "modifiers": ["lean"],
       "name": "Tidewrack Cove",
       "number": 3,
       "first_clear_gear": "storm_cap",
@@ -141,6 +144,7 @@
     },
     {
       "id": "old_pier",
+      "modifiers": ["fragile"],
       "name": "The Old Pier",
       "number": 4,
       "first_clear_gear": "oilskin_vest",
@@ -172,6 +176,7 @@
     },
     {
       "id": "gull_rock",
+      "modifiers": ["fierce"],
       "name": "Gull Rock",
       "number": 5,
       "first_clear_gear": "tide_band",

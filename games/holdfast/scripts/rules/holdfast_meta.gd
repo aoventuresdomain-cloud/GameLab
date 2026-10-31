@@ -11,6 +11,7 @@ extends RefCounted
 ##   stars: {level: int}   the most stars each level has paid (1 to 3; a tutorial pays its reward)
 ##   achievements: [ids]   the achievements unlocked, in order (see HoldfastAchievements)
 ##   counters: {name: int} what the profile cannot work out from the rest: clean_wins, the levels won with no tower lost
+##   hard_stars: {level: int} the most stars each cleared level's Hard replay has paid (1 to 3), on top of `stars`
 ##   levels_won: [ids],
 ##   unlocked: [ids],      levels opened beyond the first, by winning the one before
 ##   level: id,            the level the next run plays
@@ -98,6 +99,7 @@ static func new_profile(content: Dictionary) -> Dictionary:
 		"stars": {},
 		"achievements": [],
 		"counters": {"clean_wins": 0},
+		"hard_stars": {},
 		"levels_won": [],
 		"unlocked": [],
 		"level": levels[0] if not levels.is_empty() else "",
@@ -143,6 +145,13 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 		for level in saved_stars:
 			if levels.has(level) and (saved_stars[level] is int or saved_stars[level] is float):
 				profile["stars"][level] = clampi(int(saved_stars[level]), 0, MAX_LEVEL_STARS)
+	# Hard stars count only on a level the save has won and that has a Hard replay.
+	var saved_hard: Variant = data.get("hard_stars", {})
+	if saved_hard is Dictionary:
+		var won := _list(data.get("levels_won"))
+		for level in saved_hard:
+			if level in won and hard_modifiers(content, str(level)).size() > 0 and (saved_hard[level] is int or saved_hard[level] is float):
+				profile["hard_stars"][level] = clampi(int(saved_hard[level]), 0, MAX_LEVEL_STARS)
 	for id in _list(data.get("upgrades")):
 		if nodes.has(id) and not id in profile["upgrades"] and _closed_by(nodes, profile["upgrades"], id) == "":
 			# A save cannot hold more star nodes than the stars it has earned.
@@ -473,12 +482,40 @@ static func cost_text(node: Dictionary) -> String:
 	return "%d gold" % cost
 
 
-## Stars the player has earned in all: the most each level has paid, added up.
+## Stars the player has earned in all: the most each level has paid, on Normal and on Hard, added up.
 static func stars_earned(profile: Dictionary) -> int:
 	var total := 0
 	for level in profile["stars"]:
 		total += int(profile["stars"][level])
+	for level in profile.get("hard_stars", {}):
+		total += int(profile["hard_stars"][level])
 	return total
+
+
+## The modifiers a level's Hard replay carries, as the pack's entries in order ([] for a level with
+## none, and for a tutorial, which has no Hard replay).
+static func hard_modifiers(content: Dictionary, level: String) -> Array:
+	var data: Dictionary = content.get("levels", {}).get(level, {})
+	var out := []
+	if data.is_empty() or _tutorial(data):
+		return out
+	for id in data.get("modifiers", []):
+		if content.get("modifiers", {}).has(id):
+			out.append(content["modifiers"][id])
+	return out
+
+
+## True when the player can replay `level` on Hard: they have won it and it has a modifier.
+static func hard_open(content: Dictionary, profile: Dictionary, level: String) -> bool:
+	return level in profile["levels_won"] and not hard_modifiers(content, level).is_empty()
+
+
+## The icon and the one word of a level's Hard replay ("" when it has none), such as ">> Swift".
+static func hard_label(content: Dictionary, level: String) -> String:
+	var parts := []
+	for modifier in hard_modifiers(content, level):
+		parts.append("%s %s" % [modifier["icon"], modifier["name"]])
+	return ", ".join(parts)
 
 
 ## The blessings the player has earned, in the pack's order: each one's unlock rule is met by the
@@ -1124,12 +1161,18 @@ static func bank_run(content: Dictionary, profile: Dictionary, result: Dictionar
 	out["gold"] = int(out["gold"]) + maxi(int(result.get("gold", 0)), 0)
 	out["runs"] = int(out["runs"]) + 1
 	var level := str(result.get("level", ""))
-	var first_win: bool = result.get("outcome") == HoldfastRules.OUTCOME_WON and level != "" and not level in out["levels_won"]
+	var hard: bool = bool(result.get("hard", false))
+	var first_win: bool = not hard and result.get("outcome") == HoldfastRules.OUTCOME_WON and level != "" and not level in out["levels_won"]
 	if first_win:
 		out["levels_won"].append(level)
 		out["gold"] = int(out["gold"]) + int(content.get("levels", {}).get(level, {}).get("reward", {}).get("gold", 0))
 	var stars := stars_for_run(content, result)
-	if stars > int(out["stars"].get(level, 0)):
+	if hard:
+		# A Hard replay pays its own stars once: only the best of them is kept, and only on a cleared level.
+		if hard_open(content, out, level) and stars > int(out.get("hard_stars", {}).get(level, 0)):
+			out["hard_stars"] = out.get("hard_stars", {})
+			out["hard_stars"][level] = stars
+	elif stars > int(out["stars"].get(level, 0)):
 		out["stars"][level] = stars
 	# Gear a run found is kept whatever its outcome. It goes to the inventory; the player equips it.
 	for id in result.get("gear_found", []):
@@ -1141,7 +1184,7 @@ static func bank_run(content: Dictionary, profile: Dictionary, result: Dictionar
 	if result.get("outcome") == HoldfastRules.OUTCOME_WON and result.has("towers_lost") and int(result["towers_lost"]) == 0 and not _tutorial(content.get("levels", {}).get(level, {})):
 		out["counters"] = out.get("counters", {}).duplicate()
 		out["counters"]["clean_wins"] = int(out["counters"].get("clean_wins", 0)) + 1
-	var next := next_level(content, level) if result.get("outcome") == HoldfastRules.OUTCOME_WON else ""
+	var next := next_level(content, level) if result.get("outcome") == HoldfastRules.OUTCOME_WON and not hard else ""
 	if next != "" and not next in out["unlocked"]:
 		out["unlocked"].append(next)
 	return RecruitMeta.bank_run(content, out, result)

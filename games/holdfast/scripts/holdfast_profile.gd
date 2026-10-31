@@ -25,6 +25,8 @@ var load_message := ""
 
 var _service: SaveService
 var _content: Dictionary
+## Hard is on for the next run (only for the session; see select_hard).
+var _hard := false
 
 
 func _ready() -> void:
@@ -484,6 +486,44 @@ func get_reward_gold(id: String) -> int:
 
 func is_level_won(id: String) -> bool:
 	return id in data["levels_won"]
+
+
+## True when `id` has a Hard replay the player has opened by winning the level.
+func is_hard_open(id: String) -> bool:
+	return HoldfastMeta.hard_open(_content, data, id)
+
+
+## The stars the level's Hard replay has paid so far (0 to 3).
+func get_hard_stars(id: String) -> int:
+	return int(data.get("hard_stars", {}).get(id, 0))
+
+
+## The icon and one word of the level's Hard replay, such as ">> Swift" ("" when it has none).
+func get_hard_label(id: String) -> String:
+	return HoldfastMeta.hard_label(_content, id)
+
+
+## What the level's Hard replay changes, in words.
+func get_hard_text(id: String) -> String:
+	return " ".join(HoldfastMeta.hard_modifiers(_content, id).map(func(modifier: Dictionary) -> String: return str(modifier["text"])))
+
+
+## The player turns Hard on or off for the runs they plan next. It is not saved: a new session starts on Normal.
+func select_hard(on: bool) -> void:
+	if _hard == on:
+		return
+	_hard = on
+	changed.emit()
+
+
+## True while Hard is switched on, whether or not the selected level has a Hard replay open.
+func is_hard_on() -> bool:
+	return _hard
+
+
+## True when the next run on the selected level is its Hard replay: Hard is on and the level has one open.
+func is_hard_selected() -> bool:
+	return _hard and is_hard_open(get_level())
 
 
 func is_near(id: String) -> bool:
