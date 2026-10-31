@@ -564,10 +564,10 @@ func test_every_upgrade_in_the_pack_is_understood_by_the_rules() -> void:
 	var rules := HoldfastRules.new()
 	rules.setup(HoldfastContent.run_config("outpost", all), SimRng.new(1))
 	expect_eq(rules.setup_error, "")
-	# Hand-worked totals: keep 100 + (25+50+75+100+150) = 500; beam 420 + 100; gold x1.25*1.3*1.2*1.15*1.1*1.1.
+	# Hand-worked totals: keep 100 + (25+50+75+100+150) = 500; beam 420 + 100; gold 1 + (0.25+0.15+0.06+0.04+0.03+0.02) = 1.55 (Tithe adds, HF-M2-70).
 	expect_eq(rules.keep_health_max, 500)
 	expect_eq(rules.spawn_radius, 520.0)
-	expect_near(rules.gold_multiplier, 1.25 * 1.3 * 1.2 * 1.15 * 1.1 * 1.1, 0.0001)
+	expect_near(rules.gold_multiplier, 1.55, 0.0001)
 	expect_eq(rules.tower.repair, 3.0)
 
 

@@ -32,17 +32,17 @@ func _tree_failures(judged: Dictionary) -> PackedStringArray:
 
 func test_the_bands_file_states_the_tree_band_and_the_dry_run_limit() -> void:
 	var tree: Dictionary = HoldfastBands.load_bands()["tree"]
-	expect_eq([float(tree["hours_min"]), float(tree["hours_max"])], [10.0, 15.0], "10 to 15 hours to fill the tree")
+	expect_eq([float(tree["hours_min"]), float(tree["hours_max"])], [3.0, 4.0], "3 to 4 hours to fill the tree")
 	expect_eq(int(tree["dry_max"]), 3, "never more than 3 dry runs in a row")
 	expect_false(str(tree["how"]).is_empty(), "it says how the simulator measures it")
 	expect_true(HoldfastBands.load_bands()["seeds"].has("tree"), "and how many players")
 
 
 func test_the_figures_are_the_mean_hours_and_the_worst_dry_run() -> void:
-	var figs := _tree_figures([_row(10.0, 1), _row(14.0, 3)])
+	var figs := _tree_figures([_row(3.0, 1), _row(4.0, 3)])
 	var hours: Dictionary = figs["flare_archer/tree/hours"]
-	expect_eq(hours["value"], 12.0, "the mean of the players")
-	expect_eq([hours["lo"], hours["hi"]], [10.0, 15.0], "held to the band in the file")
+	expect_eq(hours["value"], 3.5, "the mean of the players")
+	expect_eq([hours["lo"], hours["hi"]], [3.0, 4.0], "held to the band in the file")
 	var dry: Dictionary = figs["dusk_mage/tree/dry_runs"]
 	expect_eq(dry["value"], 3.0, "the worst of the players")
 	expect_eq([dry["lo"], dry["hi"]], [0.0, 3.0], "never more than 3")
@@ -60,39 +60,39 @@ func test_a_pillar_with_no_tree_cell_has_no_tree_figures() -> void:
 
 
 func test_a_tree_that_fills_too_fast_or_too_slow_fails_the_gate() -> void:
-	for hours in [0.7, 9.9, 15.1, 16.0]:
+	for hours in [0.7, 2.9, 4.1, 16.0]:
 		var judged := HoldfastBands.evaluate(_tree_figures([_row(hours, 0)]), {})
 		var failures := _tree_failures(judged)
-		expect_true(judged["flare_archer/tree/hours"]["state"] == "MISSED", "%.1f hours is outside 10 to 15" % hours)
-		expect_true(failures[0].contains("tree/hours: MISSED") and failures[0].contains(" h, band 10.0 h to 15.0 h"), "the failure names the figure in hours: %s" % failures[0])
-	var inside := HoldfastBands.evaluate(_tree_figures([_row(12.0, 0)]), {})
-	expect_eq(_tree_failures(inside), PackedStringArray(), "12 hours and no dry run passes")
+		expect_true(judged["flare_archer/tree/hours"]["state"] == "MISSED", "%.1f hours is outside 3 to 4" % hours)
+		expect_true(failures[0].contains("tree/hours: MISSED") and failures[0].contains(" h, band 3.0 h to 4.0 h"), "the failure names the figure in hours: %s" % failures[0])
+	var inside := HoldfastBands.evaluate(_tree_figures([_row(3.5, 0)]), {})
+	expect_eq(_tree_failures(inside), PackedStringArray(), "3.5 hours and no dry run passes")
 
 
 func test_more_than_three_dry_runs_in_a_row_fails_the_gate() -> void:
-	var judged := HoldfastBands.evaluate(_tree_figures([_row(12.0, 2), _row(12.0, 4)]), {})
+	var judged := HoldfastBands.evaluate(_tree_figures([_row(3.5, 2), _row(3.5, 4)]), {})
 	expect_eq(judged["flare_archer/tree/dry_runs"]["state"], "MISSED", "four in a row is one too many")
 	var failures := _tree_failures(judged)
 	expect_eq(failures.size(), 3, "all three pillars")
 	expect_true(failures[0].contains("tree/dry_runs: MISSED") and failures[0].contains("4 runs, band 0 runs to 3 runs"), "the failure counts runs: %s" % failures[0])
-	expect_eq(HoldfastBands.evaluate(_tree_figures([_row(12.0, 3)]), {})["flare_archer/tree/dry_runs"]["state"], "met", "three is allowed")
+	expect_eq(HoldfastBands.evaluate(_tree_figures([_row(3.5, 3)]), {})["flare_archer/tree/dry_runs"]["state"], "met", "three is allowed")
 
 
 func test_a_pinned_tree_miss_may_not_get_worse_or_come_back_in_band() -> void:
 	var pins := {"flare_archer/tree/hours": 0.7, "dusk_mage/tree/hours": 0.7, "tideblade/tree/hours": 0.7}
 	expect_eq(HoldfastBands.evaluate(_tree_figures([_row(0.7, 0)]), pins)["flare_archer/tree/hours"]["state"], "known miss", "as pinned")
 	expect_eq(HoldfastBands.evaluate(_tree_figures([_row(0.5, 0)]), pins)["flare_archer/tree/hours"]["state"], "WORSE than its pin", "a tree that fills even faster")
-	expect_eq(HoldfastBands.evaluate(_tree_figures([_row(12.0, 0)]), pins)["flare_archer/tree/hours"]["state"], "BACK IN BAND (delete the pin)", "back in the band")
+	expect_eq(HoldfastBands.evaluate(_tree_figures([_row(3.5, 0)]), pins)["flare_archer/tree/hours"]["state"], "BACK IN BAND (delete the pin)", "back in the band")
 
 
 func test_the_report_has_a_tree_and_stars_table() -> void:
 	var bands := HoldfastBands.load_bands()
-	var cells := _cells([_row(12.0, 2), _row(14.0, 1, false)])
+	var cells := _cells([_row(3.0, 2), _row(4.0, 1, false)])
 	var judged := HoldfastBands.evaluate(HoldfastBands.figures(bands, cells), {})
 	var text := HoldfastBands.report(bands, judged, cells)
 	expect_true(text.contains("## Tree and stars"), "the section is there")
-	expect_true(text.contains("| flare_archer | 4 | 30 | -1 | 13.0 | 1 of 2 | 17 / 44 |"), "minutes to the first star and new tower, nobody reached a boss, mean hours, how many filled, stars against the tree's price")
-	expect_true(text.contains("| 13.0 h | 10.0 h to 15.0 h |") and text.contains("| 2 runs | 0 runs to 3 runs |"), "the judged figures are in hours and runs, not per cent")
+	expect_true(text.contains("| flare_archer | 4 | 30 | -1 | 3.5 | 1 of 2 | 17 / 44 |"), "minutes to the first star and new tower, nobody reached a boss, mean hours, how many filled, stars against the tree's price")
+	expect_true(text.contains("| 3.5 h | 3.0 h to 4.0 h |") and text.contains("| 2 runs | 0 runs to 3 runs |"), "the judged figures are in hours and runs, not per cent")
 	expect_false(HoldfastBands.report(bands, judged).contains("## Tree and stars"), "no table without a tree cell")
 
 
