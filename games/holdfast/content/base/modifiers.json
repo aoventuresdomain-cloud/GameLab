@@ -1,0 +1,9 @@
+{
+  "modifiers": [
+    {"id": "swift", "name": "Swift", "icon": ">>", "text": "Monsters move 70% faster.", "effects": [{"stat": "enemy_speed", "multiply": 1.7}]},
+    {"id": "armoured", "name": "Armoured", "icon": "[#]", "text": "Monsters have 160% more health.", "effects": [{"stat": "enemy_health", "multiply": 2.6}]},
+    {"id": "lean", "name": "Lean", "icon": "(-)", "text": "Kills pay 60% less gold and monsters have 60% more health.", "effects": [{"stat": "gold_multiplier", "multiply": 0.4}, {"stat": "enemy_health", "multiply": 1.6}]},
+    {"id": "fragile", "name": "Fragile", "icon": "|v|", "text": "The Keep has a tenth of its health and monsters move 50% faster.", "effects": [{"stat": "keep_health", "multiply": 0.1}, {"stat": "enemy_speed", "multiply": 1.5}]},
+    {"id": "fierce", "name": "Fierce", "icon": "!!", "text": "Monsters hit four times as hard and have 50% more health.", "effects": [{"stat": "enemy_damage", "multiply": 4.0}, {"stat": "enemy_health", "multiply": 1.5}]}
+  ]
+}

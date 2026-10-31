@@ -16,6 +16,8 @@ signal buy_requested(id: String)
 signal stand_requested
 ## The Plan button: plan a run on this level. Opens the Plan page; it never starts the level.
 signal plan_requested(id: String)
+## The Hard switch: the next level planned is its Hard replay (true) or Normal (false).
+signal hard_requested(on: bool)
 
 const Hud = preload("res://scripts/ui/hud.gd")
 const Guidance = preload("res://scripts/ui/guidance.gd")
@@ -38,6 +40,7 @@ const COLOUR_DOT := Color(0.95, 0.7, 0.25)
 const DOT_PX := 16.0
 const HERO_INFO := "Hero and gear"
 const RECRUITS_INFO := "Recruits, the squad and the board"
+const HARD_INFO := "Replay a cleared level with its modifier. Pays its stars again, once."
 
 @onready var _gold: Label = %GoldValue
 @onready var _stars: Label = %StarsValue
@@ -46,6 +49,8 @@ const RECRUITS_INFO := "Recruits, the squad and the board"
 @onready var _guide_button: Button = %GuideButton
 @onready var _map: Control = %Map
 @onready var _plan: Button = %PlanButton
+## The Hard switch beside Plan: the next level planned is its Hard replay, where the player has cleared the level.
+var _hard_button: Button
 @onready var _tree: Button = %TreeButton
 @onready var _back: Button = %BackButton
 @onready var _info: Label = %Info
@@ -55,6 +60,8 @@ var _content: Dictionary
 var _ids: Array = []
 var _buttons: Dictionary = {}
 var _names: Dictionary = {}
+## The modifier line under a cleared level's caption: the icon and one word of its Hard replay.
+var _hard_names: Dictionary = {}
 var _hero_button: Button
 var _recruits_button: Button
 ## The dots on the two tabs, shown while there is something the player has not looked at.
@@ -79,6 +86,15 @@ func _ready() -> void:
 	_ids = _content["levels"].keys()
 	_back.pressed.connect(home_requested.emit)
 	_plan.pressed.connect(func() -> void: plan_requested.emit(_plan_target()))
+	_hard_button = Button.new()
+	_hard_button.text = "Hard"
+	_hard_button.toggle_mode = true
+	_hard_button.focus_mode = Control.FOCUS_NONE
+	_hard_button.add_theme_font_size_override("font_size", 24)
+	_hard_button.tooltip_text = HARD_INFO
+	_hard_button.toggled.connect(hard_requested.emit)
+	_plan.get_parent().add_child(_hard_button)
+	_plan.get_parent().move_child(_hard_button, _plan.get_index() + 1)
 	_tree.pressed.connect(tree_requested.emit)
 	_guide_button.pressed.connect(_on_guide_pressed)
 	_map.draw.connect(_draw_map)
@@ -133,7 +149,14 @@ func refresh() -> void:
 		button.text = "" if won else str(int(_content["levels"][id].get("number", 0)))
 		var status := _status(id, won)
 		_names[id].text = "%s\n%s" % [_content["levels"][id]["name"], status] if status != "" else str(_content["levels"][id]["name"])
+		# A cleared level names its Hard replay's modifier on a line of its own under the caption.
+		_hard_names[id].text = _hard_line(id) if _profile.is_hard_open(id) else ""
+		_hard_names[id].size = _hard_names[id].get_minimum_size()
 		_names[id].size = _names[id].get_minimum_size()
+	var any_hard: bool = _ids.any(func(id: String) -> bool: return _profile.is_hard_open(id))
+	_hard_button.visible = any_hard
+	_hard_button.disabled = _profile.get_guided_step() != ""
+	_hard_button.set_pressed_no_signal(_profile.is_hard_on())
 	_hero_button.text = "Hero: %s" % _content["hero_paths"][_profile.get_pillar()]["name"]
 	_hero_button.reset_size()
 	# The guided buy comes first: until it is made the tree and the Hero page stay shut.
@@ -158,6 +181,11 @@ func refresh() -> void:
 ## none can be planned, before the castle has a tower).
 func _plan_target() -> String:
 	var open: Array = _ids.filter(func(id: String) -> bool: return _is_open(id) and not _content["levels"][id].get("tutorial", false))
+	# With Hard on, Plan opens the latest level that has a Hard replay to play.
+	if _profile.is_hard_on():
+		var replays: Array = open.filter(func(id: String) -> bool: return _profile.is_hard_open(id))
+		if not replays.is_empty():
+			return replays[-1]
 	for id in open:
 		if not _profile.is_level_won(id):
 			return id
@@ -262,6 +290,13 @@ func _build_nodes() -> void:
 		caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_map.add_child(caption)
 		_names[id] = caption
+		var modifier := Label.new()
+		modifier.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		modifier.add_theme_font_size_override("font_size", FONT_PX)
+		modifier.add_theme_color_override("font_color", COLOUR_GLOW)
+		modifier.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_map.add_child(modifier)
+		_hard_names[id] = modifier
 	_hero_button = Button.new()
 	_hero_button.add_theme_font_size_override("font_size", FONT_PX)
 	_hero_button.pressed.connect(hero_requested.emit)
@@ -288,9 +323,17 @@ func _build_nodes() -> void:
 	_map.add_child(_hero_figure)
 
 
+## The line under a cleared level's stars: its Hard replay's icon and word, and what that replay has paid.
+func _hard_line(id: String) -> String:
+	var paid: int = _profile.get_hard_stars(id)
+	return "%s%s" % [_profile.get_hard_label(id), "" if paid == 0 else ", %d of %d" % [paid, HoldfastMeta.MAX_LEVEL_STARS]]
+
+
 func _level_text(id: String) -> String:
 	var level: Dictionary = _content["levels"][id]
 	var text := "%s: %d waves." % [level["name"], level["waves"].size()]
+	if _profile != null and _profile.is_hard_open(id):
+		text += " Hard: %s" % _profile.get_hard_text(id)
 	if level.get("tutorial", false):
 		text += " " + str(level["intro"])
 	return text
@@ -338,6 +381,8 @@ func _place() -> void:
 		var label: Label = _names[_ids[i]]
 		# Below the node and clear of its glow ring, which also keeps it off the path.
 		label.position = Vector2(clampf(at.x - label.size.x * 0.5, 0.0, _map.size.x - label.size.x), at.y + NODE_RADIUS + LABEL_GAP)
+		var modifier: Label = _hard_names[_ids[i]]
+		modifier.position = Vector2(clampf(at.x - modifier.size.x * 0.5, 0.0, _map.size.x - modifier.size.x), label.position.y + label.size.y)
 	_hero_button.position = _lighthouse_at() + Vector2(-_hero_button.size.x * 0.5, -125.0)
 	_recruits_button.size = _recruits_button.get_minimum_size()
 	_recruits_button.position = _hero_button.position + Vector2(0.0, -_recruits_button.size.y - 8.0)

@@ -116,6 +116,20 @@ static func cell(model: Dictionary, pillar: String, seeds: int, skip: Array = []
 	return out
 
 
+## The Hard cell: the climbs of seeds 1..`seeds`, as one {level: won its Hard replay first time} per seed. A player
+## plays each level's Hard replay once, right after clearing the level; a level never cleared is left out.
+static func hard_cell(pillar: String, seeds: int) -> Array:
+	var out := []
+	for run_seed in range(1, seeds + 1):
+		var row := {}
+		var climb := HoldfastCurve.climb(run_seed, HoldfastSkilledBot.AVERAGE, pillar, 5, [], false, [], true)
+		for id in climb["levels"]:
+			if climb["levels"][id].has("hard"):
+				row[id] = climb["levels"][id]["hard"]
+		out.append(row)
+	return out
+
+
 ## The tree cell: the progression of seeds 1..`seeds` played for `sim_hours` of simulated time by the
 ## average bot, as one summary per seed ({hours: until every gold node the Hero can reach is bought,
 ## or the whole budget if it never was; filled; dry: the longest run of returns with nothing
@@ -153,6 +167,8 @@ static func measure(bands: Dictionary) -> Dictionary:
 		for side in FORK_SKIPS:
 			out["%s/%s" % [pillar, side]] = cell(HoldfastSkilledBot.AVERAGE, pillar, int(seeds["fork"]), FORK_SKIPS[side] + auto_nodes(), FORK_PREFER[side] if pillar == FORK_PREFER_PILLAR else [])
 		out["%s/no_special" % pillar] = cell(HoldfastSkilledBot.AVERAGE_NO_SPECIAL, pillar, int(seeds["special"]), auto_nodes())
+		if bands.has("hard"):
+			out["%s/hard" % pillar] = hard_cell(pillar, int(seeds["hard"]))
 		if _has_auto_node(pillar):
 			out["%s/auto" % pillar] = cell(HoldfastSkilledBot.AVERAGE_NO_SPECIAL, pillar, int(seeds["special"]), [], auto_chain())
 		if bands.has("tree"):
@@ -247,6 +263,13 @@ static func figures(bands: Dictionary, cells: Dictionary) -> Dictionary:
 		var first: String = levels()[0]
 		if first in inside:
 			out["%s/no_special/%s" % [pillar, first]] = {"value": rate(cells["%s/no_special" % pillar], first), "lo": float(special["first_level_off_min"]), "hi": 1.0, "how": "first-time win rate of the average bot that never presses the special, %d players" % seeds["special"]}
+	# Each cleared level's Hard replay is held to a band of its own (first attempt, the average bot).
+	for pillar in PILLARS:
+		if not bands.has("hard") or not cells.has("%s/hard" % pillar):
+			continue
+		for level in scope(bands, pillar):
+			var hard_band: Array = bands["hard"][level]["average"]
+			out["%s/hard/%s" % [pillar, level]] = {"value": rate(cells["%s/hard" % pillar], level), "lo": float(hard_band[0]), "hi": float(hard_band[1]), "how": "first-time win rate of the average bot on the Hard replay (%s), %d players" % [HoldfastMeta.hard_label(HoldfastContent.base(), level), seeds["hard"]]}
 	for pillar in PILLARS:
 		if bands.has("tree") and cells.has("%s/tree" % pillar):
 			var tree: Dictionary = bands["tree"]

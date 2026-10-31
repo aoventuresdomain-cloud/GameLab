@@ -118,6 +118,11 @@ func open(level_id: String, layout: Array, saved: bool, spots: Array, cards: int
 	set_castle(spots, cards, mage_cards, slots)
 
 
+## Marks the page as a Hard replay of the level: the modifier's icon and word ("" for a Normal run).
+func set_hard(label: String) -> void:
+	_title.text = "Plan your defence: %s" % _level["name"] + (" (Hard: %s)" % label if label != "" else "")
+
+
 ## Sets what the player has: the ring's `spots`, the Archer Post `cards` and Mage Post
 ## `mage_cards` they hold and the `slots` they have bought (a post on every spot of `spots` when
 ## -1). Posts already placed stay, to the new limit, so buying a slot here keeps the plan.

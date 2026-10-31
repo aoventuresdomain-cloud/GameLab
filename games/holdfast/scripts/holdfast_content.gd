@@ -27,7 +27,8 @@ static func base() -> Dictionary:
 ## none); null leaves the level's own two (Bryn and Wren), which the rules tests rely on.
 ## `posted` is {castle spot id: Recruit id}: a squad Recruit set on the post built at that spot stands there.
 ## `blessing` is the id of the blessing picked for the run ("" for none; bots play without one).
-static func run_config(level: String = DEFAULT_LEVEL, upgrades: Array = [], content: Dictionary = {}, hero: String = "", layout: Variant = null, gear: Dictionary = {}, gear_owned: Array = [], stand := false, squad: Variant = null, blessing := "", posted: Dictionary = {}) -> Dictionary:
+## `hard` plays the level as its Hard replay: the level's modifiers apply.
+static func run_config(level: String = DEFAULT_LEVEL, upgrades: Array = [], content: Dictionary = {}, hero: String = "", layout: Variant = null, gear: Dictionary = {}, gear_owned: Array = [], stand := false, squad: Variant = null, blessing := "", posted: Dictionary = {}, hard := false) -> Dictionary:
 	var config := {
 		"content": content if not content.is_empty() else base(),
 		"level": level,
@@ -45,6 +46,8 @@ static func run_config(level: String = DEFAULT_LEVEL, upgrades: Array = [], cont
 		config["posted"] = posted
 	if blessing != "":
 		config["blessing"] = blessing
+	if hard:
+		config["hard"] = true
 	var level_data: Dictionary = config["content"].get("levels", {}).get(level, {})
 	if layout != null:
 		config["layout"] = layout

@@ -81,6 +81,7 @@ func _ready() -> void:
 	journey.buy_requested.connect(profile.buy)
 	journey.stand_requested.connect(_begin_stand)
 	journey.plan_requested.connect(_plan_from_map)
+	journey.hard_requested.connect(profile.select_hard)
 	hero_page.back_requested.connect(_show.bind(Screen.MAP))
 	hero_page.tree_requested.connect(_open_tree_at.bind("Hero"))
 	hero_page.pillar_requested.connect(profile.select_pillar)
@@ -180,6 +181,7 @@ func _open_plan() -> void:
 	planning.open(level, profile.get_layout(level) if saved else [], saved, profile.get_ring_spots(), profile.get_castle_cards(), profile.get_castle_mage_cards(), profile.get_castle_slots())
 	var draw := RandomNumberGenerator.new()
 	draw.randomize()
+	planning.set_hard(profile.get_hard_label(level) if profile.is_hard_selected() else "")
 	planning.set_blessings(profile.get_blessing_offer(level, draw))
 	planning.set_squad(profile.get_squad().map(func(recruit: Dictionary) -> String: return recruit["name"]), profile.get_recruits().size())
 	_show_posted()
@@ -257,6 +259,8 @@ func _start_run(stand := false, blessing := "") -> void:
 		source.upgrades = profile.get_upgrades().duplicate()
 		source.stand = stand
 		source.blessing = blessing
+		# A Hard replay is a planned run on a cleared level; the tutorial and its stand have none.
+		source.hard = not stand and profile.is_hard_selected()
 		# The tutorial and its stand are the Hero's alone; every other run takes the squad the player picked.
 		source.squad = [] if stand or profile.is_tutorial(profile.get_level()) else profile.get_squad()
 		source.posted = profile.get_posted()
@@ -316,7 +320,8 @@ func _on_run_ended(result: Dictionary) -> void:
 		if int(result["stars_paid"]) > 0 and not profile.has_seen_stars_line():
 			result["stars_note"] = STARS_LINE
 			profile.show_stars_line()
-		if result["result"].get("outcome") == HoldfastRules.OUTCOME_WON:
+		# A Hard replay opens nothing: after it the player is back on the map.
+		if result["result"].get("outcome") == HoldfastRules.OUTCOME_WON and not result["result"].get("hard", false):
 			next = profile.get_next_level(level)
 			# While the guided buys are due no level can be planned: the guide comes first.
 			if profile.get_guide_node() != "":
