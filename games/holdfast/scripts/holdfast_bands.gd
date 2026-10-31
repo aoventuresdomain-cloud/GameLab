@@ -116,6 +116,33 @@ static func cell(model: Dictionary, pillar: String, seeds: int, skip: Array = []
 	return out
 
 
+## The tree cell: the progression of seeds 1..`seeds` played for `sim_hours` of simulated time by the
+## average bot, as one summary per seed ({hours: until every gold node the Hero can reach is bought,
+## or the whole budget if it never was; filled; dry: the longest run of returns with nothing
+## affordable; the first star, new tower and boss in minutes, -1 for never; stars earned and the
+## stars the tree costs}).
+static func tree_cell(pillar: String, seeds: int, sim_hours: float) -> Array:
+	var out := []
+	for run_seed in range(1, seeds + 1):
+		var played := HoldfastProgression.play(run_seed, sim_hours, "", [], pillar, BOTS["average"])
+		var filled: bool = float(played["filled_at"]) >= 0.0
+		out.append({
+			"hours": (float(played["filled_at"]) if filled else float(played["sim_seconds"])) / 3600.0,
+			"filled": filled,
+			"dry": int(played["dry_runs"]),
+			"first_star": _minutes(float(played["first_star_at"])),
+			"first_tower": _minutes(float(played["first_new_tower_at"])),
+			"first_boss": _minutes(float(played["first_boss_at"])),
+			"stars": int(played["stars_earned"]),
+			"stars_in_tree": int(played["stars_in_tree"]),
+		})
+	return out
+
+
+static func _minutes(seconds: float) -> float:
+	return seconds / 60.0 if seconds >= 0.0 else -1.0
+
+
 ## Plays every cell the bands ask for. Returns {cell name: climbs}.
 static func measure(bands: Dictionary) -> Dictionary:
 	var seeds: Dictionary = bands["seeds"]
@@ -128,6 +155,8 @@ static func measure(bands: Dictionary) -> Dictionary:
 		out["%s/no_special" % pillar] = cell(HoldfastSkilledBot.AVERAGE_NO_SPECIAL, pillar, int(seeds["special"]), auto_nodes())
 		if _has_auto_node(pillar):
 			out["%s/auto" % pillar] = cell(HoldfastSkilledBot.AVERAGE_NO_SPECIAL, pillar, int(seeds["special"]), [], auto_chain())
+		if bands.has("tree"):
+			out["%s/tree" % pillar] = tree_cell(pillar, int(seeds["tree"]), float(bands["tree"]["sim_hours"]))
 	var one_post: Dictionary = bands["one_post"]
 	if str(one_post["level"]) in scope(bands, str(one_post["pillar"])):
 		out["%s/one_post" % one_post["pillar"]] = cell(HoldfastSkilledBot.AVERAGE, str(one_post["pillar"]), int(seeds["one_post"]), ONE_POST_SKIP)
@@ -218,6 +247,16 @@ static func figures(bands: Dictionary, cells: Dictionary) -> Dictionary:
 		var first: String = levels()[0]
 		if first in inside:
 			out["%s/no_special/%s" % [pillar, first]] = {"value": rate(cells["%s/no_special" % pillar], first), "lo": float(special["first_level_off_min"]), "hi": 1.0, "how": "first-time win rate of the average bot that never presses the special, %d players" % seeds["special"]}
+	for pillar in PILLARS:
+		if bands.has("tree") and cells.has("%s/tree" % pillar):
+			var tree: Dictionary = bands["tree"]
+			var hours := 0.0
+			var dry := 0
+			for row in cells["%s/tree" % pillar]:
+				hours += float(row["hours"])
+				dry = maxi(dry, int(row["dry"]))
+			out["%s/tree/hours" % pillar] = {"value": hours / maxi(cells["%s/tree" % pillar].size(), 1), "lo": float(tree["hours_min"]), "hi": float(tree["hours_max"]), "unit": "h", "how": "hours of play until every gold node the Hero can reach is bought, average bot, mean of %d players" % seeds["tree"]}
+			out["%s/tree/dry_runs" % pillar] = {"value": float(dry), "lo": 0.0, "hi": float(tree["dry_max"]), "unit": "runs", "how": "the longest run of returns to the tree with nothing affordable, average bot, worst of %d players" % seeds["tree"]}
 	var post: Dictionary = bands["one_post"]
 	if str(post["level"]) in scope(bands, str(post["pillar"])):
 		out["%s/one_post/%s" % [post["pillar"], post["level"]]] = {"value": rate(cells["%s/one_post" % post["pillar"]], str(post["level"])), "lo": float(post["min"]), "hi": 1.0, "how": "first-time win rate of the average bot with one post, %d players" % seeds["one_post"]}
@@ -247,17 +286,27 @@ static func evaluate(figs: Dictionary, known_misses: Dictionary) -> Dictionary:
 	return out
 
 
+## A figure's number in its own unit: a win rate in per cent, else hours or runs.
+static func shown(fig: Dictionary, value: float) -> String:
+	match str(fig.get("unit", "")):
+		"h":
+			return "%.1f h" % value
+		"runs":
+			return "%d runs" % int(value)
+	return "%.0f%%" % (value * 100.0)
+
+
 static func failures(judged: Dictionary) -> PackedStringArray:
 	var out: PackedStringArray = []
 	for key in judged:
 		var fig: Dictionary = judged[key]
 		if fig["state"] != "met" and fig["state"] != "known miss":
-			out.append("%s: %s (%.0f%%, band %.0f%% to %.0f%%)" % [key, fig["state"], float(fig["value"]) * 100.0, float(fig["lo"]) * 100.0, float(fig["hi"]) * 100.0])
+			out.append("%s: %s (%s, band %s to %s)" % [key, fig["state"], shown(fig, float(fig["value"])), shown(fig, float(fig["lo"])), shown(fig, float(fig["hi"]))])
 	return out
 
 
 ## The report: win rates per level and pillar for both bots, then every figure that is not plainly met.
-static func report(bands: Dictionary, judged: Dictionary) -> String:
+static func report(bands: Dictionary, judged: Dictionary, cells := {}) -> String:
 	var lines: PackedStringArray = []
 	lines.append("# Holdfast pacing bands")
 	lines.append("")
@@ -286,5 +335,38 @@ static func report(bands: Dictionary, judged: Dictionary) -> String:
 		var fig: Dictionary = judged[key]
 		if key.contains("/average/") or key.contains("/poor/"):
 			continue
-		lines.append("| %s | %.0f%% | %.0f%% to %.0f%% | %s | %s |" % [key, float(fig["value"]) * 100.0, float(fig["lo"]) * 100.0, float(fig["hi"]) * 100.0, fig["state"], fig["how"]])
+		lines.append("| %s | %s | %s to %s | %s | %s |" % [key, shown(fig, float(fig["value"])), shown(fig, float(fig["lo"])), shown(fig, float(fig["hi"])), fig["state"], fig["how"]])
+	lines.append_array(_tree_lines(cells))
 	return "\n".join(lines) + "\n"
+
+
+## The tree and stars table: how long a first-time player takes to the first star, the first new tower
+## and the first boss, and what the stars on offer come to against what the tree costs (over the players).
+static func _tree_lines(cells: Dictionary) -> PackedStringArray:
+	var lines: PackedStringArray = []
+	for pillar in PILLARS:
+		if not cells.has("%s/tree" % pillar):
+			continue
+		if lines.is_empty():
+			lines.append("")
+			lines.append("## Tree and stars")
+			lines.append("")
+			lines.append("Means over the players of the tree cell who got there, in minutes of play; -1 means nobody did within the simulated time. The stars the five levels pay cannot fill the tree yet: more levels pay the rest.")
+			lines.append("")
+			lines.append("| Pillar | First star | First new tower | First boss | Hours to fill the gold nodes | Filled | Stars earned / tree costs |")
+			lines.append("|---|---:|---:|---:|---:|---:|---:|")
+		var rows: Array = cells["%s/tree" % pillar]
+		var filled := rows.filter(func(row: Dictionary) -> bool: return row["filled"]).size()
+		lines.append("| %s | %.0f | %.0f | %.0f | %.1f | %d of %d | %d / %d |" % [pillar, _mean(rows, "first_star"), _mean(rows, "first_tower"), _mean(rows, "first_boss"), _mean(rows, "hours"), filled, rows.size(), int(_mean(rows, "stars")), int(_mean(rows, "stars_in_tree"))])
+	return lines
+
+
+## The mean of `field` over the rows that have it (a negative value means never), or -1 when none do.
+static func _mean(rows: Array, field: String) -> float:
+	var total := 0.0
+	var count := 0
+	for row in rows:
+		if float(row[field]) >= 0.0:
+			total += float(row[field])
+			count += 1
+	return total / float(count) if count > 0 else -1.0
