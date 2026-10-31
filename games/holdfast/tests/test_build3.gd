@@ -139,7 +139,7 @@ func test_the_pack_schema_refuses_a_node_that_sells_a_level() -> void:
 
 func test_a_new_profile_starts_empty_on_the_first_level_and_pillar() -> void:
 	var profile := HoldfastMeta.new_profile(_meta_content())
-	expect_eq(profile, {"gold": 0, "upgrades": [], "stars": {}, "levels_won": [], "unlocked": [], "level": "first_watch", "pillar": "flare_archer", "runs": 0, "layouts": {}, "gear": {"owned": [], "equipped": {"weapon": "", "helmet": "", "armour": "", "boots": "", "ring": ""}}, "stand_done": false, "stars_line_seen": false, "gear_seen": [], "recruits": {"roster": [], "squad": [], "round": 0, "hired": [], "next": 1, "bought": 0}, "names": {"keep": "", "hero": ""}})
+	expect_eq(profile, {"gold": 0, "upgrades": [], "stars": {}, "levels_won": [], "unlocked": [], "level": "first_watch", "pillar": "flare_archer", "runs": 0, "layouts": {}, "gear": {"owned": [], "equipped": {"weapon": "", "helmet": "", "armour": "", "boots": "", "ring": ""}}, "stand_done": false, "stars_line_seen": false, "special_taught": false, "gear_seen": [], "recruits": {"roster": [], "squad": [], "round": 0, "hired": [], "next": 1, "bought": 0}, "names": {"keep": "", "hero": ""}})
 
 
 func test_buying_pays_the_cost_and_records_the_upgrade_without_changing_the_old_profile() -> void:
@@ -550,7 +550,7 @@ func test_the_tower_repairs_between_waves_only_and_up_to_its_maximum() -> void:
 func test_every_upgrade_in_the_pack_is_understood_by_the_rules() -> void:
 	var known := ["aura_dps", "aura_radius", "keep_health", "gold_multiplier", "beam_reach", "staff_damage"]
 	var known_tower := ["damage", "health", "range", "cooldown", "repair", "extra_targets", "lone_bonus", "pierce", "burst_every", "burst_extra", "storm_every", "storm_share", "hero_haste", "posted_haste", "hero_radius", "crossfire", "burn_dps", "burn_seconds", "rally_repair", "rally_shield", "rally_radius", "rally_seconds", "last_light", "last_light_radius", "watch_range", "watch_radius", "eclipse_widen", "eclipse_radius"]
-	var known_hero := ["move_speed", "health", "attack.damage", "attack.cooldown", "attack.count", "attack.spread_degrees", "ability.rapid_seconds", "ability.pierce", "ability.burn_dps", "ability.burn_seconds", "ability.cooldown", "armour", "getup_time", "pickup_radius"]
+	var known_hero := ["move_speed", "health", "attack.damage", "attack.cooldown", "attack.count", "attack.spread_degrees", "ability.rapid_seconds", "ability.pierce", "ability.burn_dps", "ability.burn_seconds", "ability.cooldown", "ability.auto_power", "armour", "getup_time", "pickup_radius"]
 	var known_recruit := ["health", "damage"]
 	var all := []
 	for id in _nodes():
