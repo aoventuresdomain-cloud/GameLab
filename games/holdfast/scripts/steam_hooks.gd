@@ -16,8 +16,11 @@ const RESET_FLAG := "--steam-reset-test-achievement"
 const RESET_RETRY_MSEC := 5000
 
 @export var source_path: NodePath
+## The profile, whose achievement unlocks go to Steam too (left empty, none do).
+@export var profile_path: NodePath
 
 var steam := SteamService.new()
+var _profile: HoldfastProfile
 var _reset_pending := false
 var _reset_deadline_msec := 0
 
@@ -25,7 +28,28 @@ var _reset_deadline_msec := 0
 func _ready() -> void:
 	steam.init(APP_ID)
 	get_node(source_path).run_ended.connect(_on_run_ended)
+	if not profile_path.is_empty():
+		_profile = get_node(profile_path)
+		_profile.achievement_unlocked.connect(unlock_achievement)
+		sync_achievements()
 	start_reset(OS.get_cmdline_user_args())
+
+
+## Sends the achievement `id` to Steam under the name the pack maps it to. True when Steam took it;
+## false, with nothing sent, when Steam is not here or the achievement has no Steam name.
+func unlock_achievement(id: String) -> bool:
+	var named := HoldfastAchievements.steam_name(HoldfastContent.base(), id)
+	return named != "" and steam.unlock_achievement(named)
+
+
+## Sends every achievement the profile holds, for when Steam was not running as they were earned.
+## Returns how many Steam took.
+func sync_achievements() -> int:
+	var taken := 0
+	if _profile != null and steam.is_available():
+		for id in _profile.get_unlocked_achievements():
+			taken += 1 if unlock_achievement(id) else 0
+	return taken
 
 
 ## Clears the test achievement when the reset flag allows it, retrying for a few

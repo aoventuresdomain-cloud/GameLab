@@ -11,6 +11,8 @@ extends Node
 signal changed
 ## Something the player must be told: a damaged, newer or unreadable save, or a failed save.
 signal notice(message: String)
+## A change just made met an achievement's goal (once for each, ever). The Steam hooks listen.
+signal achievement_unlocked(id: String)
 
 const DEFAULT_PATH := "user://holdfast_profile.sav"
 
@@ -85,9 +87,7 @@ func new_game() -> void:
 func buy(id: String) -> bool:
 	var result := HoldfastMeta.buy(_content, data, id)
 	if result["ok"]:
-		data = result["profile"]
-		_save()
-		changed.emit()
+		_apply(result["profile"])
 	return result["ok"]
 
 
@@ -262,11 +262,26 @@ func bank_run(result: Dictionary) -> void:
 
 
 func _apply(next: Dictionary) -> void:
+	var fresh := HoldfastAchievements.newly_met(_content, next)
+	if not fresh.is_empty():
+		next = HoldfastAchievements.unlock(_content, next)
 	if next == data:
 		return
 	data = next
 	_save()
 	changed.emit()
+	for id in fresh:
+		achievement_unlocked.emit(id)
+
+
+## Every achievement with its progress, for the list: {id, name, text, value, goal, done}.
+func get_achievements() -> Array:
+	return HoldfastAchievements.progress(_content, data)
+
+
+## The ids unlocked so far, in the order they came.
+func get_unlocked_achievements() -> Array:
+	return data["achievements"]
 
 
 func _save() -> void:

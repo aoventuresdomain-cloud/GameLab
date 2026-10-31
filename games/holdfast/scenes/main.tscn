@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scripts/run_flow.gd" id="1_flow"]
 [ext_resource type="Script" path="res://scripts/holdfast_run_source.gd" id="2_run"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scripts/holdfast_settings.gd" id="15_settings"]
 [ext_resource type="Script" path="res://scripts/holdfast_audio.gd" id="16_audio"]
 [ext_resource type="PackedScene" path="res://scenes/ui/settings_screen.tscn" id="17_settings_screen"]
+[ext_resource type="PackedScene" path="res://scenes/ui/achievements_screen.tscn" id="18_achievements_screen"]
 [ext_resource type="PackedScene" path="res://scenes/ui/home_screen.tscn" id="10_home"]
 [ext_resource type="PackedScene" path="res://scenes/ui/keep_screen.tscn" id="3_keep"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="4_hud"]
@@ -25,6 +26,7 @@ profile_path = NodePath("Profile")
 home_path = NodePath("UI/HomeScreen")
 settings_path = NodePath("Settings")
 settings_screen_path = NodePath("UI/SettingsScreen")
+achievements_screen_path = NodePath("UI/AchievementsScreen")
 journey_path = NodePath("UI/JourneyMap")
 hero_page_path = NodePath("UI/HeroPage")
 recruits_path = NodePath("UI/RecruitsPage")
@@ -68,6 +70,8 @@ layer = 10
 
 [node name="SettingsScreen" parent="UI" instance=ExtResource("17_settings_screen")]
 
+[node name="AchievementsScreen" parent="UI" instance=ExtResource("18_achievements_screen")]
+
 [node name="Autoplay" type="Node" parent="."]
 script = ExtResource("7_autoplay")
 flow_path = NodePath("..")
@@ -81,3 +85,4 @@ settings_path = NodePath("../Settings")
 [node name="SteamHooks" type="Node" parent="."]
 script = ExtResource("8_steam")
 source_path = NodePath("../RunSource")
+profile_path = NodePath("../Profile")

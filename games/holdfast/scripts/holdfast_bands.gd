@@ -67,19 +67,20 @@ static func load_bands() -> Dictionary:
 	return parsed if parsed is Dictionary else {}
 
 
-## The level ids in play order, without the tutorial.
-static func levels() -> Array:
-	return HoldfastCurve._levels(HoldfastContent.base())
+## The level ids in play order, without the tutorial. `content` is the pack to read (the base pack when empty).
+static func levels(content: Dictionary = {}) -> Array:
+	return HoldfastCurve._levels(content if not content.is_empty() else HoldfastContent.base())
 
 
 ## The levels a pillar is judged on: the pack's `pillar_levels` entry, or every level. A pillar is
 ## tuned to the biomes it unlocks into, so it is judged only there. Widen the scope when a later biome
 ## exists; the gate fails if a pillar's scope is empty or names a level that does not exist.
-static func scope(bands: Dictionary, pillar: String) -> Array:
+static func scope(bands: Dictionary, pillar: String, content: Dictionary = {}) -> Array:
 	var named: Variant = bands.get("pillar_levels", {}).get(pillar)
+	var all := levels(content)
 	if named is Array:
-		return named.filter(func(level: Variant) -> bool: return level in levels())
-	return levels()
+		return named.filter(func(level: Variant) -> bool: return level in all)
+	return all
 
 
 ## The levels a pillar is not judged on (shown in the report as not played by it yet).
@@ -88,16 +89,24 @@ static func out_of_scope(bands: Dictionary, pillar: String) -> Array:
 	return levels().filter(func(level: String) -> bool: return not inside.has(level))
 
 
-## Problems with the bands file itself: a pillar judged on nothing, or on a level that is not there.
-static func scope_problems(bands: Dictionary) -> PackedStringArray:
+## Problems with the bands file itself: a level (a new biome's, say) with no band entry, a pillar judged
+## on nothing, or on a level that is not there. `content` is the pack to read (the base pack when empty).
+static func scope_problems(bands: Dictionary, content: Dictionary = {}) -> PackedStringArray:
 	var out: PackedStringArray = []
+	var all := levels(content)
+	var pack: Dictionary = content if not content.is_empty() else HoldfastContent.base()
+	for level in all:
+		if not bands.get("bands", {}).has(level):
+			out.append("%s has no band entry (`bands`): give it first-time bands before it ships" % level)
+		if not pack["levels"][level].get("modifiers", []).is_empty() and not bands.get("hard", {}).has(level):
+			out.append("%s has a Hard replay but no `hard` band entry" % level)
 	for pillar in PILLARS:
 		var named: Variant = bands.get("pillar_levels", {}).get(pillar)
 		if named is Array:
 			for level in named:
-				if not levels().has(level):
+				if not all.has(level):
 					out.append("%s is judged on %s, which is not a level" % [pillar, level])
-		if scope(bands, pillar).is_empty():
+		if scope(bands, pillar, content).is_empty():
 			out.append("%s is judged on no level at all" % pillar)
 	return out
 
@@ -108,7 +117,7 @@ static func cell(model: Dictionary, pillar: String, seeds: int, skip: Array = []
 	var out := []
 	for run_seed in range(1, seeds + 1):
 		var row := {FEEL: {}}
-		var climb := HoldfastCurve.climb(run_seed, model, pillar, 5, skip, true, prefer)
+		var climb := HoldfastCurve.climb(run_seed, model, pillar, levels().size(), skip, true, prefer)
 		for id in climb["levels"]:
 			row[id] = climb["levels"][id]["first"]
 			row[FEEL][id] = {"keep": climb["levels"][id]["keep"], "seconds": climb["levels"][id]["seconds"]}
@@ -122,7 +131,7 @@ static func hard_cell(pillar: String, seeds: int) -> Array:
 	var out := []
 	for run_seed in range(1, seeds + 1):
 		var row := {}
-		var climb := HoldfastCurve.climb(run_seed, HoldfastSkilledBot.AVERAGE, pillar, 5, [], false, [], true)
+		var climb := HoldfastCurve.climb(run_seed, HoldfastSkilledBot.AVERAGE, pillar, levels().size(), [], false, [], true)
 		for id in climb["levels"]:
 			if climb["levels"][id].has("hard"):
 				row[id] = climb["levels"][id]["hard"]
