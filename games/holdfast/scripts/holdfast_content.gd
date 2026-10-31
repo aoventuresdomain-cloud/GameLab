@@ -19,16 +19,25 @@ static func base() -> Dictionary:
 	return _base.content
 
 
-## About what one run pays at level number `number`: the gold_per_run of the last tier opened by then.
-static func gold_per_run_at(content: Dictionary, number: int) -> int:
-	var best := -1
-	var out := 0
+## The gold tier row in force at level number `number`: the last one opened by then ({} when there are none).
+static func gold_tier_at(content: Dictionary, number: int) -> Dictionary:
+	var best := {}
 	for id in content.get("gold_tiers", {}):
 		var tier: Dictionary = content["gold_tiers"][id]
-		if int(tier["first_level"]) <= number and int(tier["first_level"]) > best:
-			best = int(tier["first_level"])
-			out = int(tier["gold_per_run"])
-	return out
+		if int(tier["first_level"]) <= number and (best.is_empty() or int(tier["first_level"]) > int(best["first_level"])):
+			best = tier
+	return best
+
+
+## About what one run pays at level number `number`: the gold_per_run of the last tier opened by then.
+static func gold_per_run_at(content: Dictionary, number: int) -> int:
+	return int(gold_tier_at(content, number).get("gold_per_run", 0))
+
+
+## What a gear drop with nothing left to give is salvaged for at level number `number`: the tier's share of its gold a run.
+static func salvage_at(content: Dictionary, number: int) -> int:
+	var tier := gold_tier_at(content, number)
+	return roundi(float(tier.get("gold_per_run", 0)) * float(tier.get("salvage_share", 0.0)))
 
 
 ## Rules config for one run. `hero` is the Hero path to play ("" for the level's own).
