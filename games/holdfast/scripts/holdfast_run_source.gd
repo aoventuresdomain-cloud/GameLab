@@ -44,6 +44,10 @@ var _player := HoldfastPlayerHero.new()
 var _running := false
 ## A teaching run stands still, note up, until the player presses; then it never holds again.
 var _held := false
+## The pause screen is up: nothing moves, and the keyboard is not read.
+var _paused := false
+## 1 or 2: how much game time passes for each frame of real time.
+var _speed := 1
 var _runs := 0
 var _last := {}
 
@@ -58,9 +62,9 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if auto_step and not _held:
+	if auto_step and not _held and not _paused:
 		_player.sample()
-		step(minf(delta, MAX_FRAME_SECONDS))
+		step(minf(delta, MAX_FRAME_SECONDS) * _speed)
 
 
 ## Starts a run. With a fixed rng_seed, play-again runs use rng_seed + run number.
@@ -87,6 +91,7 @@ func start_run() -> void:
 	_engine = engine
 	_running = true
 	_held = wait_for_press and (rules.tutorial or rules.stand)
+	_paused = false
 	_last = {}
 	run_started.emit()
 	_emit_changes()
@@ -141,6 +146,34 @@ func is_running() -> bool:
 ## True while a teaching run waits for the player's press.
 func is_held() -> bool:
 	return _held
+
+
+func is_paused() -> bool:
+	return _paused
+
+
+## Pauses or resumes a run in progress; with none running it does nothing.
+func set_paused(paused: bool) -> void:
+	_paused = paused and _running
+
+
+func get_speed() -> int:
+	return _speed
+
+
+## 2 for double speed, anything else 1. The rules tick the same either way: only the game time fed per frame changes.
+func set_speed(speed: int) -> void:
+	_speed = 2 if speed == 2 else 1
+
+
+## Ends the run without a result: nothing is banked or paid and no run_ended is sent.
+func leave_run() -> void:
+	if not _running:
+		return
+	_running = false
+	_paused = false
+	_held = false
+	run_left.emit()
 
 
 ## The player's click, tap or key: the run starts moving.

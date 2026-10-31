@@ -113,6 +113,7 @@ func test_the_hero_tab_goes_when_the_profile_plays_another_hero() -> void:
 	var made := await _tree_page()
 	var main: Node = made[0]
 	var page: Control = made[1]
+	main.get_node("Profile").data["paths_kept"] = ["tideblade"]
 	main.get_node("Profile").select_pillar("tideblade")
 	expect_eq(page.tab_names(), PackedStringArray(["Archer Post", "Keep", "Castle", "Mage Post"]))
 	expect_eq(page._tab_buttons.keys(), ["Archer Post", "Keep", "Castle", "Mage Post"])

@@ -24,6 +24,7 @@ func test_continue_says_where_the_player_is_and_is_plain_with_no_save() -> void:
 	expect_eq(button.text, "Continue", "nothing to continue yet")
 	var profile: HoldfastProfile = main.get_node("Profile")
 	_win(profile, ["outpost"])
+	profile.data["paths_kept"] = ["tideblade"]
 	profile.select_pillar("tideblade")
 	profile.select_level("shingle_beach")
 	profile.bank_run({"gold": 1240, "outcome": "lost", "level": "shingle_beach"})
@@ -115,6 +116,7 @@ func test_the_hero_figure_names_the_path_and_opens_the_hero_page() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
 	expect_eq(main.journey._hero_button.text, "Hero: Flare Archer")
+	profile.data["paths_kept"] = ["dusk_mage"]
 	profile.select_pillar("dusk_mage")
 	expect_eq(main.journey._hero_button.text, "Hero: Dusk Mage")
 	main.journey._hero_button.pressed.emit()
