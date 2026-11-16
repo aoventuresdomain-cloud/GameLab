@@ -14,6 +14,7 @@ signal gear_wear_requested(id: String)
 signal gear_off_requested(slot: String)
 
 const Keep = preload("res://scripts/ui/keep_screen.gd")
+const Hud = preload("res://scripts/ui/hud.gd")
 const Guidance = preload("res://scripts/ui/guidance.gd")
 const DEFAULT_INFO := ""
 const WEAR_HINT := "Bag: press a piece, or drag it onto its slot, to wear it."
@@ -37,6 +38,8 @@ var selected_pillar := ""
 @onready var _info: Label = %Info
 @onready var _tree: Button = %TreeButton
 @onready var _back: Button = %BackButton
+@onready var _gold: Label = %GoldValue
+@onready var _stars: Label = %StarsValue
 
 var _profile: Node
 var _content: Dictionary
@@ -87,6 +90,8 @@ func refresh() -> void:
 	if _profile == null:
 		return
 	selected_pillar = _profile.get_pillar()
+	_gold.text = Hud.format_number(_profile.get_gold())
+	_stars.text = str(_profile.get_stars())
 	for id in _pillar_buttons:
 		_pillar_buttons[id].set_pressed_no_signal(id == selected_pillar)
 		var reason := _lock_reason(id)
@@ -183,6 +188,8 @@ func _build_slots() -> void:
 	for slot in HoldfastMeta.gear_slots(_content):
 		var panel := PanelContainer.new()
 		panel.mouse_filter = Control.MOUSE_FILTER_STOP
+		# A slot can be pressed, so it is at least 44 px high.
+		panel.custom_minimum_size.y = 44.0
 		_compact(panel)
 		var row := HBoxContainer.new()
 		row.name = "Row"
