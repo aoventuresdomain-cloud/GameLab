@@ -489,7 +489,7 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		break
 	_gear_owned = config.get("gear_owned", [])
 	_level_number = int(level.get("number", 0))
-	_salvage = HoldfastContent.gold_per_run_at(content, _level_number)
+	_salvage = HoldfastContent.salvage_at(content, _level_number)
 	_first_clear_gear = str(level.get("first_clear_gear", ""))
 	_levels_data = content.get("levels", {})
 	tutorial = bool(level.get("tutorial", false))

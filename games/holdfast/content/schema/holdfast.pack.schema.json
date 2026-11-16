@@ -1794,7 +1794,8 @@
         "id",
         "name",
         "first_level",
-        "gold_per_run"
+        "gold_per_run",
+        "salvage_share"
       ],
       "additionalProperties": false,
       "properties": {
@@ -1811,6 +1812,11 @@
         "gold_per_run": {
           "type": "integer",
           "minimum": 1
+        },
+        "salvage_share": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
         }
       }
     }
