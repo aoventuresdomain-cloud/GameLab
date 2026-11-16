@@ -722,6 +722,16 @@
   - [ ] A test through a real JSON save: a full set at Gull Rock pays no more than about +25% over a run with no duplicates; a missing piece still drops and is not salvaged.
   - [ ] The pacing bands are unchanged or re-pinned with a reason; QA full round names a commit.
 
+### HF-M2-80 Rename the game to Fogwatch (player-facing and docs)
+- **Owner:** UI Engineer
+- **Status:** Planned, built first as a small PR before Build 14a (it touches the home screen file that HF-M2-73 rewrites). CEO chose the name Fogwatch on 2026-11-16 (replaces "Holdfast", which clashes with an existing Steam game and a trademark). HoE ruling: internal names stay (folder `games/holdfast`, class and file names, `user://holdfast_*.sav` save files, CI job names, `HF_` achievement ids, `HF-M2-` board ids), so no save is lost and no pipeline path moves; revisit before any Steam page. No Steam page, trademark search or spend (CEO go needed)
+- **QA:** screens
+- **Done when:**
+  - [ ] Every player-facing "Holdfast" reads Fogwatch: the window title (`project.godot`), the home title, the win panel line ("Fogwatch holds!"), the Windows and Mac export names and product name, the pack display name and the schema title; a test scans the shipped UI scenes, scripts' UI strings and content for "Holdfast" and fails on any left (internal class and file names are excluded by name).
+  - [ ] `README.md` and `games/holdfast/README.md` and `plan.md` say Fogwatch, with one line saying the folder and code keep the old working name; studio notes and the board keep "Holdfast" as history.
+  - [ ] An old save and old settings file still load (a test through a real JSON save).
+  - [ ] The itch page title is changed by hand through the Setup Desk (the page URL slug stays); recorded here when done.
+
 ### HF-M2-72 Menus and look: tokens, shared header and the no-overlap test
 - **Owner:** UI Engineer
 - **Status:** Planned, Build 14a. CEO approved the design pass on 16 Nov 2026 (`holdfast/m2/menus-and-look-design-pass.md`, Advisor critique `advisor-menus-look-critique.md`, kept unedited); standing CEO rule: icons, titles and labels are never tightly packed and never overlap. Placeholder art only, final art stays last (HF-M2-08 is not decided by this skin)
@@ -806,7 +816,7 @@
 
 ### HF-M2-69 Controller and keyboard input
 - **Owner:** UI Engineer
-- **Status:** On hold until the CEO answers whether the Steam Deck is a first-release target (the Advisor's pick: yes, its own build after Build 13 and before the demo); QA has not confirmed that no gamepad handling exists (F-148)
+- **Status:** Planned, after the Build 14 series (it follows the new rail, HF-M2-73). CEO answered yes on 2026-11-16: the Steam Deck is a first-release target and the controller is its own build before the demo. QA has not confirmed that no gamepad handling exists (F-148; the Advisor found none for play)
 - **QA:** full (touches every screen)
 - **Depends on:** HF-M2-73 (the rail takes L1 and R1; build the controller after the new screens so the focus order is written once)
 - **Done when:**
@@ -1349,3 +1359,5 @@
 - 2026-10-24: HF-M2-46 to 53 merged (#127, #128) with QA clear at named commits; HF-M2-50 parks Bryn, Wren and the light posts behind a flag (Head of Engineering chose a data-only retune of Levels 1 to 5 over loosening the curve bands; interim, M2b rebalances). The CEO's standing rules: no idle gaps between steps, only the Chief of Staff runs stall checks, every 30 minutes. Radial skill web (HF-M2-55) waits for the CEO's acceptance of the mockup.
 - 2026-10-31: Build 13b merged: HF-M2-65 (#163), 66 (#164), 67 (#165), the follow-ups F-160/162/163/164 (#166) and HF-M2-70 (#167), each with a QA clear at a named commit. HoE rulings on HF-M2-70: dry_max stays 3; tree/hours pinned as a known miss (about 0.9 h) rather than adding filler nodes or a 12-minute wait between buys; the Advisor agrees and aims at 2 to 3 h of real play. The Advisor asked for a salvage ceiling, boarded as HF-M2-71.
 - 2026-11-16: CEO approved the menus-and-look design pass ("much better") with one rule: icons, titles and price tags never tightly packed or overlapping. Boarded as HF-M2-72 to HF-M2-79 in builds 14a to 14e (UI Engineer; the Gameplay Engineer only for HF-M2-76). Taste calls from the Advisor's picks: left rail, animated beam. 14a (look, rail, home) is the first playable build; the team stops for the CEO's feedback after it. HF-M2-69 (controller) now follows HF-M2-73. HF-M2-71 (#169, QA clear at 0510989) merges before HF-M2-77 because both change the result panel.
+- 2026-11-16: CEO named the game Fogwatch (replaces Holdfast). Boarded as HF-M2-80, built before Build 14a. Internal names (folder, classes, save files, CI, achievement ids) keep "holdfast" so saves and the pipeline are untouched; revisit before any Steam page. Win line becomes "Fogwatch holds!" unless the CEO wants other words. The itch page title is a hands-on step for the Setup Desk. No Steam page, trademark search or spend.
+- 2026-11-16: CEO answered "yes to all" on the three open calls: Hard replays and modifiers stay in (built, HF-M2-65), game speed is in now with calling the next wave early later, and the Steam Deck is a first-release target with the controller as its own build before the demo (HF-M2-69, off hold, after Build 14).
