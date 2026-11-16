@@ -321,6 +321,7 @@ func _on_run_ended(result: Dictionary) -> void:
 		var before: Dictionary = profile.data.duplicate(true)
 		profile.bank_run(result["result"])
 		result["recruit_changes"] = RecruitMeta.changes(HoldfastContent.base(), before, profile.data)
+		result["unlocks"] = profile.get_last_unlocks()
 		result["stars_paid"] = profile.get_stars_earned() - stars_before
 		result["reward_gold"] = profile.get_reward_gold(level) if first_win else 0
 		if int(result["stars_paid"]) > 0 and not profile.has_seen_stars_line():
