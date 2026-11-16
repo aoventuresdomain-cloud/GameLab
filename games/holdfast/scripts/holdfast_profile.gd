@@ -27,6 +27,7 @@ var _service: SaveService
 var _content: Dictionary
 ## Hard is on for the next run (only for the session; see select_hard).
 var _hard := false
+var _last_unlocks: Array = []
 
 
 func _ready() -> void:
@@ -258,7 +259,14 @@ func teach_special() -> void:
 
 
 func bank_run(result: Dictionary) -> void:
+	var before: Dictionary = data.duplicate(true)
 	_apply(HoldfastMeta.bank_run(_content, data, result))
+	_last_unlocks = HoldfastMeta.unlocks(_content, before, data, result)
+
+
+## What the run banked last unlocked (HoldfastMeta.unlocks), for the result screen. Not saved.
+func get_last_unlocks() -> Array:
+	return _last_unlocks
 
 
 func _apply(next: Dictionary) -> void:
