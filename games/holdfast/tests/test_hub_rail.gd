@@ -65,6 +65,61 @@ func test_every_hub_screen_has_the_rail_with_one_word_tabs_and_marks_its_own() -
 	main.free()
 
 
+## F-177: the rail starts where the header ends, so it never covers the back chevron or a title.
+func test_the_rail_clears_the_header_on_every_hub_screen() -> void:
+	var main := _main()
+	_with_a_recruit(main)
+	for tab in HUBS:
+		var screen: Control = main.get(HUBS[tab])
+		main.call("_show", main.Screen["RECRUITS" if tab == "Squad" else tab.to_upper()])
+		await tree.process_frame
+		await tree.process_frame
+		var header: HubHeader = screen.find_children("*", "HubHeader", true, false)[0]
+		var rail_rect: Rect2 = screen.rail.get_global_rect()
+		expect_true(rail_rect.position.y >= header.get_global_rect().end.y - 0.5, "%s: the rail starts at y %s, below the header's end %s" % [tab, rail_rect.position.y, header.get_global_rect().end.y])
+		for child in header.find_children("*", "Control", true, false):
+			if child.is_visible_in_tree():
+				expect_false(rail_rect.intersects(child.get_global_rect()), "%s: the rail does not cover %s" % [tab, child.name])
+		var title: Label = header.get_node("Title")
+		expect_true(title.size.x + 0.5 >= title.get_minimum_size().x, "%s: the title is not clipped" % tab)
+		expect_near(rail_rect.end.y, 720.0, 0.5, "%s: the rail runs to the bottom of the screen" % tab)
+	main.free()
+
+
+## F-178: the tabs sit at the same height on every page, Squad included, and Menu is at the bottom.
+func test_the_tabs_sit_at_the_same_height_on_every_page() -> void:
+	var main := _main()
+	_with_a_recruit(main)
+	var seen := {}
+	for tab in HUBS:
+		var screen: Control = main.get(HUBS[tab])
+		main.call("_show", main.Screen["RECRUITS" if tab == "Squad" else tab.to_upper()])
+		await tree.process_frame
+		await tree.process_frame
+		for name in ["Map", "Tree", "Hero", "Squad", "Menu"]:
+			var y: float = screen.rail.tab(name).get_global_rect().position.y
+			if seen.has(name):
+				expect_near(y, seen[name], 0.5, "%s tab is at the same height on %s as elsewhere" % [name, tab])
+			seen[name] = y
+		expect_true(screen.rail.tab("Menu").get_global_rect().end.y > 680.0, "%s: Menu is at the bottom of the rail" % tab)
+	main.free()
+
+
+## The rail places itself: a scene or an export that stores no anchors still gets the same rail.
+func test_the_rail_pins_itself_even_when_its_scene_stores_no_layout() -> void:
+	var holder := Control.new()
+	holder.size = Vector2(1280, 720)
+	tree.root.add_child(holder)
+	var rail: HubRail = preload("res://scenes/ui/hub_rail.tscn").instantiate()
+	for side in ["left", "top", "right", "bottom"]:
+		rail.set("anchor_" + side, 0.0)
+		rail.set("offset_" + side, 0.0)
+	holder.add_child(rail)
+	await tree.process_frame
+	expect_eq(rail.get_global_rect(), Rect2(0, HubRail.TOP, HubRail.WIDTH, 720.0 - HubRail.TOP))
+	holder.free()
+
+
 func test_squad_joins_the_rail_only_after_the_first_recruit() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")

@@ -114,6 +114,11 @@ func test_the_tree_tab_has_a_dot_when_upgrades_can_be_bought() -> void:
 
 func test_the_hero_tab_and_the_hero_figure_both_open_the_hero_page() -> void:
 	var main := _main()
+	var profile: HoldfastProfile = main.get_node("Profile")
+	expect_eq(main.journey.get_node("%HeroName").text, "Flare Archer", "the chosen path is named on the map")
+	profile.data["paths_kept"] = ["dusk_mage"]
+	profile.select_pillar("dusk_mage")
+	expect_eq(main.journey.get_node("%HeroName").text, "Dusk Mage", "and follows the pick")
 	expect_eq(main.journey.rail.tab("Hero").text, "Hero", "one word")
 	main.journey.rail.press("Hero")
 	expect_true(main.hero_page.visible and not main.journey.visible)

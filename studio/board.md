@@ -714,13 +714,23 @@
   - [ ] A gear piece that can no longer help (an owned duplicate) salvages to about one run's gold at that level, shown on the result panel, no new currency (F-149), with a test.
 ### HF-M2-71 Salvage ceiling for a finished gear set
 - **Owner:** Gameplay Engineer
-- **Status:** Planned, Build 13c. From the Advisor's view `holdfast/m2/advisor-salvage-and-gold-clock.md` (31 Oct 2026) on F-165; standing CEO go
+- **Status:** Merged (#169, QA clear at 0510989, merged as 5659a01). From the Advisor's view `holdfast/m2/advisor-salvage-and-gold-clock.md` (31 Oct 2026) on F-165; standing CEO go
 - **QA:** full (rewards)
 - **Depends on:** HF-M2-70
 - **Done when:**
   - [ ] Salvage for an owned duplicate is about a quarter of that level's run gold per piece (set in `HoldfastRules._drop_gear`), so a finished set adds roughly 23% at Gull Rock, not 91%; the fraction is pack data.
   - [ ] A test through a real JSON save: a full set at Gull Rock pays no more than about +25% over a run with no duplicates; a missing piece still drops and is not salvaged.
   - [ ] The pacing bands are unchanged or re-pinned with a reason; QA full round names a commit.
+
+### HF-M2-80 Rename the game to Fogwatch (player-facing and docs)
+- **Owner:** UI Engineer
+- **Status:** Planned, built first as a small PR before Build 14a (it touches the home screen file that HF-M2-73 rewrites). CEO chose the name Fogwatch on 2026-11-16 (replaces "Holdfast", which clashes with an existing Steam game and a trademark). HoE ruling: internal names stay (folder `games/holdfast`, class and file names, `user://holdfast_*.sav` save files, CI job names, `HF_` achievement ids, `HF-M2-` board ids), so no save is lost and no pipeline path moves; revisit before any Steam page. No Steam page, trademark search or spend (CEO go needed)
+- **QA:** screens
+- **Done when:**
+  - [ ] Every player-facing "Holdfast" reads Fogwatch: the window title (`project.godot`), the home title, the win panel line ("Fogwatch holds!"), the Windows and Mac export names and product name, the pack display name and the schema title; a test scans the shipped UI scenes, scripts' UI strings and content for "Holdfast" and fails on any left (internal class and file names are excluded by name).
+  - [ ] `README.md` and `games/holdfast/README.md` and `plan.md` say Fogwatch, with one line saying the folder and code keep the old working name; studio notes and the board keep "Holdfast" as history.
+  - [ ] An old save and old settings file still load (a test through a real JSON save).
+  - [ ] The itch page title is changed by hand through the Setup Desk (the page URL slug stays); recorded here when done.
 
 ### HF-M2-72 Menus and look: tokens, shared header and the no-overlap test
 - **Owner:** UI Engineer
@@ -767,7 +777,7 @@
 
 ### HF-M2-76 Unlock events for the result screen and Plan
 - **Owner:** Gameplay Engineer
-- **Status:** Planned, Build 14c (small; no save change). The Advisor's round 2: the result must name what a win unlocked from the pack's own order
+- **Status:** Merged (#172, QA clear, merged as 4721303; no save change). The Advisor's round 2: the result must name what a win unlocked from the pack's own order
 - **QA:** sanity
 - **Done when:**
   - [ ] After a win the profile can list what it unlocked, read from the pack (a blessing in the pack's unlock order, a Recruit rescue, a gear piece, a salvage amount, a Hero tab), with a test per kind and no hard-coded names in code.
@@ -806,7 +816,7 @@
 
 ### HF-M2-69 Controller and keyboard input
 - **Owner:** UI Engineer
-- **Status:** On hold until the CEO answers whether the Steam Deck is a first-release target (the Advisor's pick: yes, its own build after Build 13 and before the demo); QA has not confirmed that no gamepad handling exists (F-148)
+- **Status:** Planned, after the Build 14 series (it follows the new rail, HF-M2-73). CEO answered yes on 2026-11-16: the Steam Deck is a first-release target and the controller is its own build before the demo. QA has not confirmed that no gamepad handling exists (F-148; the Advisor found none for play)
 - **QA:** full (touches every screen)
 - **Depends on:** HF-M2-73 (the rail takes L1 and R1; build the controller after the new screens so the focus order is written once)
 - **Done when:**
@@ -1180,6 +1190,12 @@
 | F-168 | HF-M2-70 | FOLLOW-UP from QA (#167): Walls V and Tithe IV to VI are priced for level 6 income but only five levels exist, so they sit ahead of any level 6 until the second biome | Minor | Gameplay Engineer | Open, closes with the second biome |
 | F-169 | HF-M2-70 | FOLLOW-UP from QA (#167): the "Salvaged" line shows on the result panel only; the Hero tab has nothing for it | Minor | UI Engineer | Open, add only if the CEO's play shows it is missed |
 | F-170 | HF-M2-66 | FOLLOW-UP from QA (#164): the twelve HF_ Steam achievement names do not exist on Steam's side yet, so a real Steam check needs Holdfast's own app | Minor | Setup Desk (via the Chief of Staff) | Open, needs the Steam app, CEO go for any fee |
+| F-171 | HF-M2-71 | FOLLOW-UP from QA (#169): the four new pinned zero-headroom misses (tree dry runs 5 on all three pillars, Tideblade Hard at Gull Rock 10%) | Minor | Gameplay Engineer | Open, re-measure when level 6 lands |
+| F-172 | HF-M2-72 | MUST FIX from QA (#173 at c6f142e): Hero page gold and stars always read 0 and 0; hero_page.gd never sets them, and the corner test checked position, not values | Major | UI Engineer | Open, fix pushed to #173 |
+| F-173 | HF-M2-72 | MUST FIX from QA (#173): Hero gear slot rows are 35 px high with 4 px between them and are pressable; the layout test measures Buttons and text only | Major | UI Engineer | Open, fix pushed to #173 |
+| F-174 | HF-M2-72 | FOLLOW-UP from QA (#173): Plan, Settings and Achievements hide the gold and stars chips. HoE ruling: they are not hub screens for the chips; record it in the HF-M2-72 line | Minor | UI Engineer | Open |
+| F-175 | HF-M2-79 | FOLLOW-UP from QA (#173): the in-run Pause and speed buttons straddle the HUD panel's bottom edge | Minor | UI Engineer | Open, folded into HF-M2-79 |
+| F-176 | HF-M2-72 | FOLLOW-UP from QA (#173): disabled "Start level (place a post first)" text is low contrast | Minor | UI Engineer | Open, fix in #173 if trivial, else HF-M2-74 |
 
 ## Test changes
 
@@ -1253,6 +1269,9 @@
 | 2026-10-31 | `test_build3` (profile pin gains `hard_stars`), `test_pacing_bands.gd::test_one_player_of_every_cell_is_played` (two more cells per Hero for Hard replays) (#163, HF-M2-65) | Expected lists extended for the new fields and cells; nothing loosened | Hard replays add a saved field and a measured cell (QA, 817191f) | Head of Engineering |
 | 2026-10-31 | `test_build3` (profile pin gains `achievements` and `counters.clean_wins`) (#164, HF-M2-66) | Expected profile pin extended for the new fields; nothing loosened | Achievements add saved fields (QA, 0b35c8e) | Head of Engineering |
 | 2026-10-31 | `test_tree_numbers` (hours band 10 to 15 h becomes 3 to 4 h, rows, means and boundary probes scaled, same assertions and margins), `test_build3` (Tithe total 1.55 additive, same tolerance) (#167, HF-M2-70) | Figures and the band re-set to the new design; assertion strength unchanged (QA checked) | Tithe additive and the Advisor's 3 to 4 h band (QA, a0d1e9a) | Head of Engineering |
+| 2026-11-16 | `test_gold_pacing` (salvage expectation 1,200 to 300) and the `test_a_new_tier_is_a_row_...` tier_8 row (gains `salvage_share: 0.25`) (#169, HF-M2-71) | Salvage figures follow the new quarter-of-a-run ceiling; assertions unchanged | The item changes the salvage rule (QA, 0510989) | Head of Engineering |
+| 2026-11-16 | `test_radial_web::test_no_name_sits_on_a_node_or_another_name_at_real_size` renamed `..._no_name_on_show_...` (mid-game web, names on show only) and `test_plan_and_map_layout` map-header test (icons and chips replace captions, lower bound 8 to 6 px) (#173, HF-M2-72) | Names with no room are hidden by design; the header uses icons; the CEO's 6 px rule | Spec changed under the tests; QA confirms the intent is kept (c6f142e) | Head of Engineering |
+| 2026-11-16 | `run_ui_tests.gd` font-size checks skip windows smaller than 1280x720 (#173, HF-M2-72) | Type size is checked at 1280x720 and 1920x1080 only | The layout is the same at 960x540 and the export only scales it | Head of Engineering |
 
 ## Advisor views
 
@@ -1349,3 +1368,5 @@
 - 2026-10-24: HF-M2-46 to 53 merged (#127, #128) with QA clear at named commits; HF-M2-50 parks Bryn, Wren and the light posts behind a flag (Head of Engineering chose a data-only retune of Levels 1 to 5 over loosening the curve bands; interim, M2b rebalances). The CEO's standing rules: no idle gaps between steps, only the Chief of Staff runs stall checks, every 30 minutes. Radial skill web (HF-M2-55) waits for the CEO's acceptance of the mockup.
 - 2026-10-31: Build 13b merged: HF-M2-65 (#163), 66 (#164), 67 (#165), the follow-ups F-160/162/163/164 (#166) and HF-M2-70 (#167), each with a QA clear at a named commit. HoE rulings on HF-M2-70: dry_max stays 3; tree/hours pinned as a known miss (about 0.9 h) rather than adding filler nodes or a 12-minute wait between buys; the Advisor agrees and aims at 2 to 3 h of real play. The Advisor asked for a salvage ceiling, boarded as HF-M2-71.
 - 2026-11-16: CEO approved the menus-and-look design pass ("much better") with one rule: icons, titles and price tags never tightly packed or overlapping. Boarded as HF-M2-72 to HF-M2-79 in builds 14a to 14e (UI Engineer; the Gameplay Engineer only for HF-M2-76). Taste calls from the Advisor's picks: left rail, animated beam. 14a (look, rail, home) is the first playable build; the team stops for the CEO's feedback after it. HF-M2-69 (controller) now follows HF-M2-73. HF-M2-71 (#169, QA clear at 0510989) merges before HF-M2-77 because both change the result panel.
+- 2026-11-16: CEO named the game Fogwatch (replaces Holdfast). Boarded as HF-M2-80, built before Build 14a. Internal names (folder, classes, save files, CI, achievement ids) keep "holdfast" so saves and the pipeline are untouched; revisit before any Steam page. Win line becomes "Fogwatch holds!" unless the CEO wants other words. The itch page title is a hands-on step for the Setup Desk. No Steam page, trademark search or spend.
+- 2026-11-16: CEO answered "yes to all" on the three open calls: Hard replays and modifiers stay in (built, HF-M2-65), game speed is in now with calling the next wave early later, and the Steam Deck is a first-release target with the controller as its own build before the demo (HF-M2-69, off hold, after Build 14).

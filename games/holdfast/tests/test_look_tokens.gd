@@ -109,3 +109,12 @@ func test_gold_and_stars_share_one_corner_and_back_is_top_left_on_every_hub_scre
 			expect_true(gold.get_global_rect().end.x < stars.get_global_rect().position.x, "%s: gold is beside the stars" % screen.name)
 		screen.visible = false
 	main.free()
+
+
+## F-180: a switched-on toggle keeps its outline while the mouse is over it (the hover_pressed look is
+## the pressed look), so Reduce motion reads like Screen shake and Flashes after it is clicked.
+func test_a_pressed_button_keeps_its_look_under_the_mouse() -> void:
+	var theme: Theme = load(THEME)
+	for type in ["Button", "MainButton", "QuietButton"]:
+		expect_true(theme.has_stylebox("hover_pressed", type), "%s has a hover_pressed look" % type)
+		expect_true(theme.get_stylebox("hover_pressed", type) == theme.get_stylebox("pressed", type), "%s: the same as pressed" % type)
