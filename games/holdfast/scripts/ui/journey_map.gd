@@ -106,6 +106,8 @@ func refresh() -> void:
 		return
 	_gold.text = Hud.format_number(_profile.get_gold())
 	_stars.text = str(_profile.get_stars())
+	# The Hero path in play, named beside Plan (the rail's tab says only "Hero").
+	%HeroName.text = str(_content["hero_paths"][_profile.get_pillar()]["name"])
 	_refresh_guide()
 	_default_info = Guidance.next_goal(_content, _profile)
 	_info.text = _default_info

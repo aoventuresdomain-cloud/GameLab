@@ -213,14 +213,27 @@ func _check_layout(screen: Control, window: Vector2i, scale: float, view: Rect2)
 		var px := roundi(control.get_theme_font_size("font_size") * scale)
 		# The smallest window is checked for room, not for type size (it is the same layout, drawn smaller).
 		_check(px >= MIN_FONT_PX or scale < 1.0, "%s text is %dpx on screen" % [name, px])
-		# Inside a scrolling page, a control must fit across the screen; down it, the page scrolls.
+		# Inside a scrolling page, a control must fit across the screen; down it, the page scrolls: the
+		# scroller itself must fit on screen and be able to scroll down to what overflows.
 		var scroll := _scroll_of(control)
 		var rect: Rect2 = control.get_global_rect()
-		_check(view.encloses(rect) if scroll == null else (view.encloses(scroll.get_global_rect()) and rect.position.x >= view.position.x and rect.end.x <= view.end.x), "%s fits on screen" % name)
+		var fits := view.encloses(rect)
+		if scroll != null:
+			var scrolls: bool = scroll.vertical_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED
+			fits = view.encloses(scroll.get_global_rect()) and rect.position.x >= view.position.x and rect.end.x <= view.end.x and (fits or scrolls)
+		_check(fits, "%s fits on screen" % name)
 		_check(control.size.x + 0.5 >= control.get_minimum_size().x, "%s is not clipped" % name)
 		if control is Button:
 			_check(control.size.x >= MIN_BUTTON_PX - 0.5 and control.size.y >= MIN_BUTTON_PX - 0.5, "%s is at least %dpx each way (%s)" % [name, MIN_BUTTON_PX, control.size])
 	_check_clear(_items(screen, web), "%dp %s" % [window.y, screen.name])
+	# The left rail starts below the header and covers none of what is in it.
+	if screen.get("rail") is HubRail:
+		var rail_rect: Rect2 = screen.rail.get_global_rect()
+		for header in screen.find_children("*", "HubHeader", true, false):
+			_check(rail_rect.position.y >= header.get_global_rect().end.y - 0.5, "%dp %s: the rail starts below the header" % [window.y, screen.name])
+			for child in header.find_children("*", "Control", true, false):
+				if child.is_visible_in_tree():
+					_check(not rail_rect.intersects(child.get_global_rect()), "%dp %s: the rail does not cover %s" % [window.y, screen.name, child.name])
 	# A pan-and-zoom web shows one tab at a time: each tab, as the jump tab leaves it, must hold
 	# all its nodes inside the view at a readable size.
 	if web != null:
