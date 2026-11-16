@@ -213,7 +213,7 @@ func test_the_tutorial_has_no_loss_tip_and_no_boss_line() -> void:
 
 # ------------------------------------------------------------------ the Hero page
 
-func test_the_hero_page_says_how_to_wear_gear_until_the_first_piece_is_worn() -> void:
+func test_the_hero_page_says_how_to_wear_gear_in_one_line_while_there_are_pieces() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var page: Control = main.hero_page
@@ -223,7 +223,7 @@ func test_the_hero_page_says_how_to_wear_gear_until_the_first_piece_is_worn() ->
 	profile.changed.emit()
 	expect_eq(hint.text, page.WEAR_HINT, "a piece in the bag and none worn: how to wear it")
 	profile.wear_gear("wave_worn_boots")
-	expect_eq(hint.text, "Bag", "the first piece is on: the how-to is gone")
+	expect_eq(hint.text, page.WEAR_HINT, "the first piece is on: the one-line cue stays while there are pieces")
 	main.free()
 
 

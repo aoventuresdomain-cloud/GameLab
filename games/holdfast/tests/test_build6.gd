@@ -519,7 +519,7 @@ func test_the_summary_names_the_gear_a_run_found() -> void:
 func test_the_hero_page_lists_owned_gear_and_toggles_it() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
-	var bag: HFlowContainer = main.hero_page.get_node("%Bag")
+	var bag: Container = main.hero_page.get_node("%Bag")
 	expect_eq(bag.get_child_count(), 0, "an empty bag while there is no gear")
 	expect_true((main.hero_page.get_node("%BagHint") as Label).text.begins_with("Gear: none yet"))
 	profile.bank_run({"outcome": "won", "level": "shingle_beach", "gold": 0, "gear_found": ["driftwood_stave", "sea_glass_charm"]})

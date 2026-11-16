@@ -70,6 +70,20 @@ custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 autowrap_mode = 2
 
+[node name="GoalRow" type="HBoxContainer" parent="Margin/Column/Body/Inner"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="GoalCaption" type="Label" parent="Margin/Column/Body/Inner/GoalRow"]
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "Next path"
+
+[node name="GoalLine" type="Label" parent="Margin/Column/Body/Inner/GoalRow"]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="Main" type="HBoxContainer" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -100,30 +114,60 @@ text = "i"
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HeroFigure" type="Control" parent="Margin/Column/Body/Inner/Main"]
+[node name="Stage" type="Control" parent="Margin/Column/Body/Inner/Main"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(120, 0)
+custom_minimum_size = Vector2(740, 240)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="SlotColumn" type="VBoxContainer" parent="Margin/Column/Body/Inner/Main"]
+[node name="HeroFigure" type="Control" parent="Margin/Column/Body/Inner/Main/Stage"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(340, 0)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SlotColumn" type="Control" parent="Margin/Column/Body/Inner/Main/Stage"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SpecialCard" type="PanelContainer" parent="Margin/Column/Body/Inner/Main/Stage"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Column" type="VBoxContainer" parent="Margin/Column/Body/Inner/Main/Stage/SpecialCard"]
 layout_mode = 2
 theme_override_constants/separation = 6
+
+[node name="SpecialName" type="Label" parent="Margin/Column/Body/Inner/Main/Stage/SpecialCard/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="SpecialLine" type="Label" parent="Margin/Column/Body/Inner/Main/Stage/SpecialCard/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Caption"
 
 [node name="BagHint" type="Label" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudCaption"
-autowrap_mode = 2
+autowrap_mode = 0
 
-[node name="Bag" type="HFlowContainer" parent="Margin/Column/Body/Inner"]
+[node name="Bag" type="GridContainer" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 76)
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 6
+columns = 4
 
 [node name="Info" type="Label" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
