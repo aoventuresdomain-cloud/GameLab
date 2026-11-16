@@ -97,18 +97,46 @@ layout_mode = 2
 toggle_mode = true
 text = "Key"
 
-[node name="View" type="Control" parent="Margin/Column/Body/Inner"]
+[node name="Middle" type="HBoxContainer" parent="Margin/Column/Body/Inner"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="View" type="Control" parent="Margin/Column/Body/Inner/Middle"]
 unique_name_in_owner = true
 clip_contents = true
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
 mouse_default_cursor_shape = 13
 
-[node name="Web" type="Control" parent="Margin/Column/Body/Inner/View"]
+[node name="Web" type="Control" parent="Margin/Column/Body/Inner/Middle/View"]
 unique_name_in_owner = true
 layout_mode = 3
 anchors_preset = 0
 mouse_filter = 2
+
+[node name="Side" type="VBoxContainer" parent="Margin/Column/Body/Inner/Middle"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(232, 0)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="FoundLabel" type="Label" parent="Margin/Column/Body/Inner/Middle/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Caption"
+
+[node name="Minimap" type="Control" parent="Margin/Column/Body/Inner/Middle/Side"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(232, 200)
+layout_mode = 2
+
+[node name="BuyStrip" type="HBoxContainer" parent="Margin/Column/Body/Inner"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_constants/separation = 8
 
 [node name="Footer" type="HBoxContainer" parent="Margin/Column/Body/Inner"]
 layout_mode = 2

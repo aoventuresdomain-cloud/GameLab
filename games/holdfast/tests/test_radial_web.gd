@@ -210,7 +210,7 @@ func test_the_first_view_fits_everything_revealed_at_every_window_size() -> void
 		expect_true(shown >= 13, "%s: the first ring is out (%d shown)" % [what, shown])
 		for section in page._headings:
 			if page._headings[section].visible:
-				expect_true(view.grow(1.0).encloses(_rect(page._headings[section])), "%s: rim name %s is in view" % [what, section])
+				expect_true(view.grow(1.0).encloses(_rect(page._headings[section])), "%s: rim name %s is in view (%s in %s, zoom %s)" % [what, section, _rect(page._headings[section]), view, web.scale.x])
 	main.free()
 
 
