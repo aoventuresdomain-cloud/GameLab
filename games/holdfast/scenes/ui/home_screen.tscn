@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/home_screen.gd" id="1_home"]
 [ext_resource type="Script" path="res://scripts/ui/themed_backdrop.gd" id="backdrop_tok"]
+[ext_resource type="Script" path="res://scripts/ui/home_scene.gd" id="3_scene"]
 
 [node name="HomeScreen" type="Control"]
 layout_mode = 3
@@ -21,60 +22,78 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("backdrop_tok")
 
-[node name="Centre" type="CenterContainer" parent="."]
+[node name="Scene" type="Control" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_scene")
 
-[node name="Column" type="VBoxContainer" parent="Centre"]
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 96
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 48
+
+[node name="Column" type="VBoxContainer" parent="Margin"]
+custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
-theme_override_constants/separation = 20
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="Centre/Column"]
+[node name="Title" type="Label" parent="Margin/Column"]
 layout_mode = 2
 theme_type_variation = &"ScreenTitle"
 text = "Holdfast"
-horizontal_alignment = 1
 
-[node name="Tagline" type="Label" parent="Centre/Column"]
+[node name="Tagline" type="Label" parent="Margin/Column"]
 layout_mode = 2
 text = "Hold the keep. Keep the light."
-horizontal_alignment = 1
 
-[node name="ContinueButton" type="Button" parent="Centre/Column"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(320, 0)
+[node name="Gap" type="Control" parent="Margin/Column"]
+custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
-size_flags_horizontal = 4
+
+[node name="ContinueButton" type="Button" parent="Margin/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 72)
+layout_mode = 2
+theme_type_variation = &"MainButton"
 text = "Continue"
 
-[node name="NewGameButton" type="Button" parent="Centre/Column"]
+[node name="NewGameButton" type="Button" parent="Margin/Column"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(320, 0)
+custom_minimum_size = Vector2(400, 48)
 layout_mode = 2
-size_flags_horizontal = 4
 text = "New game"
 
-[node name="SettingsButton" type="Button" parent="Centre/Column"]
+[node name="SettingsButton" type="Button" parent="Margin/Column"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(320, 0)
+custom_minimum_size = Vector2(400, 48)
 layout_mode = 2
-size_flags_horizontal = 4
 text = "Settings"
 
-[node name="QuitButton" type="Button" parent="Centre/Column"]
+[node name="QuitButton" type="Button" parent="Margin/Column"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(320, 0)
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-size_flags_horizontal = 4
+size_flags_horizontal = 0
+theme_type_variation = &"QuietButton"
 text = "Quit"
 
-[node name="Notice" type="Label" parent="Centre/Column"]
+[node name="Notice" type="Label" parent="Margin/Column"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(760, 0)
+custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
-horizontal_alignment = 1
 autowrap_mode = 2

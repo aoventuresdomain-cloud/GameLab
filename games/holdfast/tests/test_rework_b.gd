@@ -13,7 +13,7 @@ func _tree_page() -> Array:
 	tree.root.size = Vector2i(1280, 720)
 	# The first slot and Archer Post are bought, so the sections next to them are on show.
 	ThroughLevelZero.apply_castle(main.get_node("Profile"))
-	main.journey.get_node("%TreeButton").pressed.emit()
+	main.journey.rail.press("Tree")
 	# One frame for the layout, one for the deferred move to the first tab.
 	await tree.process_frame
 	await tree.process_frame

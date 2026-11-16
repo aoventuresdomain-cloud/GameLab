@@ -1,16 +1,18 @@
 extends Node
-## Run flow: main menu -> journey map -> plan -> run (HUD) -> summary -> journey map. The
-## Hero page and the skill tree open from the map and close back to it. The game layer: the
+## Run flow: home -> journey map -> plan -> run (HUD) -> summary -> journey map. The hub screens
+## (Map, Tree, Hero, Squad, Menu) are reached from each other by the left rail, and each one's back
+## goes to the map (the map's to the home screen). The game layer: the
 ## only place that starts a run or changes the profile. Screens ask through their
 ## signals and the flow acts, so a screen never writes progress itself.
 
-enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY, RECRUITS, SETTINGS, ACHIEVEMENTS }
+enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY, RECRUITS, SETTINGS, ACHIEVEMENTS, MENU }
 
 @export var source_path: NodePath
 @export var profile_path: NodePath
 @export var home_path: NodePath
 @export var settings_path: NodePath
 @export var settings_screen_path: NodePath
+@export var menu_path: NodePath
 @export var achievements_screen_path: NodePath
 @export var journey_path: NodePath
 @export var hero_page_path: NodePath
@@ -26,7 +28,9 @@ enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY, RECRUITS, SETTINGS, ACH
 ## The player's settings and the screen that changes them.
 @onready var settings: HoldfastSettings = get_node(settings_path)
 @onready var settings_screen: Control = get_node(settings_screen_path)
-## The achievements list, opened from the settings.
+## The Menu tab: Settings, Achievements, Reset all upgrades, Back to title.
+@onready var menu: Control = get_node(menu_path)
+## The achievements list, opened from the Menu or the settings.
 @onready var achievements_screen: Control = get_node(achievements_screen_path)
 @onready var journey: Control = get_node(journey_path)
 @onready var hero_page: Control = get_node(hero_page_path)
@@ -54,30 +58,38 @@ func _ready() -> void:
 	hud.leave_requested.connect(_leave_run)
 	hud.special_requested.connect(_on_special_requested)
 	home.bind(profile)
+	home.bind_settings(settings)
 	settings_screen.bind(settings)
 	achievements_screen.bind(profile)
 	for screen_with_hints in [planning, hero_page]:
 		screen_with_hints.bind_hints(settings)
 		screen_with_hints.hint_seen.connect(settings.see_hint)
-	journey.bind_hints(settings)
 	journey.bind(profile)
+	menu.bind(profile)
+	for hub in [journey, keep_screen, hero_page, recruits_page, menu]:
+		hub.rail.bind(profile, settings)
+		hub.rail.tab_requested.connect(_rail_tab)
 	hero_page.bind(profile)
 	recruits_page.bind(profile)
 	keep_screen.bind(profile)
 	home.continue_requested.connect(_show.bind(Screen.MAP))
 	home.new_game_requested.connect(_new_game)
-	home.settings_requested.connect(_show.bind(Screen.SETTINGS))
+	home.settings_requested.connect(_open_from.bind(Screen.SETTINGS, Screen.HOME))
 	settings_screen.volume_requested.connect(settings.set_volume)
 	settings_screen.shake_requested.connect(settings.set_shake)
 	settings_screen.flashes_requested.connect(settings.set_flashes)
-	settings_screen.back_requested.connect(_show.bind(Screen.HOME))
-	settings_screen.achievements_requested.connect(_show.bind(Screen.ACHIEVEMENTS))
-	achievements_screen.back_requested.connect(_show.bind(Screen.SETTINGS))
+	settings_screen.reduced_motion_requested.connect(settings.set_reduced_motion)
+	settings_screen.back_requested.connect(_leave.bind(Screen.SETTINGS))
+	settings_screen.achievements_requested.connect(_open_from.bind(Screen.ACHIEVEMENTS, Screen.SETTINGS))
+	achievements_screen.back_requested.connect(_leave.bind(Screen.ACHIEVEMENTS))
+	menu.back_requested.connect(_show.bind(Screen.MAP))
+	menu.settings_requested.connect(_open_from.bind(Screen.SETTINGS, Screen.MENU))
+	menu.achievements_requested.connect(_open_from.bind(Screen.ACHIEVEMENTS, Screen.MENU))
+	menu.reset_requested.connect(_respec_requested)
+	menu.title_requested.connect(_show.bind(Screen.HOME))
 	home.quit_requested.connect(get_tree().quit)
 	journey.home_requested.connect(_show.bind(Screen.HOME))
-	journey.tree_requested.connect(_show.bind(Screen.TREE))
 	journey.hero_requested.connect(_show.bind(Screen.HERO))
-	journey.recruits_requested.connect(_open_recruits.bind(Screen.MAP))
 	recruits_page.back_requested.connect(_leave_recruits)
 	recruits_page.squad_toggled.connect(profile.toggle_squad)
 	recruits_page.hire_requested.connect(profile.hire)
@@ -114,6 +126,34 @@ func _ready() -> void:
 	summary.tree_requested.connect(_show.bind(Screen.TREE))
 	source.run_ended.connect(_on_run_ended)
 	_show(Screen.HOME)
+
+
+## A rail tab was pressed: go to that hub screen.
+func _rail_tab(tab: String) -> void:
+	match tab:
+		"Map":
+			_show(Screen.MAP)
+		"Tree":
+			_show(Screen.TREE)
+		"Hero":
+			_show(Screen.HERO)
+		"Squad":
+			_open_recruits(Screen.MAP)
+		"Menu":
+			_show(Screen.MENU)
+
+
+## Where Settings and the Achievements list were opened from, so their back goes there.
+var _opened_from := {}
+
+
+func _open_from(next: Screen, from: Screen) -> void:
+	_opened_from[next] = from
+	_show(next)
+
+
+func _leave(from: Screen) -> void:
+	_show(_opened_from.get(from, Screen.MENU))
 
 
 func _new_game() -> void:
@@ -345,12 +385,13 @@ func _show(next: Screen) -> void:
 	screen = next
 	# Looking at the tree (opening or leaving it) or the Hero page clears the dot on its tab.
 	if next == Screen.TREE or from == Screen.TREE:
-		journey.mark_tree_seen()
+		profile.see_buyable()
 	if next == Screen.HERO:
 		profile.see_gear()
 	home.visible = next == Screen.HOME
 	settings_screen.visible = next == Screen.SETTINGS
 	achievements_screen.visible = next == Screen.ACHIEVEMENTS
+	menu.visible = next == Screen.MENU
 	journey.visible = next == Screen.MAP
 	hero_page.visible = next == Screen.HERO
 	recruits_page.visible = next == Screen.RECRUITS

@@ -36,6 +36,7 @@ var selected_pillar := ""
 @onready var _figure: Control = %HeroFigure
 @onready var _info: Label = %Info
 @onready var _tree: Button = %TreeButton
+@onready var rail: HubRail = %Rail
 @onready var _back: Button = %BackButton
 
 var _profile: Node

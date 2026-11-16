@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/ui/hub_header.tscn" id="hub_header"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hub_rail.tscn" id="hub_rail"]
 [ext_resource type="Script" path="res://scripts/ui/keep_screen.gd" id="1_keep"]
 [ext_resource type="Script" path="res://scripts/ui/themed_backdrop.gd" id="backdrop_tok"]
 
@@ -44,61 +45,70 @@ layout_mode = 2
 [node name="Title" parent="Margin/Column/Header" index="1"]
 text = "Skill tree"
 
-[node name="Guide" type="HBoxContainer" parent="Margin/Column"]
+[node name="Body" type="MarginContainer" parent="Margin/Column"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 104
+
+[node name="Inner" type="VBoxContainer" parent="Margin/Column/Body"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Guide" type="HBoxContainer" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="GuideLabel" type="Label" parent="Margin/Column/Guide"]
+[node name="GuideLabel" type="Label" parent="Margin/Column/Body/Inner/Guide"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 autowrap_mode = 2
 
-[node name="GuideButton" type="Button" parent="Margin/Column/Guide"]
+[node name="GuideButton" type="Button" parent="Margin/Column/Body/Inner/Guide"]
 unique_name_in_owner = true
 theme_type_variation = &"MainButton"
 layout_mode = 2
 
-[node name="TabRow" type="HBoxContainer" parent="Margin/Column"]
+[node name="TabRow" type="HBoxContainer" parent="Margin/Column/Body/Inner"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Tabs" type="HBoxContainer" parent="Margin/Column/TabRow"]
+[node name="Tabs" type="HBoxContainer" parent="Margin/Column/Body/Inner/TabRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="ZoomOut" type="Button" parent="Margin/Column/TabRow"]
+[node name="ZoomOut" type="Button" parent="Margin/Column/Body/Inner/TabRow"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Zoom out"
 
-[node name="ZoomIn" type="Button" parent="Margin/Column/TabRow"]
+[node name="ZoomIn" type="Button" parent="Margin/Column/Body/Inner/TabRow"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Zoom in"
 
-[node name="View" type="Control" parent="Margin/Column"]
+[node name="View" type="Control" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
 clip_contents = true
 layout_mode = 2
 size_flags_vertical = 3
 mouse_default_cursor_shape = 13
 
-[node name="Web" type="Control" parent="Margin/Column/View"]
+[node name="Web" type="Control" parent="Margin/Column/Body/Inner/View"]
 unique_name_in_owner = true
 layout_mode = 3
 anchors_preset = 0
 mouse_filter = 2
 
-[node name="Footer" type="HBoxContainer" parent="Margin/Column"]
+[node name="Footer" type="HBoxContainer" parent="Margin/Column/Body/Inner"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Info" type="Label" parent="Margin/Column/Footer"]
+[node name="Info" type="Label" parent="Margin/Column/Body/Inner/Footer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
@@ -106,21 +116,25 @@ size_flags_horizontal = 3
 size_flags_vertical = 1
 autowrap_mode = 2
 
-[node name="RespecButton" type="Button" parent="Margin/Column/Footer"]
+[node name="RespecButton" type="Button" parent="Margin/Column/Body/Inner/Footer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Refund all"
 
-[node name="ConfirmButton" type="Button" parent="Margin/Column/Footer"]
+[node name="ConfirmButton" type="Button" parent="Margin/Column/Body/Inner/Footer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "Yes, refund all"
 
-[node name="CancelButton" type="Button" parent="Margin/Column/Footer"]
+[node name="CancelButton" type="Button" parent="Margin/Column/Body/Inner/Footer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "Keep my upgrades"
+
+[node name="Rail" parent="." instance=ExtResource("hub_rail")]
+unique_name_in_owner = true
+current = "Tree"
 
 [editable path="Margin/Column/Header"]

@@ -38,7 +38,7 @@
         6,
         10
       ],
-      "blurb": "Fire arrows from a distance. Space: Flare Barrage, five seconds of rapid fire that pierces and burns.",
+      "blurb": "Fire arrows from afar. Space: Flare Barrage, five seconds of rapid, piercing fire.",
       "colour": "#f2b13a"
     },
     {
@@ -107,7 +107,7 @@
         "dash_count": 3,
         "dash_seconds": 1.2
       },
-      "blurb": "Quick stabs up close. Space: Dash-Strike, three dashes through enemies while nothing can hurt you.",
+      "blurb": "Quick stabs up close. Space: Dash-Strike, three dashes through enemies, untouchable.",
       "colour": "#4fc3c8",
       "opens": {"after": "", "reason": "Opens at the boss of the second biome, which is not built yet."}
     }

@@ -218,6 +218,21 @@ func see_gear() -> void:
 	_apply(HoldfastMeta.see_gear(data))
 
 
+## What was buyable in the tree when the player last looked at it (not saved): only a node that
+## becomes buyable after that asks for the dot on the Tree tab.
+var _seen_buyable: Array = []
+
+
+func get_seen_buyable() -> Array:
+	return _seen_buyable
+
+
+## The player has looked at the tree (opening it or leaving it).
+func see_buyable() -> void:
+	_seen_buyable = get_buyable_nodes()
+	changed.emit()
+
+
 ## The tutorial level's id (Level 0).
 func get_tutorial_level() -> String:
 	return HoldfastMeta.tutorial_level(_content)

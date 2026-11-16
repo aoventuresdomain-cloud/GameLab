@@ -37,7 +37,7 @@ func _tree_page(mid := false) -> Array:
 			expect_true(bought["ok"], "%s can be bought for the set-up (%s)" % [id, bought.get("reason", "")])
 			profile.data = bought["profile"]
 		profile.changed.emit()
-	main.journey.get_node("%TreeButton").pressed.emit()
+	main.journey.rail.press("Tree")
 	await tree.process_frame
 	await tree.process_frame
 	return [main, main.keep_screen]

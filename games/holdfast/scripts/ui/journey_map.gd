@@ -1,14 +1,12 @@
 extends Control
 ## Journey map, the hub between runs: a path of level nodes (cleared ones green and ticked, the
 ## next one glowing, the rest dimmed, a boss level ringed in red), the Hero as a figure at the
-## lighthouse, and a button to the skill tree. State is shown by look alone, never in words. It
+## lighthouse. The rail on the left goes to the other hub screens. State is shown by look alone, never in words. It
 ## shows the profile and asks for what the player taps through signals; the run flow acts. Mouse
 ## only.
 
 signal level_requested(id: String)
 signal hero_requested
-signal recruits_requested
-signal tree_requested
 signal home_requested
 ## A guided purchase (an upgrade node id) the player pressed.
 signal buy_requested(id: String)
@@ -35,11 +33,7 @@ static var COLOUR_HERO := UiTokens.colour(&"lamp_hot")
 ## Clear of the glow ring (12 out, 4 thick), so a name never touches it.
 const LABEL_GAP := 20.0
 const HERO_FIGURE := Vector2(44, 64)
-## The small dot on the Skill tree and Hero tabs: something new to look at.
-static var COLOUR_DOT := UiTokens.colour(&"lamp")
-const DOT_PX := 16.0
 const HERO_INFO := "Hero and gear"
-const RECRUITS_INFO := "Recruits, the squad and the board"
 const HARD_INFO := "Replay a cleared level with its modifier. Pays its stars again, once."
 
 @onready var _gold: Label = %GoldValue
@@ -51,7 +45,7 @@ const HARD_INFO := "Replay a cleared level with its modifier. Pays its stars aga
 @onready var _plan: Button = %PlanButton
 ## The Hard switch beside Plan: the next level planned is its Hard replay, where the player has cleared the level.
 var _hard_button: Button
-@onready var _tree: Button = %TreeButton
+@onready var rail: HubRail = %Rail
 @onready var _back: Button = %BackButton
 @onready var _info: Label = %Info
 
@@ -62,19 +56,9 @@ var _buttons: Dictionary = {}
 var _names: Dictionary = {}
 ## The modifier line under a cleared level's caption: the icon and one word of its Hard replay.
 var _hard_names: Dictionary = {}
-var _hero_button: Button
-var _recruits_button: Button
-## The dots on the two tabs, shown while there is something the player has not looked at.
-var _tree_dot: Control
-var _hero_dot: Control
-var _recruits_dot: Control
-## The nodes that could be bought when the tree was last opened or left.
-var _seen_buyable: Array = []
 ## The drawn Hero is a button too (transparent), so the figure itself can be tapped.
 var _hero_figure: Button
 var _next := ""
-## The HoldfastSettings, which remembers the hints already shown.
-var _hints: Node
 ## What the info line says when nothing is hovered: the next goal.
 var _default_info := ""
 ## The guided purchase on offer ("" when there is none).
@@ -94,14 +78,10 @@ func _ready() -> void:
 	_hard_button.toggled.connect(hard_requested.emit)
 	_plan.get_parent().add_child(_hard_button)
 	_plan.get_parent().move_child(_hard_button, _plan.get_index() + 1)
-	_tree.pressed.connect(tree_requested.emit)
 	_guide_button.pressed.connect(_on_guide_pressed)
 	_map.draw.connect(_draw_map)
 	_map.resized.connect(_place)
 	_build_nodes()
-	_tree_dot = _make_dot(_tree)
-	_hero_dot = _make_dot(_hero_button)
-	_recruits_dot = _make_dot(_recruits_button)
 	_info.text = _default_info
 	visibility_changed.connect(_on_visibility_changed)
 
@@ -112,12 +92,6 @@ func _on_guide_pressed() -> void:
 		stand_requested.emit()
 	else:
 		buy_requested.emit(_guided)
-
-
-## Tells the map where the one-time hints are kept, so the Hero tab's dot clears once its line was shown.
-func bind_hints(settings: Node) -> void:
-	_hints = settings
-	settings.changed.connect(refresh)
 
 
 func bind(profile: Node) -> void:
@@ -156,23 +130,11 @@ func refresh() -> void:
 	_hard_button.visible = any_hard
 	_hard_button.disabled = _profile.get_guided_step() != ""
 	_hard_button.set_pressed_no_signal(_profile.is_hard_on())
-	_hero_button.text = "Hero: %s" % _content["hero_paths"][_profile.get_pillar()]["name"]
-	_hero_button.reset_size()
-	# The guided buy comes first: until it is made the tree and the Hero page stay shut.
+	# The guided buy comes first: until it is made the Hero figure stays shut, like the rail's tabs.
 	var locked: bool = _profile.get_guided_step() != ""
-	_tree_dot.visible = not locked and _profile.get_buyable_nodes().any(func(id: String) -> bool: return not id in _seen_buyable)
-	_hero_dot.visible = not locked and (_profile.has_unseen_gear() or Guidance.has_pillar_news(_content, _profile, _hints))
-	_tree.disabled = locked
 	_plan.disabled = locked or _guide.visible or _plan_target() == ""
 	# One amber button: the guide's while it is on show, else Plan.
 	_plan.theme_type_variation = &"" if _guide.visible else &"MainButton"
-	_hero_button.disabled = locked
-	_recruits_button.disabled = locked
-	_recruits_button.visible = not _profile.get_recruits().is_empty()
-	var welcome: String = _profile.get_welcome()
-	_recruits_button.text = "Recruits: %s" % welcome if welcome != "" else "Recruits"
-	_recruits_button.reset_size()
-	_recruits_dot.visible = not locked and not _profile.get_pending_picks().is_empty()
 	_hero_figure.disabled = locked
 	_place()
 	_map.queue_redraw()
@@ -217,29 +179,6 @@ func _refresh_guide() -> void:
 ## How many tree nodes the player could buy right now.
 func upgrades_available() -> int:
 	return _profile.get_buyable_nodes().size()
-
-
-## The player has looked at the tree (opening it or leaving it): what could be bought then no
-## longer asks for a dot; only something that becomes affordable later does.
-func mark_tree_seen() -> void:
-	_seen_buyable = _profile.get_buyable_nodes()
-	refresh()
-
-
-## A small round dot on the top right corner of a tab, hidden until it is wanted.
-func _make_dot(tab: Button) -> Control:
-	var dot := Control.new()
-	dot.size = Vector2(DOT_PX, DOT_PX)
-	dot.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	dot.offset_left = -DOT_PX * 0.75
-	dot.offset_right = DOT_PX * 0.25
-	dot.offset_top = -DOT_PX * 0.25
-	dot.offset_bottom = DOT_PX * 0.75
-	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dot.visible = false
-	dot.draw.connect(func() -> void: dot.draw_circle(dot.size * 0.5, DOT_PX * 0.5, COLOUR_DOT))
-	tab.add_child(dot)
-	return dot
 
 
 ## The boss on a level, or "" (the first enemy of the boss tier in its waves).
@@ -296,17 +235,6 @@ func _build_nodes() -> void:
 		modifier.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_map.add_child(modifier)
 		_hard_names[id] = modifier
-	_hero_button = Button.new()
-	_hero_button.pressed.connect(hero_requested.emit)
-	_hero_button.mouse_entered.connect(func() -> void: _info.text = HERO_INFO)
-	_hero_button.mouse_exited.connect(func() -> void: _info.text = _default_info)
-	_map.add_child(_hero_button)
-	_recruits_button = Button.new()
-	_recruits_button.text = "Recruits"
-	_recruits_button.pressed.connect(recruits_requested.emit)
-	_recruits_button.mouse_entered.connect(func() -> void: _info.text = RECRUITS_INFO)
-	_recruits_button.mouse_exited.connect(func() -> void: _info.text = _default_info)
-	_map.add_child(_recruits_button)
 	_hero_figure = Button.new()
 	for style_name in ["normal", "hover", "pressed", "focus", "disabled"]:
 		_hero_figure.add_theme_stylebox_override(style_name, StyleBoxEmpty.new())
@@ -340,13 +268,13 @@ func _level_text(id: String) -> String:
 func _node_at(i: int, n: int) -> Vector2:
 	var area := _map.size
 	var t := float(i) / maxf(float(n - 1), 1.0)
-	var x := lerpf(area.x * 0.24, area.x * 0.9, t)
+	var x := lerpf(area.x * 0.22, area.x * 0.9, t)
 	var y := lerpf(area.y * 0.7, area.y * 0.3, t) + sin(float(i) * 1.835) * area.y * 0.07
 	return Vector2(x, y)
 
 
 func _lighthouse_at() -> Vector2:
-	return Vector2(_map.size.x * 0.1, _map.size.y * 0.74)
+	return Vector2(_map.size.x * 0.08, _map.size.y * 0.74)
 
 
 func _hero_at() -> Vector2:
@@ -370,7 +298,7 @@ func path_points() -> PackedVector2Array:
 
 
 func _place() -> void:
-	if _ids.is_empty() or _hero_button == null:
+	if _ids.is_empty() or _hero_figure == null:
 		return
 	for i in _ids.size():
 		var at := _node_at(i, _ids.size())
@@ -380,9 +308,6 @@ func _place() -> void:
 		label.position = Vector2(clampf(at.x - label.size.x * 0.5, 0.0, _map.size.x - label.size.x), at.y + NODE_RADIUS + LABEL_GAP)
 		var modifier: Label = _hard_names[_ids[i]]
 		modifier.position = Vector2(clampf(at.x - modifier.size.x * 0.5, 0.0, _map.size.x - modifier.size.x), label.position.y + label.size.y)
-	_hero_button.position = _lighthouse_at() + Vector2(-_hero_button.size.x * 0.5, -125.0)
-	_recruits_button.size = _recruits_button.get_minimum_size()
-	_recruits_button.position = _hero_button.position + Vector2(0.0, -_recruits_button.size.y - 8.0)
 	_hero_figure.position = _hero_at() - HERO_FIGURE * 0.5 + Vector2(0, -4)
 
 
@@ -425,4 +350,4 @@ func _on_visibility_changed() -> void:
 		if _guide.visible and not _guide_button.disabled:
 			_guide_button.grab_focus()
 		else:
-			(target if target != null and not target.disabled else _tree).grab_focus()
+			(target if target != null and not target.disabled else _plan).grab_focus()

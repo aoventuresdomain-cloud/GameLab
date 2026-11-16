@@ -140,6 +140,7 @@ var selected_pillar := ""
 @onready var _guide: Control = %Guide
 @onready var _guide_label: Label = %GuideLabel
 @onready var _guide_button: Button = %GuideButton
+@onready var rail: HubRail = %Rail
 @onready var _back: Button = %BackButton
 
 var _profile: Node

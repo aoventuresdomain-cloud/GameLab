@@ -86,21 +86,21 @@ func test_a_new_hero_path_gets_a_dot_and_one_line_then_neither() -> void:
 	var map: Control = JourneyScene.instantiate()
 	tree.root.add_child(map)
 	map.bind(profile)
-	map.bind_hints(settings)
+	map.get_node("%Rail").bind(profile, settings)
 	var page: Control = HeroPageScene.instantiate()
 	tree.root.add_child(page)
 	page.bind(profile)
 	page.bind_hints(settings)
 	page.hint_seen.connect(settings.see_hint)
 	page.visible = false
-	expect_false(map._hero_dot.visible)
+	expect_false(map.rail.has_dot("Hero"))
 	profile.locks = {"tideblade": "Opens later."}
-	map.refresh()
-	expect_true(map._hero_dot.visible, "the Dusk Mage opened: a dot on the Hero tab")
+	map.get_node("%Rail").refresh()
+	expect_true(map.rail.has_dot("Hero"), "the Dusk Mage opened: a dot on the Hero tab")
 	page.visible = true
 	expect_eq(page.get_node("%Info").text, Guidance.PILLARS_LINE, "and one line on the Hero page")
 	expect_true(settings.has_seen_hint(Guidance.HINT_PILLARS))
-	expect_false(map._hero_dot.visible, "the dot clears once the line was shown")
+	expect_false(map.rail.has_dot("Hero"), "the dot clears once the line was shown")
 	page.visible = false
 	page.visible = true
 	expect_eq(page.get_node("%Info").text, "", "the line is not said twice")

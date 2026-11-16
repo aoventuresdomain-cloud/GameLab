@@ -192,7 +192,7 @@ func _test_readable_layout() -> void:
 		_main.planning.set_squad(["Longest Name Ok", "Longest Name Ok", "Longest Name Ok", "Longest Name Ok"])
 		hud.get_node("%PostsNote").text = "Posts: North Gate, South Gate"
 		hud.get_node("%PostsNote").visible = true
-		for screen in [_main.home, _main.journey, _main.hero_page, _main.recruits_page, _main.keep_screen, hud, _main.summary, _main.planning]:
+		for screen in [_main.home, _main.journey, _main.hero_page, _main.recruits_page, _main.menu, _main.keep_screen, hud, _main.summary, _main.planning]:
 			await _check_layout(screen, window, scale, view)
 		hud.get_node("%PostsNote").text = "Fog Warden shrouded: use your special"
 		await _check_layout(hud, window, scale, view)
@@ -213,7 +213,10 @@ func _check_layout(screen: Control, window: Vector2i, scale: float, view: Rect2)
 		var px := roundi(control.get_theme_font_size("font_size") * scale)
 		# The smallest window is checked for room, not for type size (it is the same layout, drawn smaller).
 		_check(px >= MIN_FONT_PX or scale < 1.0, "%s text is %dpx on screen" % [name, px])
-		_check(view.encloses(control.get_global_rect()), "%s fits on screen" % name)
+		# Inside a scrolling page, a control must fit across the screen; down it, the page scrolls.
+		var scroll := _scroll_of(control)
+		var rect: Rect2 = control.get_global_rect()
+		_check(view.encloses(rect) if scroll == null else (view.encloses(scroll.get_global_rect()) and rect.position.x >= view.position.x and rect.end.x <= view.end.x), "%s fits on screen" % name)
 		_check(control.size.x + 0.5 >= control.get_minimum_size().x, "%s is not clipped" % name)
 		if control is Button:
 			_check(control.size.x >= MIN_BUTTON_PX - 0.5 and control.size.y >= MIN_BUTTON_PX - 0.5, "%s is at least %dpx each way (%s)" % [name, MIN_BUTTON_PX, control.size])
@@ -249,6 +252,16 @@ func _check_layout(screen: Control, window: Vector2i, scale: float, view: Rect2)
 					on_show.append(heading)
 			_check_clear(on_show, "%dp %s tab %s" % [window.y, screen.name, tab], screen._node_buttons.values())
 	screen.visible = false
+
+
+## The ScrollContainer a control sits in, if any.
+func _scroll_of(control: Node) -> ScrollContainer:
+	var up := control.get_parent()
+	while up != null:
+		if up is ScrollContainer:
+			return up
+		up = up.get_parent()
+	return null
 
 
 ## What a player reads or presses on a screen: its names, buttons and icons that are drawn, apart

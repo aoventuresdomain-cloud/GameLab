@@ -1,0 +1,56 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hub_rail.gd" id="1_rail"]
+
+[node name="Rail" type="PanelContainer"]
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_top = 68.0
+offset_right = 112.0
+grow_vertical = 2
+theme_type_variation = &"RailPanel"
+script = ExtResource("1_rail")
+
+[node name="Column" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MapTab" type="Button" parent="Column"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"RailTab"
+alignment = 0
+text = "Map"
+
+[node name="TreeTab" type="Button" parent="Column"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"RailTab"
+alignment = 0
+text = "Tree"
+
+[node name="HeroTab" type="Button" parent="Column"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"RailTab"
+alignment = 0
+text = "Hero"
+
+[node name="SquadTab" type="Button" parent="Column"]
+visible = false
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"RailTab"
+alignment = 0
+text = "Squad"
+
+[node name="Spacer" type="Control" parent="Column"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MenuTab" type="Button" parent="Column"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"RailTab"
+alignment = 0
+text = "Menu"

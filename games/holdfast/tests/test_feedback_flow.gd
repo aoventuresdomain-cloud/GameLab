@@ -218,7 +218,7 @@ func test_the_first_win_of_level_one_leaves_the_piece_in_the_bag_with_a_dot_on_t
 	expect_eq(profile.get_gear_worn(), {}, "nothing is equipped for the player")
 	expect_true(profile.has_unseen_gear(), "so the Hero tab has its dot")
 	main.call("_show", main.Screen.MAP)
-	expect_true(main.journey._hero_dot.visible)
+	expect_true(main.journey.rail.has_dot("Hero"))
 	var bag: Container = main.hero_page.get_node("%Bag")
 	main.call("_show", main.Screen.HERO)
 	expect_eq(bag.get_child_count(), 1, "the piece is in the bag")
