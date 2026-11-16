@@ -714,7 +714,7 @@
   - [ ] A gear piece that can no longer help (an owned duplicate) salvages to about one run's gold at that level, shown on the result panel, no new currency (F-149), with a test.
 ### HF-M2-71 Salvage ceiling for a finished gear set
 - **Owner:** Gameplay Engineer
-- **Status:** Planned, Build 13c. From the Advisor's view `holdfast/m2/advisor-salvage-and-gold-clock.md` (31 Oct 2026) on F-165; standing CEO go
+- **Status:** Merged (#169, QA clear at 0510989, merged as 5659a01). From the Advisor's view `holdfast/m2/advisor-salvage-and-gold-clock.md` (31 Oct 2026) on F-165; standing CEO go
 - **QA:** full (rewards)
 - **Depends on:** HF-M2-70
 - **Done when:**
@@ -777,7 +777,7 @@
 
 ### HF-M2-76 Unlock events for the result screen and Plan
 - **Owner:** Gameplay Engineer
-- **Status:** Planned, Build 14c (small; no save change). The Advisor's round 2: the result must name what a win unlocked from the pack's own order
+- **Status:** Merged (#172, QA clear, merged as 4721303; no save change). The Advisor's round 2: the result must name what a win unlocked from the pack's own order
 - **QA:** sanity
 - **Done when:**
   - [ ] After a win the profile can list what it unlocked, read from the pack (a blessing in the pack's unlock order, a Recruit rescue, a gear piece, a salvage amount, a Hero tab), with a test per kind and no hard-coded names in code.
@@ -1190,6 +1190,12 @@
 | F-168 | HF-M2-70 | FOLLOW-UP from QA (#167): Walls V and Tithe IV to VI are priced for level 6 income but only five levels exist, so they sit ahead of any level 6 until the second biome | Minor | Gameplay Engineer | Open, closes with the second biome |
 | F-169 | HF-M2-70 | FOLLOW-UP from QA (#167): the "Salvaged" line shows on the result panel only; the Hero tab has nothing for it | Minor | UI Engineer | Open, add only if the CEO's play shows it is missed |
 | F-170 | HF-M2-66 | FOLLOW-UP from QA (#164): the twelve HF_ Steam achievement names do not exist on Steam's side yet, so a real Steam check needs Holdfast's own app | Minor | Setup Desk (via the Chief of Staff) | Open, needs the Steam app, CEO go for any fee |
+| F-171 | HF-M2-71 | FOLLOW-UP from QA (#169): the four new pinned zero-headroom misses (tree dry runs 5 on all three pillars, Tideblade Hard at Gull Rock 10%) | Minor | Gameplay Engineer | Open, re-measure when level 6 lands |
+| F-172 | HF-M2-72 | MUST FIX from QA (#173 at c6f142e): Hero page gold and stars always read 0 and 0; hero_page.gd never sets them, and the corner test checked position, not values | Major | UI Engineer | Open, fix pushed to #173 |
+| F-173 | HF-M2-72 | MUST FIX from QA (#173): Hero gear slot rows are 35 px high with 4 px between them and are pressable; the layout test measures Buttons and text only | Major | UI Engineer | Open, fix pushed to #173 |
+| F-174 | HF-M2-72 | FOLLOW-UP from QA (#173): Plan, Settings and Achievements hide the gold and stars chips. HoE ruling: they are not hub screens for the chips; record it in the HF-M2-72 line | Minor | UI Engineer | Open |
+| F-175 | HF-M2-79 | FOLLOW-UP from QA (#173): the in-run Pause and speed buttons straddle the HUD panel's bottom edge | Minor | UI Engineer | Open, folded into HF-M2-79 |
+| F-176 | HF-M2-72 | FOLLOW-UP from QA (#173): disabled "Start level (place a post first)" text is low contrast | Minor | UI Engineer | Open, fix in #173 if trivial, else HF-M2-74 |
 
 ## Test changes
 
@@ -1263,6 +1269,9 @@
 | 2026-10-31 | `test_build3` (profile pin gains `hard_stars`), `test_pacing_bands.gd::test_one_player_of_every_cell_is_played` (two more cells per Hero for Hard replays) (#163, HF-M2-65) | Expected lists extended for the new fields and cells; nothing loosened | Hard replays add a saved field and a measured cell (QA, 817191f) | Head of Engineering |
 | 2026-10-31 | `test_build3` (profile pin gains `achievements` and `counters.clean_wins`) (#164, HF-M2-66) | Expected profile pin extended for the new fields; nothing loosened | Achievements add saved fields (QA, 0b35c8e) | Head of Engineering |
 | 2026-10-31 | `test_tree_numbers` (hours band 10 to 15 h becomes 3 to 4 h, rows, means and boundary probes scaled, same assertions and margins), `test_build3` (Tithe total 1.55 additive, same tolerance) (#167, HF-M2-70) | Figures and the band re-set to the new design; assertion strength unchanged (QA checked) | Tithe additive and the Advisor's 3 to 4 h band (QA, a0d1e9a) | Head of Engineering |
+| 2026-11-16 | `test_gold_pacing` (salvage expectation 1,200 to 300) and the `test_a_new_tier_is_a_row_...` tier_8 row (gains `salvage_share: 0.25`) (#169, HF-M2-71) | Salvage figures follow the new quarter-of-a-run ceiling; assertions unchanged | The item changes the salvage rule (QA, 0510989) | Head of Engineering |
+| 2026-11-16 | `test_radial_web::test_no_name_sits_on_a_node_or_another_name_at_real_size` renamed `..._no_name_on_show_...` (mid-game web, names on show only) and `test_plan_and_map_layout` map-header test (icons and chips replace captions, lower bound 8 to 6 px) (#173, HF-M2-72) | Names with no room are hidden by design; the header uses icons; the CEO's 6 px rule | Spec changed under the tests; QA confirms the intent is kept (c6f142e) | Head of Engineering |
+| 2026-11-16 | `run_ui_tests.gd` font-size checks skip windows smaller than 1280x720 (#173, HF-M2-72) | Type size is checked at 1280x720 and 1920x1080 only | The layout is the same at 960x540 and the export only scales it | Head of Engineering |
 
 ## Advisor views
 
