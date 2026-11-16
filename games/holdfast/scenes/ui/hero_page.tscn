@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
+[ext_resource type="PackedScene" path="res://scenes/ui/hub_header.tscn" id="hub_header"]
 [ext_resource type="Script" path="res://scripts/ui/hero_page.gd" id="1_hero"]
+[ext_resource type="Script" path="res://scripts/ui/themed_backdrop.gd" id="backdrop_tok"]
 
 [node name="HeroPage" type="Control"]
 layout_mode = 3
@@ -18,7 +20,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.1, 0.12, 0.16, 1)
+script = ExtResource("backdrop_tok")
 
 [node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -34,28 +36,17 @@ theme_override_constants/margin_bottom = 12
 
 [node name="Column" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 6
 
-[node name="Header" type="HBoxContainer" parent="Margin/Column"]
+[node name="Header" parent="Margin/Column" instance=ExtResource("hub_header")]
 layout_mode = 2
-theme_override_constants/separation = 12
 
-[node name="BackButton" type="Button" parent="Margin/Column/Header"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "Journey map"
-
-[node name="Title" type="Label" parent="Margin/Column/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"HudValue"
+[node name="Title" parent="Margin/Column/Header" index="1"]
 text = "Hero"
 
-[node name="TreeButton" type="Button" parent="Margin/Column/Header"]
+[node name="TreeButton" type="Button" parent="Margin/Column/Header/Extra"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 text = "Skill tree"
 
 [node name="PillarRow" type="HBoxContainer" parent="Margin/Column"]
@@ -67,7 +58,6 @@ theme_override_constants/separation = 8
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
 autowrap_mode = 2
 
 [node name="Main" type="HBoxContainer" parent="Margin/Column"]
@@ -93,14 +83,12 @@ text = "Hero"
 [node name="StatsInfoButton" type="Button" parent="Margin/Column/Main/StatColumn/StatHeader"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
 toggle_mode = true
 text = "i"
 
 [node name="Stats" type="Label" parent="Margin/Column/Main/StatColumn"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
 
 [node name="HeroFigure" type="Control" parent="Margin/Column/Main"]
 unique_name_in_owner = true
@@ -112,7 +100,7 @@ size_flags_horizontal = 3
 unique_name_in_owner = true
 custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 6
 
 [node name="BagHint" type="Label" parent="Margin/Column"]
 unique_name_in_owner = true
@@ -131,5 +119,6 @@ theme_override_constants/v_separation = 6
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
 autowrap_mode = 2
+
+[editable path="Margin/Column/Header"]

@@ -12,6 +12,13 @@ const StubRunSource = preload("res://scripts/stub_run_source.gd")
 const BASE_SIZE := Vector2i(1280, 720)
 const MIN_FONT_PX := 20 # on-screen pixels
 const MIN_TREE_FONT_PX := 12 # the skill tree's node prices and names, as the radial web mock-up has them
+## The CEO's rule (16 Nov): icons, titles and labels never overlap and keep this far apart, in pixels
+## of the 1280x720 layout (the same layout at every window size).
+const MIN_CLEAR_PX := 6.0
+## Every button is at least this big, each way, in pixels of the 1280x720 layout.
+const MIN_BUTTON_PX := 44
+## A spread over every section of the tree, bought in an order the rules allow.
+const MID_GAME_NODES := ["castle_slot_2", "castle_slot_3", "castle_archer_2", "post_timbers", "post_drills", "post_sight", "post_rate", "post_mend", "flare_boots", "flare_hide", "flare_focus", "keep_walls_1", "keep_walls_2", "keep_beam_1", "tithe_1", "gate_mage", "mage_sight"]
 
 var _failures := 0
 var _main: Node
@@ -140,7 +147,7 @@ func _click(control: Control) -> void:
 ## The window scales the 1280x720 base (canvas_items stretch), so the layout is
 ## the same at 1920x1080, drawn 1.5x larger. Checked with worst-case numbers.
 func _test_readable_layout() -> void:
-	print("layout: readable and on screen at 1280x720 and 1920x1080")
+	print("layout: readable, on screen and clear of each other at 1280x720, 960x540 and 1920x1080")
 	_source.step(1000.0) # end the run
 	# The map at its fullest: Level 0 won, and the guide asks for a star that is not there yet.
 	_main.get_node("Profile").new_game()
@@ -161,12 +168,20 @@ func _test_readable_layout() -> void:
 	profile.data["recruits"]["roster"][0]["xp"] = 5
 	profile.data["recruits"]["roster"][1]["xp"] = 5
 	profile.data["recruits"]["roster"][2]["xp"] = 5
+	# The skill tree at a busy mid-game: many nodes on show, so the names must find room or go.
+	ThroughLevelZero.apply_castle(profile)
+	for id in MID_GAME_NODES:
+		profile.data["stars"]["first_watch"] = int(profile.data["stars"]["first_watch"]) + 6
+		var bought := HoldfastMeta.buy(HoldfastContent.base(), profile.data, id)
+		_check(bought["ok"], "%s can be bought for the busy tree (%s)" % [id, bought.get("reason", "")])
+		profile.data = bought["profile"]
+	profile.changed.emit()
 	_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": true})
 	var hud: Control = _main.hud
 	hud._on_gold_changed(9_999_999)
 	hud._on_keep_health_changed(99_999, 99_999)
 	hud._on_wave_changed(99, 99)
-	for window in [BASE_SIZE, Vector2i(1920, 1080)]:
+	for window in [BASE_SIZE, Vector2i(960, 540), Vector2i(1920, 1080)]:
 		root.size = window
 		await process_frame
 		var scale := float(window.y) / BASE_SIZE.y
@@ -196,9 +211,13 @@ func _check_layout(screen: Control, window: Vector2i, scale: float, view: Rect2)
 	for control in _texts(screen, web):
 		var name := "%dp %s/%s" % [window.y, screen.name, screen.get_path_to(control)]
 		var px := roundi(control.get_theme_font_size("font_size") * scale)
-		_check(px >= MIN_FONT_PX, "%s text is %dpx on screen" % [name, px])
+		# The smallest window is checked for room, not for type size (it is the same layout, drawn smaller).
+		_check(px >= MIN_FONT_PX or scale < 1.0, "%s text is %dpx on screen" % [name, px])
 		_check(view.encloses(control.get_global_rect()), "%s fits on screen" % name)
 		_check(control.size.x + 0.5 >= control.get_minimum_size().x, "%s is not clipped" % name)
+		if control is Button:
+			_check(control.size.x >= MIN_BUTTON_PX - 0.5 and control.size.y >= MIN_BUTTON_PX - 0.5, "%s is at least %dpx each way (%s)" % [name, MIN_BUTTON_PX, control.size])
+	_check_clear(_items(screen, web), "%dp %s" % [window.y, screen.name])
 	# A pan-and-zoom web shows one tab at a time: each tab, as the jump tab leaves it, must hold
 	# all its nodes inside the view at a readable size.
 	if web != null:
@@ -210,13 +229,94 @@ func _check_layout(screen: Control, window: Vector2i, scale: float, view: Rect2)
 				if screen._tab_rect(tab).encloses(Rect2(node.position, node.size)) and node.get_parent().visible:
 					var name := "%dp %s tab %s/%s" % [window.y, screen.name, tab, id]
 					var px := roundi(node.get_theme_font_size("font_size") * web.scale.x * scale)
-					_check(px >= MIN_TREE_FONT_PX, "%s text is %dpx on screen" % [name, px])
+					_check(px >= MIN_TREE_FONT_PX or scale < 1.0, "%s text is %dpx on screen" % [name, px])
 					var label: Label = screen._labels[id]
 					var label_px := roundi(label.get_theme_font_size("font_size") * label.scale.x * web.scale.x * scale)
-					_check(label_px >= MIN_TREE_FONT_PX or web.scale.x < screen.LABELS_MIN_ZOOM, "%s name is %dpx on screen" % [name, label_px])
+					_check(label_px >= MIN_TREE_FONT_PX or scale < 1.0 or web.scale.x < screen.LABELS_MIN_ZOOM, "%s name is %dpx on screen" % [name, label_px])
 					_check(screen.get_node("%View").get_global_rect().encloses(node.get_global_rect()), "%s fits in the view" % name)
 					_check(node.size.x + 0.5 >= node.get_minimum_size().x, "%s is not clipped" % name)
+			var on_show: Array = []
+			var view_rect: Rect2 = screen.get_node("%View").get_global_rect()
+			for id in screen._node_buttons:
+				var node: Button = screen._node_buttons[id]
+				if node.visible and node.get_parent().visible and view_rect.intersects(_screen_rect(node)):
+					on_show.append(node)
+					var label: Label = screen._labels[id]
+					if label.visible and label.self_modulate.a > 0.0:
+						on_show.append(label)
+			for heading in screen._headings.values():
+				if heading.visible and heading.get_parent().visible and view_rect.encloses(_screen_rect(heading)):
+					on_show.append(heading)
+			_check_clear(on_show, "%dp %s tab %s" % [window.y, screen.name, tab], screen._node_buttons.values())
 	screen.visible = false
+
+
+## What a player reads or presses on a screen: its names, buttons and icons that are drawn, apart
+## from what sits inside a button (its own text) and `skip` (a web, checked on its own).
+func _items(node: Node, skip: Node = null) -> Array:
+	var out := []
+	for child in node.get_children():
+		if child == skip:
+			continue
+		var drawn: bool = child is Control and child.is_visible_in_tree() and child.modulate.a > 0.05 and child.self_modulate.a > 0.05
+		if drawn and (child is Button or child is TextureRect or (child is Label and child.text != "")):
+			out.append(child)
+		if not child is Button:
+			out.append_array(_items(child, skip))
+	return out
+
+
+## Where a control really is on screen, whatever its scale.
+func _screen_rect(control: Control) -> Rect2:
+	var rect := control.get_global_transform() * Rect2(Vector2.ZERO, control.size)
+	if control is Label and (control as Label).autowrap_mode == TextServer.AUTOWRAP_OFF and not control.clip_text:
+		# Only the text itself takes room, not the empty space of a label stretched by its row.
+		var label := control as Label
+		var text_size := label.get_theme_font("font").get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size"))
+		var width := minf(text_size.x * control.get_global_transform().get_scale().x, rect.size.x)
+		var left := rect.position.x
+		if label.horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER:
+			left += (rect.size.x - width) * 0.5
+		elif label.horizontal_alignment == HORIZONTAL_ALIGNMENT_RIGHT:
+			left += rect.size.x - width
+		rect = Rect2(left, rect.position.y, width, rect.size.y)
+	return rect
+
+
+## Fails for any two of `items` that overlap or come nearer than MIN_CLEAR_PX on screen. The
+## `round_items` (a web's round nodes) count as circles, not as the squares that hold them.
+func _check_clear(items: Array, where: String, round_items: Array = []) -> void:
+	var rects := items.map(func(item: Control) -> Rect2: return _screen_rect(item))
+	var bad := 0
+	for i in items.size():
+		for j in range(i + 1, items.size()):
+			if items[i].is_ancestor_of(items[j]) or items[j].is_ancestor_of(items[i]):
+				continue
+			var gap := _gap(rects[i], items[i] in round_items, rects[j], items[j] in round_items)
+			if gap < MIN_CLEAR_PX - 0.01:
+				bad += 1
+				if bad <= 6:
+					_check(false, "%s: %s and %s are %.1fpx apart (need %.0f)" % [where, _describe(items[i]), _describe(items[j]), gap, MIN_CLEAR_PX])
+	_check(bad == 0, "%s: icons, titles and labels are clear of each other" % where)
+
+
+## The room between two shapes (a rect, or the circle in a rect): negative when they overlap.
+func _gap(a: Rect2, a_round: bool, b: Rect2, b_round: bool) -> float:
+	if a_round and b_round:
+		return a.get_center().distance_to(b.get_center()) - (minf(a.size.x, a.size.y) + minf(b.size.x, b.size.y)) * 0.5
+	if a_round or b_round:
+		var circle := a if a_round else b
+		var box := b if a_round else a
+		var nearest := Vector2(clampf(circle.get_center().x, box.position.x, box.end.x), clampf(circle.get_center().y, box.position.y, box.end.y))
+		return circle.get_center().distance_to(nearest) - minf(circle.size.x, circle.size.y) * 0.5
+	var dx := maxf(a.position.x - b.end.x, b.position.x - a.end.x)
+	var dy := maxf(a.position.y - b.end.y, b.position.y - a.end.y)
+	return Vector2(dx, dy).length() if dx > 0.0 and dy > 0.0 else maxf(dx, dy)
+
+
+func _describe(control: Control) -> String:
+	var text: String = control.text if "text" in control else control.name
+	return "%s '%s'" % [control.name, text.substr(0, 24)]
 
 
 func _texts(node: Node, skip: Node = null) -> Array:

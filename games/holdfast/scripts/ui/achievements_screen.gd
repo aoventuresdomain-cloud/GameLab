@@ -39,7 +39,7 @@ func refresh() -> void:
 		var status := "Done" if entry["done"] else "%d of %d" % [entry["value"], entry["goal"]]
 		row.text = "%s: %s (%s)" % [entry["name"], entry["text"], status]
 		if not entry["done"]:
-			row.modulate = Color(1, 1, 1, 0.7)
+			row.modulate = UiTokens.fade(0.7)
 		_rows.add_child(row)
 
 

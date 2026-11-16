@@ -15,15 +15,14 @@ signal squad_requested
 ## A Recruit was picked for a placed post's spot (the id of the Recruit, "" for nobody).
 signal recruit_posted(site: String, id: String)
 
-const FONT_PX := 20
-const COLOUR_ARENA := Color(0.35, 0.4, 0.5)
-const COLOUR_KEEP := Color(0.85, 0.8, 0.55)
-const COLOUR_RANGE := Color(0.55, 0.75, 0.95, 0.25)
-const COLOUR_MAGE_RANGE := Color(0.6, 0.48, 0.88, 0.25)
+static var COLOUR_ARENA := UiTokens.colour(&"line")
+static var COLOUR_KEEP := UiTokens.colour(&"bone")
+static var COLOUR_RANGE := UiTokens.colour(&"focus", 0.25)
+static var COLOUR_MAGE_RANGE := UiTokens.colour(&"arcane", 0.25)
 ## How far out the ring's spots sit on the map (of the way to its edge): far enough that the
 ## buttons of neighbouring spots clear each other.
 const SITE_FILL := 0.78
-const COLOUR_SLOT := Color(0.95, 0.85, 0.5)
+static var COLOUR_SLOT := UiTokens.colour(&"lamp_hot")
 const MAGE_ID := "mage_post"
 const EMPTY_SPOT := "Empty"
 const HINT := "Drag a post onto a spot, or press a spot."
@@ -143,7 +142,6 @@ func set_castle(spots: Array, cards: int, mage_cards := 0, slots := -1) -> void:
 	for id in _spots:
 		var button := Button.new()
 		button.toggle_mode = true
-		button.add_theme_font_size_override("font_size", FONT_PX)
 		button.pressed.connect(_toggle.bind(id))
 		button.set_drag_forwarding(_slot_drag.bind(id, button), _slot_can_drop.bind(id), _slot_drop.bind(id))
 		_map.add_child(button)
@@ -151,8 +149,6 @@ func set_castle(spots: Array, cards: int, mage_cards := 0, slots := -1) -> void:
 		var picker := MenuButton.new()
 		picker.flat = false
 		picker.tooltip_text = RECRUIT_TIP
-		picker.add_theme_font_size_override("font_size", FONT_PX)
-		picker.get_popup().add_theme_font_size_override("font_size", FONT_PX)
 		picker.get_popup().id_pressed.connect(_pick_recruit.bind(id))
 		_map.add_child(picker)
 		_recruit_buttons[id] = picker
@@ -188,7 +184,6 @@ func set_blessings(offer: Array) -> void:
 		var button := Button.new()
 		button.toggle_mode = true
 		button.button_group = group
-		button.add_theme_font_size_override("font_size", FONT_PX)
 		button.text = str(_content["blessings"][id]["name"]) if id != "" else NO_BLESSING
 		button.pressed.connect(_pick_blessing.bind(id))
 		_blessings.add_child(button)
@@ -374,10 +369,9 @@ func _refresh_cards() -> void:
 			card.name = "%sCard%d" % [tower_id, i]
 			var label := Label.new()
 			label.text = str(tower["name"]) if in_hand else "Placed"
-			label.add_theme_font_size_override("font_size", FONT_PX)
 			label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			card.add_child(label)
-			card.modulate = Color.WHITE if in_hand else Color(1, 1, 1, 0.45)
+			card.modulate = UiTokens.fade(1.0 if in_hand else 0.45)
 			card.set_drag_forwarding(_card_drag.bind(card, tower_id) if in_hand else Callable(), _side_can_drop, _side_drop)
 			if in_hand:
 				card.mouse_default_cursor_shape = Control.CURSOR_DRAG
@@ -395,7 +389,6 @@ func _drag_preview(held: Control, tower_id: String) -> void:
 		return
 	var preview := Label.new()
 	preview.text = str(_content["towers"][tower_id]["name"])
-	preview.add_theme_font_size_override("font_size", FONT_PX)
 	held.set_drag_preview(preview)
 
 

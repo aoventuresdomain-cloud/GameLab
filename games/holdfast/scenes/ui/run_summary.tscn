@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/run_summary.gd" id="1_summary"]
+[ext_resource type="Script" path="res://scripts/ui/themed_backdrop.gd" id="backdrop_tok"]
 
 [node name="RunSummary" type="Control"]
 layout_mode = 3
@@ -18,7 +19,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.6)
+script = ExtResource("backdrop_tok")
+alpha = 0.7
 
 [node name="Centre" type="CenterContainer" parent="."]
 layout_mode = 1
@@ -44,7 +46,6 @@ theme_override_constants/separation = 10
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ScreenTitle"
-theme_override_font_sizes/font_size = 52
 text = "Holdfast holds!"
 horizontal_alignment = 1
 
@@ -207,4 +208,4 @@ autowrap_mode = 2
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 8

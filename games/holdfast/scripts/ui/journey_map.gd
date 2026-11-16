@@ -21,22 +21,22 @@ signal hard_requested(on: bool)
 
 const Hud = preload("res://scripts/ui/hud.gd")
 const Guidance = preload("res://scripts/ui/guidance.gd")
-const FONT_PX := 20
 const NODE_RADIUS := 32.0
 const PATH_STEPS := 12
-const COLOUR_PATH := Color(0.45, 0.5, 0.6)
-const COLOUR_WON := Color(0.25, 0.6, 0.35)
-const COLOUR_OPEN := Color(0.3, 0.38, 0.52)
-const COLOUR_LOCKED := Color(0.2, 0.22, 0.27)
-const COLOUR_GLOW := Color(0.95, 0.7, 0.25)
-const COLOUR_BOSS := Color(0.85, 0.3, 0.25)
-const COLOUR_KEEP := Color(0.85, 0.8, 0.55)
-const COLOUR_HERO := Color(0.95, 0.6, 0.2)
+## Colours are tokens of the theme (UiTokens).
+static var COLOUR_PATH := UiTokens.colour(&"mute", 0.6)
+static var COLOUR_WON := UiTokens.colour(&"good").darkened(0.4)
+static var COLOUR_OPEN := UiTokens.colour(&"line")
+static var COLOUR_LOCKED := UiTokens.colour(&"raise")
+static var COLOUR_GLOW := UiTokens.colour(&"lamp")
+static var COLOUR_BOSS := UiTokens.colour(&"boss")
+static var COLOUR_KEEP := UiTokens.colour(&"bone")
+static var COLOUR_HERO := UiTokens.colour(&"lamp_hot")
 ## Clear of the glow ring (12 out, 4 thick), so a name never touches it.
 const LABEL_GAP := 20.0
 const HERO_FIGURE := Vector2(44, 64)
 ## The small dot on the Skill tree and Hero tabs: something new to look at.
-const COLOUR_DOT := Color(0.95, 0.7, 0.25)
+static var COLOUR_DOT := UiTokens.colour(&"lamp")
 const DOT_PX := 16.0
 const HERO_INFO := "Hero and gear"
 const RECRUITS_INFO := "Recruits, the squad and the board"
@@ -90,7 +90,6 @@ func _ready() -> void:
 	_hard_button.text = "Hard"
 	_hard_button.toggle_mode = true
 	_hard_button.focus_mode = Control.FOCUS_NONE
-	_hard_button.add_theme_font_size_override("font_size", 24)
 	_hard_button.tooltip_text = HARD_INFO
 	_hard_button.toggled.connect(hard_requested.emit)
 	_plan.get_parent().add_child(_hard_button)
@@ -165,6 +164,8 @@ func refresh() -> void:
 	_hero_dot.visible = not locked and (_profile.has_unseen_gear() or Guidance.has_pillar_news(_content, _profile, _hints))
 	_tree.disabled = locked
 	_plan.disabled = locked or _guide.visible or _plan_target() == ""
+	# One amber button: the guide's while it is on show, else Plan.
+	_plan.theme_type_variation = &"" if _guide.visible else &"MainButton"
 	_hero_button.disabled = locked
 	_recruits_button.disabled = locked
 	_recruits_button.visible = not _profile.get_recruits().is_empty()
@@ -278,7 +279,6 @@ func _build_nodes() -> void:
 		button.focus_exited.connect(_map.queue_redraw)
 		button.custom_minimum_size = Vector2.ONE * NODE_RADIUS * 2.0
 		button.size = button.custom_minimum_size
-		button.add_theme_font_size_override("font_size", 24)
 		button.pressed.connect(func() -> void: level_requested.emit(id))
 		button.mouse_entered.connect(func() -> void: _info.text = _level_text(id))
 		button.mouse_exited.connect(func() -> void: _info.text = _default_info)
@@ -286,26 +286,23 @@ func _build_nodes() -> void:
 		_buttons[id] = button
 		var caption := Label.new()
 		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		caption.add_theme_font_size_override("font_size", FONT_PX)
+		caption.theme_type_variation = &"Caption"
 		caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_map.add_child(caption)
 		_names[id] = caption
 		var modifier := Label.new()
 		modifier.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		modifier.add_theme_font_size_override("font_size", FONT_PX)
-		modifier.add_theme_color_override("font_color", COLOUR_GLOW)
+		modifier.theme_type_variation = &"Modifier"
 		modifier.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_map.add_child(modifier)
 		_hard_names[id] = modifier
 	_hero_button = Button.new()
-	_hero_button.add_theme_font_size_override("font_size", FONT_PX)
 	_hero_button.pressed.connect(hero_requested.emit)
 	_hero_button.mouse_entered.connect(func() -> void: _info.text = HERO_INFO)
 	_hero_button.mouse_exited.connect(func() -> void: _info.text = _default_info)
 	_map.add_child(_hero_button)
 	_recruits_button = Button.new()
 	_recruits_button.text = "Recruits"
-	_recruits_button.add_theme_font_size_override("font_size", FONT_PX)
 	_recruits_button.pressed.connect(recruits_requested.emit)
 	_recruits_button.mouse_entered.connect(func() -> void: _info.text = RECRUITS_INFO)
 	_recruits_button.mouse_exited.connect(func() -> void: _info.text = _default_info)
@@ -403,7 +400,7 @@ func _draw_map() -> void:
 	_map.draw_circle(hero + Vector2(0, -22), 8.0, COLOUR_HERO)
 	_map.draw_colored_polygon(PackedVector2Array([hero + Vector2(0, -14), hero + Vector2(14, 22), hero + Vector2(-14, 22)]), COLOUR_HERO)
 	if _hero_figure.has_focus():
-		_map.draw_rect(Rect2(_hero_figure.position, HERO_FIGURE), Color.WHITE, false, 3.0)
+		_map.draw_rect(Rect2(_hero_figure.position, HERO_FIGURE), UiTokens.colour(&"focus"), false, 3.0)
 	for i in n:
 		var id: String = _ids[i]
 		var at := _node_at(i, n)
@@ -415,9 +412,9 @@ func _draw_map() -> void:
 		if id == _next:
 			_map.draw_arc(at, NODE_RADIUS + 12.0, 0.0, TAU, 40, COLOUR_GLOW, 4.0, true)
 		if _buttons[id].has_focus():
-			_map.draw_arc(at, NODE_RADIUS + 3.0, 0.0, TAU, 40, Color.WHITE, 3.0, true)
+			_map.draw_arc(at, NODE_RADIUS + 3.0, 0.0, TAU, 40, UiTokens.colour(&"focus"), 3.0, true)
 		if won:
-			_map.draw_polyline(PackedVector2Array([at + Vector2(-14, 0), at + Vector2(-4, 11), at + Vector2(15, -11)]), Color.WHITE, 5.0, true)
+			_map.draw_polyline(PackedVector2Array([at + Vector2(-14, 0), at + Vector2(-4, 11), at + Vector2(15, -11)]), UiTokens.colour(&"bone"), 5.0, true)
 
 
 func _on_visibility_changed() -> void:
