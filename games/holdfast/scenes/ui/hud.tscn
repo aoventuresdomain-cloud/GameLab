@@ -26,10 +26,10 @@ mouse_filter = 2
 [node name="Row" type="HBoxContainer" parent="TopBar"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 28
+theme_override_constants/separation = 16
 
 [node name="Gold" type="VBoxContainer" parent="TopBar/Row"]
-custom_minimum_size = Vector2(200, 0)
+custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 6
@@ -46,7 +46,7 @@ theme_type_variation = &"HudValue"
 text = "0"
 
 [node name="Wave" type="VBoxContainer" parent="TopBar/Row"]
-custom_minimum_size = Vector2(160, 0)
+custom_minimum_size = Vector2(130, 0)
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 6
@@ -80,20 +80,32 @@ theme_type_variation = &"HudMid"
 text = "0 / 0"
 
 [node name="Ability" type="VBoxContainer" parent="TopBar/Row"]
-custom_minimum_size = Vector2(110, 0)
+custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 6
 
-[node name="Caption" type="Label" parent="TopBar/Row/Ability"]
+[node name="CaptionRow" type="HBoxContainer" parent="TopBar/Row/Ability"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Caption" type="Label" parent="TopBar/Row/Ability/CaptionRow"]
 layout_mode = 2
 theme_type_variation = &"HudCaption"
 text = "Space"
 
+[node name="AutoTag" type="Label" parent="TopBar/Row/Ability/CaptionRow"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"HudTag"
+text = "Auto"
+
 [node name="AbilityValue" type="Label" parent="TopBar/Row/Ability"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"HudMid"
+theme_type_variation = &"HudReady"
 text = "Ready"
 
 [node name="Lost" type="VBoxContainer" parent="TopBar/Row"]
@@ -114,6 +126,7 @@ theme_type_variation = &"HudMid"
 text = "0 / 0"
 
 [node name="Keep" type="VBoxContainer" parent="TopBar/Row"]
+custom_minimum_size = Vector2(190, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -122,6 +135,7 @@ theme_override_constants/separation = 6
 [node name="Header" type="HBoxContainer" parent="TopBar/Row/Keep"]
 layout_mode = 2
 mouse_filter = 2
+theme_override_constants/separation = 12
 
 [node name="Caption" type="Label" parent="TopBar/Row/Keep/Header"]
 layout_mode = 2
@@ -143,6 +157,28 @@ size_flags_vertical = 6
 mouse_filter = 2
 max_value = 1.0
 show_percentage = false
+
+[node name="Controls" type="HBoxContainer" parent="TopBar/Row"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="PauseButton" type="Button" parent="TopBar/Row/Controls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Pause (Esc or P)"
+text = "II"
+
+[node name="SpeedButton" type="Button" parent="TopBar/Row/Controls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Game speed"
+text = "1x"
 
 [node name="WaveBanner" type="Label" parent="."]
 unique_name_in_owner = true
@@ -178,3 +214,52 @@ mouse_filter = 2
 theme_type_variation = &"HudCaption"
 horizontal_alignment = 1
 autowrap_mode = 2
+
+[node name="BossBar" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -100.0
+offset_right = 300.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Column" type="VBoxContainer" parent="BossBar"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="BossBar/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="BossName" type="Label" parent="BossBar/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudCaption"
+text = "Boss"
+text_overrun_behavior = 3
+
+[node name="BossState" type="Label" parent="BossBar/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudTag"
+text = "Shielded"
+
+[node name="BossHealth" type="ProgressBar" parent="BossBar/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+mouse_filter = 2
+max_value = 1.0
+show_percentage = false

@@ -280,6 +280,24 @@ func get_boss_note() -> String:
 	return ""
 
 
+## The shrouded boss still standing, for the HUD's boss bar; {} when none is on the field.
+func get_boss_state() -> Dictionary:
+	if _rules == null:
+		return {}
+	for enemy in _rules.enemies:
+		if enemy.required_ability != "" and enemy.health > 0.0:
+			return {
+				"name": str(HoldfastContent.base()["enemies"][enemy.type]["name"]),
+				"health": enemy.health, "max_health": enemy.max_health,
+				"exposed_left": enemy.exposed_left, "shielded": enemy.exposed_left <= 0.0,
+			}
+	return {}
+
+
+func is_special_automatic() -> bool:
+	return _rules != null and float(_rules.hero_ability.get("auto_power", 0.0)) > 0.0
+
+
 ## Read-only use: drawing and tests. Never step or change it.
 func get_rules() -> HoldfastRules:
 	return _rules

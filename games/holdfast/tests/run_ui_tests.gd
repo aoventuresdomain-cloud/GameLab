@@ -197,6 +197,18 @@ func _test_readable_layout() -> void:
 		hud.get_node("%PostsNote").text = "Fog Warden shrouded: use your special"
 		await _check_layout(hud, window, scale, view)
 		hud.get_node("%PostsNote").visible = false
+		# The longest wave banner, a boss on the field and the pause panel over it.
+		hud.get_node("%WaveBanner").text = "Wave 99"
+		hud.get_node("%WaveBanner").visible = true
+		hud.get_node("%AutoTag").visible = true
+		hud.show_boss({"name": "The Fog Warden of the Longest Night", "health": 500.0, "max_health": 500.0, "exposed_left": 12.0, "shielded": false})
+		await _check_layout(hud, window, scale, view)
+		hud._pause_screen.visible = true
+		await _check_layout(hud, window, scale, view)
+		hud._pause_screen.visible = false
+		hud.show_boss({})
+		hud.get_node("%WaveBanner").visible = false
+		hud.get_node("%AutoTag").visible = false
 		# The summary after a win, with Next level and the Upgrade screen as well.
 		_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": false, "stars_paid": 2, "reward_gold": 150, "keep_health": 72, "keep_health_max": 100, "result": {"outcome": "won", "level": "shingle_beach", "keep_left": 0.72, "salvaged": 99999},
 				"notes": {"boss": "The Fog Warden is beaten, and the longest name on the longest day.", "way_on": "More is coming."},
