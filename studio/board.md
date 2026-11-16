@@ -722,10 +722,93 @@
   - [ ] A test through a real JSON save: a full set at Gull Rock pays no more than about +25% over a run with no duplicates; a missing piece still drops and is not salvaged.
   - [ ] The pacing bands are unchanged or re-pinned with a reason; QA full round names a commit.
 
+### HF-M2-72 Menus and look: tokens, shared header and the no-overlap test
+- **Owner:** UI Engineer
+- **Status:** Planned, Build 14a. CEO approved the design pass on 16 Nov 2026 (`holdfast/m2/menus-and-look-design-pass.md`, Advisor critique `advisor-menus-look-critique.md`, kept unedited); standing CEO rule: icons, titles and labels are never tightly packed and never overlap. Placeholder art only, final art stays last (HF-M2-08 is not decided by this skin)
+- **QA:** screens (interface only)
+- **Done when:**
+  - [ ] The look is one set of colour and type tokens in a theme (night, panel, bone text, lantern amber, owned green, warning red; soft serif for titles, sans at 14 px or more; main, second and quiet buttons; blue focus ring kept), with no colour or font set directly in a screen; section colours are not tokens for nodes (the Advisor: no rim).
+  - [ ] Gold and stars sit in the same top-right corner on every hub screen with icons, and a back chevron top-left everywhere; every button is at least 44 px; amber is used for one main thing per screen.
+  - [ ] A layout test walks every screen at 1280x720 and 960x540 and fails if any two icons, titles or labels overlap or sit closer than 6 px, or any text is clipped.
+  - [ ] The existing screens still pass their tests; any changed test is logged in the Test changes table.
+
+### HF-M2-73 Left rail, Menu tab and home screen
+- **Owner:** UI Engineer
+- **Status:** Planned, Build 14a (first playable build; the team stops for the CEO's feedback after it). Taste calls taken from the Advisor's picks: left rail, animated beam
+- **QA:** screens
+- **Depends on:** HF-M2-72
+- **Done when:**
+  - [ ] A left rail on every hub screen with Map, Tree, Hero and Menu, one word each; Squad appears on the rail only after the first Recruit rescue, with a dot; a dot on a tab means something there is worth doing; back always goes to the parent; L1 and R1 are reserved for tab switching (the wiring is HF-M2-69).
+  - [ ] The Menu tab holds Settings, Achievements, Reset all upgrades (with a confirm) and Back to title; Achievements and Settings open from it and still work.
+  - [ ] The home screen has the lighthouse and sea, Continue as the one main button showing the level name, Quit as small text, and a swinging beam that stops for reduced motion; tested through a real JSON save for Continue.
+  - [ ] No existing navigation path is lost (journey map, Plan, tree, Hero, result links), checked by a test that reaches each screen from the rail.
+
+### HF-M2-74 Tree nodes and detail card per the CEO's label rule
+- **Owner:** UI Engineer
+- **Status:** Planned, Build 14b. Folds F-155 (exact price on the buy card when it first matters)
+- **QA:** screens
+- **Depends on:** HF-M2-72
+- **Done when:**
+  - [ ] A node has its icon inside and a price tag under it (coin or star), no numbers inside circles; owned is green with a tick in every section, buyable is an amber ring, stars show as a star icon on the price and dimmed when not affordable, with no red and no section rim.
+  - [ ] Name and price tag keep at least 6 px clear of any other node, label or tag; if there is no room the name hides first (shown on tap), then the tag moves above the node, and never overlap; buyable nodes keep their tag, owned nodes show a name only if there is room; a layout test over the whole tree at the default zoom and fully zoomed in checks it.
+  - [ ] The shape key covers Stat, Behaviour, Castle, Link, Gate and Capstone, drawn as three states at a glance; Link nodes needing two parents say so on the detail card.
+  - [ ] The detail card has the section colour on its header only, the coin on Buy, before and after, what it needs and what Refund returns; no other line is added.
+
+### HF-M2-75 Tree navigation: chips, found count, minimap and Can buy now
+- **Owner:** UI Engineer
+- **Status:** Planned, Build 14b
+- **QA:** screens
+- **Depends on:** HF-M2-74
+- **Done when:**
+  - [ ] Section chips appear only for a section with a revealed node, with no exact totals; one line reads "Found 12 of about 100".
+  - [ ] The minimap shows only found nodes; nothing sits over a buyable node (chips above, Can buy now strip below, map in a side column), checked by the layout test.
+  - [ ] A Can buy now strip lists what is affordable and takes you to it; the banner is shown only for the guided first buys, then gone.
+  - [ ] The first visit fits the one node you can buy with the guided banner, tested with a new save and a late-game save through a real JSON round trip.
+
+### HF-M2-76 Unlock events for the result screen and Plan
+- **Owner:** Gameplay Engineer
+- **Status:** Planned, Build 14c (small; no save change). The Advisor's round 2: the result must name what a win unlocked from the pack's own order
+- **QA:** sanity
+- **Done when:**
+  - [ ] After a win the profile can list what it unlocked, read from the pack (a blessing in the pack's unlock order, a Recruit rescue, a gear piece, a salvage amount, a Hero tab), with a test per kind and no hard-coded names in code.
+  - [ ] Only unlocked blessings are offered to Plan, with the pack's own wording; a test with a new save shows None and the Steady Flame only.
+  - [ ] No saved field is added or changed (a test through a real JSON save).
+
+### HF-M2-77 Map, Plan and result screens
+- **Owner:** UI Engineer
+- **Status:** Planned, Build 14c. Folds F-079 and F-136 (result panel tight, lighter band) and F-144 (next-goal line) if still open when built
+- **QA:** screens
+- **Depends on:** HF-M2-72, HF-M2-73, HF-M2-76, HF-M2-71 (both change the result panel; #169 merges first)
+- **Done when:**
+  - [ ] Map (one word) names the boss by its level name, shows no chapter count, and has one next-goal line; Plan has one Start button, a drawn field with the route, a tower count with "Add a tower" in one tile, the blessing choice with None, and a Squad tile only after the first rescue.
+  - [ ] The result shows three star slots with a thin Keep-health bar and the marks, coins and stars gained, an Unlocked list from HF-M2-76 (a blessing with its own icon, not the flame) and the Salvaged line; while a guided buy is waiting the main button is Spend stars, not Next level.
+  - [ ] No explaining lines (the Advisor's cut list); the layout test from HF-M2-72 passes on all three screens.
+
+### HF-M2-78 Hero and Squad pages
+- **Owner:** UI Engineer
+- **Status:** Planned, Build 14d. Folds F-169 (Salvaged line on the Hero tab if the CEO's play shows it is missed) and F-130 (how to wear gear)
+- **QA:** screens
+- **Depends on:** HF-M2-72, HF-M2-73
+- **Done when:**
+  - [ ] The Hero page has four headline stats, the special on its own card, five gear slots around the Hero, a bag grid with a one-line "wear it" cue, and "Dusk Mage: boss, level 5" as a goal.
+  - [ ] The Squad page (after the first rescue) shows each Recruit's class, post, trait, level and the deploy slots used (for example "2 slots, 1 used"); an unfound Recruit is a plain "?" with no class icon.
+  - [ ] The layout test from HF-M2-72 passes on both pages; no existing Hero or Recruit action is lost.
+
+### HF-M2-79 In-run screen: HUD, pause panel and boss cue
+- **Owner:** UI Engineer (Gameplay Engineer only if the boss's exposed state cannot be read from the sim)
+- **Status:** Planned, Build 14e. Placeholder art; the field and unit look wait for the art step
+- **QA:** screens
+- **Depends on:** HF-M2-72
+- **Done when:**
+  - [ ] A HUD frame with Hero health, wave banner, speed and pause; the special shows ready and cooling states; Auto is hidden until Keeper's Habit is owned.
+  - [ ] The pause panel has Resume and Back to map; the boss bar shows shielded or exposed.
+  - [ ] The layout test from HF-M2-72 passes on the run screen at both sizes, including the longest wave banner and a boss name.
+
 ### HF-M2-69 Controller and keyboard input
 - **Owner:** UI Engineer
 - **Status:** On hold until the CEO answers whether the Steam Deck is a first-release target (the Advisor's pick: yes, its own build after Build 13 and before the demo); QA has not confirmed that no gamepad handling exists (F-148)
 - **QA:** full (touches every screen)
+- **Depends on:** HF-M2-73 (the rail takes L1 and R1; build the controller after the new screens so the focus order is written once)
 - **Done when:**
   - [ ] Every screen is reachable and every action works with a gamepad and with the keyboard alone, with a visible focus.
   - [ ] A test walks the main flow without a mouse.
@@ -1265,3 +1348,4 @@
 - 2026-10-24: CEO asks added after the test: a Plan entry on the journey map (HF-M2-53, folded into the fix batch) and a radial skill tree (design HF-M2-54 with one Advisor round, build HF-M2-55 only after the CEO accepts the mockup). The other fixes do not wait for the redesign.
 - 2026-10-24: HF-M2-46 to 53 merged (#127, #128) with QA clear at named commits; HF-M2-50 parks Bryn, Wren and the light posts behind a flag (Head of Engineering chose a data-only retune of Levels 1 to 5 over loosening the curve bands; interim, M2b rebalances). The CEO's standing rules: no idle gaps between steps, only the Chief of Staff runs stall checks, every 30 minutes. Radial skill web (HF-M2-55) waits for the CEO's acceptance of the mockup.
 - 2026-10-31: Build 13b merged: HF-M2-65 (#163), 66 (#164), 67 (#165), the follow-ups F-160/162/163/164 (#166) and HF-M2-70 (#167), each with a QA clear at a named commit. HoE rulings on HF-M2-70: dry_max stays 3; tree/hours pinned as a known miss (about 0.9 h) rather than adding filler nodes or a 12-minute wait between buys; the Advisor agrees and aims at 2 to 3 h of real play. The Advisor asked for a salvage ceiling, boarded as HF-M2-71.
+- 2026-11-16: CEO approved the menus-and-look design pass ("much better") with one rule: icons, titles and price tags never tightly packed or overlapping. Boarded as HF-M2-72 to HF-M2-79 in builds 14a to 14e (UI Engineer; the Gameplay Engineer only for HF-M2-76). Taste calls from the Advisor's picks: left rail, animated beam. 14a (look, rail, home) is the first playable build; the team stops for the CEO's feedback after it. HF-M2-69 (controller) now follows HF-M2-73. HF-M2-71 (#169, QA clear at 0510989) merges before HF-M2-77 because both change the result panel.
