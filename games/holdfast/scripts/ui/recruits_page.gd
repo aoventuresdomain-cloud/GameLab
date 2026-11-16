@@ -12,7 +12,7 @@ signal pick_requested(id: String, skill_id: String)
 signal rename_requested(who: String, text: String)
 
 const Hud = preload("res://scripts/ui/hud.gd")
-const FONT_PX := 20
+const HUB_HEADER = preload("res://scenes/ui/hub_header.tscn")
 ## Waiting picks shown at once; the rest follow as these are made.
 const PICKS_SHOWN := 1
 
@@ -24,6 +24,7 @@ var _building := false
 var _back: Button
 var _title: Label
 var _gold: Label
+var _stars: Label
 var _keep_name: LineEdit
 var _hero_name: LineEdit
 var _picks: VBoxContainer
@@ -31,14 +32,14 @@ var _roster: HFlowContainer
 var _detail_name: LineEdit
 var _detail_text: Label
 var _squad_button: Button
-var _board: HBoxContainer
+var _board: HFlowContainer
 var _board_note: Label
 
 
 func _ready() -> void:
 	_content = HoldfastContent.base()
 	var backdrop := ColorRect.new()
-	backdrop.color = Color(0.1, 0.12, 0.16, 1)
+	backdrop.color = UiTokens.colour(&"night")
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(backdrop)
 	var margin := MarginContainer.new()
@@ -52,22 +53,17 @@ func _ready() -> void:
 	column.add_theme_constant_override("separation", 6)
 	margin.add_child(column)
 
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 12)
+	var header: Control = HUB_HEADER.instantiate()
 	column.add_child(header)
-	_back = _button("Back")
+	_back = header.get_node("BackButton")
 	_back.pressed.connect(back_requested.emit)
-	header.add_child(_back)
-	_title = _label("Recruits")
-	_title.theme_type_variation = &"HudValue"
-	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(_title)
-	_gold = _label("")
-	header.add_child(_gold)
+	_title = header.get_node("Title")
+	_gold = header.get_node("GoldChip/Row/GoldValue")
+	_stars = header.get_node("StarsChip/Row/StarsValue")
 
-	var names := HBoxContainer.new()
+	# The keep's and the Hero's names sit in the header, beside the title.
+	var names: HBoxContainer = header.get_node("Extra")
 	names.add_theme_constant_override("separation", 8)
-	column.add_child(names)
 	names.add_child(_label("Keep"))
 	_keep_name = _name_box("keep")
 	names.add_child(_keep_name)
@@ -76,12 +72,12 @@ func _ready() -> void:
 	names.add_child(_hero_name)
 
 	_picks = VBoxContainer.new()
-	_picks.add_theme_constant_override("separation", 4)
+	_picks.add_theme_constant_override("separation", 8)
 	column.add_child(_picks)
 
 	_roster = HFlowContainer.new()
 	_roster.add_theme_constant_override("h_separation", 6)
-	_roster.add_theme_constant_override("v_separation", 4)
+	_roster.add_theme_constant_override("v_separation", 8)
 	column.add_child(_roster)
 
 	var detail := HBoxContainer.new()
@@ -90,7 +86,6 @@ func _ready() -> void:
 	_detail_name = LineEdit.new()
 	_detail_name.custom_minimum_size = Vector2(220, 0)
 	_detail_name.max_length = RecruitRoster.NAME_MAX
-	_detail_name.add_theme_font_size_override("font_size", FONT_PX)
 	_detail_name.text_submitted.connect(func(_text: String) -> void: _detail_name.release_focus())
 	_detail_name.focus_exited.connect(func() -> void: _rename(_selected, _detail_name.text))
 	detail.add_child(_detail_name)
@@ -106,8 +101,9 @@ func _ready() -> void:
 	_board_note = _label("")
 	_board_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_board_note)
-	_board = HBoxContainer.new()
-	_board.add_theme_constant_override("separation", 8)
+	_board = HFlowContainer.new()
+	_board.add_theme_constant_override("h_separation", 8)
+	_board.add_theme_constant_override("v_separation", 8)
 	column.add_child(_board)
 	visibility_changed.connect(_on_visibility_changed)
 
@@ -123,8 +119,9 @@ func refresh() -> void:
 	if _profile == null or _building or _roster == null:
 		return
 	_building = true
-	_gold.text = "Gold %s" % Hud.format_number(_profile.get_gold())
-	_title.text = "Recruits: squad %d of %d (marked *)" % [_profile.get_squad_ids().size(), _profile.get_squad_slots()]
+	_gold.text = Hud.format_number(_profile.get_gold())
+	_stars.text = str(_profile.get_stars())
+	_title.text = "Squad: %d of %d (marked *)" % [_profile.get_squad_ids().size(), _profile.get_squad_slots()]
 	_set_text(_keep_name, _profile.get_given_name("keep"), _profile.get_name_of("keep"))
 	_set_text(_hero_name, _profile.get_given_name("hero"), _profile.get_name_of("hero"))
 	_fill_picks()
@@ -149,6 +146,7 @@ func _fill_picks() -> void:
 	for pick in waiting.slice(0, PICKS_SHOWN):
 		var row := HFlowContainer.new()
 		row.add_theme_constant_override("h_separation", 8)
+		row.add_theme_constant_override("v_separation", 8)
 		row.add_child(_label("%s picks:" % pick["name"]))
 		for skill_id in pick["options"]:
 			var skill: Dictionary = _content["recruit_skills"][skill_id]
@@ -241,9 +239,8 @@ func _rename(who: String, text: String) -> void:
 
 func _name_box(who: String) -> LineEdit:
 	var box := LineEdit.new()
-	box.custom_minimum_size = Vector2(220, 0)
+	box.custom_minimum_size = Vector2(180, 0)
 	box.max_length = RecruitRoster.NAME_MAX
-	box.add_theme_font_size_override("font_size", FONT_PX)
 	box.text_submitted.connect(func(_text: String) -> void: box.release_focus())
 	box.focus_exited.connect(func() -> void: _rename(who, box.text))
 	return box
@@ -253,7 +250,9 @@ func _name_box(who: String) -> LineEdit:
 static func shape_icon(cls: Dictionary) -> ImageTexture:
 	var size := 28
 	var sides: int = cls["sides"]
-	var colour := Color(str(cls["colour"]))
+	var colour := UiTokens.pack_colour(str(cls["colour"]))
+	var edge := UiTokens.colour(&"night")
+	var clear := UiTokens.colour(&"night", 0.0)
 	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
 	var middle := Vector2(size, size) * 0.5
 	var reach := size * 0.5 - 1.0
@@ -266,21 +265,19 @@ static func shape_icon(cls: Dictionary) -> ImageTexture:
 				var normal := Vector2.from_angle(-PI / 2.0 + TAU * (float(i) + 0.5) / float(sides))
 				outer = outer and p.dot(normal) <= reach * cos(PI / float(sides))
 				inner = inner and p.dot(normal) <= (reach - 2.5) * cos(PI / float(sides))
-			image.set_pixel(x, y, colour if inner else (Color.BLACK if outer else Color(0, 0, 0, 0)))
+			image.set_pixel(x, y, colour if inner else (edge if outer else clear))
 	return ImageTexture.create_from_image(image)
 
 
 func _button(text: String) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.add_theme_font_size_override("font_size", FONT_PX)
 	return button
 
 
 func _label(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", FONT_PX)
 	return label
 
 

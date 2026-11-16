@@ -153,15 +153,20 @@ func test_the_names_stay_12_px_on_screen_and_go_when_the_web_is_too_small_for_th
 	main.free()
 
 
-func test_no_name_sits_on_a_node_or_another_name_at_real_size() -> void:
-	var made := await _tree_page()
+func test_no_name_on_show_sits_on_a_node_or_another_name_at_real_size() -> void:
+	# A name with no room is left off (HF-M2-72), so the names on show are checked, on a mid-game web.
+	var made := await _tree_page(true)
 	var main: Node = made[0]
 	var page: Control = made[1]
-	var ids: Array = page._labels.keys()
+	page.show_tab(page.tab_names()[0])
+	page._web.scale = Vector2.ONE
+	page._sync_labels()
+	var ids: Array = page._labels.keys().filter(func(id: String) -> bool: return page._labels[id].visible)
+	expect_true(ids.size() > 10, "most names are on show (%d)" % ids.size())
 	for i in ids.size():
 		var name_rect := Rect2(page._labels[ids[i]].position, page._labels[ids[i]].size)
-		for other in ids:
-			if other != ids[i]:
+		for other in page._node_buttons:
+			if other != ids[i] and page._node_buttons[other].visible:
 				var node: Button = page._node_buttons[other]
 				expect_false(name_rect.intersects(Rect2(node.position, node.size)), "the name of %s is not on %s" % [ids[i], other])
 		for j in range(i + 1, ids.size()):

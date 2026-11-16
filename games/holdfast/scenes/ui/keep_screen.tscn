@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
+[ext_resource type="PackedScene" path="res://scenes/ui/hub_header.tscn" id="hub_header"]
 [ext_resource type="Script" path="res://scripts/ui/keep_screen.gd" id="1_keep"]
+[ext_resource type="Script" path="res://scripts/ui/themed_backdrop.gd" id="backdrop_tok"]
 
 [node name="KeepScreen" type="Control"]
 layout_mode = 3
@@ -18,7 +20,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.1, 0.12, 0.16, 1)
+script = ExtResource("backdrop_tok")
 
 [node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -36,39 +38,11 @@ theme_override_constants/margin_bottom = 12
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Header" type="HBoxContainer" parent="Margin/Column"]
+[node name="Header" parent="Margin/Column" instance=ExtResource("hub_header")]
 layout_mode = 2
-theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="Margin/Column/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"HudValue"
+[node name="Title" parent="Margin/Column/Header" index="1"]
 text = "Skill tree"
-
-[node name="GoldCaption" type="Label" parent="Margin/Column/Header"]
-layout_mode = 2
-theme_type_variation = &"HudCaption"
-text = "Gold"
-
-[node name="GoldValue" type="Label" parent="Margin/Column/Header"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(140, 0)
-layout_mode = 2
-theme_type_variation = &"HudValue"
-text = "0"
-
-[node name="StarsCaption" type="Label" parent="Margin/Column/Header"]
-layout_mode = 2
-theme_type_variation = &"HudCaption"
-text = "Stars"
-
-[node name="StarsValue" type="Label" parent="Margin/Column/Header"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(60, 0)
-layout_mode = 2
-theme_type_variation = &"HudValue"
-text = "0"
 
 [node name="Guide" type="HBoxContainer" parent="Margin/Column"]
 unique_name_in_owner = true
@@ -80,13 +54,12 @@ theme_override_constants/separation = 16
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
 autowrap_mode = 2
 
 [node name="GuideButton" type="Button" parent="Margin/Column/Guide"]
 unique_name_in_owner = true
+theme_type_variation = &"MainButton"
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 
 [node name="TabRow" type="HBoxContainer" parent="Margin/Column"]
 layout_mode = 2
@@ -101,13 +74,11 @@ theme_override_constants/separation = 8
 [node name="ZoomOut" type="Button" parent="Margin/Column/TabRow"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
 text = "Zoom out"
 
 [node name="ZoomIn" type="Button" parent="Margin/Column/TabRow"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
 text = "Zoom in"
 
 [node name="View" type="Control" parent="Margin/Column"]
@@ -133,31 +104,23 @@ custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
-theme_override_font_sizes/font_size = 20
 autowrap_mode = 2
 
 [node name="RespecButton" type="Button" parent="Margin/Column/Footer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 text = "Refund all"
 
 [node name="ConfirmButton" type="Button" parent="Margin/Column/Footer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 text = "Yes, refund all"
 
 [node name="CancelButton" type="Button" parent="Margin/Column/Footer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 text = "Keep my upgrades"
 
-[node name="BackButton" type="Button" parent="Margin/Column/Footer"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "Journey map"
+[editable path="Margin/Column/Header"]

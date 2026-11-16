@@ -44,6 +44,7 @@ func _ready() -> void:
 ## The Pause and Speed buttons under the top bar's right end, and the pause screen over the run.
 func _build_controls() -> void:
 	var box := HBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
 	_pause_button = Button.new()
 	_pause_button.text = "II"
 	_pause_button.tooltip_text = "Pause (Esc or P)"
@@ -62,7 +63,7 @@ func _build_controls() -> void:
 	box.offset_right = -16.0
 	add_child(box)
 	_pause_screen = ColorRect.new()
-	(_pause_screen as ColorRect).color = Color(0, 0, 0, 0.6)
+	(_pause_screen as ColorRect).color = UiTokens.colour(&"night", 0.7)
 	_pause_screen.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_pause_screen.mouse_filter = Control.MOUSE_FILTER_STOP
 	_pause_screen.visible = false
@@ -71,6 +72,7 @@ func _build_controls() -> void:
 	_pause_screen.add_child(centre)
 	var column := VBoxContainer.new()
 	column.custom_minimum_size = Vector2(320, 0)
+	column.add_theme_constant_override("separation", 12)
 	centre.add_child(column)
 	var title := Label.new()
 	title.text = "Paused"

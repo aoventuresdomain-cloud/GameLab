@@ -15,13 +15,12 @@ signal gear_off_requested(slot: String)
 
 const Keep = preload("res://scripts/ui/keep_screen.gd")
 const Guidance = preload("res://scripts/ui/guidance.gd")
-const FONT_PX := 20
 const DEFAULT_INFO := ""
 const WEAR_HINT := "Bag: press a piece, or drag it onto its slot, to wear it."
 const LOCKED_ALPHA := 0.5
-const COLOUR_HERO := Color(0.95, 0.6, 0.2)
-const COLOUR_WORN := Color(0.2, 0.5, 0.3)
-const COLOUR_WORN_EDGE := Color(0.45, 0.85, 0.55)
+static var COLOUR_HERO := UiTokens.colour(&"lamp_hot")
+static var COLOUR_WORN := UiTokens.colour(&"good").darkened(0.4)
+static var COLOUR_WORN_EDGE := UiTokens.colour(&"good")
 
 ## The Hero path id the profile has picked.
 var selected_pillar := ""
@@ -92,7 +91,7 @@ func refresh() -> void:
 		_pillar_buttons[id].set_pressed_no_signal(id == selected_pillar)
 		var reason := _lock_reason(id)
 		_pillar_buttons[id].text = "%s (locked)" % _content["hero_paths"][id]["name"] if reason != "" else str(_content["hero_paths"][id]["name"])
-		_pillar_buttons[id].modulate = Color(1, 1, 1, LOCKED_ALPHA) if reason != "" else Color.WHITE
+		_pillar_buttons[id].modulate = UiTokens.fade(LOCKED_ALPHA) if reason != "" else UiTokens.fade(1.0)
 	var path: Dictionary = _content["hero_paths"][selected_pillar]
 	_pillar_info.text = "%s: %s" % [path["name"], path.get("blurb", "")]
 	_refresh_gear()
@@ -119,8 +118,7 @@ func _refresh_gear() -> void:
 			continue
 		var button := Button.new()
 		button.text = str(item["name"])
-		button.add_theme_font_size_override("font_size", FONT_PX)
-		_compact(button)
+		button.custom_minimum_size.y = 44.0
 		button.pressed.connect(func() -> void: gear_requested.emit(id))
 		button.set_drag_forwarding(_bag_drag.bind(id, button), _off_can_drop, _off_drop)
 		button.mouse_entered.connect(func() -> void: _info.text = _gear_text(id))
@@ -195,12 +193,10 @@ func _build_slots() -> void:
 		var data: Dictionary = info.get(slot, {"name": str(slot).capitalize(), "identity": ""})
 		title.text = str(data["name"])
 		panel.tooltip_text = "%s: %s" % [data["name"], data["identity"]] if str(data["identity"]) != "" else str(data["name"])
-		title.add_theme_font_size_override("font_size", FONT_PX)
 		title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		title.custom_minimum_size = Vector2(110, 0)
 		var item := Label.new()
 		item.name = "Item"
-		item.add_theme_font_size_override("font_size", FONT_PX)
 		item.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		item.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(title)
@@ -254,7 +250,6 @@ func _drag_preview(held: Control, text: String) -> void:
 		return
 	var preview := Label.new()
 	preview.text = text
-	preview.add_theme_font_size_override("font_size", FONT_PX)
 	held.set_drag_preview(preview)
 
 
@@ -284,7 +279,6 @@ func _build_pillars() -> void:
 		var path: Dictionary = _content["hero_paths"][id]
 		var button := Button.new()
 		button.text = str(path["name"])
-		button.add_theme_font_size_override("font_size", 24)
 		button.toggle_mode = true
 		button.button_group = group
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL

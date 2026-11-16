@@ -119,22 +119,25 @@ func test_the_map_does_not_move_when_the_guide_strip_goes() -> void:
 	main.free()
 
 
-func test_the_map_header_keeps_each_caption_beside_its_value_and_clear_of_the_next() -> void:
+func test_the_map_header_keeps_each_icon_beside_its_value_and_clear_of_the_next() -> void:
+	# HF-M2-72: gold and stars are chips with an icon (the captions are gone).
 	var made := await _map_page(false)
 	var main: Node = made[0]
 	var map: Control = made[1]
-	var gold_caption: Label = map.get_node("Margin/Column/Header/GoldCaption")
+	var gold_chip: Control = map.get_node("Margin/Column/Header/GoldChip")
+	var gold_icon: Control = map.get_node("Margin/Column/Header/GoldChip/Row/GoldIcon")
 	var gold: Label = map.get_node("%GoldValue")
-	var stars_caption: Label = map.get_node("Margin/Column/Header/StarsCaption")
+	var stars_chip: Control = map.get_node("Margin/Column/Header/StarsChip")
+	var stars_icon: Control = map.get_node("Margin/Column/Header/StarsChip/Row/StarsIcon")
 	var stars: Label = map.get_node("%StarsValue")
 	map.get_node("%GoldValue").text = "9,999,999"
 	await tree.process_frame
-	expect_eq(gold.horizontal_alignment, HORIZONTAL_ALIGNMENT_LEFT, "the value starts beside its caption")
-	expect_eq(stars.horizontal_alignment, HORIZONTAL_ALIGNMENT_LEFT)
-	var gap := gold.get_global_rect().position.x - gold_caption.get_global_rect().end.x
-	expect_true(gap >= 8.0 and gap <= 24.0, "the Gold value sits right after its caption (gap %s)" % gap)
+	await tree.process_frame
+	var gap := gold.get_global_rect().position.x - gold_icon.get_global_rect().end.x
+	expect_true(gap >= 6.0 and gap <= 24.0, "the Gold value sits right after its icon (gap %s)" % gap)
 	var text_end := gold.get_global_rect().position.x + gold.get_theme_font("font").get_string_size(gold.text, HORIZONTAL_ALIGNMENT_LEFT, -1, gold.get_theme_font_size("font_size")).x
-	expect_true(text_end + 8.0 <= stars_caption.get_global_rect().position.x, "even a long figure clears the Stars caption")
-	var star_gap := stars.get_global_rect().position.x - stars_caption.get_global_rect().end.x
-	expect_true(star_gap >= 8.0 and star_gap <= 24.0, "the Stars value sits right after its caption (gap %s)" % star_gap)
+	expect_true(text_end <= gold_chip.get_global_rect().end.x, "even a long figure stays inside its chip")
+	expect_true(gold_chip.get_global_rect().end.x + 6.0 <= stars_chip.get_global_rect().position.x, "and the chip clears the Stars chip")
+	var star_gap := stars.get_global_rect().position.x - stars_icon.get_global_rect().end.x
+	expect_true(star_gap >= 6.0 and star_gap <= 24.0, "the Stars value sits right after its icon (gap %s)" % star_gap)
 	main.free()

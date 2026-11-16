@@ -17,21 +17,21 @@ signal stand_requested
 
 const Hud = preload("res://scripts/ui/hud.gd")
 const Guidance = preload("res://scripts/ui/guidance.gd")
-const FONT_PX := 20
-const DIMMED := Color(1, 1, 1, 0.45)
-const OWNED_FILL := Color(0.2, 0.5, 0.3)
-const OWNED_EDGE := Color(0.45, 0.85, 0.55)
+## Every colour is a token of the theme (UiTokens), read once when the script loads.
+static var DIMMED := UiTokens.fade(0.45)
+static var OWNED_FILL := UiTokens.colour(&"good").darkened(0.4)
+static var OWNED_EDGE := UiTokens.colour(&"good")
+## No button is smaller than this on either side (the CEO's 44 px rule).
+const MIN_BUTTON := 44.0
 ## A round node: big enough to press at real size.
 const NODE_SIZE := Vector2(44, 44)
-const PRICE_PX := 14
-const CLOSED_PX := 11
-## Names under the nodes and on the rim keep their size on screen at any zoom, and the node names
-## are left off when the web is too small for them to be told apart.
-const LABEL_PX := 12
+## Names under the nodes and on the rim keep their size on screen at any zoom (theme types TreeName
+## and TreeRim), and the node names are left off when the web is too small for them to be told apart.
 const LABEL_WIDTH := 96.0
-const LABEL_GAP := 2.0
+## The room a name and a node keep from every other node and name, in pixels on screen (the CEO's 6 px rule).
+const NAME_CLEAR := 6.0
+const LABEL_GAP := 8
 const LABELS_MIN_ZOOM := 0.6
-const RIM_PX := 16
 const RIM_SIZE := Vector2(100, 24)
 ## A section's name sits this far beyond its outermost node, and never nearer the middle than RIM_MIN.
 const RIM_GAP := 56.0
@@ -39,8 +39,8 @@ const RIM_MIN := 120.0
 ## Link nodes (they join two parts of the web) have a dashed ring.
 const LINK_PREFIX := "link_"
 const LINK_DASHES := 16
-const FAR_EDGE := Color(0.55, 0.62, 0.72)
-const NODE_FILL := Color(0.14, 0.16, 0.21)
+static var FAR_EDGE := UiTokens.colour(&"mute")
+static var NODE_FILL := UiTokens.colour(&"raise")
 ## The card keeps this far from the edge of the page.
 const CARD_MARGIN := 24.0
 ## About 0.4, a power-of-two fraction so the stored scale equals the limit exactly.
@@ -59,15 +59,15 @@ const DRAG_PX := 6.0
 ## Space kept around a tab's sections, and the part of the web that must stay in view.
 const FIT_PAD := 12.0
 const KEEP_IN_VIEW := 120.0
-const LINK_BOUGHT := Color(0.95, 0.75, 0.3, 0.9)
-const LINK_OPEN := Color(0.55, 0.62, 0.72, 0.6)
-const LINK_FORK := Color(0.9, 0.4, 0.35, 0.8)
-const COLOUR_ACT := Color(0.95, 0.7, 0.25)
-const COLOUR_SHORT := Color(0.95, 0.4, 0.35)
+static var LINK_BOUGHT := UiTokens.colour(&"lamp", 0.9)
+static var LINK_OPEN := UiTokens.colour(&"mute", 0.6)
+static var LINK_FORK := UiTokens.colour(&"warning", 0.8)
+static var COLOUR_ACT := UiTokens.colour(&"lamp")
+static var COLOUR_SHORT := UiTokens.colour(&"warning")
 ## The outline that shows where a controller or the keyboard is, apart from the act and done colours.
-const COLOUR_FOCUS := Color(0.35, 0.6, 1.0)
+static var COLOUR_FOCUS := UiTokens.colour(&"focus")
 const CARD_WIDTH := 480.0
-const CARD_EDGE := Color(0.45, 0.5, 0.6)
+static var CARD_EDGE := UiTokens.colour(&"mute", 0.6)
 ## How long a node that a purchase made buyable glows, and the card's glow after a purchase.
 const GLOW_SECONDS := 0.9
 ## What a stat means to the player, by the stat's own name without its tower or Hero scope.
@@ -241,7 +241,7 @@ func refresh() -> void:
 		button.tooltip_text = _tip_text(id)
 		# The price on the node (a tick when owned); the name is under it and on its tooltip.
 		button.text = "" if bought else ("closed" if closed else _face(node))
-		button.add_theme_font_size_override("font_size", CLOSED_PX if closed else PRICE_PX)
+		button.theme_type_variation = &"TreeClosedButton" if closed else &"TreePriceButton"
 		var state := "owned" if bought else ("closed" if closed else ("open" if near else "far"))
 		_marks[id].set_meta("state", state)
 		_marks[id].queue_redraw()
@@ -249,7 +249,7 @@ func refresh() -> void:
 		# Every node can be pressed: its card says what is open to the player, and what is not.
 		button.set_pressed_no_signal(bought)
 		# Only what is one buy away (or already bought) is drawn in full; the rest is dimmed.
-		button.modulate = Color.WHITE if near else DIMMED
+		button.modulate = UiTokens.fade(1.0) if near else DIMMED
 		_labels[id].modulate = button.modulate
 	for section in _section_columns:
 		_section_columns[section].visible = (not _content["hero_paths"].has(section) or section == selected_pillar) and _section_has_shown_node(section)
@@ -406,15 +406,15 @@ func _build_tree() -> void:
 			mark.draw.connect(_draw_mark.bind(id))
 			_marks[id] = mark
 			var text := str(node.get("label", node["name"]))
-			var width := get_theme_default_font().get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_PX).x + 4.0
-			var label := _caption(text, LABEL_PX, Vector2(width, LABEL_PX + 4))
+			var label_px := get_theme_font_size(&"font_size", &"TreeName")
+			var width := get_theme_font(&"font", &"TreeName").get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, label_px).x + 4.0
+			var label := _caption(text, &"TreeName", Vector2(width, label_px + 4))
 			holder.add_child(label)
 			label.reset_size()
 			_labels[id] = label
 		_rim_dirs[str(section["id"])] = (middle / maxf(count, 1)).normalized() if middle.length() > 1.0 else Vector2.LEFT
-		var heading := _caption(str(section.get("rim", section["name"])), RIM_PX, RIM_SIZE)
+		var heading := _caption(str(section.get("rim", section["name"])), &"TreeRim", RIM_SIZE)
 		heading.pivot_offset = RIM_SIZE * 0.5
-		heading.theme_type_variation = &"HudCaption"
 		holder.add_child(heading)
 		_headings[str(section["id"])] = heading
 	_place_labels()
@@ -423,8 +423,9 @@ func _build_tree() -> void:
 
 
 ## Each node's name goes on the side of it (below, above, right, left, then the corners) that crowds the other nodes
-## least, worked out once for the whole web at real size. A name grows from the edge of its
-## node, so it never runs back over it as it keeps its size when the web is zoomed out.
+## and names least, worked out once for the whole web at real size. A name grows from the edge of its
+## node, so it never runs back over it as it keeps its size when the web is zoomed out. Which names
+## are left off at the zoom the web is at is _declutter's job.
 func _place_labels() -> void:
 	var half := NODE_SIZE * 0.5
 	var taken: Array[Rect2] = []
@@ -445,13 +446,14 @@ func _place_labels() -> void:
 			[at + Vector2(half.x * 0.7 + LABEL_GAP, -half.y * 0.7 - LABEL_GAP), Vector2(0, box.y)],
 			[at - half * 0.7 - Vector2.ONE * LABEL_GAP, box],
 		]
+		var own := Rect2(at - half, NODE_SIZE)
 		var best := 0
 		var best_cost := INF
 		for i in options.size():
 			var rect := Rect2(options[i][0] - options[i][1], box)
 			var cost := float(i) * 0.1
 			for other in taken:
-				cost += rect.intersection(other).get_area() if other != Rect2(at - half, NODE_SIZE) else 0.0
+				cost += rect.intersection(other).get_area() if other != own else 0.0
 			if cost < best_cost:
 				best = i
 				best_cost = cost
@@ -459,13 +461,54 @@ func _place_labels() -> void:
 		label.position = options[best][0] - options[best][1]
 
 
+## Leaves off the names that have no room at the zoom the web is at: one that comes within
+## NAME_CLEAR px on screen of a node, or of a name already kept, is hidden (the CEO's rule: hide the
+## name first; the node's card and tooltip still say it). The nodes one buy away keep theirs first.
+func _declutter() -> void:
+	var zoom := _web.scale.x
+	if zoom <= 0.0:
+		return
+	var clear := NAME_CLEAR / zoom
+	var half := NODE_SIZE * 0.5
+	var on_show: Array = _node_buttons.keys().filter(func(id: String) -> bool: return _node_buttons[id].visible and _node_buttons[id].get_parent().visible)
+	on_show.sort_custom(func(a: String, b: String) -> bool: return _is_lit(a) and not _is_lit(b))
+	var nodes := {}
+	for id in on_show:
+		nodes[id] = Rect2(_point(id) - half, NODE_SIZE).grow(clear)
+	var kept: Array[Rect2] = []
+	# The section names on the rim are in the way of a name too.
+	for section in _headings:
+		var heading: Label = _headings[section]
+		if heading.visible and heading.get_parent().visible:
+			kept.append(Rect2(heading.position + heading.pivot_offset * (1.0 - 1.0 / zoom), heading.size / zoom).grow(clear))
+	for id in _labels:
+		_labels[id].visible = false
+	for id in on_show:
+		var label: Label = _labels[id]
+		# The name is scaled about the point it hangs from, so its rect at this zoom is smaller or larger than at real size.
+		var rect := Rect2(label.position + label.pivot_offset * (1.0 - 1.0 / zoom), label.size / zoom)
+		var free := true
+		for other in nodes:
+			if rect.intersects(nodes[other]):
+				free = false
+				break
+		for other in kept:
+			free = free and not rect.intersects(other)
+		if free:
+			label.visible = true
+			kept.append(rect.grow(clear))
+
+
+## True when a node is bought or one buy away: drawn in full, not dimmed.
+func _is_lit(id: String) -> bool:
+	return _profile != null and (id in _profile.get_upgrades() or _profile.is_near(id))
+
+
 ## A name that does not take the mouse, centred in a box of a given size.
-func _caption(text: String, font_px: int, box: Vector2) -> Label:
+func _caption(text: String, variation: StringName, box: Vector2) -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", font_px)
-	label.add_theme_color_override("font_outline_color", Color(0.06, 0.07, 0.1))
-	label.add_theme_constant_override("outline_size", 4)
+	label.theme_type_variation = variation
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.custom_minimum_size = box
@@ -482,7 +525,7 @@ func _draw_mark(id: String) -> void:
 		for i in LINK_DASHES:
 			mark.draw_arc(middle, middle.x - 1.5, i * step, (i + 0.55) * step, 4, _edge(state), 3.0, true)
 	if state == "owned":
-		mark.draw_polyline(PackedVector2Array([Vector2(12, 23), Vector2(19, 30), Vector2(32, 15)]), Color.WHITE, 4.0, true)
+		mark.draw_polyline(PackedVector2Array([Vector2(12, 23), Vector2(19, 30), Vector2(32, 15)]), UiTokens.colour(&"bone"), 4.0, true)
 	elif state != "closed" and HoldfastMeta.is_star_node(_content["upgrade_nodes"][id]):
 		var points := PackedVector2Array()
 		for i in 10:
@@ -500,6 +543,7 @@ func _sync_labels() -> void:
 	for id in _labels:
 		_labels[id].scale = Vector2.ONE / zoom
 		_labels[id].self_modulate.a = 1.0 if shown else 0.0
+	_declutter()
 	for section in _headings:
 		_headings[section].scale = Vector2.ONE / zoom
 
@@ -551,7 +595,7 @@ func _refresh_tabs() -> void:
 		button.queue_free()
 	_tab_buttons.clear()
 	for label in names:
-		var button := _button(label, FONT_PX, 6)
+		var button := _button(label)
 		button.toggle_mode = true
 		button.button_group = _tab_group
 		button.pressed.connect(show_tab.bind(label))
@@ -767,25 +811,19 @@ func _draw_links() -> void:
 				_web.draw_dashed_line(here, _point(other_id), LINK_FORK, 3.0, 8.0)
 
 
-## A compact button at the screen's text size: the theme's button look with slim margins.
-func _button(text: String, font_px := FONT_PX, margin := 3) -> Button:
+## A button in the theme's look, at least 44 px tall.
+func _button(text: String, variation := &"") -> Button:
 	var button := Button.new()
 	button.text = text
-	button.add_theme_font_size_override("font_size", font_px)
-	for style_name in ["normal", "hover", "pressed", "focus", "disabled"]:
-		var style := button.get_theme_stylebox(style_name).duplicate()
-		style.content_margin_top = margin
-		style.content_margin_bottom = margin
-		style.content_margin_left = 10
-		style.content_margin_right = 10
-		button.add_theme_stylebox_override(style_name, style)
+	button.theme_type_variation = variation
+	button.custom_minimum_size.y = MIN_BUTTON
 	return button
 
 
 ## A transparent box with a blue outline: where a controller or the keyboard is.
 static func _focus_style(radius := 6) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
-	box.bg_color = Color(0, 0, 0, 0)
+	box.bg_color = UiTokens.colour(&"night", 0.0)
 	box.border_color = COLOUR_FOCUS
 	box.set_border_width_all(3)
 	box.set_corner_radius_all(radius)
@@ -805,7 +843,7 @@ func _build_card() -> void:
 	_card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_card.gui_input.connect(_on_card_backdrop_input)
 	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.6)
+	dim.color = UiTokens.colour(&"night", 0.7)
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_card.add_child(dim)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -825,7 +863,7 @@ func _build_card() -> void:
 	_card_panel.name = "Panel"
 	_card_panel.custom_minimum_size = Vector2(CARD_WIDTH, 0)
 	_card_style = StyleBoxFlat.new()
-	_card_style.bg_color = Color(0.14, 0.16, 0.21)
+	_card_style.bg_color = UiTokens.colour(&"raise")
 	_card_style.border_color = CARD_EDGE
 	_card_style.set_border_width_all(3)
 	_card_style.set_corner_radius_all(10)
@@ -839,11 +877,11 @@ func _build_card() -> void:
 	var header := HBoxContainer.new()
 	column.add_child(header)
 	_card_title = Label.new()
-	_card_title.add_theme_font_size_override("font_size", 28)
+	_card_title.theme_type_variation = &"Heading"
 	_card_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_card_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	header.add_child(_card_title)
-	_card_close = _button("\u00d7", 28, 0)
+	_card_close = _button("\u00d7")
 	_card_close.name = "Close"
 	_card_close.add_theme_stylebox_override("focus", _focus_style())
 	_card_close.pressed.connect(close_card)
@@ -854,7 +892,7 @@ func _build_card() -> void:
 	_card_extra.add_theme_constant_override("separation", 6)
 	column.add_child(_card_extra)
 	_card_note = _card_label("")
-	_card_note.modulate = Color(1, 1, 1, 0.75)
+	_card_note.modulate = UiTokens.fade(0.75)
 	column.add_child(_card_note)
 	var footer := HBoxContainer.new()
 	footer.add_theme_constant_override("separation", 12)
@@ -865,14 +903,14 @@ func _build_card() -> void:
 	_card_tick.draw.connect(_draw_tick)
 	footer.add_child(_card_tick)
 	_card_price = _card_label("")
-	_card_price.add_theme_font_size_override("font_size", 24)
+	_card_price.theme_type_variation = &"CardPrice"
 	_card_price.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_card_price.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	footer.add_child(_card_price)
 	_card_buy = _act_button("Buy")
 	_card_buy.pressed.connect(_card_buy_pressed)
 	footer.add_child(_card_buy)
-	_card_refund = _button("Refund", 24, 3)
+	_card_refund = _button("Refund")
 	_card_refund.add_theme_stylebox_override("focus", _focus_style())
 	_card_refund.pressed.connect(func() -> void: refund_requested.emit(_card_id))
 	footer.add_child(_card_refund)
@@ -881,33 +919,19 @@ func _build_card() -> void:
 func _card_label(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", 22)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return label
 
 
 ## The one amber button of a card.
 func _act_button(text: String) -> Button:
-	var button := _button(text, 24, 3)
-	for state in ["normal", "hover", "pressed"]:
-		var box := StyleBoxFlat.new()
-		box.bg_color = COLOUR_ACT if state != "hover" else COLOUR_ACT.lightened(0.2)
-		box.set_corner_radius_all(6)
-		box.content_margin_left = 24.0
-		box.content_margin_right = 24.0
-		box.content_margin_top = 4.0
-		box.content_margin_bottom = 4.0
-		button.add_theme_stylebox_override(state, box)
-		button.add_theme_color_override("font_color" if state == "normal" else "font_%s_color" % state, Color(0.1, 0.1, 0.12))
-	button.add_theme_color_override("font_focus_color", Color(0.1, 0.1, 0.12))
-	button.add_theme_stylebox_override("focus", _focus_style())
-	return button
+	return _button(text, &"MainButton")
 
 
 func _draw_tick() -> void:
 	_card_tick.draw_circle(Vector2(18, 18), 17.0, OWNED_FILL)
 	_card_tick.draw_arc(Vector2(18, 18), 17.0, 0.0, TAU, 32, OWNED_EDGE, 2.0, true)
-	_card_tick.draw_polyline(PackedVector2Array([Vector2(9, 18), Vector2(16, 25), Vector2(27, 11)]), Color.WHITE, 4.0, true)
+	_card_tick.draw_polyline(PackedVector2Array([Vector2(9, 18), Vector2(16, 25), Vector2(27, 11)]), UiTokens.colour(&"bone"), 4.0, true)
 
 
 ## Shows the card of one node over the dimmed tree. The focus goes to what the player most likely
@@ -986,22 +1010,21 @@ func _fill_card() -> void:
 	_card_tick.visible = owned
 	_card_buy.visible = not owned
 	_card_refund.visible = owned
-	_card_price.remove_theme_font_override("font")
-	_card_price.remove_theme_color_override("font_color")
+	_card_price.theme_type_variation = &"CardPrice"
 	var reason: String = _profile.why_not_refund(id) if owned else _profile.why_not_buy(id)
 	var shortfall := _shortfall(node, reason)
 	_card_note.text = "" if reason == "" or shortfall > 0 else reason
 	if owned:
 		var gain: Dictionary = _profile.get_refund_gain(id)
 		_card_price.text = "+%s gold" % Hud.format_number(int(gain["gold"])) if int(gain["stars"]) == 0 else "+%d %s, fee %s gold" % [int(gain["stars"]), "star" if int(gain["stars"]) == 1 else "stars", Hud.format_number(-int(gain["gold"]))]
-		_card_price.add_theme_font_override("font", _bold_font())
+		_card_price.theme_type_variation = &"CardPriceBold"
 		_card_refund.disabled = reason != ""
 	else:
 		_card_price.text = _price(node) + (" gold" if not HoldfastMeta.is_star_node(node) else "")
 		if shortfall > 0:
 			# A cue besides the red: the words say how much is missing.
 			_card_price.text += "  (need %s more)" % Hud.format_number(shortfall)
-			_card_price.add_theme_color_override("font_color", COLOUR_SHORT)
+			_card_price.theme_type_variation = &"CardPriceShort"
 		_card_buy.disabled = reason != ""
 
 
@@ -1046,8 +1069,8 @@ func _gate_cards() -> Control:
 		var panel := PanelContainer.new()
 		panel.custom_minimum_size = Vector2(130, 64)
 		var box := StyleBoxFlat.new()
-		box.bg_color = Color(0.3, 0.2, 0.5) if i == 0 else Color(0.08, 0.09, 0.11)
-		box.border_color = Color(0.6, 0.48, 0.88) if i == 0 else Color(0.2, 0.22, 0.27)
+		box.bg_color = UiTokens.colour(&"arcane").darkened(0.6) if i == 0 else UiTokens.colour(&"deep")
+		box.border_color = UiTokens.colour(&"arcane") if i == 0 else UiTokens.colour(&"line")
 		box.set_border_width_all(2)
 		box.set_corner_radius_all(6)
 		panel.add_theme_stylebox_override("panel", box)
@@ -1064,13 +1087,6 @@ func _clear(box: Control) -> void:
 	for child in box.get_children():
 		box.remove_child(child)
 		child.queue_free()
-
-
-func _bold_font() -> Font:
-	var font := FontVariation.new()
-	font.base_font = get_theme_default_font()
-	font.variation_embolden = 0.9
-	return font
 
 
 static func _capital(text: String) -> String:
@@ -1101,7 +1117,7 @@ func _light_up(before: Array, bought: String) -> void:
 	for id in _glowing:
 		var button: Button = _node_buttons[id]
 		button.modulate = COLOUR_ACT.lightened(0.5)
-		create_tween().tween_property(button, "modulate", Color.WHITE, GLOW_SECONDS)
+		create_tween().tween_property(button, "modulate", UiTokens.fade(1.0), GLOW_SECONDS)
 	get_tree().create_timer(GLOW_SECONDS).timeout.connect(_glowing.clear)
 
 

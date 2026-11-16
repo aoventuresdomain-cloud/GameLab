@@ -51,6 +51,9 @@ func _ready() -> void:
 func show_summary(summary: Dictionary, next_level: String = "") -> void:
 	_next_level = next_level
 	_next_level_button.visible = _next_level != ""
+	# One amber button: the next level when there is one, else playing again.
+	_next_level_button.theme_type_variation = &"MainButton"
+	_play_again_button.theme_type_variation = &"" if _next_level != "" else &"MainButton"
 	_play_again_button.text = "Retry" if summary.get("keep_fell", false) else "Play again"
 	_title.text = "The keep has fallen" if summary.get("keep_fell", false) else "Holdfast holds!"
 	_gold_value.text = Hud.format_number(int(summary.get("gold_earned", 0)))
