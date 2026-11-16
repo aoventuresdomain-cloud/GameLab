@@ -1136,6 +1136,33 @@ static func paths_opened_by(content: Dictionary, level: String) -> Array:
 	return out
 
 
+## What banking a run unlocked, read from the pack for the result screen: [{kind, id, name, text, amount}] in
+## this order: blessings (the pack's own name and line), Recruits rescued (name, class), gear pieces new to
+## the bag, Hero paths opened, then the gold a spare gear drop was salvaged for. `before` and `after` are the
+## profile either side of the bank and `result` is the run's result. Nothing here is saved.
+static func unlocks(content: Dictionary, before: Dictionary, after: Dictionary, result: Dictionary) -> Array:
+	var out := []
+	var had := blessings_unlocked(content, before)
+	for id in blessings_unlocked(content, after):
+		if not id in had:
+			var blessing: Dictionary = content["blessings"][id]
+			out.append({"kind": "blessing", "id": id, "name": str(blessing["name"]), "text": str(blessing["text"]), "amount": 0})
+	for change in RecruitMeta.changes(content, before, after):
+		if change["joined"]:
+			var class_data: Dictionary = content.get("recruit_classes", {}).get(change["class"], {})
+			out.append({"kind": "recruit", "id": str(change["id"]), "name": str(change["name"]), "text": str(class_data.get("name", "")), "amount": 0})
+	for id in result.get("gear_found", []):
+		var item: Dictionary = content.get("gear_items", {}).get(id, {})
+		if not item.is_empty() and not id in before["gear"]["owned"]:
+			out.append({"kind": "gear", "id": str(id), "name": str(item["name"]), "text": "", "amount": 0})
+	for id in content.get("hero_paths", {}):
+		if path_open(content, after, id) and not path_open(content, before, id):
+			out.append({"kind": "hero_path", "id": str(id), "name": str(content["hero_paths"][id]["name"]), "text": "", "amount": 0})
+	if int(result.get("salvaged", 0)) > 0:
+		out.append({"kind": "salvage", "id": "", "name": "", "text": "", "amount": int(result["salvaged"])})
+	return out
+
+
 ## The profile with a run open (started, not yet banked or left), or closed again. Saved at once, so
 ## a reload that finds it open knows the run was lost.
 static func set_run_open(profile: Dictionary, open: bool) -> Dictionary:
