@@ -45,6 +45,10 @@ layout_mode = 2
 [node name="Title" parent="Margin/Column/Header" index="1"]
 text = "Map"
 
+[node name="HeroName" type="Label" parent="Margin/Column/Header/Extra"]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="PlanButton" type="Button" parent="Margin/Column/Header/Extra"]
 unique_name_in_owner = true
 layout_mode = 2

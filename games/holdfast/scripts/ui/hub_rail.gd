@@ -8,6 +8,8 @@ extends PanelContainer
 signal tab_requested(tab: String)
 
 const WIDTH := 112.0
+## Where the rail starts: the bottom edge of the header (12 px margin and a 56 px chip row).
+const TOP := 68.0
 ## Where a screen's content starts, as a margin inside the 24 px screen margin: 16 px clear of the rail.
 const CONTENT_MARGIN := 104.0
 const TABS := ["Map", "Tree", "Hero", "Squad", "Menu"]
@@ -25,6 +27,7 @@ var _dots := {}
 
 
 func _ready() -> void:
+	_place()
 	_content = HoldfastContent.base()
 	var group := ButtonGroup.new()
 	for tab in TABS:
@@ -35,6 +38,22 @@ func _ready() -> void:
 		_buttons[tab] = button
 		_dots[tab] = _make_dot(button)
 	set_current(current)
+
+
+## Pins the rail to the left edge, from the header's bottom edge to the bottom of the screen, in code so
+## every screen has the same rail whatever its scene or export stores (HF-M2-73, F-177). It grows
+## downwards only, so it can never reach up over the header.
+func _place() -> void:
+	anchor_left = 0.0
+	anchor_right = 0.0
+	anchor_top = 0.0
+	anchor_bottom = 1.0
+	offset_left = 0.0
+	offset_right = WIDTH
+	offset_top = TOP
+	offset_bottom = 0.0
+	grow_horizontal = Control.GROW_DIRECTION_END
+	grow_vertical = Control.GROW_DIRECTION_END
 
 
 func bind(profile: Node, hints: Node) -> void:
