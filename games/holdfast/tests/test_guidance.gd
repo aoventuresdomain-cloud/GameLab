@@ -265,20 +265,20 @@ func _plan(main: Node, cards := 1, mage_cards := 0, saved := false) -> Control:
 	return planning
 
 
-func test_quick_start_says_why_it_is_greyed_and_stops_saying_it_once_a_layout_is_saved() -> void:
+func test_the_plan_page_has_one_start_button_that_starts_the_layout_it_opened_with() -> void:
 	var main := _main()
 	var planning := _plan(main)
-	var quick: Button = planning.get_node("%QuickButton")
-	expect_true(quick.disabled)
-	expect_eq(quick.tooltip_text, planning.QUICK_WHY)
-	expect_eq(quick.text, "Quick start (no layout yet)", "the button says why on its face")
-	expect_true(planning.get_node("%Hint").text.contains(planning.QUICK_WHY), "on the page as well as on hover")
-	planning = _plan(main, 1, 0, true)
+	expect_true(planning.get_node_or_null("%QuickButton") == null, "no second way to start")
+	var start: Button = planning.get_node("%StartButton")
+	expect_true(start.disabled and start.text.contains(planning.NEED_A_POST), "nothing placed: it says what is missing")
+	var heard := []
+	planning.start_requested.connect(func(layout: Array) -> void: heard.append(layout))
 	planning.open("outpost", ["spot_1"], true, _content()["castle_rules"]["castle"]["spots"].slice(0, 3), 1)
-	expect_false(quick.disabled)
-	expect_eq(quick.text, "Quick start")
-	expect_eq(quick.tooltip_text, "")
-	expect_false(planning.get_node("%Hint").text.contains(planning.QUICK_WHY))
+	expect_false(start.disabled)
+	expect_eq(start.text, "Start level")
+	start.pressed.emit()
+	expect_eq(heard, [["spot_1"]], "Start remembers the layout")
+	expect_eq(planning.get_node("%Hint").text, "", "and nothing explains how to place a post")
 	main.free()
 
 
@@ -388,7 +388,7 @@ func test_next_level_waits_for_the_guided_buys_and_is_there_after_them() -> void
 	main.call("_on_run_ended", _ended("first_watch", HoldfastRules.OUTCOME_WON, 2, 2))
 	var summary: Control = main.summary
 	expect_false(summary.get_node("%NextLevelButton").visible, "no Next level before the buys")
-	expect_true(summary.get_node("%GuideNote").visible, "the summary says what to do instead")
+	expect_true(summary.get_node("%SpendButton").visible, "the main button says what to do instead: Spend stars")
 	summary.get_node("%TreeButton").pressed.emit()
 	expect_true(main.keep_screen.visible and main.keep_screen.get_node("%Guide").visible, "the Skill tree route has the guide")
 	main.keep_screen.get_node("%GuideButton").pressed.emit()
@@ -397,7 +397,7 @@ func test_next_level_waits_for_the_guided_buys_and_is_there_after_them() -> void
 	expect_true(main.journey.get_node("%Guide").visible and main.journey.get_node("%GuideButton").text == "Start", "the map route has it too")
 	main.call("_on_run_ended", _ended("outpost", HoldfastRules.OUTCOME_WON))
 	expect_true(summary.get_node("%NextLevelButton").visible, "after the buys Next level is back")
-	expect_false(summary.get_node("%GuideNote").visible)
+	expect_false(summary.get_node("%SpendButton").visible)
 	main.free()
 
 
@@ -511,7 +511,7 @@ func test_the_level_zero_summary_with_its_reward_and_notes_fits_the_screen() -> 
 	var main := _main()
 	var summary: Control = main.summary
 	summary.show_summary({"gold_earned": 50, "waves_cleared": 2, "total_waves": 2, "keep_fell": false, "stars_paid": 2, "reward_gold": 150,
-			"stars_note": main.STARS_LINE, "notes": {"guide_note": Guidance.GUIDE_NOTE}, "result": {}}, "")
+			"notes": {"guide_note": Guidance.GUIDE_NOTE}, "result": {}}, "")
 	summary.visible = true
 	await tree.process_frame
 	await tree.process_frame

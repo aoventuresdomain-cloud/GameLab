@@ -298,7 +298,7 @@ func test_after_the_stand_every_screen_opens_freely() -> void:
 
 # ------------------------------------------------------------------ the line on stars
 
-func test_the_first_summary_that_pays_stars_says_what_they_buy_and_never_again() -> void:
+func test_the_summary_never_explains_what_stars_buy() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var source: HoldfastRunSource = main.get_node("RunSource")
@@ -306,20 +306,10 @@ func test_the_first_summary_that_pays_stars_says_what_they_buy_and_never_again()
 	expect_false(profile.has_seen_stars_line())
 	main.call("_level_picked", "first_watch")
 	_play_out(source)
-	var note: Label = main.summary.get_node("%StarsNote")
-	expect_true(note.visible)
-	expect_eq(note.text, "Stars buy slots and towers. Gold buys upgrades.")
-	expect_true(profile.has_seen_stars_line())
-	# The stand pays no stars, and a replay of Level 0 pays none either: the line is not shown again.
-	main.journey.buy_requested.emit("castle_slot_1")
-	main.journey.buy_requested.emit("castle_archer_1")
-	main.journey.stand_requested.emit()
-	_play_out(source)
-	expect_false(note.visible, "the stand's summary has no line")
-	profile.data["stars"].erase("outpost")
-	main.call("_level_picked", "first_watch")
-	_play_out(source)
-	expect_false(note.visible, "nor does a replay")
+	expect_eq(main.summary.get_node("%StarsValue").text, "+2", "the stars are paid")
+	for label in main.summary.find_children("*", "Label", true, false):
+		expect_false(label.text.contains("Stars buy"), "no explaining line: %s" % label.text)
+	expect_true(main.summary.get_node_or_null("%StarsNote") == null, "and there is no place for one")
 	main.free()
 
 

@@ -3,8 +3,9 @@ extends Control
 ## castle's ring of spots around the keep (any of them can hold a post, as many as the slots the
 ## player has bought), and the tower cards the player owns, which they drag onto a spot, or
 ## press a spot to place and lift one.
-## Auto-place suggests a layout and Quick start reuses the last one. It shows the choice and
-## asks for the run through signals; the run flow acts. Mouse only.
+## Auto-place suggests a layout; the page opens with the last one played on the level already placed,
+## so the one Start button starts it. It shows the choice and asks for the run through signals; the run
+## flow acts. Mouse only.
 
 signal start_requested(layout: Array)
 signal back_requested
@@ -23,12 +24,18 @@ static var COLOUR_MAGE_RANGE := UiTokens.colour(&"arcane", 0.25)
 ## buttons of neighbouring spots clear each other.
 const SITE_FILL := 0.78
 static var COLOUR_SLOT := UiTokens.colour(&"lamp_hot")
+## The route the enemies take: the arcs they spawn on, and the line from each to the keep.
+static var COLOUR_ROUTE := UiTokens.colour(&"boss", 0.7)
+const ROUTE_WIDTH := 3.0
+const ROUTE_DASH := 12.0
+const ROUTE_EDGE := 6.0
+const ROUTE_KEEP_GAP := 14.0
 const MAGE_ID := "mage_post"
 const EMPTY_SPOT := "Empty"
-const HINT := "Drag a post onto a spot, or press a spot."
-const NO_BLESSING := "No blessing"
+## Nothing explains how to place a post: the page shows it. The line is for a reason or a one-time note.
+const HINT := ""
+const NO_BLESSING := "None"
 const NOBODY := "Nobody"
-const QUICK_WHY := "Quick start needs a layout you have played here before."
 const BLESSING_HINT := "A blessing lasts one run. Take one, or none."
 const MAGE_HINT := "Drag a Mage Post onto a spot like an Archer Post."
 ## The one-time lines (each said once, the first time the page has the thing to say it about).
@@ -48,10 +55,10 @@ signal hint_seen(id: String)
 @onready var _start: Button = %StartButton
 @onready var _tower: Button = %TowerButton
 @onready var _auto: Button = %AutoButton
-@onready var _quick: Button = %QuickButton
 @onready var _side: Control = %Side
 @onready var _tray: GridContainer = %Tray
 @onready var _squad: Button = %SquadButton
+@onready var _squad_tile: Control = %SquadTile
 @onready var _blessings: HBoxContainer = %Blessings
 @onready var _blessing_text: Label = %BlessingText
 
@@ -66,8 +73,6 @@ var _slots := 0
 var _cards := 0
 ## The Mage Post cards the player holds, on top of the Archer cards.
 var _mage_cards := 0
-## The layout of the last run on this level ("" none yet): what Quick start reuses.
-var _saved: Array = []
 var _site_buttons: Dictionary = {}
 ## The blessing picked for the run ("" for none), and each blessing on offer's button by id.
 var _blessing := ""
@@ -93,25 +98,23 @@ func _ready() -> void:
 	_back.pressed.connect(back_requested.emit)
 	_start.pressed.connect(func() -> void: start_requested.emit(_chosen.duplicate()))
 	_auto.pressed.connect(auto_place)
-	_quick.pressed.connect(func() -> void: start_requested.emit(_saved.duplicate()))
 	_tower.pressed.connect(tower_requested.emit)
 	_squad.pressed.connect(squad_requested.emit)
 	# A lifted post goes back to the tray when let go anywhere that is not a free slot.
-	for target in [self, _map, _side, _auto, _quick, _start, _back]:
+	for target in [self, _map, _side, _auto, _start, _back]:
 		target.set_drag_forwarding(Callable(), _side_can_drop, _side_drop)
 	_map.draw.connect(_draw_map)
 	_map.resized.connect(_place_buttons)
 	visibility_changed.connect(_on_visibility_changed)
 
 
-## Shows the level's map with `layout` (entries: a spot id, or "mage:<spot id>") already placed.
-## `saved` says the layout is the player's own from an earlier run, which Quick start can then
-## reuse. The castle is set by `set_castle`.
-func open(level_id: String, layout: Array, saved: bool, spots: Array, cards: int, mage_cards := 0, slots := -1) -> void:
+## Shows the level's map with `layout` (entries: a spot id, or "mage:<spot id>") already placed: the
+## player's own from an earlier run, when they have one. `_saved` is kept for the callers. The castle is
+## set by `set_castle`.
+func open(level_id: String, layout: Array, _saved: bool, spots: Array, cards: int, mage_cards := 0, slots := -1) -> void:
 	_level_id = level_id
 	_level = _content["levels"][level_id]
 	_chosen = layout.duplicate()
-	_saved = layout.duplicate() if saved else []
 	_title.text = "Plan your defence: %s" % _level["name"]
 	_show_hint(HINT)
 	set_castle(spots, cards, mage_cards, slots)
@@ -197,6 +200,7 @@ func set_blessings(offer: Array) -> void:
 func set_squad(names: Array, known := -1) -> void:
 	var have := names.size() if known < 0 else known
 	_squad.visible = have > 0
+	_squad_tile.visible = have > 0
 	_squad_line = "" if have == 0 else ("Squad: %s" % ", ".join(PackedStringArray(names)) if not names.is_empty() else "Squad: nobody")
 	_squad.tooltip_text = "Pick who goes on the run"
 	_show_hint(_hint_text)
@@ -233,7 +237,7 @@ func _seen(id: String) -> bool:
 
 
 ## The hint line, then in the same paragraph one thing the page has not said yet (the Mage Post cards
-## in hand, the blessings, or why Quick start is shut), and under it the squad.
+## in hand or the blessings), and under it the squad.
 func _show_hint(text: String) -> void:
 	_hint_text = text
 	var extra := ""
@@ -246,10 +250,9 @@ func _show_hint(text: String) -> void:
 		elif _blessings.visible and not _seen(HINT_BLESSINGS):
 			extra = BLESSING_HINT
 			_extra_hint = HINT_BLESSINGS
-		elif _saved.is_empty():
-			extra = QUICK_WHY
 	var line := "%s %s" % [text, extra] if extra != "" else text
-	_hint.text = "%s\n%s" % [line, _squad_line] if _squad_line != "" else line
+	_hint.text = "%s\n%s" % [line, _squad_line] if _squad_line != "" and line != "" else (_squad_line if line == "" else line)
+	_hint.visible = _hint.text != ""
 
 
 ## The blessing picked for the run: an id, or "" for none.
@@ -342,9 +345,6 @@ func _refresh() -> void:
 	_count.text = "Posts: %d of %d" % [_chosen.size(), mini(_slots, _cards + _mage_cards)]
 	_start.disabled = _chosen.is_empty()
 	_start.text = "Start level" if not _chosen.is_empty() else "Start level\n%s" % NEED_A_POST
-	_quick.disabled = _saved.is_empty()
-	_quick.text = "Quick start" if not _saved.is_empty() else "Quick start (no layout yet)"
-	_quick.tooltip_text = QUICK_WHY if _saved.is_empty() else ""
 	_show_hint(_hint_text)
 	_refresh_cards()
 	_place_buttons()
@@ -474,6 +474,7 @@ func _draw_map() -> void:
 	var scale := _scale()
 	var centre: Vector2 = _map.size * 0.5
 	_map.draw_rect(Rect2(Vector2.ZERO, _map.size), COLOUR_ARENA, false, 2.0)
+	_draw_route(centre)
 	_map.draw_circle(centre, float(_level["keep_radius"]) * scale, COLOUR_KEEP)
 	for id in _spots:
 		var at: Vector2 = centre + Vector2(float(_spots[id]["x"]), float(_spots[id]["y"])) * scale
@@ -482,6 +483,36 @@ func _draw_map() -> void:
 		if placed >= 0:
 			var tower_id := _tower_of(_chosen[placed])
 			_map.draw_circle(at, float(_content["towers"][tower_id]["range"]) * scale, COLOUR_MAGE_RANGE if tower_id == MAGE_ID else COLOUR_RANGE)
+
+
+## The way the enemies come, as [start, end] lines in map pixels: from each spawn arc on the field's edge
+## to the keep.
+func route_lines() -> Array:
+	var out := []
+	if _level.is_empty():
+		return out
+	var centre: Vector2 = _map.size * 0.5
+	var reach := minf(_map.size.x, _map.size.y) * 0.5 - ROUTE_EDGE
+	for arc in _level.get("spawn_arcs", []):
+		var direction := Vector2.from_angle(deg_to_rad(float(arc["centre"])))
+		out.append([centre + direction * reach, centre + direction * (float(_level["keep_radius"]) * _scale() + ROUTE_KEEP_GAP)])
+	return out
+
+
+## The route drawn: each spawn arc thick where it meets the field's edge, and a dashed line from it to
+## the keep with an arrowhead.
+func _draw_route(centre: Vector2) -> void:
+	var reach := minf(_map.size.x, _map.size.y) * 0.5 - ROUTE_EDGE
+	var arcs: Array = _level.get("spawn_arcs", [])
+	var lines := route_lines()
+	for i in lines.size():
+		var arc: Dictionary = arcs[i]
+		_map.draw_arc(centre, reach, deg_to_rad(float(arc["centre"]) - float(arc["width"]) * 0.5), deg_to_rad(float(arc["centre"]) + float(arc["width"]) * 0.5), 24, COLOUR_ROUTE, ROUTE_WIDTH + 2.0, true)
+		_map.draw_dashed_line(lines[i][0], lines[i][1], COLOUR_ROUTE, ROUTE_WIDTH, ROUTE_DASH)
+		var direction: Vector2 = (lines[i][1] - lines[i][0]).normalized()
+		var side := direction.orthogonal()
+		var tip: Vector2 = lines[i][1] + direction * 2.0
+		_map.draw_colored_polygon(PackedVector2Array([tip, tip - direction * 14.0 + side * 8.0, tip - direction * 14.0 - side * 8.0]), COLOUR_ROUTE)
 
 
 func _on_visibility_changed() -> void:

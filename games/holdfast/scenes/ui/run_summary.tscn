@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/run_summary.gd" id="1_summary"]
 [ext_resource type="Script" path="res://scripts/ui/themed_backdrop.gd" id="backdrop_tok"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/star.svg" id="star"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/coin.svg" id="coin"]
 
 [node name="RunSummary" type="Control"]
 layout_mode = 3
@@ -40,7 +42,7 @@ layout_mode = 2
 
 [node name="Column" type="VBoxContainer" parent="Centre/Row/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="Title" type="Label" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
@@ -49,45 +51,94 @@ theme_type_variation = &"ScreenTitle"
 text = "Holdfast holds!"
 horizontal_alignment = 1
 
-[node name="Stats" type="GridContainer" parent="Centre/Row/Panel/Column"]
+[node name="StarRow" type="HBoxContainer" parent="Centre/Row/Panel/Column"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_constants/h_separation = 48
-theme_override_constants/v_separation = 8
-columns = 2
+theme_override_constants/separation = 12
 
-[node name="GoldCaption" type="Label" parent="Centre/Row/Panel/Column/Stats"]
+[node name="Star1" type="TextureRect" parent="Centre/Row/Panel/Column/StarRow"]
+custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
-text = "Gold earned"
+texture = ExtResource("star")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="GoldValue" type="Label" parent="Centre/Row/Panel/Column/Stats"]
+[node name="Star2" type="TextureRect" parent="Centre/Row/Panel/Column/StarRow"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+texture = ExtResource("star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Star3" type="TextureRect" parent="Centre/Row/Panel/Column/StarRow"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+texture = ExtResource("star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeepBar" type="Control" parent="Centre/Row/Panel/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(360, 10)
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="Stats" type="HBoxContainer" parent="Centre/Row/Panel/Column"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 40
+
+[node name="Gold" type="HBoxContainer" parent="Centre/Row/Panel/Column/Stats"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GoldIcon" type="TextureRect" parent="Centre/Row/Panel/Column/Stats/Gold"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GoldValue" type="Label" parent="Centre/Row/Panel/Column/Stats/Gold"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudValue"
 text = "0"
-horizontal_alignment = 2
 
-[node name="WavesCaption" type="Label" parent="Centre/Row/Panel/Column/Stats"]
+[node name="Stars" type="HBoxContainer" parent="Centre/Row/Panel/Column/Stats"]
 layout_mode = 2
-text = "Waves cleared"
+theme_override_constants/separation = 8
 
-[node name="WavesValue" type="Label" parent="Centre/Row/Panel/Column/Stats"]
+[node name="StarsIcon" type="TextureRect" parent="Centre/Row/Panel/Column/Stats/Stars"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="StarsValue" type="Label" parent="Centre/Row/Panel/Column/Stats/Stars"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudValue"
+text = "0"
+
+[node name="Waves" type="HBoxContainer" parent="Centre/Row/Panel/Column/Stats"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="WavesCaption" type="Label" parent="Centre/Row/Panel/Column/Stats/Waves"]
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "Waves"
+
+[node name="WavesValue" type="Label" parent="Centre/Row/Panel/Column/Stats/Waves"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudValue"
 text = "0 / 0"
-horizontal_alignment = 2
-
-[node name="StarsCaption" type="Label" parent="Centre/Row/Panel/Column/Stats"]
-layout_mode = 2
-text = "Stars won"
-
-[node name="StarsValue" type="Label" parent="Centre/Row/Panel/Column/Stats"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"HudValue"
-text = "0"
-horizontal_alignment = 2
 
 [node name="Reward" type="Label" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
@@ -103,26 +154,23 @@ layout_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="UnlockedLine" type="Label" parent="Centre/Row/Panel/Column"]
+[node name="Unlocked" type="VBoxContainer" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
 visible = false
-custom_minimum_size = Vector2(620, 0)
+custom_minimum_size = Vector2(560, 0)
 layout_mode = 2
-horizontal_alignment = 1
-autowrap_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 6
 
-[node name="StarsNote" type="Label" parent="Centre/Row/Panel/Column"]
-unique_name_in_owner = true
-visible = false
+[node name="UnlockedCaption" type="Label" parent="Centre/Row/Panel/Column/Unlocked"]
 layout_mode = 2
-horizontal_alignment = 1
+theme_type_variation = &"Caption"
+text = "Unlocked"
 
-[node name="GearFound" type="Label" parent="Centre/Row/Panel/Column"]
+[node name="UnlockedList" type="VBoxContainer" parent="Centre/Row/Panel/Column/Unlocked"]
 unique_name_in_owner = true
-visible = false
 layout_mode = 2
-horizontal_alignment = 1
-autowrap_mode = 2
+theme_override_constants/separation = 6
 
 [node name="Salvaged" type="Label" parent="Centre/Row/Panel/Column"]
 unique_name_in_owner = true
@@ -146,27 +194,29 @@ layout_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="GuideNote" type="Label" parent="Centre/Row/Panel/Column"]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(620, 0)
+[node name="Primary" type="HBoxContainer" parent="Centre/Row/Panel/Column"]
 layout_mode = 2
-horizontal_alignment = 1
-autowrap_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 12
 
-[node name="NextLevelButton" type="Button" parent="Centre/Row/Panel/Column"]
+[node name="SpendButton" type="Button" parent="Centre/Row/Panel/Column/Primary"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
-size_flags_horizontal = 4
+text = "Spend stars"
+
+[node name="NextLevelButton" type="Button" parent="Centre/Row/Panel/Column/Primary"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
 text = "Next level"
 
-[node name="PlayAgainButton" type="Button" parent="Centre/Row/Panel/Column"]
+[node name="PlayAgainButton" type="Button" parent="Centre/Row/Panel/Column/Primary"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
-size_flags_horizontal = 4
 text = "Play again"
 
 [node name="Secondary" type="HBoxContainer" parent="Centre/Row/Panel/Column"]

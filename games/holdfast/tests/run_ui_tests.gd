@@ -198,7 +198,10 @@ func _test_readable_layout() -> void:
 		await _check_layout(hud, window, scale, view)
 		hud.get_node("%PostsNote").visible = false
 		# The summary after a win, with Next level and the Upgrade screen as well.
-		_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": false, "stars_paid": 2, "reward_gold": 150, "stars_note": "Stars buy slots and towers. Gold buys upgrades.", "recruit_changes": [{"name": "Longest Name Ok", "to": 5, "trait": "steady"}, {"name": "Longest Name Ok", "to": 3, "trait": ""}, {"name": "Longest Name Ok", "class": "lookout", "to": 1, "trait": "", "joined": true}]}, "shingle_beach")
+		_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": false, "stars_paid": 2, "reward_gold": 150, "keep_health": 72, "keep_health_max": 100, "result": {"outcome": "won", "level": "shingle_beach", "keep_left": 0.72, "salvaged": 99999},
+				"notes": {"boss": "The Fog Warden is beaten, and the longest name on the longest day.", "way_on": "More is coming."},
+				"unlocks": [{"kind": "blessing", "id": "steady_flame", "name": "Steady Flame", "text": "Your lamp burns steadier: the longest line the pack has for a blessing.", "amount": 0}, {"kind": "recruit", "id": "wren", "name": "Longest Name Ok", "text": "Lookout", "amount": 0}, {"kind": "gear", "id": "beacon_visor", "name": "Beacon visor of the longest night", "text": "", "amount": 0}, {"kind": "hero_path", "id": "dusk_mage", "name": "Dusk Mage", "text": "", "amount": 0}, {"kind": "salvage", "id": "", "name": "", "text": "", "amount": 99999}],
+				"recruit_changes": [{"name": "Longest Name Ok", "to": 5, "trait": "steady"}, {"name": "Longest Name Ok", "to": 3, "trait": ""}, {"name": "Longest Name Ok", "class": "lookout", "to": 1, "trait": "", "joined": true}]}, "shingle_beach")
 		_main.summary.set_picks(profile.get_pending_picks())
 		await _check_layout(_main.summary, window, scale, view)
 		_main.summary.show_summary({"gold_earned": 9_999_999, "waves_cleared": 99, "total_waves": 99, "keep_fell": true})
