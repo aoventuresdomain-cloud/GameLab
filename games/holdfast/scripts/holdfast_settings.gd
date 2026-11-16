@@ -1,6 +1,6 @@
 class_name HoldfastSettings
 extends Node
-## The player's settings: volume, screen shake, flashes, game speed, and which one-time hints they have
+## The player's settings: volume, screen shake, flashes, reduced motion, game speed, and which one-time hints they have
 ## seen. Saved through the kit's SaveService in a file of their own, apart from the profile, so
 ## "New game" keeps them and a profile reset cannot lose them. Screens read it through get_/is_/
 ## are_ accessors; the run flow is the only caller of the setters.
@@ -23,6 +23,7 @@ var load_message := ""
 var _volume := DEFAULT_VOLUME
 var _shake := true
 var _flashes := true
+var _reduced_motion := false
 var _speed := 1
 var _hints_seen: Array = []
 var _service: SaveService
@@ -39,6 +40,7 @@ func load_settings() -> void:
 	_volume = DEFAULT_VOLUME
 	_shake = true
 	_flashes = true
+	_reduced_motion = false
 	_speed = 1
 	_hints_seen = []
 	load_message = ""
@@ -52,6 +54,7 @@ func load_settings() -> void:
 		_volume = clampf(float(volume), 0.0, 1.0) if volume is float or volume is int else DEFAULT_VOLUME
 		_shake = saved.get("shake") if saved.get("shake") is bool else true
 		_flashes = saved.get("flashes") if saved.get("flashes") is bool else true
+		_reduced_motion = saved.get("reduced_motion") if saved.get("reduced_motion") is bool else false
 		var speed: Variant = saved.get("speed")
 		_speed = 2 if (speed is int or speed is float) and int(speed) == 2 else 1
 		var seen: Variant = saved.get("hints_seen", [])
@@ -62,6 +65,11 @@ func load_settings() -> void:
 			notice.emit(load_message)
 	_apply_volume()
 	changed.emit()
+
+
+## True when the player asked for less movement: the home screen's beam stands still.
+func is_motion_reduced() -> bool:
+	return _reduced_motion
 
 
 func get_volume() -> float:
@@ -101,6 +109,11 @@ func set_flashes(on: bool) -> void:
 	_commit()
 
 
+func set_reduced_motion(on: bool) -> void:
+	_reduced_motion = on
+	_commit()
+
+
 ## 2 for double speed, anything else 1.
 func set_speed(speed: int) -> void:
 	_speed = 2 if speed == 2 else 1
@@ -122,6 +135,6 @@ func _apply_volume() -> void:
 
 
 func _commit() -> void:
-	if _service != null and not _service.save({"volume": _volume, "shake": _shake, "flashes": _flashes, "speed": _speed, "hints_seen": _hints_seen}):
+	if _service != null and not _service.save({"volume": _volume, "shake": _shake, "flashes": _flashes, "reduced_motion": _reduced_motion, "speed": _speed, "hints_seen": _hints_seen}):
 		notice.emit("Your settings could not be saved.")
 	changed.emit()

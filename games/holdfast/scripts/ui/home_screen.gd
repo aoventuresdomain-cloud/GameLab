@@ -1,13 +1,13 @@
 extends Control
-## Home screen: Continue, New game, Settings, Quit. It only asks; the run flow
-## acts. New game asks twice when there is progress to lose.
+## Home screen: the lighthouse and the sea, with Continue (the one main button, saying where the
+## player is), New game, Settings and a small Quit. It only asks; the run flow acts. New game asks
+## twice when there is progress to lose.
 
 signal continue_requested
 signal new_game_requested
 signal settings_requested
 signal quit_requested
 
-const Hud = preload("res://scripts/ui/hud.gd")
 const CONFIRM_TEXT := "Erase your progress?\nClick again to start over"
 
 @onready var _continue: Button = %ContinueButton
@@ -15,6 +15,7 @@ const CONFIRM_TEXT := "Erase your progress?\nClick again to start over"
 @onready var _settings: Button = %SettingsButton
 @onready var _quit: Button = %QuitButton
 @onready var _notice: Label = %Notice
+@onready var _scene: Control = %Scene
 
 var _profile: Node
 var _confirming := false
@@ -46,11 +47,21 @@ func refresh() -> void:
 		_new_game.text = "New game"
 
 
-## "Continue", and under it where the player is: level, Hero path and gold.
+## "Continue", and under it where the player is: the level's number and name.
 func _continue_text() -> String:
-	var content := HoldfastContent.base()
-	var level: Dictionary = content["levels"][_profile.get_level()]
-	return "Continue\nLevel %d · %s · %s gold" % [int(level.get("number", 0)), content["hero_paths"][_profile.get_pillar()]["name"], Hud.format_number(_profile.get_gold())]
+	var level: Dictionary = HoldfastContent.base()["levels"][_profile.get_level()]
+	return "Continue\nLevel %d · %s" % [int(level.get("number", 0)), level["name"]]
+
+
+## Lets the beam stand still when the player asked for reduced motion.
+func bind_settings(settings: Node) -> void:
+	settings.changed.connect(func() -> void: _scene.set_moving(not settings.is_motion_reduced()))
+	_scene.set_moving(not settings.is_motion_reduced())
+
+
+## True while the beam is swinging (for tests).
+func is_beam_moving() -> bool:
+	return _scene.is_moving()
 
 
 func show_notice(message: String) -> void:

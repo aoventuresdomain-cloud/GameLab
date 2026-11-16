@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=20 format=3]
+[gd_resource type="Theme" load_steps=24 format=3]
 
 [sub_resource type="StyleBoxFlat" id="panel"]
 content_margin_left = 16
@@ -233,6 +233,50 @@ font_weight = 700
 [sub_resource type="FontVariation" id="bold"]
 base_font = SubResource("sans_bold")
 
+[sub_resource type="StyleBoxFlat" id="rail_panel"]
+bg_color = Color(0.0745, 0.1059, 0.1804, 1)
+border_width_right = 1
+border_color = Color(0.1843, 0.2392, 0.3608, 1)
+content_margin_left = 8
+content_margin_top = 12
+content_margin_right = 8
+content_margin_bottom = 12
+
+[sub_resource type="StyleBoxFlat" id="rail_tab"]
+bg_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 12
+content_margin_top = 10
+content_margin_right = 12
+content_margin_bottom = 10
+
+[sub_resource type="StyleBoxFlat" id="rail_tab_hover"]
+bg_color = Color(0.1098, 0.1529, 0.2510, 0.6)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 12
+content_margin_top = 10
+content_margin_right = 12
+content_margin_bottom = 10
+
+[sub_resource type="StyleBoxFlat" id="rail_tab_here"]
+bg_color = Color(0.1098, 0.1529, 0.2510, 1)
+border_width_left = 4
+border_color = Color(0.9569, 0.6902, 0.2902, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 12
+content_margin_top = 10
+content_margin_right = 12
+content_margin_bottom = 10
+
 [resource]
 default_font_size = 22
 Tokens/colors/night = Color(0.0471, 0.0706, 0.1255, 1)
@@ -252,11 +296,13 @@ Tokens/colors/arcane = Color(0.6039, 0.4824, 0.8784, 1)
 Button/colors/font_color = Color(0.9373, 0.9098, 0.8392, 1)
 Button/colors/font_hover_color = Color(1.0000, 0.8510, 0.5412, 1)
 Button/colors/font_pressed_color = Color(1.0000, 0.8510, 0.5412, 1)
+Button/colors/font_hover_pressed_color = Color(1.0000, 0.8510, 0.5412, 1)
 Button/colors/font_focus_color = Color(0.9373, 0.9098, 0.8392, 1)
 Button/colors/font_disabled_color = Color(0.6039, 0.6431, 0.7333, 1)
 Button/colors/icon_normal_color = Color(0.9373, 0.9098, 0.8392, 1)
 Button/colors/icon_hover_color = Color(1.0000, 0.8510, 0.5412, 1)
 Button/colors/icon_pressed_color = Color(1.0000, 0.8510, 0.5412, 1)
+Button/colors/icon_hover_pressed_color = Color(1.0000, 0.8510, 0.5412, 1)
 Button/colors/icon_focus_color = Color(0.9373, 0.9098, 0.8392, 1)
 Button/colors/icon_disabled_color = Color(0.6039, 0.6431, 0.7333, 1)
 Button/constants/h_separation = 8
@@ -264,6 +310,7 @@ Button/font_sizes/font_size = 24
 Button/styles/normal = SubResource("btn_normal")
 Button/styles/hover = SubResource("btn_hover")
 Button/styles/pressed = SubResource("btn_pressed")
+Button/styles/hover_pressed = SubResource("btn_pressed")
 Button/styles/disabled = SubResource("btn_disabled")
 Button/styles/focus = SubResource("btn_focus")
 MainButton/base_type = &"Button"
@@ -278,6 +325,8 @@ MainButton/colors/icon_pressed_color = Color(0.1647, 0.1020, 0.0196, 1)
 MainButton/styles/normal = SubResource("main_normal")
 MainButton/styles/hover = SubResource("main_hover")
 MainButton/styles/pressed = SubResource("main_pressed")
+MainButton/styles/hover_pressed = SubResource("main_pressed")
+MainButton/colors/font_hover_pressed_color = Color(0.1647, 0.1020, 0.0196, 1)
 MainButton/styles/disabled = SubResource("main_disabled")
 MainButton/styles/focus = SubResource("btn_focus")
 QuietButton/base_type = &"Button"
@@ -292,6 +341,8 @@ QuietButton/colors/icon_focus_color = Color(0.9373, 0.9098, 0.8392, 1)
 QuietButton/styles/normal = SubResource("quiet_normal")
 QuietButton/styles/hover = SubResource("quiet_hover")
 QuietButton/styles/pressed = SubResource("quiet_pressed")
+QuietButton/styles/hover_pressed = SubResource("quiet_pressed")
+QuietButton/colors/font_hover_pressed_color = Color(0.9373, 0.9098, 0.8392, 1)
 QuietButton/styles/disabled = SubResource("quiet_normal")
 QuietButton/styles/focus = SubResource("btn_focus")
 Label/colors/font_color = Color(0.9373, 0.9098, 0.8392, 1)
@@ -367,6 +418,22 @@ CardPriceShort/font_sizes/font_size = 24
 Modifier/base_type = &"Label"
 Modifier/colors/font_color = Color(0.9569, 0.6902, 0.2902, 1)
 Modifier/font_sizes/font_size = 20
+RailPanel/base_type = &"PanelContainer"
+RailPanel/styles/panel = SubResource("rail_panel")
+RailTab/base_type = &"Button"
+RailTab/colors/font_color = Color(0.6039, 0.6431, 0.7333, 1)
+RailTab/colors/font_hover_color = Color(0.9373, 0.9098, 0.8392, 1)
+RailTab/colors/font_pressed_color = Color(0.9373, 0.9098, 0.8392, 1)
+RailTab/colors/font_hover_pressed_color = Color(0.9373, 0.9098, 0.8392, 1)
+RailTab/colors/font_focus_color = Color(0.6039, 0.6431, 0.7333, 1)
+RailTab/font_sizes/font_size = 20
+RailTab/colors/font_disabled_color = Color(0.3, 0.34, 0.43, 1)
+RailTab/styles/normal = SubResource("rail_tab")
+RailTab/styles/hover = SubResource("rail_tab_hover")
+RailTab/styles/pressed = SubResource("rail_tab_here")
+RailTab/styles/hover_pressed = SubResource("rail_tab_here")
+RailTab/styles/disabled = SubResource("rail_tab")
+RailTab/styles/focus = SubResource("btn_focus")
 PanelContainer/styles/panel = SubResource("panel")
 Chip/base_type = &"PanelContainer"
 Chip/styles/panel = SubResource("chip")

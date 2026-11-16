@@ -52,11 +52,11 @@ func _at_the_map_with_gold(main: Node, gold: int) -> HoldfastProfile:
 func test_the_dot_shows_when_something_can_be_bought_and_the_name_stays_short() -> void:
 	var main := _main()
 	var map: Control = main.journey
-	expect_false(map._tree_dot.visible, "a new game has nothing to buy")
+	expect_false(map.rail.has_dot("Tree"), "a new game has nothing to buy")
 	_at_the_map_with_gold(main, 100)
-	expect_true(map._tree_dot.visible, "100 gold buys something")
-	expect_eq(map.get_node("%TreeButton").text, "Skill tree", "the count is gone: the dot says it")
-	expect_true(map._tree_dot.get_parent() == map.get_node("%TreeButton"))
+	expect_true(map.rail.has_dot("Tree"), "100 gold buys something")
+	expect_eq(map.rail.tab("Tree").text, "Tree", "one word: the dot says there is something to buy")
+	expect_true(map.rail._dots["Tree"].get_parent() == map.rail.tab("Tree"))
 	main.free()
 
 
@@ -65,9 +65,9 @@ func test_looking_at_the_tree_clears_the_dot_and_it_stays_clear_on_the_way_back(
 	var map: Control = main.journey
 	_at_the_map_with_gold(main, 100)
 	main.call("_show", main.Screen.TREE)
-	expect_false(map._tree_dot.visible, "opened")
+	expect_false(map.rail.has_dot("Tree"), "opened")
 	main.call("_show", main.Screen.MAP)
-	expect_false(map._tree_dot.visible, "and still clear when back, though the same things can still be bought")
+	expect_false(map.rail.has_dot("Tree"), "and still clear when back, though the same things can still be bought")
 	main.free()
 
 
@@ -82,7 +82,7 @@ func test_what_became_affordable_while_the_tree_was_open_asks_for_no_dot() -> vo
 	# Something that became affordable while the tree was open was seen there too.
 	profile.bank_run({"gold": 5000, "outcome": "lost", "level": "outpost"})
 	main.call("_show", main.Screen.MAP)
-	expect_false(map._tree_dot.visible, "what the player saw in the tree asks for no dot")
+	expect_false(map.rail.has_dot("Tree"), "what the player saw in the tree asks for no dot")
 	main.free()
 
 
@@ -92,9 +92,9 @@ func test_the_dot_comes_back_when_something_new_becomes_affordable() -> void:
 	var profile := _at_the_map_with_gold(main, 100)
 	main.call("_show", main.Screen.TREE)
 	main.call("_show", main.Screen.MAP)
-	expect_false(map._tree_dot.visible)
+	expect_false(map.rail.has_dot("Tree"))
 	profile.bank_run({"gold": 5000, "outcome": "lost", "level": "outpost"})
-	expect_true(map._tree_dot.visible, "a run's gold made new nodes affordable")
+	expect_true(map.rail.has_dot("Tree"), "a run's gold made new nodes affordable")
 	main.free()
 
 
@@ -106,8 +106,8 @@ func test_no_dot_while_the_guide_has_the_tree_shut() -> void:
 	profile.data = HoldfastMeta.bank_run(content, HoldfastMeta.new_profile(content), {"outcome": "won", "level": HoldfastMeta.tutorial_level(content), "gold": 0})
 	profile.changed.emit()
 	expect_false(profile.get_buyable_nodes().is_empty(), "the guided slot is on offer")
-	expect_false(map._tree_dot.visible, "but the guide, not a dot, asks for it")
-	expect_false(map._hero_dot.visible)
+	expect_false(map.rail.has_dot("Tree"), "but the guide, not a dot, asks for it")
+	expect_false(map.rail.has_dot("Hero"))
 	main.free()
 
 
@@ -118,12 +118,14 @@ func test_the_dot_is_a_drawn_shape_on_the_corner_not_over_the_name() -> void:
 	main.call("_show", main.Screen.MAP)
 	await tree.process_frame
 	await tree.process_frame
-	var button: Button = map.get_node("%TreeButton")
-	var dot: Control = map._tree_dot
+	var button: Button = map.rail.tab("Tree")
+	var dot: Control = map.rail._dots["Tree"]
 	expect_true(dot.size.x >= 12.0 and dot.size.x == dot.size.y, "a visible round dot")
 	expect_true(dot.mouse_filter == Control.MOUSE_FILTER_IGNORE, "it never takes a press")
-	var corner := button.get_global_rect().end - Vector2(0, button.size.y)
-	expect_true(dot.get_global_rect().has_point(corner), "it sits on the top right corner")
+	var name_width := button.get_theme_font("font").get_string_size(button.text, HORIZONTAL_ALIGNMENT_LEFT, -1, button.get_theme_font_size("font_size")).x
+	expect_true(button.get_global_rect().encloses(dot.get_global_rect()), "it sits inside the tab")
+	expect_true(dot.get_global_rect().position.y < button.get_global_rect().position.y + 12.0 and dot.get_global_rect().end.x > button.get_global_rect().end.x - 12.0, "in its top right corner")
+	expect_true(dot.get_global_rect().position.x - (button.get_global_rect().get_center().x + name_width * 0.5) >= 6.0, "6 px clear of the name")
 	expect_true(tree.root.get_visible_rect().encloses(dot.get_global_rect()), "and stays on screen")
 	main.free()
 
@@ -170,16 +172,16 @@ func test_a_new_piece_puts_a_dot_on_the_hero_tab_until_the_page_is_opened() -> v
 	var map: Control = main.journey
 	var profile: HoldfastProfile = main.get_node("Profile")
 	ThroughLevelZero.apply(profile)
-	expect_false(map._hero_dot.visible, "nothing found yet")
+	expect_false(map.rail.has_dot("Hero"), "nothing found yet")
 	profile.bank_run({"outcome": "won", "level": "outpost", "gold": 0, "gear_found": ["wave_worn_boots"]})
-	expect_true(map._hero_dot.visible, "a piece nobody has looked at")
-	expect_true(map._hero_dot.get_parent() == map._hero_button)
+	expect_true(map.rail.has_dot("Hero"), "a piece nobody has looked at")
+	expect_true(map.rail._dots["Hero"].get_parent() == map.rail.tab("Hero"))
 	main.call("_show", main.Screen.HERO)
-	expect_false(map._hero_dot.visible, "the page was opened")
+	expect_false(map.rail.has_dot("Hero"), "the page was opened")
 	main.call("_show", main.Screen.MAP)
-	expect_false(map._hero_dot.visible)
+	expect_false(map.rail.has_dot("Hero"))
 	profile.bank_run({"outcome": "won", "level": "shingle_beach", "gold": 0, "gear_found": ["gull_feather_fletching"]})
-	expect_true(map._hero_dot.visible, "the next piece asks again")
+	expect_true(map.rail.has_dot("Hero"), "the next piece asks again")
 	main.free()
 
 

@@ -116,7 +116,7 @@ func test_the_plan_button_fits_the_header_and_looks_like_the_others_at_every_siz
 	_past_level_zero(main)
 	var journey: Control = main.journey
 	var plan := _plan_button(main)
-	var tree_button: Button = journey.get_node("%TreeButton")
+	var tree_button: Button = journey.rail.tab("Tree")
 	for window in WINDOWS:
 		tree.root.size = window
 		await tree.process_frame
@@ -128,8 +128,8 @@ func test_the_plan_button_fits_the_header_and_looks_like_the_others_at_every_siz
 		expect_true(rect.position.x >= 0.0 and rect.end.x <= float(window.x), "%s: inside the width (%s)" % [label, rect])
 		expect_true(rect.position.y >= 0.0 and rect.end.y <= float(window.y), "%s: inside the height (%s)" % [label, rect])
 		expect_true(plan.size.x >= plan.get_minimum_size().x, "%s: the word fits its button" % label)
-		expect_eq(plan.get_theme_font_size("font_size"), tree_button.get_theme_font_size("font_size"), "%s: same type size as Skill tree" % label)
-		expect_eq(plan.size.y, tree_button.size.y, "%s: same height as Skill tree" % label)
+		expect_eq(plan.get_theme_font_size("font_size"), main.hero_page.get_node("%TreeButton").get_theme_font_size("font_size"), "%s: same type size as the other header buttons" % label)
+		expect_true(plan.size.y >= 44.0, "%s: a 44 px target at least" % label)
 		for other in [journey.get_node("%BackButton"), tree_button, journey.get_node("%GoldValue"), journey.get_node("%StarsValue")]:
 			expect_false(plan.get_global_rect().intersects(other.get_global_rect()), "%s: clear of %s" % [label, other.name])
 	main.free()

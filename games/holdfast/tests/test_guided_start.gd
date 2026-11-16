@@ -73,22 +73,22 @@ func test_the_map_shuts_the_tree_and_the_hero_page_until_the_guide_is_done() -> 
 	var profile: HoldfastProfile = main.get_node("Profile")
 	profile.new_game()
 	var map: Control = main.journey
-	expect_false(map.get_node("%TreeButton").disabled, "a new game can open the tree")
+	expect_false(map.rail.tab("Tree").disabled, "a new game can open the tree")
 	profile.data = _after_level_zero()
 	profile.changed.emit()
 	expect_true(map.get_node("%Guide").visible)
-	expect_true(map.get_node("%TreeButton").disabled, "the tree is shut during the guide")
-	expect_true(map._hero_button.disabled, "and so is the Hero page")
+	expect_true(map.rail.tab("Tree").disabled, "the tree is shut during the guide")
+	expect_true(map.rail.tab("Hero").disabled, "and so is the Hero page")
 	expect_true(map._hero_figure.disabled, "including the figure")
 	map.get_node("%GuideButton").pressed.emit()
 	expect_eq(profile.get_upgrades(), ["castle_slot_1"], "the guide buys the slot")
-	expect_true(map.get_node("%TreeButton").disabled)
+	expect_true(map.rail.tab("Tree").disabled)
 	map.get_node("%GuideButton").pressed.emit()
 	expect_true(profile.has_a_tower())
 	expect_eq(map.get_node("%GuideButton").text, "Start", "the strip now offers the short fight")
 	expect_false(main.get_node("RunSource").is_running(), "and nothing starts without a press")
-	expect_false(map.get_node("%TreeButton").disabled, "the tree opens when the guide is done")
-	expect_false(map._hero_button.disabled)
+	expect_false(map.rail.tab("Tree").disabled, "the tree opens when the guide is done")
+	expect_false(map.rail.tab("Hero").disabled)
 	main.free()
 
 
@@ -201,8 +201,8 @@ func test_a_save_with_the_stars_spent_on_slots_can_open_the_tree_and_the_hero_pa
 	var profile: HoldfastProfile = main.get_node("Profile")
 	profile.data = _stuck_save(150)
 	profile.changed.emit()
-	expect_false(main.journey.get_node("%TreeButton").disabled, "the tree is reachable")
-	expect_false(main.journey._hero_button.disabled, "so is the Hero page")
+	expect_false(main.journey.rail.tab("Tree").disabled, "the tree is reachable")
+	expect_false(main.journey.rail.tab("Hero").disabled, "so is the Hero page")
 	expect_true(main.journey.get_node("%Guide").visible and main.journey.get_node("%GuideButton").disabled, "the guide still names the step it is waiting on")
 	main.free()
 
@@ -245,7 +245,7 @@ func _open_tree(profile_data: Dictionary) -> Array:
 	var profile: HoldfastProfile = main.get_node("Profile")
 	profile.data = profile_data
 	profile.changed.emit()
-	main.journey.get_node("%TreeButton").pressed.emit()
+	main.journey.rail.press("Tree")
 	await tree.process_frame
 	await tree.process_frame
 	return [main, main.keep_screen]
@@ -307,7 +307,7 @@ func test_the_view_the_player_chose_survives_closing_and_opening_the_tree() -> v
 	var scale_after := web.scale.x
 	var place := web.position
 	page.get_node("%BackButton").pressed.emit()
-	main.journey.get_node("%TreeButton").pressed.emit()
+	main.journey.rail.press("Tree")
 	await tree.process_frame
 	expect_eq(web.scale.x, scale_after, "the zoom stays")
 	expect_eq(web.position, place, "and so does the pan")
@@ -334,7 +334,7 @@ func test_a_view_nobody_touched_is_laid_out_again_each_visit() -> void:
 	var first := web.scale.x
 	page.get_node("%BackButton").pressed.emit()
 	main.get_node("Profile").data["gold"] = 1
-	main.journey.get_node("%TreeButton").pressed.emit()
+	main.journey.rail.press("Tree")
 	await tree.process_frame
 	expect_eq(web.scale.x, first, "same overview")
 	main.free()

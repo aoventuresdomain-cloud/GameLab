@@ -70,6 +70,11 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Flashes"
 
+[node name="MotionButton" type="CheckButton" parent="Centre/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reduce motion: Off"
+
 [node name="AchievementsButton" type="Button" parent="Centre/Column"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(320, 0)

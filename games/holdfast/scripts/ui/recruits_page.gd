@@ -13,6 +13,7 @@ signal rename_requested(who: String, text: String)
 
 const Hud = preload("res://scripts/ui/hud.gd")
 const HUB_HEADER = preload("res://scenes/ui/hub_header.tscn")
+const HUB_RAIL = preload("res://scenes/ui/hub_rail.tscn")
 ## Waiting picks shown at once; the rest follow as these are made.
 const PICKS_SHOWN := 1
 
@@ -21,6 +22,8 @@ var _content: Dictionary
 var _selected := ""
 var _building := false
 
+## The rail on the left, which goes to the other hub screens.
+var rail: HubRail
 var _back: Button
 var _title: Label
 var _gold: Label
@@ -44,8 +47,8 @@ func _ready() -> void:
 	add_child(backdrop)
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right"]:
-		margin.add_theme_constant_override("margin_" + side, 24)
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_right", 24)
 	for side in ["top", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 12)
 	add_child(margin)
@@ -55,6 +58,19 @@ func _ready() -> void:
 
 	var header: Control = HUB_HEADER.instantiate()
 	column.add_child(header)
+	# Everything under the header sits right of the rail.
+	var inset := MarginContainer.new()
+	inset.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	inset.add_theme_constant_override("margin_left", int(HubRail.CONTENT_MARGIN))
+	column.add_child(inset)
+	# A full roster and board are taller than the screen: the page scrolls, never squeezes.
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	inset.add_child(scroll)
+	var body := VBoxContainer.new()
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 6)
+	scroll.add_child(body)
 	_back = header.get_node("BackButton")
 	_back.pressed.connect(back_requested.emit)
 	_title = header.get_node("Title")
@@ -73,16 +89,16 @@ func _ready() -> void:
 
 	_picks = VBoxContainer.new()
 	_picks.add_theme_constant_override("separation", 8)
-	column.add_child(_picks)
+	body.add_child(_picks)
 
 	_roster = HFlowContainer.new()
 	_roster.add_theme_constant_override("h_separation", 6)
 	_roster.add_theme_constant_override("v_separation", 8)
-	column.add_child(_roster)
+	body.add_child(_roster)
 
 	var detail := HBoxContainer.new()
 	detail.add_theme_constant_override("separation", 8)
-	column.add_child(detail)
+	body.add_child(detail)
 	_detail_name = LineEdit.new()
 	_detail_name.custom_minimum_size = Vector2(220, 0)
 	_detail_name.max_length = RecruitRoster.NAME_MAX
@@ -100,11 +116,14 @@ func _ready() -> void:
 
 	_board_note = _label("")
 	_board_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(_board_note)
+	body.add_child(_board_note)
 	_board = HFlowContainer.new()
 	_board.add_theme_constant_override("h_separation", 8)
 	_board.add_theme_constant_override("v_separation", 8)
-	column.add_child(_board)
+	body.add_child(_board)
+	rail = HUB_RAIL.instantiate()
+	rail.current = "Squad"
+	add_child(rail)
 	visibility_changed.connect(_on_visibility_changed)
 
 
@@ -208,7 +227,8 @@ func _fill_detail() -> void:
 	var why: String = "" if on_squad else _profile.why_not_squad(_selected)
 	_squad_button.disabled = why != ""
 	_squad_button.tooltip_text = why
-	_board_note.text = why if why != "" else ""
+	_board_note.text = why
+	_board_note.visible = why != ""
 
 
 func _fill_board() -> void:

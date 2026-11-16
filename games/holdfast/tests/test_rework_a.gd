@@ -28,7 +28,7 @@ func test_continue_says_where_the_player_is_and_is_plain_with_no_save() -> void:
 	profile.select_pillar("tideblade")
 	profile.select_level("shingle_beach")
 	profile.bank_run({"gold": 1240, "outcome": "lost", "level": "shingle_beach"})
-	expect_eq(button.text, "Continue\nLevel 2 · Tideblade · 1.2K gold")
+	expect_eq(button.text, "Continue\nLevel 2 · Shingle Beach", "the level the player is on, by number and name")
 	main.free()
 
 
@@ -92,13 +92,13 @@ func test_tapping_an_open_level_plans_it_and_a_locked_one_does_nothing() -> void
 	main.free()
 
 
-func test_the_skill_tree_button_has_a_dot_when_upgrades_can_be_bought() -> void:
+func test_the_tree_tab_has_a_dot_when_upgrades_can_be_bought() -> void:
 	var main := _main()
 	var map: Control = main.journey
 	var profile: HoldfastProfile = main.get_node("Profile")
 	expect_eq(map.upgrades_available(), 0)
-	expect_eq(map.get_node("%TreeButton").text, "Skill tree")
-	expect_false(map._tree_dot.visible, "nothing to buy, no dot")
+	expect_eq(map.rail.tab("Tree").text, "Tree")
+	expect_false(map.rail.has_dot("Tree"), "nothing to buy, no dot")
 	ThroughLevelZero.apply_castle(profile)
 	profile.bank_run({"gold": 100, "outcome": "lost", "level": "outpost"})
 	var affordable := 0
@@ -107,22 +107,25 @@ func test_the_skill_tree_button_has_a_dot_when_upgrades_can_be_bought() -> void:
 			affordable += 1
 	expect_true(affordable > 0, "100 gold buys something")
 	expect_eq(map.upgrades_available(), affordable)
-	expect_eq(map.get_node("%TreeButton").text, "Skill tree")
-	expect_true(map._tree_dot.visible, "the dot says there is something to buy")
+	expect_eq(map.rail.tab("Tree").text, "Tree")
+	expect_true(map.rail.has_dot("Tree"), "the dot says there is something to buy")
 	main.free()
 
 
-func test_the_hero_figure_names_the_path_and_opens_the_hero_page() -> void:
+func test_the_hero_tab_and_the_hero_figure_both_open_the_hero_page() -> void:
 	var main := _main()
 	var profile: HoldfastProfile = main.get_node("Profile")
-	expect_eq(main.journey._hero_button.text, "Hero: Flare Archer")
+	expect_eq(main.journey.get_node("%HeroName").text, "Flare Archer", "the chosen path is named on the map")
 	profile.data["paths_kept"] = ["dusk_mage"]
 	profile.select_pillar("dusk_mage")
-	expect_eq(main.journey._hero_button.text, "Hero: Dusk Mage")
-	main.journey._hero_button.pressed.emit()
+	expect_eq(main.journey.get_node("%HeroName").text, "Dusk Mage", "and follows the pick")
+	expect_eq(main.journey.rail.tab("Hero").text, "Hero", "one word")
+	main.journey.rail.press("Hero")
 	expect_true(main.hero_page.visible and not main.journey.visible)
 	main.hero_page.get_node("%BackButton").pressed.emit()
 	expect_true(main.journey.visible and not main.hero_page.visible)
+	main.journey._hero_figure.pressed.emit()
+	expect_true(main.hero_page.visible and not main.journey.visible, "the figure on the map goes the same way")
 	main.free()
 
 
@@ -145,7 +148,7 @@ func test_the_hero_page_shows_the_slots_and_links_to_the_heros_tree_section() ->
 
 func test_the_map_and_the_summary_both_open_the_skill_tree_and_it_returns_to_the_map() -> void:
 	var main := _main()
-	main.journey.get_node("%TreeButton").pressed.emit()
+	main.journey.rail.press("Tree")
 	expect_true(main.keep_screen.visible and not main.journey.visible)
 	main.keep_screen.get_node("%BackButton").pressed.emit()
 	expect_true(main.journey.visible and not main.keep_screen.visible)

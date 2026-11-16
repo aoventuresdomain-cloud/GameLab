@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/ui/hub_header.tscn" id="hub_header"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hub_rail.tscn" id="hub_rail"]
 [ext_resource type="Script" path="res://scripts/ui/hero_page.gd" id="1_hero"]
 [ext_resource type="Script" path="res://scripts/ui/themed_backdrop.gd" id="backdrop_tok"]
 
@@ -49,76 +50,89 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Skill tree"
 
-[node name="PillarRow" type="HBoxContainer" parent="Margin/Column"]
+[node name="Body" type="MarginContainer" parent="Margin/Column"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 104
+
+[node name="Inner" type="VBoxContainer" parent="Margin/Column/Body"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PillarRow" type="HBoxContainer" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="PillarInfo" type="Label" parent="Margin/Column"]
+[node name="PillarInfo" type="Label" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 autowrap_mode = 2
 
-[node name="Main" type="HBoxContainer" parent="Margin/Column"]
+[node name="Main" type="HBoxContainer" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 24
 
-[node name="StatColumn" type="VBoxContainer" parent="Margin/Column/Main"]
+[node name="StatColumn" type="VBoxContainer" parent="Margin/Column/Body/Inner/Main"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="StatHeader" type="HBoxContainer" parent="Margin/Column/Main/StatColumn"]
+[node name="StatHeader" type="HBoxContainer" parent="Margin/Column/Body/Inner/Main/StatColumn"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="StatCaption" type="Label" parent="Margin/Column/Main/StatColumn/StatHeader"]
+[node name="StatCaption" type="Label" parent="Margin/Column/Body/Inner/Main/StatColumn/StatHeader"]
 layout_mode = 2
 theme_type_variation = &"HudCaption"
 text = "Hero"
 
-[node name="StatsInfoButton" type="Button" parent="Margin/Column/Main/StatColumn/StatHeader"]
+[node name="StatsInfoButton" type="Button" parent="Margin/Column/Body/Inner/Main/StatColumn/StatHeader"]
 unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
 text = "i"
 
-[node name="Stats" type="Label" parent="Margin/Column/Main/StatColumn"]
+[node name="Stats" type="Label" parent="Margin/Column/Body/Inner/Main/StatColumn"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HeroFigure" type="Control" parent="Margin/Column/Main"]
+[node name="HeroFigure" type="Control" parent="Margin/Column/Body/Inner/Main"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="SlotColumn" type="VBoxContainer" parent="Margin/Column/Main"]
+[node name="SlotColumn" type="VBoxContainer" parent="Margin/Column/Body/Inner/Main"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="BagHint" type="Label" parent="Margin/Column"]
+[node name="BagHint" type="Label" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudCaption"
 autowrap_mode = 2
 
-[node name="Bag" type="HFlowContainer" parent="Margin/Column"]
+[node name="Bag" type="HFlowContainer" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 6
 
-[node name="Info" type="Label" parent="Margin/Column"]
+[node name="Info" type="Label" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 autowrap_mode = 2
+
+[node name="Rail" parent="." instance=ExtResource("hub_rail")]
+unique_name_in_owner = true
+current = "Hero"
 
 [editable path="Margin/Column/Header"]

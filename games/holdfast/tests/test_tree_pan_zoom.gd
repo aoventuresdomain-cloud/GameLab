@@ -14,7 +14,7 @@ func _tree_page() -> Array:
 	ThroughLevelZero.apply_castle(main.get_node("Profile"))
 	main.get_node("Profile").data["gold"] = 5000
 	main.get_node("Profile").changed.emit()
-	main.journey.get_node("%TreeButton").pressed.emit()
+	main.journey.rail.press("Tree")
 	await tree.process_frame
 	await tree.process_frame
 	return [main, main.keep_screen]

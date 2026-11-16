@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/ui/hub_header.tscn" id="hub_header"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hub_rail.tscn" id="hub_rail"]
 [ext_resource type="Script" path="res://scripts/ui/journey_map.gd" id="1_map"]
 [ext_resource type="Script" path="res://scripts/ui/themed_backdrop.gd" id="backdrop_tok"]
 
@@ -44,26 +45,34 @@ layout_mode = 2
 [node name="Title" parent="Margin/Column/Header" index="1"]
 text = "Journey"
 
+[node name="HeroName" type="Label" parent="Margin/Column/Header/Extra"]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="PlanButton" type="Button" parent="Margin/Column/Header/Extra"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Plan"
 
-[node name="TreeButton" type="Button" parent="Margin/Column/Header/Extra"]
-unique_name_in_owner = true
+[node name="Body" type="MarginContainer" parent="Margin/Column"]
 layout_mode = 2
-text = "Skill tree"
+size_flags_vertical = 3
+theme_override_constants/margin_left = 104
 
-[node name="Map" type="Control" parent="Margin/Column"]
+[node name="Inner" type="VBoxContainer" parent="Margin/Column/Body"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Map" type="Control" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="GuideSlot" type="Control" parent="Margin/Column"]
+[node name="GuideSlot" type="Control" parent="Margin/Column/Body/Inner"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 
-[node name="Guide" type="HBoxContainer" parent="Margin/Column/GuideSlot"]
+[node name="Guide" type="HBoxContainer" parent="Margin/Column/Body/Inner/GuideSlot"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -74,22 +83,26 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 12
 
-[node name="GuideLabel" type="Label" parent="Margin/Column/GuideSlot/Guide"]
+[node name="GuideLabel" type="Label" parent="Margin/Column/Body/Inner/GuideSlot/Guide"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 size_flags_horizontal = 3
 autowrap_mode = 2
 
-[node name="GuideButton" type="Button" parent="Margin/Column/GuideSlot/Guide"]
+[node name="GuideButton" type="Button" parent="Margin/Column/Body/Inner/GuideSlot/Guide"]
 unique_name_in_owner = true
 theme_type_variation = &"MainButton"
 layout_mode = 2
 
-[node name="Info" type="Label" parent="Margin/Column"]
+[node name="Info" type="Label" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 autowrap_mode = 2
+
+[node name="Rail" parent="." instance=ExtResource("hub_rail")]
+unique_name_in_owner = true
+current = "Map"
 
 [editable path="Margin/Column/Header"]

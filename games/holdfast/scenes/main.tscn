@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scripts/holdfast_settings.gd" id="15_settings"]
 [ext_resource type="Script" path="res://scripts/holdfast_audio.gd" id="16_audio"]
 [ext_resource type="PackedScene" path="res://scenes/ui/settings_screen.tscn" id="17_settings_screen"]
+[ext_resource type="PackedScene" path="res://scenes/ui/menu_screen.tscn" id="19_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/achievements_screen.tscn" id="18_achievements_screen"]
 [ext_resource type="PackedScene" path="res://scenes/ui/home_screen.tscn" id="10_home"]
 [ext_resource type="PackedScene" path="res://scenes/ui/keep_screen.tscn" id="3_keep"]
@@ -26,6 +27,7 @@ profile_path = NodePath("Profile")
 home_path = NodePath("UI/HomeScreen")
 settings_path = NodePath("Settings")
 settings_screen_path = NodePath("UI/SettingsScreen")
+menu_path = NodePath("UI/MenuScreen")
 achievements_screen_path = NodePath("UI/AchievementsScreen")
 journey_path = NodePath("UI/JourneyMap")
 hero_page_path = NodePath("UI/HeroPage")
@@ -67,6 +69,8 @@ layer = 10
 [node name="KeepScreen" parent="UI" instance=ExtResource("3_keep")]
 
 [node name="HomeScreen" parent="UI" instance=ExtResource("10_home")]
+
+[node name="MenuScreen" parent="UI" instance=ExtResource("19_menu")]
 
 [node name="SettingsScreen" parent="UI" instance=ExtResource("17_settings_screen")]
 
