@@ -818,7 +818,7 @@
 
 ### HF-M2-89 Exploratory bug-hunt round (CEO 2026-11-17 19:49)
 - **Owner:** Head of QA
-- **Status:** In progress on b5dfbc4 (Build 19a merged). Estimate: about 1.5 to 3 h, upper bound 5, medium confidence; the fix build (Build 20) is quoted once the findings are in
+- **Status:** In progress. Round 1 on b5dfbc4 gave F-200 to F-208 (Build 20 merged as a4ddeea); QA continues with the Dusk Mage pass, Gull Rock Hard and Extreme, and the real-press Fog Warden check on a4ddeea. Estimate: about 1.5 to 3 h, upper bound 5, medium confidence
 - **QA:** full
 - **Depends on:** HF-M2-88
 - **Done when:**
@@ -826,6 +826,18 @@
   - [ ] Every finding reproduces without test-only helpers, is graded MUST FIX or FOLLOW-UP, and is sent to the Head of Engineering to be boarded with one owner before anyone fixes it.
   - [ ] Earlier findings F-200 to F-205 are re-checked on the final hash.
   - [ ] Merges stay frozen to blocker or major fixes until QA reports.
+
+### HF-M2-90 Build 20: five interface follow-ups from the bug hunt
+- **Owner:** UI Engineer
+- **Status:** Merged (#206, QA PASS at e405f36, 1,196 tests, merged as a4ddeea). Build 20, CEO 2026-11-17 19:49 bug hunt. About 1.5 h from go to first PR, plus one fix cycle for F-208 (Plan page overflow found by QA on 651370650c3c)
+- **QA:** screens
+- **Depends on:** HF-M2-89
+- **Done when:**
+  - [x] Settings Volume slider shows a visible focus ring like every other control (F-201); the Tab order claim F-200 was QA's own error and is withdrawn.
+  - [x] Extreme is described where the player looks: the Plan title and the map record name the tier (F-202), and the map chip never offers a tier the level lacks (F-205).
+  - [x] The home Continue label names the next step, not the last level played (F-203); the first-run special tip names only keys that work (F-204).
+  - [x] The Plan page and map captions stay inside bounds at 1280x720 and 1920x1080 on every level and tier (F-206, F-208), covered by a regression test.
+  - [x] Changed tests are OK'd by the Head of Engineering and logged in the Test changes table.
 
 ### HF-M2-72 Menus and look: tokens, shared header and the no-overlap test
 - **Owner:** UI Engineer
@@ -1314,12 +1326,16 @@
 | F-197 | HF-M2-77 | FOLLOW-UP from QA (F-new4): on the Plan page, once a post is placed its range disc is drawn well past the field and behind the header, "Not enough stars" and the blessing row, at both sizes. Legible and unchanged since earlier builds, so polish, not a regression. HoE ruling: left for the final polish step with F-193 | Minor | UI Engineer | Closed, fixed in Build 19a (#204, QA PASS at 14da8b9) |
 | F-198 | HF-M2-86 | FOLLOW-UP from QA (#199, F-new5): the Call next wave button sits over the top-right corner of the playfield (about 134 by 48 px at 1280x720, same share at 1080p), so a unit or enemy there is hidden and a click there goes to the button. Same family as F-193 | Minor | UI Engineer | Closed, fixed in Build 19a (#204, QA PASS at 14da8b9) |
 | F-199 | HF-M2-87 | FOLLOW-UP from QA (#202, F-new6): the tier chips are global, so picking Hard on a level with no Hard replay quietly plays Normal. Needs the chip hidden or one line saying why. Small and interface only, so it rides Build 19a on the CEO's ask | Minor | UI Engineer | Closed, fixed in Build 19a (#204, QA PASS at 14da8b9) |
-| F-200 | HF-M2-76 | FOLLOW-UP from QA (HF-M2-89 batch 1, B1-1): in Settings the Volume slider, the top row, is last in the keyboard Tab order, after Achievements and one unidentified stop. Repro: Home, Settings, press Tab repeatedly | Minor | UI Engineer | Open, Build 20 |
-| F-201 | HF-M2-76 | FOLLOW-UP from QA (B1-2): the focused Volume slider shows only a slightly brighter bar, no focus ring like every other control. Same repro | Minor | UI Engineer | Open, Build 20 |
-| F-202 | HF-M2-87 | FOLLOW-UP from QA (B2-1): Extreme is not described where the player looks. The Plan title reads "Plan: The Outpost (Extreme)" while Hard names its modifier, so the two Extreme modifiers are not listed, and the map's per-level line shows the Hard record only, not the Extreme one | Minor | UI Engineer | Open, Build 20 |
-| F-203 | HF-M2-73 | FOLLOW-UP from QA (B2-2): the home Continue label follows the last level played, not the next step. After Hard and Extreme replays of The Outpost it reads "Continue Level 1 · The Outpost" while the map says "Next: Gull Rock" | Minor | UI Engineer | Open, Build 20 |
-| F-204 | HF-M2-83 | FOLLOW-UP from QA (B3-1, on 14da8b9): the first-run special tip says "Press Space, A or click to use it" but A is move-left on the keyboard and does not fire it. The tip should name only keys that work (or say which is the pad button) | Minor | UI Engineer | Open, Build 20 |
-| F-205 | HF-M2-88 | FOLLOW-UP from QA (F-new6, softened by the F-199 Plan line): on a level without a Hard replay the map chip still reads Hard while the Plan page says it plays Normal | Minor | UI Engineer | Open, Build 20 |
+| F-200 | HF-M2-76 | FOLLOW-UP from QA (HF-M2-89 batch 1, B1-1): in Settings the Volume slider, the top row, is last in the keyboard Tab order, after Achievements and one unidentified stop. Repro: Home, Settings, press Tab repeatedly | Minor | UI Engineer | Withdrawn: QA retracted it as its own error |
+| F-201 | HF-M2-76 | FOLLOW-UP from QA (B1-2): the focused Volume slider shows only a slightly brighter bar, no focus ring like every other control. Same repro | Minor | UI Engineer | Closed, fixed in Build 20 (#206, QA PASS at e405f36) |
+| F-202 | HF-M2-87 | FOLLOW-UP from QA (B2-1): Extreme is not described where the player looks. The Plan title reads "Plan: The Outpost (Extreme)" while Hard names its modifier, so the two Extreme modifiers are not listed, and the map's per-level line shows the Hard record only, not the Extreme one | Minor | UI Engineer | Closed, fixed in Build 20 (#206, QA PASS at e405f36) |
+| F-203 | HF-M2-73 | FOLLOW-UP from QA (B2-2): the home Continue label follows the last level played, not the next step. After Hard and Extreme replays of The Outpost it reads "Continue Level 1 · The Outpost" while the map says "Next: Gull Rock" | Minor | UI Engineer | Closed, fixed in Build 20 (#206, QA PASS at e405f36) |
+| F-204 | HF-M2-83 | FOLLOW-UP from QA (B3-1, on 14da8b9): the first-run special tip says "Press Space, A or click to use it" but A is move-left on the keyboard and does not fire it. The tip should name only keys that work (or say which is the pad button) | Minor | UI Engineer | Closed, fixed in Build 20 (#206, QA PASS at e405f36) |
+| F-205 | HF-M2-88 | FOLLOW-UP from QA (F-new6, softened by the F-199 Plan line): on a level without a Hard replay the map chip still reads Hard while the Plan page says it plays Normal | Minor | UI Engineer | Closed, fixed in Build 20 (#206, QA PASS at e405f36) |
+| F-206 | HF-M2-90 | FOLLOW-UP from QA (HF-M2-89 batch 4): map captions step into each other or the path on some levels | Minor | UI Engineer | Closed, fixed in Build 20 (#206, QA PASS at e405f36) |
+| F-207 | HF-M2-90 | FOLLOW-UP from QA (B4-2): chip spacing at 960x540 is unverified; the headless window cannot render that size | Minor | UI Engineer | Open, needs a real 960x540 render; not blocking |
+| F-208 | HF-M2-90 | MUST FIX from QA (#206 at 651370650c3c): the Plan page overflowed its bounds at 1280x720 on some level and tier | Major | UI Engineer | Closed, fixed at e405f36 with a regression test; QA PASS |
+| F-209 | HF-M2-91 | FOLLOW-UP from QA (HF-M2-89, Gull Rock Normal) with Advisor ruling (`advisor-fog-warden-hint.md`): the Fog Warden shroud gives no hint what lifts it. Ruling: a special press alone lifts the shroud for 6 s (it need not hit the boss); the hint names what to press and whether the special is ready ("Press Space for Flare Barrage" / "Special ready in 9 s"); cooldown 14 to 16 s; a build like QA's should win Gull Rock Normal about half the time. First QA must reproduce with a real press: if the bar stays Shielded after a press it becomes MUST FIX for the Gameplay Engineer | Minor | Gameplay Engineer | Open, hint wording in Build 20a or 21 after QA's real-press check |
 
 ## Test changes
 
@@ -1415,6 +1431,8 @@
 | 2026-11-17 | `test_hard_replays.gd::test_nightmare_is_a_stub_in_data_that_nothing_offers` | Renamed `test_the_four_tiers_are_built_in_data_and_open_in_order` and rewritten for the four tiers | The Nightmare stub is replaced by Extreme, so the old assertion no longer describes the product | Head of Engineering (Build 19, #202) |
 | 2026-11-17 | `test_hard_replays.gd::test_the_map_shows_a_cleared_levels_modifier_and_a_switch_turns_hard_on` | Renamed `..._and_a_chip_turns_hard_on` | The Hard switch is now a tier chip | Head of Engineering (Build 19, #202) |
 | 2026-11-17 | `tests/tree_card.gd::can_buy` (helper used by `test_guided_start.gd`): now also requires the detail card to be visible (#194, F-195) | A node that opens no card must not count as buyable | Tighter, same intent; the test still fails if a refused node opens a card with an enabled Buy | Head of Engineering |
+| 2026-11-17 | `tests/test_special_tip_per_pillar.gd` KEYS const | Now "Press Space, A on a pad, or click to use it." (#206, F-204) | The old text named A, which is move-left on the keyboard | Head of Engineering |
+| 2026-11-17 | `tests/test_hub_rail.gd::test_continue_names_the_level_from_a_real_json_save` | Expected level is the map's next level, else `profile.get_level()` (#206, F-203) | The test pinned the old last-played rule the finding replaces on purpose | Head of Engineering |
 
 ## Advisor views
 
@@ -1535,3 +1553,4 @@
 - 2026-11-17: CEO (19:47): fix any known bug before he plays. Build 19a (HF-M2-88) takes F-193, F-197, F-198 and F-199, interface only; gameplay and balance follow-ups stay out so the bands are not touched.
 - 2026-11-17: CEO (19:49): run another QA round hunting for bugs, then fix them. HF-M2-89 (Head of QA, full round on b5dfbc4) runs now; every finding is boarded with an owner and graded before anyone fixes it; the fix build (Build 20) is quoted once the findings are in; merges are frozen to blocker or major fixes until QA reports. No stop for feedback.
 - 2026-11-17: Build 19a merged (#204, QA PASS at 14da8b9, 1,187 tests, merged as b5dfbc4): F-193, F-197, F-198 and F-199 closed.
+- 2026-11-17: Build 20 merged (#206, QA PASS at e405f36, 1,196 tests, merged as a4ddeea). F-200 withdrawn, F-201 to F-206 and F-208 closed, F-207 open, F-209 (Fog Warden hint) boarded. QA continues HF-M2-89.
