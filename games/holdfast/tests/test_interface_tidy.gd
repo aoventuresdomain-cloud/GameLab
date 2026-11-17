@@ -158,7 +158,7 @@ func test_the_plan_page_has_no_red_arcs_and_no_hint_about_them() -> void:
 
 # ------------------------------------------------------------------ Hero page
 
-func test_the_hero_page_has_the_numbers_left_the_hero_in_the_middle_and_the_slots_right() -> void:
+func test_the_hero_page_has_the_numbers_left_the_hero_in_the_middle_and_the_slots_around() -> void:
 	var main := _main()
 	var page := _page_with(main, ["driftwood_stave", "wave_worn_boots"])
 	for window in [Vector2i(1280, 720), Vector2i(1920, 1080)]:
@@ -167,14 +167,24 @@ func test_the_hero_page_has_the_numbers_left_the_hero_in_the_middle_and_the_slot
 		await tree.process_frame
 		await tree.process_frame
 		var stats: Rect2 = page.get_node("%Stats").get_global_rect()
-		var figure: Rect2 = page.get_node("%HeroFigure").get_global_rect()
-		var slots: Rect2 = page.get_node("%SlotColumn").get_global_rect()
+		var stage: Rect2 = page.get_node("%Stage").get_global_rect()
 		var bag: Rect2 = page.get_node("%Bag").get_global_rect()
-		expect_true(stats.end.x <= figure.position.x + 0.5, "%s: numbers left of the Hero" % window)
-		expect_true(figure.end.x <= slots.position.x + 0.5, "%s: slots right of the Hero" % window)
-		expect_true(figure.size.x >= 100.0 and figure.size.y >= 150.0, "%s: the Hero has room (%s)" % [window, figure.size])
-		expect_true(bag.position.y >= slots.end.y - 0.5 and bag.position.y >= figure.end.y - 0.5, "%s: the bag is below" % window)
-		expect_true(tree.root.get_visible_rect().encloses(slots), "%s: the slots are on screen" % window)
+		var middle: float = stage.get_center().x
+		expect_true(stats.end.x <= stage.position.x + 0.5, "%s: numbers left of the Hero and the slots" % window)
+		expect_true(stage.size.x >= 740.0 and stage.size.y >= 200.0, "%s: the Hero has room (%s)" % [window, stage.size])
+		var left := 0
+		var right := 0
+		for slot in page._slot_panels:
+			var rect: Rect2 = page._slot_panels[slot].get_global_rect()
+			if rect.end.x <= middle:
+				left += 1
+			elif rect.position.x >= middle:
+				right += 1
+			expect_true(stage.encloses(rect), "%s: the %s slot is in the stage" % [window, slot])
+			expect_true(tree.root.get_visible_rect().encloses(rect), "%s: the %s slot is on screen" % [window, slot])
+		expect_eq(left + right, 5, "%s: every slot is on one side of the Hero" % window)
+		expect_true(left >= 2 and right >= 2, "%s: the Hero has slots on both sides (%d, %d)" % [window, left, right])
+		expect_true(bag.position.y >= stage.end.y - 0.5, "%s: the bag is below" % window)
 	main.free()
 
 
@@ -183,7 +193,7 @@ func test_a_piece_worn_leaves_the_bag_and_comes_back_when_taken_off() -> void:
 	var page := _page_with(main, ["driftwood_stave", "wave_worn_boots"])
 	var profile: HoldfastProfile = main.get_node("Profile")
 	profile.take_off_gear("boots")
-	var bag: HFlowContainer = page.get_node("%Bag")
+	var bag: Container = page.get_node("%Bag")
 	expect_eq(bag.get_child_count(), 2)
 	profile.wear_gear("driftwood_stave")
 	expect_eq(bag.get_child_count(), 1, "the worn one is on its slot, not in the bag")

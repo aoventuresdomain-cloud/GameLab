@@ -57,6 +57,19 @@ static func _nearly_affordable(content: Dictionary, profile: Node) -> String:
 
 
 ## The first boss-tier enemy in a level's waves, or "".
+## The next Hero path still to open and what opens it, as "Dusk Mage: boss, level 5" ("" when every
+## path with a gate is open).
+static func next_path_goal(content: Dictionary, profile: Node) -> String:
+	for id in content["hero_paths"]:
+		var after := str(content["hero_paths"][id].get("opens", {}).get("after", ""))
+		if after == "" or not content["levels"].has(after) or str(profile.get_pillar_lock_reason(id)) == "":
+			continue
+		var level: Dictionary = content["levels"][after]
+		var what := "boss, level %d" % int(level.get("number", 0)) if boss_name(content, after) != "" else "win level %d" % int(level.get("number", 0))
+		return "%s: %s" % [content["hero_paths"][id]["name"], what]
+	return ""
+
+
 static func boss_name(content: Dictionary, level: String) -> String:
 	for wave in content["levels"][level]["waves"]:
 		for spawn in wave["spawns"]:

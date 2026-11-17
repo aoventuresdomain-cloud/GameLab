@@ -1,7 +1,8 @@
 extends Control
-## Recruits page: the recruitment board, the roster and the squad. The roster is a row of chips (one
-## for each Recruit, the squad's marked); pressing one shows who they are below, where they are
-## renamed and put on or taken off the squad. A Recruit with a skill pick waiting shows the two choices
+## Squad page: the recruitment board, the roster and the squad. The roster is a set of cards (one for
+## each Recruit: name and level, class, post and traits; the squad's say so) and a plain "?" for each
+## Recruit not yet found; a line says how many deploy slots the squad uses. Pressing a card shows who
+## they are below, where they are renamed and put on or taken off the squad. A Recruit with a skill pick waiting shows the two choices
 ## at the top, so a pick needs no screen of its own. The keep and the Hero are renamed here too.
 ## It shows the profile and asks for changes through signals; the run flow acts. Mouse only.
 
@@ -16,6 +17,8 @@ const HUB_HEADER = preload("res://scenes/ui/hub_header.tscn")
 const HUB_RAIL = preload("res://scenes/ui/hub_rail.tscn")
 ## Waiting picks shown at once; the rest follow as these are made.
 const PICKS_SHOWN := 1
+## A Recruit's card is at least this wide, so four fit a row.
+const CARD_WIDTH := 270.0
 
 var _profile: Node
 var _content: Dictionary
@@ -32,6 +35,10 @@ var _keep_name: LineEdit
 var _hero_name: LineEdit
 var _picks: VBoxContainer
 var _roster: HFlowContainer
+var _slots_line: Label
+## The roster's cards by Recruit id, and the "?" cards for those not found.
+var _cards := {}
+var _unfound: Array = []
 var _detail_name: LineEdit
 var _detail_text: Label
 var _squad_button: Button
@@ -91,6 +98,8 @@ func _ready() -> void:
 	_picks.add_theme_constant_override("separation", 8)
 	body.add_child(_picks)
 
+	_slots_line = _label("")
+	body.add_child(_slots_line)
 	_roster = HFlowContainer.new()
 	_roster.add_theme_constant_override("h_separation", 6)
 	_roster.add_theme_constant_override("v_separation", 8)
@@ -140,7 +149,8 @@ func refresh() -> void:
 	_building = true
 	_gold.text = Hud.format_number(_profile.get_gold())
 	_stars.text = str(_profile.get_stars())
-	_title.text = "Squad: %d of %d (marked *)" % [_profile.get_squad_ids().size(), _profile.get_squad_slots()]
+	_title.text = "Squad"
+	_slots_line.text = slots_text(_profile.get_squad_ids().size(), _profile.get_squad_slots())
 	_set_text(_keep_name, _profile.get_given_name("keep"), _profile.get_name_of("keep"))
 	_set_text(_hero_name, _profile.get_given_name("hero"), _profile.get_name_of("hero"))
 	_fill_picks()
@@ -177,6 +187,11 @@ func _fill_picks() -> void:
 		_picks.add_child(_label(more_picks_text(waiting.size() - PICKS_SHOWN)))
 
 
+## "2 slots, 1 used": the squad's deploy places and how many hold a Recruit.
+static func slots_text(used: int, total: int) -> String:
+	return "%d %s, %d used" % [total, "slot" if total == 1 else "slots", used]
+
+
 static func more_picks_text(count: int) -> String:
 	return "%d more %s waiting for a pick." % [count, "Recruit is" if count == 1 else "Recruits are"]
 
@@ -185,17 +200,57 @@ func _fill_roster() -> void:
 	for child in _roster.get_children():
 		_roster.remove_child(child)
 		child.queue_free()
+	_cards.clear()
+	_unfound.clear()
 	var roster: Array = _profile.get_recruits()
 	if _selected == "" or _profile.get_recruit(_selected).is_empty():
 		_selected = str(roster[0]["id"]) if not roster.is_empty() else ""
 	for recruit in roster:
-		var on_squad: bool = recruit["id"] in _profile.get_squad_ids()
-		var button := _button("%s %d%s" % [recruit["name"], RecruitRoster.level_of(recruit, _content), " *" if on_squad else ""])
+		var button := _button(card_text(recruit))
 		button.toggle_mode = true
 		button.button_pressed = recruit["id"] == _selected
 		button.icon = shape_icon(_content["recruit_classes"][recruit["class"]])
+		button.custom_minimum_size = Vector2(CARD_WIDTH, 0)
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.pressed.connect(_select.bind(str(recruit["id"])))
 		_roster.add_child(button)
+		_cards[str(recruit["id"])] = button
+	# A Recruit not yet found is a plain "?": no class, no name, no picture.
+	for rescue in _content.get("recruit_rescues", {}).values():
+		if _profile.get_recruit(str(rescue["id"])).is_empty():
+			var card := PanelContainer.new()
+			card.custom_minimum_size = Vector2(CARD_WIDTH, 0)
+			var mark := _label("?")
+			mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			card.add_child(mark)
+			_roster.add_child(card)
+			_unfound.append(card)
+
+
+## A card's lines: "Bryn, level 3", the class, the post (or that they are off the squad) and the traits.
+func card_text(recruit: Dictionary) -> String:
+	var id := str(recruit["id"])
+	var traits := PackedStringArray()
+	for trait_id in recruit["traits"]:
+		traits.append(str(_content["recruit_traits"][trait_id]["name"]))
+	var post := "Off the squad"
+	if id in _profile.get_squad_ids():
+		var where := post_name(id)
+		post = "Post: %s" % where if where != "" else "On the squad, no post"
+	return "%s, level %d\n%s\n%s\n%s" % [recruit["name"], RecruitRoster.level_of(recruit, _content), _content["recruit_classes"][recruit["class"]]["name"], post, ", ".join(traits) if not traits.is_empty() else "No trait yet"]
+
+
+## The name of the spot a Recruit's post stands on ("" when they have none).
+func post_name(id: String) -> String:
+	var posted: Dictionary = _profile.get_posted()
+	for site in posted:
+		if posted[site] == id:
+			for castle in _content.get("castle_rules", {}).values():
+				for spot in castle["spots"]:
+					if str(spot["id"]) == site:
+						return str(spot["name"])
+	return ""
 
 
 func _select(id: String) -> void:

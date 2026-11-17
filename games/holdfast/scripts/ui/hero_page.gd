@@ -1,8 +1,8 @@
 extends Control
 ## Hero page: choose the Hero's path, wear the gear found so far and read what the Hero's numbers
-## come to. The Hero stands in the middle (placeholder art), the numbers on the left and the five
-## gear slots on the right, each with its own stat identity (shown on hover); the bag of pieces not
-## worn is below. A piece is worn by dragging it from the bag onto its slot (the same gesture as the
+## come to. The Hero stands in the middle (placeholder art) with the five gear slots around them, each
+## with its own stat identity (shown on hover); the four headline numbers and the special's card are
+## on the left; the bag of pieces not worn is below, and the next Hero path to open is named as a goal. A piece is worn by dragging it from the bag onto its slot (the same gesture as the
 ## Plan page's cards) or by pressing it, and taken off by dragging it back or pressing its slot.
 ## It shows the profile and asks for changes through signals; the run flow acts. Mouse only.
 
@@ -18,6 +18,15 @@ const Hud = preload("res://scripts/ui/hud.gd")
 const Guidance = preload("res://scripts/ui/guidance.gd")
 const DEFAULT_INFO := ""
 const WEAR_HINT := "Bag: press a piece, or drag it onto its slot, to wear it."
+## The numbers shown at first (the first rows of the breakdown); the "i" button shows them all.
+const HEADLINE_ROWS := 4
+## The slots around the Hero: these on the left, the rest on the right.
+const LEFT_SLOTS := ["helmet", "armour", "boots"]
+const SLOT_WIDTH := 280.0
+const SLOT_HEIGHT := 76.0
+const SLOT_GAP := 6.0
+const FIGURE_GAP := 16.0
+const FIGURE_HALF := 70.0
 const LOCKED_ALPHA := 0.5
 static var COLOUR_HERO := UiTokens.colour(&"lamp_hot")
 static var COLOUR_WORN := UiTokens.colour(&"good").darkened(0.4)
@@ -28,12 +37,18 @@ var selected_pillar := ""
 
 @onready var _pillar_row: HBoxContainer = %PillarRow
 @onready var _pillar_info: Label = %PillarInfo
-@onready var _slot_column: VBoxContainer = %SlotColumn
-@onready var _bag: HFlowContainer = %Bag
+@onready var _slot_column: Control = %SlotColumn
+@onready var _bag: GridContainer = %Bag
 @onready var _bag_hint: Label = %BagHint
 @onready var _main: Control = %Main
 @onready var _stats: Label = %Stats
 @onready var _stats_info: Button = %StatsInfoButton
+@onready var _stage: Control = %Stage
+@onready var _special_card: Control = %SpecialCard
+@onready var _special_name: Label = %SpecialName
+@onready var _special_line: Label = %SpecialLine
+@onready var _goal_row: Control = %GoalRow
+@onready var _goal_line: Label = %GoalLine
 @onready var _figure: Control = %HeroFigure
 @onready var _info: Label = %Info
 @onready var _tree: Button = %TreeButton
@@ -53,14 +68,15 @@ func _ready() -> void:
 	_content = HoldfastContent.base()
 	_back.pressed.connect(back_requested.emit)
 	_tree.pressed.connect(tree_requested.emit)
-	_stats_info.pressed.connect(func() -> void: _stats.text = _stats_text(_stats_info.button_pressed))
+	_stats_info.pressed.connect(_toggle_details)
+	_stage.resized.connect(_layout_ring)
 	_figure.draw.connect(_draw_figure)
 	_figure.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	visibility_changed.connect(_on_visibility_changed)
 	_build_pillars()
 	_build_slots()
 	# A piece let go anywhere that is not its slot goes back to the bag.
-	for target in [_main, _bag, _slot_column]:
+	for target in [_main, _bag, _slot_column, _stage]:
 		target.set_drag_forwarding(Callable(), _off_can_drop, _off_drop)
 	_info.text = DEFAULT_INFO
 
@@ -100,6 +116,9 @@ func refresh() -> void:
 		_pillar_buttons[id].modulate = UiTokens.fade(LOCKED_ALPHA) if reason != "" else UiTokens.fade(1.0)
 	var path: Dictionary = _content["hero_paths"][selected_pillar]
 	_pillar_info.text = "%s: %s" % [path["name"], path.get("blurb", "")]
+	var goal := Guidance.next_path_goal(_content, _profile)
+	_goal_line.text = goal
+	_goal_row.visible = goal != ""
 	_refresh_gear()
 
 
@@ -115,8 +134,8 @@ func _refresh_gear() -> void:
 		_bag.remove_child(child)
 		child.queue_free()
 	var owned: Array = _profile.get_gear_owned()
-	# The how-to shows until the first piece is on.
-	_bag_hint.text = "Gear: none yet. Each level's first win gives a piece, and elites and bosses may drop more." if owned.is_empty() else (WEAR_HINT if worn.is_empty() else "Bag")
+	# The one-line how-to stays while there are pieces.
+	_bag_hint.text = "Gear: none yet. Each level's first win gives a piece, and elites and bosses may drop more." if owned.is_empty() else WEAR_HINT
 	for id in owned:
 		var item: Dictionary = _content["gear_items"][id]
 		# A worn piece is on its slot, not in the bag.
@@ -125,12 +144,14 @@ func _refresh_gear() -> void:
 		var button := Button.new()
 		button.text = str(item["name"])
 		button.custom_minimum_size.y = 44.0
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.pressed.connect(func() -> void: gear_requested.emit(id))
 		button.set_drag_forwarding(_bag_drag.bind(id, button), _off_can_drop, _off_drop)
 		button.mouse_entered.connect(func() -> void: _info.text = _gear_text(id))
 		button.mouse_exited.connect(func() -> void: _info.text = DEFAULT_INFO)
 		_bag.add_child(button)
 	_stats.text = _stats_text(_stats_info.button_pressed)
+	_refresh_special()
 	_figure.queue_redraw()
 
 
@@ -152,11 +173,12 @@ static func _light(panel: PanelContainer, worn: bool) -> void:
 	panel.add_theme_stylebox_override("panel", box)
 
 
-## The Hero's numbers with the tree and the gear worn: "Health 80", or with `breakdown` "Health 80
-## (base 60, tree +0, gear +20)".
+## The Hero's four headline numbers with the tree and the gear worn: "Health 80". With `breakdown` all
+## of them, each as "Health 80 (base 60, tree +0, gear +20)".
 func _stats_text(breakdown := false) -> String:
 	var lines: PackedStringArray = []
-	for row in _profile.get_hero_breakdown():
+	var rows: Array = _profile.get_hero_breakdown()
+	for row in rows if breakdown else rows.slice(0, HEADLINE_ROWS):
 		var unit: String = row["unit"] if row["unit"] == "%" else ""
 		var line := "%s %s%s" % [row["label"], _num(float(row["final"])), unit]
 		if breakdown:
@@ -165,10 +187,53 @@ func _stats_text(breakdown := false) -> String:
 	return "\n".join(lines)
 
 
+## The "i" button swaps the Hero and the slots for every number with where it comes from, and back.
+func _toggle_details() -> void:
+	var details := _stats_info.button_pressed
+	_stage.visible = not details
+	_special_card.visible = not details
+	_stats.text = _stats_text(details)
+
+
+## The special on its own card: its name and how often Space gives it.
+func _refresh_special() -> void:
+	var ability: Dictionary = _content["hero_paths"][selected_pillar].get("ability", {})
+	_special_name.text = str(ability.get("name", ""))
+	var cooldown := ""
+	for row in _profile.get_hero_breakdown():
+		if row["label"] == "Ability cooldown":
+			cooldown = _num(float(row["final"]))
+	_special_line.text = "Special: Space, every %s s" % cooldown if cooldown != "" else "Special: Space"
+	_special_card.visible = _special_name.text != "" and not _stats_info.button_pressed
+
+
+## Puts the five slots around the Hero: some on the left, the rest on the right, top down.
+func _layout_ring() -> void:
+	var middle := _stage.size.x * 0.5
+	var left := 0
+	var right := 0
+	for slot in _slot_panels:
+		var panel: PanelContainer = _slot_panels[slot]
+		var on_left: bool = slot in LEFT_SLOTS
+		var row := left if on_left else right
+		if on_left:
+			left += 1
+		else:
+			right += 1
+		var x := middle - FIGURE_HALF - FIGURE_GAP - SLOT_WIDTH if on_left else middle + FIGURE_HALF + FIGURE_GAP
+		panel.position = Vector2(maxf(0.0, x), row * (SLOT_HEIGHT + SLOT_GAP))
+		panel.size = Vector2(SLOT_WIDTH, SLOT_HEIGHT)
+	# The special's card takes the next place in the right column.
+	_special_card.position = Vector2(middle + FIGURE_HALF + FIGURE_GAP, right * (SLOT_HEIGHT + SLOT_GAP))
+	_special_card.size = Vector2(SLOT_WIDTH, maxf(SLOT_HEIGHT, _special_card.get_combined_minimum_size().y))
+
+
 ## The placeholder Hero: a head and a cloaked body, until the final art.
 func _draw_figure() -> void:
-	var centre := _figure.size * 0.5
-	var unit := minf(_figure.size.x, _figure.size.y) * 0.5
+	# The Hero stands in the height of the three slot rows, between the two columns of slots.
+	var rows_height := 3.0 * SLOT_HEIGHT + 2.0 * SLOT_GAP
+	var centre := Vector2(_figure.size.x * 0.5, rows_height * 0.5)
+	var unit := rows_height * 0.5
 	_figure.draw_circle(centre + Vector2(0, -unit * 0.45), unit * 0.22, COLOUR_HERO)
 	_figure.draw_colored_polygon(PackedVector2Array([centre + Vector2(0, -unit * 0.2), centre + Vector2(unit * 0.4, unit * 0.65), centre + Vector2(-unit * 0.4, unit * 0.65)]), COLOUR_HERO)
 
@@ -190,23 +255,22 @@ func _build_slots() -> void:
 		var panel := PanelContainer.new()
 		panel.mouse_filter = Control.MOUSE_FILTER_STOP
 		# A slot can be pressed, so it is at least 44 px high.
-		panel.custom_minimum_size.y = 44.0
+		panel.custom_minimum_size = Vector2(SLOT_WIDTH, SLOT_HEIGHT)
 		_compact(panel)
-		var row := HBoxContainer.new()
+		var row := VBoxContainer.new()
 		row.name = "Row"
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_theme_constant_override("separation", 12)
+		row.add_theme_constant_override("separation", 6)
 		var title := Label.new()
 		title.name = "Title"
+		title.theme_type_variation = &"Caption"
 		var data: Dictionary = info.get(slot, {"name": str(slot).capitalize(), "identity": ""})
 		title.text = str(data["name"])
 		panel.tooltip_text = "%s: %s" % [data["name"], data["identity"]] if str(data["identity"]) != "" else str(data["name"])
 		title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		title.custom_minimum_size = Vector2(110, 0)
 		var item := Label.new()
 		item.name = "Item"
 		item.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		item.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(title)
 		row.add_child(item)
 		panel.add_child(row)
@@ -214,6 +278,7 @@ func _build_slots() -> void:
 		panel.gui_input.connect(_slot_input.bind(str(slot)))
 		_slot_column.add_child(panel)
 		_slot_panels[str(slot)] = panel
+	_layout_ring.call_deferred()
 
 
 ## A copy of a control's styles with less padding above and below, so twelve pieces and five slots

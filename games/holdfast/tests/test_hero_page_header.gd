@@ -31,18 +31,20 @@ func test_the_hero_page_header_shows_the_gold_and_stars_the_profile_has() -> voi
 	main.free()
 
 
-func test_the_gear_slot_rows_are_44_px_high_and_6_px_apart() -> void:
+func test_the_gear_slots_are_44_px_high_and_6_px_apart() -> void:
 	var main := _main()
 	main.call("_show", main.Screen.HERO)
 	await tree.process_frame
 	await tree.process_frame
 	var rows: Array = main.hero_page.get_node("%SlotColumn").get_children()
 	expect_eq(rows.size(), 5, "five slots")
+	var view := Rect2(Vector2.ZERO, Vector2(1280, 720))
 	for i in rows.size():
 		expect_true(rows[i].size.y >= 44.0, "slot %d is %s high" % [i, rows[i].size.y])
-		if i > 0:
-			var gap: float = rows[i].get_global_rect().position.y - rows[i - 1].get_global_rect().end.y
-			expect_true(gap >= 6.0, "slot %d is %s from the one above" % [i, gap])
-	var view := Rect2(Vector2.ZERO, Vector2(1280, 720))
-	expect_true(view.encloses(rows[rows.size() - 1].get_global_rect()), "and all five are on screen")
+		expect_true(view.encloses(rows[i].get_global_rect()), "slot %d is on screen" % i)
+		for j in range(i + 1, rows.size()):
+			var a: Rect2 = rows[i].get_global_rect()
+			var b: Rect2 = rows[j].get_global_rect()
+			var gap := maxf(maxf(a.position.x - b.end.x, b.position.x - a.end.x), maxf(a.position.y - b.end.y, b.position.y - a.end.y))
+			expect_true(gap >= 6.0, "slots %d and %d are %s apart" % [i, j, gap])
 	main.free()
