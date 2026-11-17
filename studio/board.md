@@ -399,7 +399,7 @@
 
 ### HF-M2-28 Recalibrate levels and balance all pillars
 - **Owner:** Gameplay Engineer
-- **Status:** In QA (Build 16 of 16, #188 at f769a59, QA full: no behaviour defects, paperwork F-188 closed; waiting on QA's confirm). Advisor rulings of 2026-11-17 are in the Advisor views table
+- **Status:** Merged (Build 16 of 16, #188, QA full clear at f769a59, merged as d0c5f4d). Quick fixes 16a (HF-M2-84) and 16b (HF-M2-83) follow. Advisor rulings of 2026-11-17 are in the Advisor views table
 - **QA:** full (pack retune changes outcomes)
 - **Done when:**
   - [ ] Bands per pillar and per bot (average, poor) for every level, with a per-pillar first-time floor, from the Advisor's targets (pillar balance view, 2026-10-22, in the Advisor views table). Hero stats are not nerfed.
@@ -750,6 +750,25 @@
   - [x] The boss bar has its own strip under the field, clear of the field edge and the HUD, and the exposed line above the field is gone.
   - [x] Esc, Start and B open the pause card on the first-run prompt and close it again.
   - [x] No existing test changed.
+
+
+### HF-M2-83 Quick fix 16b: the first-run special tip names each Hero pillar's own special
+- **Owner:** UI Engineer
+- **Status:** Merged (#191, QA clear at 6d2b90d, merged as 9f832fc)
+- **QA:** screens
+- **Done when:**
+  - [x] The first-run special tip names the Flare Archer's burst, the Dusk Mage's own special and the Tideblade's dash (F-191), with a test per pillar.
+  - [x] No existing test changed.
+
+
+### HF-M2-84 Quick fix 16a: balance note text and a wider no-input guard
+- **Owner:** Gameplay Engineer
+- **Status:** Merged (#190, QA clear at bbef2c0, merged as d754f26)
+- **QA:** sanity
+- **Done when:**
+  - [x] The `known_misses_note` says Tideblade health 86 (F-189).
+  - [x] The no-input guard loses the Outpost on 20 seeds per Hero; Shingle Beach stays at 3 seeds (F-192). Two test changes, each OK'd by the Head of Engineering and logged.
+  - [x] No number in the game changes.
 
 
 ### HF-M2-72 Menus and look: tokens, shared header and the no-overlap test
@@ -1228,10 +1247,11 @@
 | F-186 | HF-M2-80 | FOLLOW-UP from QA (#184): the window title was thought to be set every frame | Minor | UI Engineer | Closed, withdrawn by QA (the head sets it once after the first frame) |
 | F-187 | HF-M2-81 | FOLLOW-UP from QA (#183): the "already won a real level" stand branch had no test of its own | Minor | UI Engineer | Closed, covered on main by test_plan_stays_still |
 | F-188 | HF-M2-28 | MUST FIX from QA (#188 at f769a59): the Test changes table lacked rows for `test_build4b`, `test_build6`, `test_slice2` and `test_pacing_bands` | Minor | Head of Engineering | Closed, rows added to the Test changes table |
-| F-189 | HF-M2-28 | FOLLOW-UP from QA (#188): the `known_misses_note` in `pacing-bands.json` says Tideblade health 80 to 84; heroes.json and `test_build6` say 86. Fix the text | Minor | Gameplay Engineer | Open, rides the next Gameplay Engineer change |
+| F-189 | HF-M2-28 | FOLLOW-UP from QA (#188): the `known_misses_note` in `pacing-bands.json` says Tideblade health 80 to 84; heroes.json and `test_build6` say 86. Fix the text | Minor | Gameplay Engineer | Closed (#190, QA clear at bbef2c0) |
 | F-190 | HF-M2-28 | FOLLOW-UP from QA (#188): the Done-when line "the known-miss list is empty" is not met as written (one Flare Archer pin plus three hours pins remain, each with a stated cause). HoE ruling: the line is reworded to "every remaining known miss has a stated cause and an Advisor note"; the Advisor confirmed the Flare Archer no-special Outpost pin, which cannot be lifted without a no-input run winning Outpost (9 of 9) | Minor | Head of Engineering | Closed, the Advisor accepted all four pins on 2026-11-17 |
-| F-191 | HF-M2-69 | FOLLOW-UP from QA (#188, also on main): the first-run special tip reads "a burst of fire, far stronger than your arrows" for the Tideblade, whose special is the dash | Minor | UI Engineer | Open, next UI change |
-| F-192 | HF-M2-28 | FOLLOW-UP from QA observation (#188, not a finding: it used a test-style helper): with no input, Shingle Beach was won by 1 of 20 seeds for the Dusk Mage and 2 of 20 for the Tideblade (main: 1 and 1); the guard tests use seeds 1 to 3. Consider widening the guard to more seeds, which needs my OK as a test change | Minor | Gameplay Engineer | Open, next Gameplay Engineer change |
+| F-191 | HF-M2-69 | FOLLOW-UP from QA (#188, also on main): the first-run special tip reads "a burst of fire, far stronger than your arrows" for the Tideblade, whose special is the dash | Minor | UI Engineer | Closed (#191, QA clear at 6d2b90d) |
+| F-192 | HF-M2-28 | FOLLOW-UP from QA observation (#188, not a finding: it used a test-style helper): with no input, Shingle Beach was won by 1 of 20 seeds for the Dusk Mage and 2 of 20 for the Tideblade (main: 1 and 1); the guard tests use seeds 1 to 3. Consider widening the guard to more seeds, which needs my OK as a test change | Minor | Gameplay Engineer | Closed (#190, QA clear at bbef2c0): the Outpost guard now runs 20 seeds per Hero (all lost with no input); Shingle Beach stays at 3 seeds with the Advisor's conditions (Advisor views table) |
+| F-193 | HF-M2-83 | FOLLOW-UP from QA (#191, cosmetic): the first-run special tip is drawn over the playfield, so a unit can sit under it | Minor | UI Engineer | Open, next UI change |
 
 ## Test changes
 
@@ -1321,6 +1341,8 @@
 | 2026-11-17 | `test_build6.gd::test_gear_applies_to_whichever_hero_path_is_played`: Tideblade max health 100.0 to 106.0 ("Tideblade 86 + 20") (#188, HF-M2-28) | Tideblade health 80 to 86 (Advisor-ruled buff); assertion strength unchanged | Advisor ruling of 2026-11-17 | Head of Engineering |
 | 2026-11-17 | `test_build4b.gd::test_dash_strike_makes_three_dashes_and_hits_each_enemy_once_per_dash` (comments to "30 each" and "1000 - 90 = 910"; 973.0 to 970.0, 946.0 to 940.0, 919.0 to 910.0) and `test_a_dash_chain_of_one_and_of_zero_seconds` (973.0 to 970.0) (#188, HF-M2-28) | Dash-Strike 27 to 30, kept at 3x the new Tideblade attack of 10 as `test_the_shipped_specials` requires; pure number changes, intent kept (QA checked) | Advisor ruling of 2026-11-17 (Tideblade buff) | Head of Engineering |
 | 2026-11-17 | `test_pacing_bands.gd::test_the_fork_feel_is_judged_from_the_first_level_a_fork_node_can_be_bought` renamed `..._judged_from_the_first_level_most_players_own_a_fork_node` (old: a fork-feel figure exists from Shingle Beach on; new: none for Outpost or Shingle Beach, present for Tidewrack Cove and Gull Rock); `test_the_figures_are_the_gaps_and_floors_the_bands_describe` figure count `3 * (5 * 4 + 4 + 3) + 1` to `3 * (5 * 4 + 3) + 1`; additive tests for the Dusk Mage ceiling, fork reach and the start level (#188, HF-M2-28) | The fork rule moves the start level to the first level where the average bot owns a fork node in at least half its runs; with empty cells there is no fork-feel figure | Advisor ruling of 2026-11-17 (fork feel, option A); nothing weakened | Head of Engineering |
+| 2026-11-17 | `test_build4.gd::test_a_run_with_no_input_is_lost_on_the_first_two_levels` renamed `..._at_the_outpost_on_twenty_seeds_and_at_shingle_beach_on_three`; seeds `[1, 2, 3]` become `range(1, 21)` at the Outpost, Shingle Beach stays `[1, 2, 3]` (#190, F-192) | A wider guard where it is clean | Stricter, nothing weakened: same assertion (every run lost), more seeds | Head of Engineering |
+| 2026-11-17 | `test_slice2b.gd::test_a_run_with_no_input_is_lost_on_every_pillar`: seeds `[1, 2, 3]` become `range(1, 21)` (#190, F-192) | A wider guard | Stricter, same assertion on more seeds | Head of Engineering |
 
 ## Advisor views
 
@@ -1347,6 +1369,7 @@
 | 2026-11-17 | HF-M2-28 fork feel | Judge fork feel from the first level where the average bot has bought a fork node in at least half its runs, not a hand-set level, with one check: the first fork is affordable within three runs of reaching Tidewrack Cove. The first fork is not meant to be affordable at Shingle Beach; a stronger first-tier fork node is rejected | Accepted (option A as a rule); the test change is OK once the engineer sends the old and new text |
 | 2026-11-17 | HF-M2-28 Dusk Mage basic attack | The Advisor first agreed to a Dusk basic-attack buff (5 to 8), then withdrew it once told it lets a run with no input win Shingle Beach 5 times in 6: "A Hero that wins Shingle Beach 5 times in 6 with no input has stopped being played." Ship the widened ceiling with no buff; run the Tideblade buff against the same no-input guard. Full view in `/mnt/project-files/holdfast/m2/advisor-build16-dusk-buff.md` (unedited) | Accepted; shipped in #188 |
 | 2026-11-17 | HF-M2-28 remaining pins | Accepted, all four. Flare Archer no-special bot at Outpost 0%: easing the Outpost enough to lift it would let a run with no input win it 9 of 9, so the no-input guard wins; 0% for a no-special bot at the first fork is the intended result, and if testers find it frustrating the first press should be taught differently, not the level changed. The three gold-hours pins: prices stay, the clock stretches with content; measure it in the Gate 2 tester sessions, not with a bot. Full note in `/mnt/project-files/holdfast/m2/advisor-build16-remaining-pins.md` (unedited) | Accepted |
+| 2026-11-17 | HF-M2-28 Shingle Beach with no input | Acceptable, with conditions: no-input wins at Shingle Beach stay at 2 of 20 or fewer per pillar (now Dusk 1, Tideblade 2, Flare 0, and the idle wins predate the buff); a third seed is fixed in that pillar's numbers; no further Dusk or Tideblade basic-attack buff without a 20-seed no-input re-run | Accepted |
 
 ## Decisions and open questions
 
@@ -1425,3 +1448,4 @@
 - 2026-11-16: CEO named the game Fogwatch (replaces Holdfast). Boarded as HF-M2-80, built before Build 14a. Internal names (folder, classes, save files, CI, achievement ids) keep "holdfast" so saves and the pipeline are untouched; revisit before any Steam page. Win line becomes "Fogwatch holds!" unless the CEO wants other words. The itch page title is a hands-on step for the Setup Desk. No Steam page, trademark search or spend.
 - 2026-11-16: CEO answered "yes to all" on the three open calls: Hard replays and modifiers stay in (built, HF-M2-65), game speed is in now with calling the next wave early later, and the Steam Deck is a first-release target with the controller as its own build before the demo (HF-M2-69, off hold, after Build 14).
 - 2026-11-17: Builds 14c-a (#183), 14c-b (#185), the Fogwatch text rename (#184) and the F-new1 test (#186) merged, each with a QA clear at a named commit. QA caught the save-folder orphaning in the rename (F-185) before it merged. Build 15 (controller and keyboard, #182) is on the itch draft; a real pad or Steam Deck is the CEO's check. Build 16 (balance, HF-M2-28) is with the Gameplay Engineer; the Advisor's rulings are in the Advisor views table. Export, product and Mac names stay Holdfast until the Mac check.
+- 2026-11-17: Build 16 (balance, HF-M2-28, #188) merged with a QA full clear at f769a59, then quick fixes 16b (HF-M2-83, #191, QA 6d2b90d) and 16a (HF-M2-84, #190, QA bbef2c0). Tideblade is buffed (attack 10, health 86, Dash-Strike 30), the Dusk Mage keeps its numbers with a wider ceiling, and the Advisor accepted the four remaining pins. Open for the Gate 2 sessions: gold hours, and the Shingle Beach no-input share.
