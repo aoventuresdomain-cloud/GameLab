@@ -295,7 +295,7 @@ func refresh() -> void:
 		var button: Button = _node_buttons[id]
 		var bought: bool = id in owned
 		var closed: bool = _profile.why_not_buy(id).begins_with("Closed")
-		var near: bool = bought or _profile.is_near(id)
+		var near: bool = bought or _is_open(id)
 		button.visible = _profile.is_visible(id)
 		_labels[id].visible = button.visible
 		_tags[id].visible = button.visible
@@ -747,7 +747,15 @@ func _is_free(rect: Rect2, own: String, nodes: Dictionary, kept: Array[Rect2]) -
 
 ## True when a node is bought or one buy away: drawn in full, not dimmed.
 func _is_lit(id: String) -> bool:
-	return _profile != null and (id in _profile.get_upgrades() or _profile.is_near(id))
+	return _profile != null and (id in _profile.get_upgrades() or _is_open(id))
+
+
+## One buy away, and the player may buy it: while a guided buy is due, that step is the only node that is.
+func _is_open(id: String) -> bool:
+	if _profile == null or not _profile.is_near(id):
+		return false
+	var guided: String = _profile.get_guided_step()
+	return guided == "" or id == guided
 
 
 ## A name that does not take the mouse, centred in a box of a given size.
@@ -1420,6 +1428,11 @@ func _draw_tick() -> void:
 ## was just looked at.
 func open_card(id: String) -> void:
 	if _profile == null or not _content["upgrade_nodes"].has(id):
+		return
+	# During the guided buys the guided step is the only thing the player can open (HF-M2-38, F-195).
+	var guided: String = _profile.get_guided_step()
+	if guided != "" and id != guided:
+		close_card()
 		return
 	_card_id = id
 	_card_from = _node_buttons.get(id)

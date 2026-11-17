@@ -10,10 +10,11 @@ static func buy(page: Control, id: String) -> void:
 	page._card_buy.pressed.emit()
 
 
-## True when the rules let the player buy `id`: its card, opened, has a Buy that can be pressed.
+## True when the rules let the player buy `id`: its card, opened, has a Buy that can be pressed. A node
+## that opens no card (the guided buys keep the rest shut, F-195) cannot be bought.
 static func can_buy(page: Control, id: String) -> bool:
 	page.open_card(id)
-	return page._card_buy.visible and not page._card_buy.disabled
+	return page._card.visible and page._card_buy.visible and not page._card_buy.disabled
 
 
 ## All the text on the open card, one string.
