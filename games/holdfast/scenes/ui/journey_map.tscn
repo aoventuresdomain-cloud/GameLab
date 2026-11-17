@@ -49,10 +49,6 @@ text = "Map"
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HeroName" type="Label" parent="Margin/Column/Header/Extra"]
-unique_name_in_owner = true
-layout_mode = 2
-
 [node name="PlanButton" type="Button" parent="Margin/Column/Header/Extra"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -103,10 +99,6 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 text_overrun_behavior = 3
-
-[node name="Rail" parent="." instance=ExtResource("hub_rail")]
-unique_name_in_owner = true
-current = "Map"
 
 [node name="Rail" parent="." instance=ExtResource("hub_rail")]
 unique_name_in_owner = true
