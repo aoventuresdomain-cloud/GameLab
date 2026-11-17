@@ -254,7 +254,7 @@ func _open_plan() -> void:
 	planning.open(level, profile.get_layout(level) if saved else [], saved, profile.get_ring_spots(), profile.get_castle_cards(), profile.get_castle_mage_cards(), profile.get_castle_slots())
 	var draw := RandomNumberGenerator.new()
 	draw.randomize()
-	planning.set_tier(profile.get_run_tier(), profile.get_hard_label(level))
+	planning.set_tier(profile.get_run_tier(), profile.get_hard_label(level), profile.get_tier())
 	planning.set_blessings(profile.get_blessing_offer(level, draw))
 	planning.set_squad(profile.get_squad().map(func(recruit: Dictionary) -> String: return recruit["name"]), profile.get_recruits().size())
 	_show_posted()
