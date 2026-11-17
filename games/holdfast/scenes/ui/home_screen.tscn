@@ -55,7 +55,7 @@ theme_override_constants/separation = 16
 [node name="Title" type="Label" parent="Margin/Column"]
 layout_mode = 2
 theme_type_variation = &"ScreenTitle"
-text = "Holdfast"
+text = "Fogwatch"
 
 [node name="Tagline" type="Label" parent="Margin/Column"]
 layout_mode = 2

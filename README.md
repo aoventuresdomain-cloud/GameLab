@@ -3,7 +3,7 @@
 GameLab is a game studio. This one repository holds every game and the shared **Studio Kit**.
 
 - **Engine:** Godot 4 (latest stable 4.x), GDScript. Unity is the fallback if a game's M1 tech proof fails.
-- **Current game:** Holdfast (game one), in `games/holdfast/`.
+- **Current game:** Fogwatch (game one), in `games/holdfast/`. The folder, code and save files keep the old working name, Holdfast.
 
 ## Layout
 
