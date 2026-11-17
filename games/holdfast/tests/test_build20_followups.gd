@@ -66,7 +66,7 @@ func test_the_volume_slider_has_the_focus_ring_while_it_is_focused() -> void:
 
 # ------------------------------------------------------------------ F-202
 
-func test_the_plan_title_names_the_two_extreme_modifiers() -> void:
+func test_the_plan_names_the_two_extreme_modifiers() -> void:
 	var main := _main()
 	var profile := _past_the_guide(main)
 	var level := _open_extreme(profile)
@@ -75,32 +75,63 @@ func test_the_plan_title_names_the_two_extreme_modifiers() -> void:
 	profile.select_level(level)
 	main.call("_open_plan")
 	expect_eq(profile.get_run_tier(), "extreme")
-	var title: String = main.planning.get_node("%Title").text if main.planning.has_node("%Title") else main.planning._title.text
-	expect_eq(title, "Plan: %s (Extreme: %s)" % [HoldfastContent.base()["levels"][level]["name"], profile.get_extreme_label(level)])
-	expect_true(profile.get_extreme_label(level).contains(","), "two modifiers, so a comma: " + title)
+	var label: String = profile.get_extreme_label(level)
+	expect_true(label.contains(","), "two modifiers, so a comma: " + label)
+	expect_eq(main.planning._title.text, "Plan: %s (Extreme)" % HoldfastContent.base()["levels"][level]["name"], "the title stays short")
+	expect_true(main.planning.get_node("%Hint").text.contains("Extreme: %s" % label), "and the line under it names both: " + main.planning.get_node("%Hint").text)
 	main.free()
 
 
-func test_the_plan_title_fits_beside_the_tower_button_for_every_level_at_both_sizes() -> void:
+## F-208: a long title once made the header wider than the screen, pushing Back off the left and the tower list off the right.
+func test_no_plan_header_control_leaves_the_screen_for_any_level_and_tier_at_both_sizes() -> void:
 	var main := _main()
 	var profile := _past_the_guide(main)
 	var content := HoldfastContent.base()
 	var planning: Control = main.planning
+	var longest_name := ""
+	var longest_label := ""
+	for id in content["levels"]:
+		if str(content["levels"][id]["name"]).length() > longest_name.length():
+			longest_name = str(content["levels"][id]["name"])
+		longest_label = longest_label if longest_label.length() >= HoldfastMeta.extreme_label(content, id).length() else HoldfastMeta.extreme_label(content, id)
 	for window in WINDOWS:
 		tree.root.size = window
+		var screen := Rect2(Vector2.ZERO, Vector2(window))
+		var cases := []
 		for id in content["levels"]:
-			if HoldfastMeta.extreme_modifiers(content, id).is_empty():
+			if id == HoldfastMeta.tutorial_level(content):
 				continue
-			planning.open(id, [], false, profile.get_ring_spots(), profile.get_castle_cards(), profile.get_castle_mage_cards(), profile.get_castle_slots())
-			planning.set_tier("extreme", HoldfastMeta.extreme_label(content, id), "extreme")
+			cases.append([id, "extreme", HoldfastMeta.extreme_label(content, id)])
+			cases.append([id, "hard", HoldfastMeta.hard_label(content, id)])
+			cases.append([id, "easy", ""])
+		for case in cases:
+			planning.open(case[0], [], false, profile.get_ring_spots(), profile.get_castle_cards(), profile.get_castle_mage_cards(), profile.get_castle_slots())
+			planning.set_tier(case[1], case[2], case[1])
 			planning.show()
 			await tree.process_frame
 			await tree.process_frame
-			var title: Label = planning._title
-			var tile: Control = planning.get_node("Margin/Column/Header/Extra/TowerTile")
-			expect_true(title.size.x + 0.5 >= title.get_minimum_size().x, "%dx%d %s: the title is not clipped (%s)" % [window.x, window.y, id, title.text])
-			expect_false(title.get_global_rect().intersects(tile.get_global_rect()), "%dx%d %s: and is clear of the tower tile" % [window.x, window.y, id])
+			_expect_header_on_screen(planning, screen, "%dx%d %s %s" % [window.x, window.y, case[0], case[1]])
+		# The worst case: the longest level name with the longest pair of modifiers.
+		var any := "outpost"
+		planning.open(any, [], false, profile.get_ring_spots(), profile.get_castle_cards(), profile.get_castle_mage_cards(), profile.get_castle_slots())
+		planning._level = planning._level.duplicate()
+		planning._level["name"] = longest_name
+		planning.set_tier("extreme", longest_label + ", " + longest_label, "extreme")
+		planning.show()
+		await tree.process_frame
+		await tree.process_frame
+		_expect_header_on_screen(planning, screen, "%dx%d the longest name with a doubled label" % [window.x, window.y])
 	main.free()
+
+
+func _expect_header_on_screen(planning: Control, screen: Rect2, what: String) -> void:
+	var header: Control = planning.get_node("Margin/Column/Header")
+	for control in header.find_children("*", "Control", true, false):
+		if control.is_visible_in_tree() and control.get_global_rect().size.x > 0.0:
+			expect_true(screen.encloses(control.get_global_rect()), "%s: %s is on the screen (%s)" % [what, control.name, control.get_global_rect()])
+	var tile: Control = planning.get_node("Margin/Column/Header/Extra/TowerTile")
+	expect_false(planning._title.get_global_rect().intersects(tile.get_global_rect()), "%s: the title is clear of the tower tile" % what)
+	expect_true(screen.encloses(planning.get_node("Margin/Column/Body").get_global_rect()), "%s: the body is on the screen" % what)
 
 
 func test_the_map_line_under_a_level_gives_the_extreme_record_once_extreme_is_open() -> void:
@@ -265,3 +296,4 @@ func test_the_map_chip_goes_back_to_normal_when_the_level_played_does_not_offer_
 	main.call("_open_plan")
 	expect_eq(profile.get_tier(), "hard", "Hard stays picked on a level that has it")
 	main.free()
+
