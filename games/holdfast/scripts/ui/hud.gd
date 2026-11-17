@@ -11,6 +11,13 @@ extends Control
 @onready var _lost_value: Label = %LostValue
 @onready var _wave_banner: Label = %WaveBanner
 @onready var _posts_note: Label = %PostsNote
+@onready var _pause_button: Button = %PauseButton
+@onready var _speed_button: Button = %SpeedButton
+@onready var _auto_tag: Label = %AutoTag
+@onready var _boss_bar: Control = %BossBar
+@onready var _boss_name: Label = %BossName
+@onready var _boss_state: Label = %BossState
+@onready var _boss_health: ProgressBar = %BossHealth
 
 ## The player pressed while a teaching run waited; the run flow lifts the hold.
 signal begin_requested
@@ -26,12 +33,10 @@ signal special_requested
 ## Under a teaching note while the run waits.
 const HOLD_HINT := "Click, tap or press a key to begin."
 
-const LEAVE_TEXT := "Leave run"
+const LEAVE_TEXT := "Back to map"
 const LEAVE_CONFIRM_TEXT := "Leave? Nothing is banked.\nClick again to leave"
 
 var _source: Node
-var _pause_button: Button
-var _speed_button: Button
 var _pause_screen: Control
 var _leave_button: Button
 var _confirming_leave := false
@@ -41,27 +46,10 @@ func _ready() -> void:
 	_build_controls()
 
 
-## The Pause and Speed buttons under the top bar's right end, and the pause screen over the run.
+## The Pause and Speed buttons live in the top bar; this wires them and builds the pause panel over the run.
 func _build_controls() -> void:
-	var box := HBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
-	_pause_button = Button.new()
-	_pause_button.text = "II"
-	_pause_button.tooltip_text = "Pause (Esc or P)"
-	_pause_button.focus_mode = Control.FOCUS_NONE
 	_pause_button.pressed.connect(func() -> void: pause_requested.emit(not _paused()))
-	box.add_child(_pause_button)
-	_speed_button = Button.new()
-	_speed_button.text = "1x"
-	_speed_button.tooltip_text = "Game speed"
-	_speed_button.focus_mode = Control.FOCUS_NONE
 	_speed_button.pressed.connect(func() -> void: speed_requested.emit(1 if _speed() == 2 else 2))
-	box.add_child(_speed_button)
-	box.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	box.offset_top = 104.0
-	box.offset_right = -16.0
-	add_child(box)
 	_pause_screen = ColorRect.new()
 	(_pause_screen as ColorRect).color = UiTokens.colour(&"night", 0.7)
 	_pause_screen.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -70,10 +58,16 @@ func _build_controls() -> void:
 	var centre := CenterContainer.new()
 	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_pause_screen.add_child(centre)
+	var card := PanelContainer.new()
+	centre.add_child(card)
+	var margin := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 24)
+	card.add_child(margin)
 	var column := VBoxContainer.new()
 	column.custom_minimum_size = Vector2(320, 0)
 	column.add_theme_constant_override("separation", 12)
-	centre.add_child(column)
+	margin.add_child(column)
 	var title := Label.new()
 	title.text = "Paused"
 	title.theme_type_variation = &"HudValue"
@@ -81,10 +75,12 @@ func _build_controls() -> void:
 	column.add_child(title)
 	var resume := Button.new()
 	resume.text = "Resume"
+	resume.custom_minimum_size = Vector2(0, 56)
 	resume.pressed.connect(func() -> void: pause_requested.emit(false))
 	column.add_child(resume)
 	_leave_button = Button.new()
 	_leave_button.text = LEAVE_TEXT
+	_leave_button.custom_minimum_size = Vector2(0, 56)
 	_leave_button.pressed.connect(_on_leave_pressed)
 	column.add_child(_leave_button)
 	add_child(_pause_screen)
@@ -173,6 +169,9 @@ func _refresh_hero() -> void:
 		_hero_value.text = "%s / %s" % [format_number(_source.get_hero_health()), format_number(_source.get_hero_health_max())]
 	var wait: float = _source.get_ability_wait()
 	_ability_value.text = "Ready" if wait <= 0.0 else "%.1f s" % wait
+	_ability_value.theme_type_variation = &"HudReady" if wait <= 0.0 else &"HudCooling"
+	_auto_tag.visible = _source.is_special_automatic()
+	show_boss(_source.get_boss_state())
 	_lost_value.text = "%d / %d" % [_source.get_towers_lost(), _source.get_recruits_lost()]
 	var banner: String = _source.get_wave_banner()
 	_wave_banner.text = banner
@@ -187,6 +186,20 @@ func _refresh_hero() -> void:
 			note += "\n" + HOLD_HINT
 	_posts_note.text = note
 	_posts_note.visible = note != ""
+
+
+## The boss bar: the boss's name, its health, and whether its shroud is up ("Shielded") or down ("Exposed: N s").
+## An empty state hides it.
+func show_boss(state: Dictionary) -> void:
+	_boss_bar.visible = not state.is_empty()
+	if state.is_empty():
+		return
+	_boss_name.text = str(state["name"])
+	_boss_health.max_value = maxf(float(state["max_health"]), 1.0)
+	_boss_health.value = float(state["health"])
+	var shielded: bool = state["shielded"]
+	_boss_state.text = "Shielded" if shielded else "Exposed: %d s" % ceili(float(state["exposed_left"]))
+	_boss_state.theme_type_variation = &"HudCaption" if shielded else &"HudTag"
 
 
 ## Pulls the current values, for when the HUD is shown mid-run.

@@ -120,6 +120,16 @@ func get_hero_health_max() -> int:
 	return 0
 
 
+## The boss on the field as {name, health, max_health, exposed_left, shielded}, {} when there is none.
+func get_boss_state() -> Dictionary:
+	return {}
+
+
+## True once the Hero's special fires on its own (Keeper's Habit is owned).
+func is_special_automatic() -> bool:
+	return false
+
+
 ## Seconds until the Hero's ability is ready; 0 when it is.
 func get_ability_wait() -> float:
 	return 0.0
