@@ -174,16 +174,24 @@ func test_the_hero_page_has_the_numbers_left_the_hero_in_the_middle_and_the_slot
 		expect_true(stage.size.x >= 740.0 and stage.size.y >= 200.0, "%s: the Hero has room (%s)" % [window, stage.size])
 		var left := 0
 		var right := 0
+		var left_edge := -INF
+		var right_edge := INF
 		for slot in page._slot_panels:
 			var rect: Rect2 = page._slot_panels[slot].get_global_rect()
 			if rect.end.x <= middle:
 				left += 1
+				left_edge = maxf(left_edge, rect.end.x)
 			elif rect.position.x >= middle:
 				right += 1
+				right_edge = minf(right_edge, rect.position.x)
 			expect_true(stage.encloses(rect), "%s: the %s slot is in the stage" % [window, slot])
 			expect_true(tree.root.get_visible_rect().encloses(rect), "%s: the %s slot is on screen" % [window, slot])
 		expect_eq(left + right, 5, "%s: every slot is on one side of the Hero" % window)
 		expect_true(left >= 2 and right >= 2, "%s: the Hero has slots on both sides (%d, %d)" % [window, left, right])
+		# The condition of the HF-M2-78 change to this test: the Hero keeps room of its own, at least
+		# 100 x 150, between the two columns of slots.
+		var figure: Rect2 = page.get_node("%HeroFigure").get_global_rect()
+		expect_true(right_edge - left_edge >= 100.0 and figure.size.y >= 150.0, "%s: the Hero has room between the slots (%s wide, %s high)" % [window, right_edge - left_edge, figure.size.y])
 		expect_true(bag.position.y >= stage.end.y - 0.5, "%s: the bag is below" % window)
 	main.free()
 

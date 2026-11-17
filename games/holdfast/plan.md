@@ -1,12 +1,12 @@
-# Holdfast: plan (build excerpt)
+# Fogwatch: plan (build excerpt)
 
-*This repository is public, so this file carries only the build-facing parts of the Holdfast plan (v2, 6 Oct 2026, with the M2 changes the CEO approved at Gate 1): the game, the kit, the architecture, milestones and the Unity fallback. The full plan, including money, budget, gates' numbers and stop rules, stays in the GameLab project files (`holdfast-project-plan.md`) until the repository is made private. Then the full plan replaces this excerpt. Section numbers match the full plan.*
+*This repository is public, so this file carries only the build-facing parts of the Fogwatch plan (v2, 6 Oct 2026, with the M2 changes the CEO approved at Gate 1): the game, the kit, the architecture, milestones and the Unity fallback. The full plan, including money, budget, gates' numbers and stop rules, stays in the GameLab project files (`holdfast-project-plan.md`) until the repository is made private. Then the full plan replaces this excerpt. Section numbers match the full plan.*
 
 *Studio matters (repository, kit, team, rules) are in the GameLab project's `gamelab-studio.md`, which wins on those.*
 
 ## 3. The game
 
-**Theme: The Last Lighthouse** (CEO, 6 Oct 2026). A lighthouse on a coast swallowed by a living fog. Fog creatures come out of the dark. Your Hero is the Keeper, whose lantern is their light: every attack is light, fire or the shadow that light casts. Recruits are survivors you rescue from the sea, and upgrading the keep makes the beam reach further and push the fog back. "Holdfast" is the working title until the name check.
+**Theme: The Last Lighthouse** (CEO, 6 Oct 2026). A lighthouse on a coast swallowed by a living fog. Fog creatures come out of the dark. Your Hero is the Keeper, whose lantern is their light: every attack is light, fire or the shadow that light casts. Recruits are survivors you rescue from the sea, and upgrading the keep makes the beam reach further and push the fog back. The game is called Fogwatch (CEO, 16 Nov 2026), replacing the working title Holdfast. The folder, code, save files and board ids keep the old name.
 
 **Run (3-8 minutes):**
 1. Pick a level, a squad of Recruits for your deploy slots (2 to start, up to 4), and 1 of 3 offered blessings (temporary boosts for this run).
@@ -28,7 +28,7 @@
 
 **Art direction (default, confirm in M2):** clean top-down 2D with bold outlines and a limited palette. Start from CC0 or licensed packs (e.g. Kenney) and use AI-generated variants against a locked style guide. The owner approves every new asset family. Steam requires the store page to disclose AI-generated content (section 11).
 
-## 4. The GameLab Studio Kit (what Holdfast builds first)
+## 4. The GameLab Studio Kit (what Fogwatch builds first)
 
 | Kit part | What it does |
 |---|---|
@@ -42,12 +42,12 @@
 | **Delivery (mobile phase, later)** | Signed (Ed25519) packs on static hosting with a manifest and offline cache, for live events. Built only if Gate 5 passes |
 | **Services layer** | Save (local plus Steam Cloud), Steam (achievements, stats, cloud saves), and opt-in anonymous telemetry. Ads, Store and Consent adapters are added in the mobile phase |
 
-**Build only what Holdfast needs.** The kit lives in `kit/` of the GameLab repository and nothing Holdfast-specific goes there; it is generalised only when game two starts (`gamelab-studio.md` section 4).
+**Build only what Fogwatch needs.** The kit lives in `kit/` of the GameLab repository and nothing Fogwatch-specific goes there; it is generalised only when game two starts (`gamelab-studio.md` section 4).
 
 ## 7. Architecture (also drawn as a diagram)
 
 **The game (Godot 4, GDScript):**
-- **Game layer** (Holdfast-specific): scenes, Hero control, towers, Recruit behaviour, UI, juice (effects, sound).
+- **Game layer** (Fogwatch-specific): scenes, Hero control, towers, Recruit behaviour, UI, juice (effects, sound).
 - **Progression simulator** (kit): deterministic rules engine that reads packs. No rendering dependency, so it runs headless in CI.
 - **Pack loader** (kit): reads bundled packs and validates them against the schema.
 - **Services layer** (kit): `Save` (local file plus Steam Cloud), `Steam` (achievements, stats and cloud saves through the GodotSteam extension; Valve's public test app ID until the store page exists), `Telemetry` (opt-in, anonymous, off by default in the EU until consent).

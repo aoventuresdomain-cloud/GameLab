@@ -84,6 +84,8 @@ var _hints: Node
 ## The hint's own line and the squad's, which sits under it.
 var _hint_text := ""
 var _squad_line := ""
+## The most lines the hint has had since the page opened.
+var _hint_lines := 0
 ## The squad's Recruits as [{id, name}], who is set on which spot ({spot id: Recruit id}), and the
 ## button under each spot that picks one.
 var _squad_picks: Array = []
@@ -97,6 +99,11 @@ func _ready() -> void:
 	_content = HoldfastContent.base()
 	_back.pressed.connect(back_requested.emit)
 	_start.pressed.connect(func() -> void: start_requested.emit(_chosen.duplicate()))
+	# Start keeps the size of its longer, two-line wording, so it and the column beside the map do not
+	# move when the first post is placed.
+	_start.text = "Start level\n%s" % NEED_A_POST
+	_start.custom_minimum_size = _start.get_minimum_size()
+	_start.text = "Start level"
 	_auto.pressed.connect(auto_place)
 	_tower.pressed.connect(tower_requested.emit)
 	_squad.pressed.connect(squad_requested.emit)
@@ -116,6 +123,7 @@ func open(level_id: String, layout: Array, _saved: bool, spots: Array, cards: in
 	_level = _content["levels"][level_id]
 	_chosen = layout.duplicate()
 	_title.text = "Plan your defence: %s" % _level["name"]
+	_hint_lines = 0
 	_show_hint(HINT)
 	set_castle(spots, cards, mage_cards, slots)
 
@@ -252,7 +260,10 @@ func _show_hint(text: String) -> void:
 			_extra_hint = HINT_BLESSINGS
 	var line := "%s %s" % [text, extra] if extra != "" else text
 	_hint.text = "%s\n%s" % [line, _squad_line] if _squad_line != "" and line != "" else (_squad_line if line == "" else line)
-	_hint.visible = _hint.text != ""
+	# Once a line has stood on the page it keeps its space, so the map does not shift when it goes.
+	_hint_lines = maxi(_hint_lines, _hint.text.count("\n") + 1 if _hint.text != "" else 0)
+	_hint.custom_minimum_size.y = _hint_lines * (_hint.get_line_height() + _hint.get_theme_constant("line_spacing"))
+	_hint.visible = _hint_lines > 0
 
 
 ## The blessing picked for the run: an id, or "" for none.
@@ -361,12 +372,20 @@ func _refresh_cards() -> void:
 	for child in _tray.get_children():
 		_tray.remove_child(child)
 		child.queue_free()
+	# Every card is as wide as the longest post name, so the column does not narrow as cards are placed.
+	var font := _tray.get_theme_font("font", "Label")
+	var font_size := _tray.get_theme_font_size("font_size", "Label")
+	var card_width := _tray.get_theme_stylebox("panel", "PanelContainer").get_minimum_size().x
+	var widest := 0.0
+	for tower_id in [_archer_id(), MAGE_ID]:
+		widest = maxf(widest, font.get_string_size(str(_content["towers"][tower_id]["name"]), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
 	for tower_id in [_archer_id(), MAGE_ID]:
 		var tower: Dictionary = _content["towers"][tower_id]
 		for i in _cards_of(tower_id):
 			var in_hand: bool = i >= _placed(tower_id)
 			var card := PanelContainer.new()
 			card.name = "%sCard%d" % [tower_id, i]
+			card.custom_minimum_size.x = ceilf(widest + card_width)
 			var label := Label.new()
 			label.text = str(tower["name"]) if in_hand else "Placed"
 			label.mouse_filter = Control.MOUSE_FILTER_IGNORE

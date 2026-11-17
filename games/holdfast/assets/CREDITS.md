@@ -1,4 +1,4 @@
-# Holdfast asset credits
+# Fogwatch asset credits
 
 M1 uses placeholder art only, and placeholder sounds.
 

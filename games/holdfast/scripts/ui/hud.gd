@@ -148,6 +148,14 @@ func _input(event: InputEvent) -> void:
 	if not visible or _source == null or not _source.is_held():
 		return
 	if _source.is_teaching_special():
+		# Escape, Start or B open the pause card (and close it) while the prompt waits, so a pad or keyboard
+		# player is never stuck on it; with the card up, clicks belong to the card, not to the prompt.
+		if event.is_action_pressed(HoldfastInput.ACTION_PAUSE, false) or event.is_action_pressed("ui_cancel", false):
+			pause_requested.emit(not _paused())
+			get_viewport().set_input_as_handled()
+			return
+		if _paused():
+			return
 		# Only the special's own key, or a click or tap, answers its prompt.
 		var fires: bool = event.is_action_pressed(HoldfastPlayerHero.ACTION_ABILITY, false) \
 			or (event is InputEventMouseButton and event.pressed) \
@@ -194,7 +202,8 @@ func _refresh_hero() -> void:
 	_wave_banner.visible = banner != ""
 	# A boss's note outranks the posts line (that one is only up before wave 1).
 	var note: String = _source.get_special_note()
-	if note == "":
+	# The boss bar says "Exposed: N s" itself, so only the shrouded note (what lifts the shroud) shows here.
+	if note == "" and _source.get_boss_state().get("shielded", false):
 		note = _source.get_boss_note()
 	if note == "":
 		note = _source.get_posts_note()
