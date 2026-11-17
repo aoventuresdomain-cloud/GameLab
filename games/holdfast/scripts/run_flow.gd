@@ -43,11 +43,16 @@ enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY, RECRUITS, SETTINGS, ACH
 @onready var planning: Control = get_node(planning_path)
 
 const Guidance = preload("res://scripts/ui/guidance.gd")
+## What the window (and the web page tab) is called. The project name stays the old one, which keeps the
+## user data folder and so every saved game.
+const GAME_TITLE := "Fogwatch"
 
 var screen := Screen.HOME
 
 
 func _ready() -> void:
+	if DisplayServer.get_name() != "headless":
+		DisplayServer.window_set_title(GAME_TITLE)
 	hud.bind(source)
 	hud.begin_requested.connect(source.release_hold)
 	hud.pause_requested.connect(source.set_paused)

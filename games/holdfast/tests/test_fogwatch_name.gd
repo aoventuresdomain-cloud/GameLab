@@ -32,7 +32,6 @@ func test_no_shipped_text_still_says_the_old_name() -> void:
 	expect_true(files.size() > 20, "the scan found the files (%d)" % files.size())
 	for path in files:
 		expect_eq(_left_over(path), [], "%s has no %s in a string" % [path, OLD_NAME])
-	expect_eq(ProjectSettings.get_setting("application/config/name"), "Fogwatch", "the window title")
 
 
 func test_the_home_title_and_the_win_line_say_fogwatch() -> void:
@@ -40,6 +39,15 @@ func test_the_home_title_and_the_win_line_say_fogwatch() -> void:
 	expect_true(home.contains("text = \"Fogwatch\""), "home title")
 	var summary: String = FileAccess.get_file_as_string("res://scripts/ui/run_summary.gd")
 	expect_true(summary.contains("\"Fogwatch holds!\""), "win line")
+
+
+func test_the_window_says_fogwatch_and_the_user_folder_keeps_its_old_name() -> void:
+	var flow := preload("res://scripts/run_flow.gd")
+	expect_eq(flow.GAME_TITLE, "Fogwatch", "the window title")
+	# The project name decides where user:// lives (and so where every save is); it is deliberately the old name.
+	expect_eq(ProjectSettings.get_setting("application/config/name"), "Holdfast", "project name unchanged")
+	expect_false(ProjectSettings.get_setting("application/config/use_custom_user_dir", false), "the default user folder, which a custom one would move")
+	expect_eq(OS.get_user_data_dir().get_file(), "Holdfast", "user data folder is still named Holdfast (%s)" % OS.get_user_data_dir())
 
 
 func test_the_save_files_keep_their_names_and_an_old_save_still_loads() -> void:
