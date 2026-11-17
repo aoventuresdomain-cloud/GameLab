@@ -43,7 +43,8 @@ const COLOUR_HEALTH := Color("#d64545")
 ## Height kept clear for the HUD bar at the 1280x720 base size (scenes/ui/hud.tscn
 ## draws it from y = 16 to about y = 121).
 const HUD_CLEARANCE := 132.0
-const BOTTOM_MARGIN := 16.0
+## The strip kept clear under the arena for the HUD's boss bar (scenes/ui/hud.tscn draws it from 72 to 16 px above the bottom).
+const BOTTOM_MARGIN := 80.0
 ## Space kept round the arena's border on screen.
 const ARENA_MARGIN := 8.0
 const HERO_RADIUS := 12.0
