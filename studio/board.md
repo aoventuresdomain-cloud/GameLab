@@ -910,20 +910,20 @@
 
 ### HF-M2-12 Gate 2 full QA round
 - **Owner:** Head of QA and Validation
-- **Status:** Ready
+- **Status:** Done (round on 6846b93, Build 17 re-test at 7f34a04; one MUST FIX found and fixed)
 - **QA:** full
 - **Done when:**
-  - [ ] One fixed build is tested end to end against every M2 Done when line on this board, and merges are frozen to blocker and major fixes during the round.
-  - [ ] Every result names the fixed commit; if `main` moves under the build, the run is void and restarts on the new commit.
-  - [ ] One production-shaped run (real build, the game's own defaults, new game to quit) and the full suite in CI's order, on that commit. A finding counts only if it reproduces without test-only helpers, and each is graded MUST FIX or FOLLOW-UP.
+  - [x] One fixed build is tested end to end against every M2 Done when line on this board, and merges are frozen to blocker and major fixes during the round.
+  - [x] Every result names the fixed commit; if `main` moves under the build, the run is void and restarts on the new commit.
+  - [x] One production-shaped run (real build, the game's own defaults, new game to quit) and the full suite in CI's order, on that commit. A finding counts only if it reproduces without test-only helpers, and each is graded MUST FIX or FOLLOW-UP.
 
 ### HF-M2-13 Gate 2 brief
 - **Owner:** Head of Engineering
-- **Status:** Ready
+- **Status:** Delivered to the CEO for the review (project file `holdfast/m2/gate2-brief.md`; go / rework / stop recommendation: go to polish, no rework outstanding)
 - **QA:** none (document)
 - **Done when:**
-  - [ ] The CEO has one brief with their own playtest notes, the pacing report, style for approval, the QA result and a go / rework / stop recommendation.
-  - [ ] The brief states the commit each QA result was run on.
+  - [x] The CEO has one brief with their own playtest notes, the pacing report, style for approval, the QA result and a go / rework / stop recommendation.
+  - [x] The brief states the commit each QA result was run on.
 
 ### HF-M2-46 The first guide text is short, fits the screen and waits for a press
 - **Owner:** Gameplay Engineer
