@@ -28,6 +28,8 @@ func _ready() -> void:
 	_quit.pressed.connect(quit_requested.emit)
 	_quit.visible = not OS.has_feature("web")
 	visibility_changed.connect(_on_visibility_changed)
+	# The title is up from the start, so no change of visibility will give it the focus.
+	_on_visibility_changed.call_deferred()
 
 
 func bind(profile: Node) -> void:

@@ -125,6 +125,22 @@ func _ready() -> void:
 	_show(Screen.HOME)
 
 
+## B on a pad and Escape on a keyboard press the back button of the screen that is up, so every screen
+## can be left without a mouse. Home has none, a result waits for a choice, and a run's Escape pauses.
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed("ui_cancel", false):
+		return
+	var page: Control = {
+		Screen.MAP: journey, Screen.TREE: keep_screen, Screen.HERO: hero_page, Screen.PLAN: planning,
+		Screen.RECRUITS: recruits_page, Screen.SETTINGS: settings_screen, Screen.ACHIEVEMENTS: achievements_screen,
+		Screen.MENU: menu,
+	}.get(screen)
+	var back: Button = page.find_child("BackButton", true, false) if page != null else null
+	if back != null and back.is_visible_in_tree() and not back.disabled:
+		back.pressed.emit()
+		get_viewport().set_input_as_handled()
+
+
 ## A rail tab was pressed: go to that hub screen.
 func _rail_tab(tab: String) -> void:
 	match tab:
