@@ -498,7 +498,7 @@ func test_the_hud_note_says_whether_the_boss_is_shrouded() -> void:
 	expect_eq(source.get_boss_note(), "", "no boss yet")
 	var rules := source.get_rules()
 	var boss := _enemy(rules, "fog_warden", Vector2(300, 300), 500.0)
-	expect_eq(source.get_boss_note(), "Fog Warden shrouded: use your special")
+	expect_eq(source.get_boss_note(), "Fog Warden shrouded: press Space (A on a pad) with it in reach")
 	boss.exposed_left = 3.2
 	expect_eq(source.get_boss_note(), "Fog Warden exposed: 4 s", "rounded up")
 	main.free()

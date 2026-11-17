@@ -60,6 +60,8 @@ const ENEMY_COLOURS := {
 	"fog_warden": Color("#7a8a9a"),
 }
 const COLOUR_ELITE := Color("#f2d27a")
+## Segments in the special's reach ring.
+const REACH_STEPS := 96
 const COLOUR_SHROUD := Color(0.75, 0.8, 0.85, 0.35)
 const COLOUR_EXPOSED := Color("#ffd86b")
 
@@ -287,6 +289,7 @@ func _draw_hero(rules: HoldfastRules) -> void:
 		draw_string(ThemeDB.fallback_font, at + Vector2(-50, -radius - 8.0), "Down: %d" % ceili(float(rules.hero_state["get_up_in"])), HORIZONTAL_ALIGNMENT_CENTER, 100, FONT_SIZE + 2, COLOUR_TEXT)
 		return
 	draw_arc(at, float(rules.hero_attack["range"]), 0.0, TAU, 64, Color(colour, 0.12), 1.0)
+	_draw_reach(rules, at, rules.special_reach_hint())
 	draw_circle(at, radius, colour)
 	draw_arc(at, radius, 0.0, TAU, 24, COLOUR_HERO_EDGE, 2.0)
 	draw_line(at, at + rules.hero_facing * (radius + 8.0), COLOUR_HERO_EDGE, 3.0)
@@ -298,6 +301,25 @@ func _draw_hero(rules: HoldfastRules) -> void:
 	var charged := 1.0 - rules.hero_ability_ready_in / float(rules.hero_ability["cooldown"])
 	draw_arc(at, radius + 6.0, -PI / 2.0, -PI / 2.0 + TAU * clampf(charged, 0.0, 1.0), 32,
 			COLOUR_ABILITY_READY if ready else COLOUR_ABILITY_CHARGING, 3.0)
+
+
+## The special's reach as a ring around the Hero, kept inside the arena so it never runs under the bars around
+## the field. 0 draws nothing.
+func _draw_reach(rules: HoldfastRules, at: Vector2, reach: float) -> void:
+	if reach <= 0.0:
+		return
+	var field := Rect2(-rules.arena_half, rules.arena_half * 2.0)
+	var run := PackedVector2Array()
+	for i in REACH_STEPS + 1:
+		var point := at + Vector2.RIGHT.rotated(TAU * i / REACH_STEPS) * reach
+		if field.has_point(point):
+			run.append(point)
+			continue
+		if run.size() > 1:
+			draw_polyline(run, Color(COLOUR_ABILITY_READY, 0.55), 2.0)
+		run = PackedVector2Array()
+	if run.size() > 1:
+		draw_polyline(run, Color(COLOUR_ABILITY_READY, 0.55), 2.0)
 
 
 ## The flash of one Hero attack: a burst's circle, an arc's wedge or a dash's trail.

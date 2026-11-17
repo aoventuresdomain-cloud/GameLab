@@ -1341,6 +1341,22 @@ func _step_hero(dt: float, input: Dictionary) -> void:
 		_fire(hero_ability, hero_rapid_power)
 
 
+## True while a boss on the field has its shroud up (the special lifts it, wherever the Hero stands).
+func boss_shrouded() -> bool:
+	for enemy in enemies:
+		if enemy.required_ability != "" and enemy.health > 0.0 and enemy.exposed_left <= 0.0:
+			return true
+	return false
+
+
+## The special's reach in pixels while it is worth showing (a boss is shrouded, the special is ready, the Hero
+## is up); 0 otherwise. Display only: nothing in the rules reads it.
+func special_reach_hint() -> float:
+	if not boss_shrouded() or hero_ability_ready_in > 0.0 or hero_state["downed"]:
+		return 0.0
+	return float(hero_ability.get("range", 0.0))
+
+
 ## Keeper's Habit: a barrage the Hero has the stat for (`auto_power` above 0) fires on its own, at
 ## that share of its power, once HABIT_ENEMIES or more enemies have been within its reach for
 ## HABIT_DELAY seconds with it ready. True on the tick it should.

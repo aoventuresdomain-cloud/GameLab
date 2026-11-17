@@ -70,6 +70,8 @@ const SPECIAL_WHAT := {
 	"tideblade": "three dashes through enemies, and you cannot be hit.",
 }
 const SPECIAL_KEYS := "Press Space, A on a pad, or click to use it."
+## The shrouded boss's note while the special is ready; the ring around the Hero shows the reach.
+const SHROUD_PROMPT := "press Space (A on a pad) with it in reach"
 
 
 func _ready() -> void:
@@ -293,8 +295,26 @@ func get_boss_note() -> String:
 			var name := str(HoldfastContent.base()["enemies"][enemy.type]["name"])
 			if enemy.exposed_left > 0.0:
 				return "%s exposed: %d s" % [name, ceili(enemy.exposed_left)]
-			return "%s shrouded: use your special" % name
+			return _shrouded_note(name)
 	return ""
+
+
+## What a shrouded boss asks of the player: the special's key when it is ready (the burst needs the boss in
+## reach, the shroud lifts on any press), else when it will be ready. A Hero who is down is told when they are up.
+func _shrouded_note(boss_name: String) -> String:
+	var down := get_hero_down_seconds()
+	if down > 0.0:
+		return "%s shrouded: you are down, up in %d s" % [boss_name, ceili(down)]
+	var wait := get_ability_wait()
+	if wait > 0.0:
+		return "%s shrouded: special ready in %d s" % [boss_name, ceili(wait)]
+	return "%s shrouded: %s" % [boss_name, SHROUD_PROMPT]
+
+
+## The special's reach in pixels while it is worth showing: a boss is shrouded, the special is ready and the
+## Hero is up. 0 otherwise.
+func get_special_reach() -> float:
+	return _rules.special_reach_hint() if _rules != null else 0.0
 
 
 ## The shrouded boss still standing, for the HUD's boss bar; {} when none is on the field.
