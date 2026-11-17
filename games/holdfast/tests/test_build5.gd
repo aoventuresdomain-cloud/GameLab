@@ -659,7 +659,7 @@ func test_the_keep_screen_shows_sections_dims_the_far_nodes_and_lists_the_next_u
 	TreeCard.buy(keep, "post_scope")
 	TreeCard.buy(keep, "post_sight")
 	TreeCard.buy(keep, "post_scope")
-	expect_true(not TreeCard.can_buy(keep, "post_twin") and keep._node_buttons["post_twin"].text.contains("closed"), "the other side of the fork is closed")
+	expect_true(not TreeCard.can_buy(keep, "post_twin") and keep._marks["post_twin"].get_meta("state") == "closed", "the other side of the fork is closed")
 	expect_true(keep._card_note.text.contains("Closed by Scope"))
 	keep.open_card("post_scope")
 	expect_true(TreeCard.text(keep).contains("Replaces Twin arrows"), TreeCard.text(keep))

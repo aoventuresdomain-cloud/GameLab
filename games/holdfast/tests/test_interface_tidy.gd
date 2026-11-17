@@ -128,7 +128,7 @@ func test_an_owned_node_glows_green_and_has_no_bought_word() -> void:
 	expect_eq(slot.text, "", "no word on it: a tick is drawn there")
 	expect_eq(page._marks["castle_slot_1"].get_meta("state"), "owned", "the tick")
 	expect_eq(page._labels["castle_slot_1"].text, "First Slot", "and the name stays under it")
-	expect_true(slot.get_theme_stylebox("disabled") == page._owned_style and slot.get_theme_stylebox("normal") == page._owned_style, "it glows")
+	expect_true(page._marks["castle_slot_1"].get_meta("state") == "owned", "it glows green (a castle node is drawn whole on its mark)")
 	page.open_card("castle_slot_1")
 	expect_false(TreeCard.text(page).to_lower().contains("bought"), TreeCard.text(page))
 	page.close_card()
@@ -141,7 +141,7 @@ func test_an_owned_node_glows_green_and_has_no_bought_word() -> void:
 	expect_true(boots.get_theme_stylebox("normal") == page._owned_style, "a bought node glows")
 	profile.respec()
 	expect_false(boots.get_theme_stylebox("normal") == page._owned_style, "and the glow goes with a refund")
-	expect_true(slot.get_theme_stylebox("normal") == page._owned_style, "the guided slot is not taken back and keeps its glow")
+	expect_true(page._marks["castle_slot_1"].get_meta("state") == "owned", "the guided slot is not taken back and keeps its glow")
 	main.free()
 
 

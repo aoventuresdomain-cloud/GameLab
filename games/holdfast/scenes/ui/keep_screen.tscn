@@ -91,6 +91,12 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Zoom in"
 
+[node name="KeyButton" type="Button" parent="Margin/Column/Body/Inner/TabRow"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+text = "Key"
+
 [node name="View" type="Control" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
 clip_contents = true

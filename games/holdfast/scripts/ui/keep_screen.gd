@@ -31,6 +31,31 @@ const LABEL_WIDTH := 96.0
 ## The room a name and a node keep from every other node and name, in pixels on screen (the CEO's 6 px rule).
 const NAME_CLEAR := 6.0
 const LABEL_GAP := 8
+## A gate or a capstone sits inside a thin outer ring, so it takes more room than a plain node.
+const RING_SIZE := Vector2(54, 54)
+## The price tag (a coin or star and the number) hangs this far under its node, or above it when
+## there is no room under.
+const TAG_GAP := 4.0
+const TAG_ICON := 14.0
+## About one line of the TreePrice type, for placing names clear of the tags.
+const TAG_HEIGHT := 20.0
+const TAG_WIDTH := 56.0
+const ICON_DIR := "res://assets/ui/icons/"
+const KINDS := ["stat", "behaviour", "castle", "link", "gate", "capstone"]
+## Stats that change how a post or the Hero fights rather than how hard: they make a Behaviour node.
+const BEHAVIOUR_STATS := ["extra_targets", "burst_every", "storm_every", "lone_bonus", "attack.count", "ability.auto_power", "ability.pierce", "pierce", "crossfire", "hero_haste", "posted_haste"]
+## The glyph inside a node, by the first stat it changes (the scope is dropped).
+const STAT_GLYPH := {
+	"damage": "damage", "attack.damage": "damage", "ability.burn_dps": "burn", "burn_dps": "burn", "burn_seconds": "burn", "ability.burn_seconds": "burn",
+	"aura_dps": "damage", "staff_damage": "damage", "burst_extra": "damage", "storm_share": "damage", "lone_bonus": "damage", "last_light": "damage", "crossfire": "damage",
+	"cooldown": "speed", "attack.cooldown": "speed", "ability.cooldown": "speed", "burst_every": "speed", "storm_every": "speed", "move_speed": "speed", "hero_haste": "speed",
+	"posted_haste": "speed", "ability.rapid_seconds": "speed", "getup_time": "speed", "rally_seconds": "speed",
+	"range": "range", "attack.range": "range", "watch_range": "range", "beam_reach": "range", "pickup_radius": "range", "hero_radius": "range", "watch_radius": "range",
+	"rally_radius": "range", "eclipse_radius": "range", "eclipse_widen": "range", "last_light_radius": "range", "attack.spread_degrees": "range",
+	"health": "health", "keep_health": "health", "armour": "health", "repair": "health", "rally_repair": "health", "rally_shield": "health",
+	"extra_targets": "multi", "pierce": "multi", "ability.pierce": "multi", "attack.count": "multi",
+	"gold_multiplier": "coin", "ability.auto_power": "speed",
+}
 const LABELS_MIN_ZOOM := 0.6
 const RIM_SIZE := Vector2(100, 24)
 ## A section's name sits this far beyond its outermost node, and never nearer the middle than RIM_MIN.
@@ -41,6 +66,10 @@ const LINK_PREFIX := "link_"
 const LINK_DASHES := 16
 static var FAR_EDGE := UiTokens.colour(&"mute")
 static var NODE_FILL := UiTokens.colour(&"raise")
+## The colour of a section's name on the card's header bar, and nowhere else (a token of the theme).
+const SECTION_TOKEN := {
+	"flare_archer": &"sec_hero", "archer_post": &"sec_post", "keep": &"sec_keep", "gold": &"sec_gold", "castle": &"sec_castle", "mage_post": &"arcane",
+}
 ## The card keeps this far from the edge of the page.
 const CARD_MARGIN := 24.0
 ## About 0.4, a power-of-two fraction so the stored scale equals the limit exactly.
@@ -133,6 +162,7 @@ var selected_pillar := ""
 @onready var _tabs: HBoxContainer = %Tabs
 @onready var _zoom_out: Button = %ZoomOut
 @onready var _zoom_in: Button = %ZoomIn
+@onready var _key_button: Button = %KeyButton
 @onready var _info: Label = %Info
 @onready var _respec: Button = %RespecButton
 @onready var _confirm: Button = %ConfirmButton
@@ -152,6 +182,10 @@ var _node_buttons: Dictionary = {}
 ## The name under each node, and the mark drawn on it (tick, star, dashed ring).
 var _labels: Dictionary = {}
 var _marks: Dictionary = {}
+## The price tag under each node (a coin or star and the number), and which of them stand above
+## their node at the zoom the web is at.
+var _tags: Dictionary = {}
+var _tag_side: Dictionary = {}
 ## The way each section lies from the middle, which is where its name goes on the rim.
 var _rim_dirs: Dictionary = {}
 var _styles: Dictionary = {}
@@ -175,6 +209,9 @@ var _dragged := false
 ## The upgrade the guide offers ("" for the fight).
 var _guide_node := ""
 var _card: Control
+var _card_bar: ColorRect
+## The key to the shapes, over a corner of the view while it is open.
+var _key: Control
 var _card_id := ""
 var _card_title: Label
 var _card_close: Button
@@ -203,11 +240,13 @@ func _ready() -> void:
 	_guide_button.pressed.connect(_on_guide_pressed)
 	_zoom_out.pressed.connect(zoom_by.bind(1.0 / ZOOM_STEP))
 	_zoom_in.pressed.connect(zoom_by.bind(ZOOM_STEP))
+	_key_button.toggled.connect(func(on: bool) -> void: _key.visible = on)
 	_view.gui_input.connect(_on_view_input)
 	_view.resized.connect(_fit_view)
 	_web.draw.connect(_draw_links)
 	visibility_changed.connect(_on_visibility_changed)
 	_build_tree()
+	_build_key()
 	_build_card()
 
 
@@ -239,19 +278,23 @@ func refresh() -> void:
 		var near: bool = bought or _profile.is_near(id)
 		button.visible = _profile.is_visible(id)
 		_labels[id].visible = button.visible
+		_tags[id].visible = button.visible
 		button.tooltip_text = _tip_text(id)
-		# The price on the node (a tick when owned); the name is under it and on its tooltip.
-		button.text = "" if bought else ("closed" if closed else _face(node))
-		button.theme_type_variation = &"TreeClosedButton" if closed else &"TreePriceButton"
+		# Nothing is written inside a node: its glyph is drawn on it, and its price is the tag under it.
+		button.text = ""
+		button.theme_type_variation = &"TreePriceButton"
 		var state := "owned" if bought else ("closed" if closed else ("open" if near else "far"))
 		_marks[id].set_meta("state", state)
 		_marks[id].queue_redraw()
-		_light(button, state, _is_link(id))
+		_light(button, state, _is_link(id), _kind(id))
 		# Every node can be pressed: its card says what is open to the player, and what is not.
 		button.set_pressed_no_signal(bought)
 		# Only what is one buy away (or already bought) is drawn in full; the rest is dimmed.
 		button.modulate = UiTokens.fade(1.0) if near else DIMMED
 		_labels[id].modulate = button.modulate
+		# The tag is dimmed, never reddened, while the player cannot afford it.
+		var short := _shortfall(node, _profile.why_not_buy(id)) > 0
+		_tags[id].modulate = DIMMED if not near else (UiTokens.fade(0.55) if short else UiTokens.fade(1.0))
 	for section in _section_columns:
 		_section_columns[section].visible = (not _content["hero_paths"].has(section) or section == selected_pillar) and _section_has_shown_node(section)
 		_place_heading(section)
@@ -345,13 +388,76 @@ static func _edge(state: String) -> Color:
 
 ## What the node's button looks like in a state; every state of the button looks the same, save
 ## a brighter fill under the pointer.
-func _light(button: Button, state: String, link: bool) -> void:
+func _light(button: Button, state: String, link: bool, kind := "stat") -> void:
+	if kind != "stat":
+		# Every other shape is drawn whole on the node's mark; the button only takes the press and the focus.
+		for name in ["normal", "pressed", "disabled", "hover", "hover_pressed"]:
+			button.add_theme_stylebox_override(name, StyleBoxEmpty.new())
+		button.add_theme_stylebox_override("focus", _focus_style(int(NODE_SIZE.x * 0.5)))
+		return
 	var rest: StyleBoxFlat = _owned_style if state == "owned" and not link else _node_style(state, link, false)
 	for name in ["normal", "pressed", "disabled"]:
 		button.add_theme_stylebox_override(name, rest)
 	for name in ["hover", "hover_pressed"]:
 		button.add_theme_stylebox_override(name, _node_style(state, link, true))
 	button.add_theme_stylebox_override("focus", _owned_focus_style if state == "owned" else _focus_style(int(NODE_SIZE.x * 0.5)))
+
+
+## Which of the six shapes of the key a node is: a Link joins two parts of the web, a Gate opens a
+## tower, a Castle node grants slots or cards, a Capstone is a star-priced end of a section, a
+## Behaviour changes how a post or the Hero fights, and a Stat only adds to a number.
+func _kind(id: String) -> String:
+	var node: Dictionary = _content["upgrade_nodes"][id]
+	if _is_link(id):
+		return "link"
+	if id.begins_with("gate_") or node.has("needs_nodes"):
+		return "gate"
+	if node.has("grants"):
+		return "castle"
+	if str(node.get("currency", "")) == "stars" and node.has("effects"):
+		return "capstone"
+	if node.has("text") or (node.has("effects") and _field(str(node["effects"][0]["stat"])) in BEHAVIOUR_STATS):
+		return "behaviour"
+	return "stat"
+
+
+## The room a node takes: the gate and the capstone have a ring around them.
+func _foot(id: String) -> Vector2:
+	return RING_SIZE if _kind(id) in ["gate", "capstone"] else NODE_SIZE
+
+
+static func _field(stat: String) -> String:
+	for scope in ["tower.", "hero.", "recruit."]:
+		if stat.begins_with(scope):
+			return stat.substr(scope.length())
+	return stat
+
+
+## The picture inside a node, by what it does.
+func _glyph(id: String) -> String:
+	var node: Dictionary = _content["upgrade_nodes"][id]
+	match _kind(id):
+		"link":
+			return "link"
+		"gate":
+			return "gate"
+		"castle":
+			return "recruit" if node["grants"].has("squad") else "castle"
+	if node.has("effects"):
+		if str(node["effects"][0]["stat"]).begins_with("recruit."):
+			return "recruit"
+		return STAT_GLYPH.get(_field(str(node["effects"][0]["stat"])), "damage")
+	return "damage"
+
+
+static var _icons := {}
+
+
+## An icon of the tree: a glyph (node_*.svg), or the coin or star of a price.
+static func _icon(name: String) -> Texture2D:
+	if not _icons.has(name):
+		_icons[name] = load("%s%s.svg" % [ICON_DIR, name if name in ["coin", "star"] else "node_" + name])
+	return _icons[name]
 
 
 func _is_link(id: String) -> bool:
@@ -367,11 +473,6 @@ func _joins_sections(id: String, required: String) -> bool:
 func _point(id: String) -> Vector2:
 	var at: Dictionary = _content["upgrade_nodes"][id]["at"]
 	return Vector2(float(at["x"]), float(at["y"]))
-
-
-## What a node's button says: its price, with room above it for the star of a star price.
-func _face(node: Dictionary) -> String:
-	return ("\n%d" % int(node["cost"])) if HoldfastMeta.is_star_node(node) else Hud.format_number(int(node["cost"]))
 
 
 func _build_tree() -> void:
@@ -402,6 +503,8 @@ func _build_tree() -> void:
 			_node_buttons[id] = button
 			var mark := Control.new()
 			mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			button.mouse_entered.connect(mark.queue_redraw)
+			button.mouse_exited.connect(mark.queue_redraw)
 			button.add_child(mark)
 			mark.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 			mark.draw.connect(_draw_mark.bind(id))
@@ -413,6 +516,9 @@ func _build_tree() -> void:
 			holder.add_child(label)
 			label.reset_size()
 			_labels[id] = label
+			var tag := _make_tag(node)
+			holder.add_child(tag)
+			_tags[id] = tag
 		_rim_dirs[str(section["id"])] = (middle / maxf(count, 1)).normalized() if middle.length() > 1.0 else Vector2.LEFT
 		var heading := _caption(str(section.get("rim", section["name"])), &"TreeRim", RIM_SIZE)
 		heading.pivot_offset = RIM_SIZE * 0.5
@@ -423,21 +529,81 @@ func _build_tree() -> void:
 	_web.custom_minimum_size = _holders_rect(_section_columns.values()).end
 
 
-## Each node's name goes on the side of it (below, above, right, left, then the corners) that crowds the other nodes
-## and names least, worked out once for the whole web at real size. A name grows from the edge of its
+## The price tag: the coin or star, and the number.
+func _make_tag(node: Dictionary) -> Control:
+	var tag := HBoxContainer.new()
+	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tag.add_theme_constant_override("separation", 3)
+	var icon := TextureRect.new()
+	icon.texture = _icon("star" if HoldfastMeta.is_star_node(node) else "coin")
+	icon.custom_minimum_size = Vector2(TAG_ICON, TAG_ICON)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tag.add_child(icon)
+	var value := Label.new()
+	value.name = "Value"
+	value.theme_type_variation = &"TreePrice"
+	value.text = str(int(node["cost"])) if HoldfastMeta.is_star_node(node) else Hud.format_number(int(node["cost"]))
+	value.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tag.add_child(value)
+	tag.size = tag.get_combined_minimum_size()
+	return tag
+
+
+## Which side of its node a tag hangs from, in the order they are tried.
+enum Side { BELOW, ABOVE, RIGHT, LEFT }
+
+
+## Hangs a tag from its node: under it, else above it, and only when neither has room beside it.
+func _place_tag(id: String, side: int) -> void:
+	var tag: Control = _tags[id]
+	# Sized from the theme it is in, not the default one it was made under.
+	tag.size = tag.get_combined_minimum_size()
+	var at := _point(id)
+	var half := _foot(id) * 0.5
+	_tag_side[id] = side
+	match side:
+		Side.ABOVE:
+			tag.pivot_offset = Vector2(tag.size.x * 0.5, tag.size.y)
+			tag.position = at + Vector2(0, -half.y - TAG_GAP) - tag.pivot_offset
+		Side.RIGHT:
+			tag.pivot_offset = Vector2(0, tag.size.y * 0.5)
+			tag.position = at + Vector2(half.x + TAG_GAP, 0) - tag.pivot_offset
+		Side.LEFT:
+			tag.pivot_offset = Vector2(tag.size.x, tag.size.y * 0.5)
+			tag.position = at + Vector2(-half.x - TAG_GAP, 0) - tag.pivot_offset
+		_:
+			tag.pivot_offset = Vector2(tag.size.x * 0.5, 0)
+			tag.position = at + Vector2(0, half.y + TAG_GAP) - tag.pivot_offset
+
+
+## Where a node's tag is at the zoom the web is at (its size on screen stays the same).
+func _tag_rect(id: String, zoom: float) -> Rect2:
+	var tag: Control = _tags[id]
+	return Rect2(tag.position + tag.pivot_offset * (1.0 - 1.0 / zoom), tag.size / zoom)
+
+
+## Each node's name goes on the side of it (under its tag, below, above, right, left, then the corners) that crowds the
+## other nodes, tags and names least, worked out once for the whole web at real size. A name grows from the edge of its
 ## node, so it never runs back over it as it keeps its size when the web is zoomed out. Which names
 ## are left off at the zoom the web is at is _declutter's job.
 func _place_labels() -> void:
-	var half := NODE_SIZE * 0.5
 	var taken: Array[Rect2] = []
 	for id in _node_buttons:
-		taken.append(Rect2(_point(id) - half, NODE_SIZE))
+		_place_tag(id, Side.BELOW)
+		taken.append(Rect2(_point(id) - _foot(id) * 0.5, _foot(id)))
+		taken.append(Rect2(_tags[id].position, _tags[id].size))
 	for id in _labels:
 		var label: Label = _labels[id]
 		var at := _point(id)
 		var box := label.size
+		var half := _foot(id) * 0.5
+		var tag_h: float = _tags[id].size.y
 		# Where the name hangs from, and the point of the name that sits on it.
 		var options: Array = [
+			[at + Vector2(0, half.y + TAG_GAP + tag_h + LABEL_GAP), Vector2(box.x * 0.5, 0)],
 			[at + Vector2(0, half.y + LABEL_GAP), Vector2(box.x * 0.5, 0)],
 			[at + Vector2(0, -half.y - LABEL_GAP), Vector2(box.x * 0.5, box.y)],
 			[at + Vector2(half.x + LABEL_GAP, 0), Vector2(0, box.y * 0.5)],
@@ -447,14 +613,17 @@ func _place_labels() -> void:
 			[at + Vector2(half.x * 0.7 + LABEL_GAP, -half.y * 0.7 - LABEL_GAP), Vector2(0, box.y)],
 			[at - half * 0.7 - Vector2.ONE * LABEL_GAP, box],
 		]
-		var own := Rect2(at - half, NODE_SIZE)
+		var own := Rect2(at - half, _foot(id))
+		var own_tag := Rect2(_tags[id].position, _tags[id].size)
 		var best := 0
 		var best_cost := INF
 		for i in options.size():
 			var rect := Rect2(options[i][0] - options[i][1], box)
 			var cost := float(i) * 0.1
 			for other in taken:
-				cost += rect.intersection(other).get_area() if other != own else 0.0
+				cost += rect.intersection(other).get_area() if other != own and other != own_tag else 0.0
+			if rect.intersects(own_tag):
+				cost += rect.intersection(own_tag).get_area()
 			if cost < best_cost:
 				best = i
 				best_cost = cost
@@ -462,42 +631,96 @@ func _place_labels() -> void:
 		label.position = options[best][0] - options[best][1]
 
 
-## Leaves off the names that have no room at the zoom the web is at: one that comes within
-## NAME_CLEAR px on screen of a node, or of a name already kept, is hidden (the CEO's rule: hide the
-## name first; the node's card and tooltip still say it). The nodes one buy away keep theirs first.
+## Settles the names and tags at the zoom the web is at (the CEO's rule: nothing is within NAME_CLEAR px
+## on screen of another node, name or tag). A buyable node's tag goes first, under the node, else above
+## it, else beside it; then the names of the nodes one buy away, then the tags of the rest, then every other name. A name
+## with no room is left off (the card and the tooltip still say it); so is a tag with no room either side.
 func _declutter() -> void:
 	var zoom := _web.scale.x
 	if zoom <= 0.0:
 		return
 	var clear := NAME_CLEAR / zoom
-	var half := NODE_SIZE * 0.5
 	var on_show: Array = _node_buttons.keys().filter(func(id: String) -> bool: return _node_buttons[id].visible and _node_buttons[id].get_parent().visible)
-	on_show.sort_custom(func(a: String, b: String) -> bool: return _is_lit(a) and not _is_lit(b))
 	var nodes := {}
 	for id in on_show:
-		nodes[id] = Rect2(_point(id) - half, NODE_SIZE).grow(clear)
+		nodes[id] = Rect2(_point(id) - _foot(id) * 0.5, _foot(id)).grow(clear)
 	var kept: Array[Rect2] = []
-	# The section names on the rim are in the way of a name too.
+	# The section names on the rim are in the way of a name too, so they stand clear of every node first.
 	for section in _headings:
 		var heading: Label = _headings[section]
 		if heading.visible and heading.get_parent().visible:
-			kept.append(Rect2(heading.position + heading.pivot_offset * (1.0 - 1.0 / zoom), heading.size / zoom).grow(clear))
+			_stand_clear(section, zoom, nodes, kept)
+			kept.append(_text_rect(heading, zoom).grow(clear))
 	for id in _labels:
 		_labels[id].visible = false
-	for id in on_show:
-		var label: Label = _labels[id]
-		# The name is scaled about the point it hangs from, so its rect at this zoom is smaller or larger than at real size.
-		var rect := Rect2(label.position + label.pivot_offset * (1.0 - 1.0 / zoom), label.size / zoom)
-		var free := true
-		for other in nodes:
-			if rect.intersects(nodes[other]):
-				free = false
-				break
-		for other in kept:
-			free = free and not rect.intersects(other)
-		if free:
-			label.visible = true
+		_tags[id].visible = false
+	var lit: Array = on_show.filter(func(id: String) -> bool: return _is_lit(id))
+	var rest: Array = on_show.filter(func(id: String) -> bool: return not _is_lit(id))
+	var owned: Array = _profile.get_upgrades() if _profile != null else []
+	for id in lit:
+		if not id in owned:
+			_keep_tag(id, zoom, clear, nodes, kept)
+	for id in lit:
+		_keep_name(id, zoom, clear, nodes, kept)
+	for id in rest:
+		_keep_tag(id, zoom, clear, nodes, kept)
+	for id in rest:
+		_keep_name(id, zoom, clear, nodes, kept)
+
+
+## Moves a section's name out along its rim until it touches no node and no other section name.
+func _stand_clear(section: String, zoom: float, nodes: Dictionary, kept: Array[Rect2]) -> void:
+	var heading: Label = _headings[section]
+	_place_heading(section)
+	var step := 8.0 / zoom
+	for i in 80:
+		if _is_free(_text_rect(heading, zoom), "", nodes, kept):
+			return
+		heading.position += _rim_dirs[section] * step
+
+
+## The room a name's own letters take at this zoom (its box is wider than its text).
+func _text_rect(label: Label, zoom: float) -> Rect2:
+	var box := Rect2(label.position + label.pivot_offset * (1.0 - 1.0 / zoom), label.size / zoom)
+	var font := label.get_theme_font(&"font")
+	var width := font.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size(&"font_size")).x + 4.0
+	var wide := minf(width / zoom, box.size.x)
+	return Rect2(box.position + Vector2((box.size.x - wide) * 0.5, 0.0), Vector2(wide, box.size.y))
+
+
+## Shows a node's tag under it, or else above it, where it is clear of every node and of what is kept.
+func _keep_tag(id: String, zoom: float, clear: float, nodes: Dictionary, kept: Array[Rect2]) -> void:
+	if _profile != null and (id in _profile.get_upgrades() or _profile.why_not_buy(id).begins_with("Closed")):
+		return
+	for side in [Side.BELOW, Side.ABOVE, Side.RIGHT, Side.LEFT]:
+		_place_tag(id, side)
+		var rect := _tag_rect(id, zoom)
+		if _is_free(rect, id, nodes, kept):
+			_tags[id].visible = true
 			kept.append(rect.grow(clear))
+			return
+	_place_tag(id, Side.BELOW)
+
+
+## Shows a node's name where it was placed, if that is clear of every node and of what is kept.
+func _keep_name(id: String, zoom: float, clear: float, nodes: Dictionary, kept: Array[Rect2]) -> void:
+	var label: Label = _labels[id]
+	# The name is scaled about the point it hangs from, so its rect at this zoom is smaller or larger than at real size.
+	var rect := Rect2(label.position + label.pivot_offset * (1.0 - 1.0 / zoom), label.size / zoom)
+	if _is_free(rect, "", nodes, kept):
+		label.visible = true
+		kept.append(rect.grow(clear))
+
+
+## True when a rect touches no node (but its own) and nothing kept.
+func _is_free(rect: Rect2, own: String, nodes: Dictionary, kept: Array[Rect2]) -> bool:
+	for other in nodes:
+		if other != own and rect.intersects(nodes[other]):
+			return false
+	for other in kept:
+		if rect.intersects(other):
+			return false
+	return true
 
 
 ## True when a node is bought or one buy away: drawn in full, not dimmed.
@@ -516,23 +739,62 @@ func _caption(text: String, variation: StringName, box: Vector2) -> Label:
 	return label
 
 
-## The tick of an owned node, the star of a star price, the dashed ring of a link.
+## A node drawn whole: its shape by kind, its glyph (a tick once owned) inside. The key draws the
+## same shapes with the same call.
 func _draw_mark(id: String) -> void:
 	var mark: Control = _marks[id]
 	var state: String = mark.get_meta("state", "far")
+	var kind := _kind(id)
 	var middle := NODE_SIZE * 0.5
-	if _is_link(id):
-		var step := TAU / LINK_DASHES
-		for i in LINK_DASHES:
-			mark.draw_arc(middle, middle.x - 1.5, i * step, (i + 0.55) * step, 4, _edge(state), 3.0, true)
-	if state == "owned":
-		mark.draw_polyline(PackedVector2Array([Vector2(12, 23), Vector2(19, 30), Vector2(32, 15)]), UiTokens.colour(&"bone"), 4.0, true)
-	elif state != "closed" and HoldfastMeta.is_star_node(_content["upgrade_nodes"][id]):
-		var points := PackedVector2Array()
-		for i in 10:
-			var angle := -PI * 0.5 + i * PI * 0.2
-			points.append(Vector2(middle.x, 12.0) + Vector2.from_angle(angle) * (6.0 if i % 2 == 0 else 2.6))
-		mark.draw_colored_polygon(points, COLOUR_ACT)
+	if kind != "stat":
+		var fill := OWNED_FILL if state == "owned" else NODE_FILL
+		if _node_buttons[id].is_hovered():
+			fill = fill.lightened(0.15)
+		draw_shape(mark, kind, middle, fill, _edge(state))
+	var tint := UiTokens.colour(&"bone") if state == "owned" else (COLOUR_ACT if state == "open" else FAR_EDGE)
+	var glyph := "tick" if state == "owned" else _glyph(id)
+	mark.draw_texture_rect(_icon(glyph), Rect2(middle - Vector2(10, 10), Vector2(20, 20)), false, tint if glyph != "coin" else UiTokens.fade(1.0))
+
+
+## One of the six shapes of the key: a Stat is a circle, a Behaviour a hexagon, a Castle node a
+## rounded square, a Link a dashed diamond, a Gate a square in a thin ring and a Capstone a circle in a thin ring.
+static func draw_shape(canvas: CanvasItem, kind: String, centre: Vector2, fill: Color, edge: Color) -> void:
+	var ring := UiTokens.colour(&"line")
+	match kind:
+		"behaviour":
+			var points := PackedVector2Array()
+			for i in 6:
+				points.append(centre + Vector2.from_angle(-PI * 0.5 + i * PI / 3.0) * 22.0)
+			canvas.draw_colored_polygon(points, fill)
+			points.append(points[0])
+			canvas.draw_polyline(points, edge, 3.0, true)
+		"castle":
+			var box := StyleBoxFlat.new()
+			box.bg_color = fill
+			box.border_color = edge
+			box.set_border_width_all(3)
+			box.set_corner_radius_all(8)
+			canvas.draw_style_box(box, Rect2(centre - Vector2(20, 20), Vector2(40, 40)))
+		"link":
+			var points := PackedVector2Array([centre + Vector2(0, -22), centre + Vector2(22, 0), centre + Vector2(0, 22), centre + Vector2(-22, 0)])
+			canvas.draw_colored_polygon(points, fill)
+			for i in 4:
+				canvas.draw_dashed_line(points[i], points[(i + 1) % 4], edge, 3.0, 5.0)
+		"gate":
+			canvas.draw_arc(centre, 26.0, 0.0, TAU, 48, ring, 1.5, true)
+			var box := StyleBoxFlat.new()
+			box.bg_color = fill
+			box.border_color = edge
+			box.set_border_width_all(3)
+			box.set_corner_radius_all(6)
+			canvas.draw_style_box(box, Rect2(centre - Vector2(18, 18), Vector2(36, 36)))
+		"capstone":
+			canvas.draw_arc(centre, 26.0, 0.0, TAU, 48, ring, 1.5, true)
+			canvas.draw_circle(centre, 20.0, fill)
+			canvas.draw_arc(centre, 19.0, 0.0, TAU, 40, edge, 3.0, true)
+		_:
+			canvas.draw_circle(centre, 20.0, fill)
+			canvas.draw_arc(centre, 20.0, 0.0, TAU, 40, edge, 3.0, true)
 
 
 ## Names keep their size on screen whatever the zoom; node names go when the web is too small for them.
@@ -544,6 +806,7 @@ func _sync_labels() -> void:
 	for id in _labels:
 		_labels[id].scale = Vector2.ONE / zoom
 		_labels[id].self_modulate.a = 1.0 if shown else 0.0
+		_tags[id].scale = Vector2.ONE / zoom
 	_declutter()
 	for section in _headings:
 		_headings[section].scale = Vector2.ONE / zoom
@@ -833,6 +1096,43 @@ static func _focus_style(radius := 6) -> StyleBoxFlat:
 
 # ------------------------------------------------------------------ the detail card
 
+## The key: each shape (Stat, Behaviour, Castle, Link, Gate, Capstone) drawn as owned, buyable and
+## locked, over the foot of the view while it is open.
+func _build_key() -> void:
+	var panel := PanelContainer.new()
+	panel.name = "Key"
+	panel.visible = false
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	_view.add_child(panel)
+	panel.position = Vector2(12, 12)
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 4)
+	panel.add_child(grid)
+	grid.add_child(Control.new())
+	for state in ["Owned", "Buyable", "Locked"]:
+		var head := Label.new()
+		head.text = state
+		head.theme_type_variation = &"Caption"
+		head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		grid.add_child(head)
+	for kind in KINDS:
+		var name := Label.new()
+		name.text = str(kind).capitalize()
+		name.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		grid.add_child(name)
+		for state in ["owned", "open", "far"]:
+			var swatch := Control.new()
+			swatch.custom_minimum_size = Vector2(48, 48)
+			swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			swatch.draw.connect(func() -> void:
+				var fill := OWNED_FILL if state == "owned" else NODE_FILL
+				draw_shape(swatch, kind, swatch.size * 0.5, fill, _edge(state)))
+			grid.add_child(swatch)
+	_key = panel
+
+
 ## The card is built here, hidden, over the whole page: a dim backdrop (a press on it closes the
 ## card) and a panel in the middle that shows one node.
 func _build_card() -> void:
@@ -875,6 +1175,11 @@ func _build_card() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 10)
 	_card_panel.add_child(column)
+	# The section's colour is on this bar over the header and nowhere else on the card.
+	_card_bar = ColorRect.new()
+	_card_bar.custom_minimum_size = Vector2(0, 6)
+	_card_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(_card_bar)
 	var header := HBoxContainer.new()
 	column.add_child(header)
 	_card_title = Label.new()
@@ -995,6 +1300,7 @@ func _fill_card() -> void:
 	var node: Dictionary = _content["upgrade_nodes"][id]
 	var owned: bool = id in _profile.get_upgrades()
 	_card_title.text = str(node["name"])
+	_card_bar.color = UiTokens.colour(SECTION_TOKEN.get(str(node["branch"]), &"mute"))
 	_clear(_card_lines)
 	_clear(_card_extra)
 	for line in _change_lines(id, owned):
@@ -1004,12 +1310,18 @@ func _fill_card() -> void:
 		for other in node["excludes"]:
 			names.append(str(_content["upgrade_nodes"][other]["name"]))
 		_card_extra.add_child(_card_label("Replaces %s" % ", ".join(names)))
+	if node.get("requires", []).size() > 1:
+		var parents: PackedStringArray = []
+		for required in node["requires"]:
+			parents.append(str(_content["upgrade_nodes"][required]["name"]))
+		_card_extra.add_child(_card_label("Needs both %s" % " and ".join(parents)))
 	if node.has("hero") and node.has("tower"):
 		_card_extra.add_child(_card_label("Joins %s and %s" % [_content["hero_paths"][node["hero"]]["name"], _content["towers"][node["tower"]]["name"]]))
 	if int(node.get("grants", {}).get("mage_cards", 0)) > 0:
 		_card_extra.add_child(_gate_cards())
 	_card_tick.visible = owned
 	_card_buy.visible = not owned
+	_card_buy.icon = _icon("star" if HoldfastMeta.is_star_node(node) else "coin")
 	_card_refund.visible = owned
 	_card_price.theme_type_variation = &"CardPrice"
 	var reason: String = _profile.why_not_refund(id) if owned else _profile.why_not_buy(id)

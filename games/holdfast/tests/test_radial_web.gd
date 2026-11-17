@@ -124,7 +124,8 @@ func test_nodes_are_round_and_a_44_px_target_at_real_size_and_the_card_still_nam
 	var page: Control = made[1]
 	for id in page._node_buttons:
 		expect_true(page._node_buttons[id].size.x >= 44.0 and page._node_buttons[id].size.y >= 44.0, "%s is a 44 px target" % id)
-	expect_eq(page._node_buttons["gate_mage"].text, "\n2", "the price, with room for the star")
+	expect_eq(page._node_buttons["gate_mage"].text, "", "no number inside a node")
+	expect_eq(page._tags["gate_mage"].get_node("Value").text, "2", "the price is the tag under it, with a star")
 	expect_eq(page._labels["gate_mage"].text, "Mage Gate", "short under the node")
 	page.open_card("gate_mage")
 	expect_eq(page._card_title.text, "Tower Gate I: Mage Post", "and in full on its card")
