@@ -781,6 +781,28 @@
   - [x] No number in the game changes.
 
 
+### HF-M2-86 Build 18: call the next wave early
+- **Owner:** Gameplay Engineer
+- **Status:** Ready (Build 18 of 19, CEO 2026-11-17 17:14 "Yes build number 3", from the Advisor's Incrempire comparison, gap D). Estimate: about 1.5 to 3 h including QA, upper bound 5, medium confidence
+- **QA:** screens (run flow and one HUD control; no save data change)
+- **Depends on:** HF-M2-64 (game speed, merged)
+- **Done when:**
+  - [ ] During a run, between waves, a clearly labelled control calls the next wave at once instead of waiting for the timer; it works with the mouse, touch, keyboard and gamepad (the same focus rules as the other run controls).
+  - [ ] Calling early never skips a wave, never starts two waves at once and cannot be pressed while a wave is already spawning or after the last wave; a test per case.
+  - [ ] Rewards are unchanged (no bonus for calling early, no penalty), and a no-input run still loses exactly as before (the no-input guard tests pass untouched).
+  - [ ] The pacing bands and the simulator do not change, and the control sits with the speed and pause controls without overlapping them at 1280x720 and 1920x1080.
+
+### HF-M2-87 Build 19: four difficulty tiers (Easy, Medium, Hard, Extreme)
+- **Owner:** Gameplay Engineer
+- **Status:** Ready, waits for the Advisor's tier design (asked 2026-11-17, view to be logged in the Advisor views table; shown to the CEO unedited next to the team's). Build 19 of 19. Estimate: about 4 to 8 h including QA, upper bound 12, low confidence (a band per level per tier)
+- **QA:** full (level data, rewards and saves)
+- **Depends on:** HF-M2-86, the Advisor's tier design
+- **Done when:**
+  - [ ] Every level offers four tiers, Easy, Medium, Hard and Extreme, replacing the Hard and Nightmare stub in `modes.json`; Medium is today's level, Hard is today's Hard replay, Extreme takes the Nightmare slot. Tier names are data text, so a name change is a one-line data edit; placeholders are used until the CEO picks the names.
+  - [ ] Unlock, star payout and what Easy changes follow the Advisor's design; stars from any tier are saved once per level and tier and cannot be earned twice (a test through a real JSON save, including a save from before this build loading cleanly).
+  - [ ] The simulator and the pacing bands cover every tier (a band per level per tier), with Easy no harder than Medium and Extreme harder than Hard on the bots.
+  - [ ] The journey map and level card show the four tiers with icon plus one word and nothing overlapping at 1280x720 and 1920x1080; any existing test change is OK'd by the Head of Engineering first and logged.
+
 ### HF-M2-72 Menus and look: tokens, shared header and the no-overlap test
 - **Owner:** UI Engineer
 - **Status:** Merged (#173, QA clear at 25f40cd after the F-172 and F-173 fixes, merged as b956f7a). Build 14a. CEO approved the design pass on 16 Nov 2026 (`holdfast/m2/menus-and-look-design-pass.md`, Advisor critique `advisor-menus-look-critique.md`, kept unedited); standing CEO rule: icons, titles and labels are never tightly packed and never overlap. Placeholder art only, final art stays last (HF-M2-08 is not decided by this skin)
@@ -1468,3 +1490,4 @@
 - 2026-11-17: CEO: continue the build and review everything together at the end. Every queued build is merged, so no engineering build is open. The Advisor confirmed no buildable Incrempire gap is open and the gold-hours pins stay (Advisor views table); calling the next wave early is offered after the review. Gate 2 full QA round (HF-M2-12) started on main 6846b93, merges frozen to blocker and major fixes.
 - 2026-11-17: Gate 2 full QA round on main 6846b93 (main did not move): one MUST FIX (F-194, left rail highlights the wrong tab) and three FOLLOW-UPs (F-195 to F-197). F-194 to F-196 go to Build 17 (HF-M2-85, UI Engineer); F-197 and F-193 wait for the final polish step. Not covered by the round and to be named in the Gate 2 brief: wins on levels 2 to 5 and the Gull Rock boss in a real browser (a browser-driven Hero could not win them; they rest on the bands, 1,138 tests and per-PR walks), Quit (hidden in the web build by design; tests only), a physical gamepad or Steam Deck, the true 960x540 room, the itch page itself, and HF-M2-00 (the Mac Steam check, the CEO's Mac).
 - 2026-11-17: Build 17 of 17 merged (#194, QA PASS at 7f34a04, merged as 7e3333d): F-194 (rail highlight), F-195 (guided-buy ring) and F-196 (loss wave) closed. F-193 and F-197 wait for the final polish step. Next: the Gate 2 brief (HF-M2-13) for the CEO review.
+- 2026-11-17: CEO (17:14): build call-the-next-wave-early now (Build 18, HF-M2-86); skip further gold-progression testing for now (nothing blocks on it); build four difficulty tiers Easy, Medium, Hard and Extreme with catchier, not cheesy, lighthouse- or fog-flavoured names (Build 19, HF-M2-87). Advisor first on the tier design and names; the CEO sees the Advisor view unedited next to the team's; the name choice is parked with placeholders so the build is not blocked.
