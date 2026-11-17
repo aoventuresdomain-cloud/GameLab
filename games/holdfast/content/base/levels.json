@@ -37,6 +37,8 @@
     {
       "id": "outpost",
       "modifiers": ["swift"],
+      "extreme_modifiers": ["lean"],
+      "easy_effects": [{"stat": "keep_health", "multiply": 1.1}],
       "name": "The Outpost",
       "number": 1,
       "first_clear_gear": "wave_worn_boots",
@@ -74,6 +76,8 @@
     {
       "id": "shingle_beach",
       "modifiers": ["armoured"],
+      "extreme_modifiers": ["swift"],
+      "easy_effects": [{"stat": "enemy_damage", "multiply": 0.92}],
       "name": "Shingle Beach",
       "number": 2,
       "first_clear_gear": "gull_feather_fletching",
@@ -113,6 +117,8 @@
     {
       "id": "tidewrack_cove",
       "modifiers": ["lean"],
+      "extreme_modifiers": ["swift"],
+      "easy_effects": [{"stat": "enemy_health", "multiply": 0.88}],
       "name": "Tidewrack Cove",
       "number": 3,
       "first_clear_gear": "storm_cap",
@@ -145,6 +151,8 @@
     {
       "id": "old_pier",
       "modifiers": ["fragile"],
+      "extreme_modifiers": ["lean"],
+      "easy_effects": [{"stat": "enemy_health", "multiply": 0.9}],
       "name": "The Old Pier",
       "number": 4,
       "first_clear_gear": "oilskin_vest",
@@ -177,6 +185,8 @@
     {
       "id": "gull_rock",
       "modifiers": ["fierce"],
+      "extreme_modifiers": ["armoured"],
+      "easy_effects": [{"stat": "enemy_health", "multiply": 0.9}, {"stat": "enemy_damage", "multiply": 0.8}],
       "name": "Gull Rock",
       "number": 5,
       "first_clear_gear": "tide_band",

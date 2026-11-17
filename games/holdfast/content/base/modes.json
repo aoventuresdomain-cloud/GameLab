@@ -1,6 +1,8 @@
 {
   "modes": [
-    {"id": "hard", "name": "Hard", "built": true, "unlock": "level_won", "text": "Replay a cleared level with its modifier. Pays its stars again, once."},
-    {"id": "nightmare", "name": "Nightmare", "built": false, "unlock": "hard_cleared", "text": "Not built. Goes after Hard: a second modifier on the same level, paying stars once more."}
+    {"id": "easy", "name": "Easy", "icon": "~", "built": true, "unlock": "level_reached", "text": "Give me a quiet night", "effects": [{"stat": "gold_multiplier", "multiply": 0.6}]},
+    {"id": "normal", "name": "Normal", "icon": "=", "built": true, "unlock": "level_reached", "text": "Give me a fair fight"},
+    {"id": "hard", "name": "Hard", "icon": "^", "built": true, "unlock": "normal_won", "text": "Give me a long night"},
+    {"id": "extreme", "name": "Extreme", "icon": "^^", "built": true, "unlock": "hard_won", "text": "Give me the storm"}
   ]
 }

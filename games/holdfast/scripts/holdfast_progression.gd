@@ -214,6 +214,7 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 		"stars_in_tree": _star_price(nodes, avoid),
 	}
 	report["hash"] = SimEngine.hash_data(report)
+	report["profile"] = profile  # where the player ended up, outside the hash
 	return report
 
 

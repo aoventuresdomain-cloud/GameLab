@@ -14,8 +14,8 @@ signal buy_requested(id: String)
 signal stand_requested
 ## The Plan button: plan a run on this level. Opens the Plan page; it never starts the level.
 signal plan_requested(id: String)
-## The Hard switch: the next level planned is its Hard replay (true) or Normal (false).
-signal hard_requested(on: bool)
+## A tier chip: the next level planned plays that tier ("easy", "normal", "hard" or "extreme").
+signal tier_requested(tier: String)
 
 const Hud = preload("res://scripts/ui/hud.gd")
 const Guidance = preload("res://scripts/ui/guidance.gd")
@@ -34,7 +34,10 @@ static var COLOUR_HERO := UiTokens.colour(&"lamp_hot")
 const LABEL_GAP := 20.0
 const HERO_FIGURE := Vector2(44, 64)
 const HERO_INFO := "Hero and gear"
-const HARD_INFO := "Replay a cleared level with its modifier. Pays its stars again, once."
+## The tier chips sit under the map, in this order.
+const TIER_ORDER := ["easy", "normal", "hard", "extreme"]
+## Clear of its neighbours: a chip and the line beneath it.
+const CHIP_WIDTH := 190.0
 
 @onready var _gold: Label = %GoldValue
 @onready var _stars: Label = %StarsValue
@@ -43,8 +46,10 @@ const HARD_INFO := "Replay a cleared level with its modifier. Pays its stars aga
 @onready var _guide_button: Button = %GuideButton
 @onready var _map: Control = %Map
 @onready var _plan: Button = %PlanButton
-## The Hard switch beside Plan: the next level planned is its Hard replay, where the player has cleared the level.
-var _hard_button: Button
+## The tier chips under the map (Easy, Normal, then Hard and Extreme once a level has opened them), each with
+## a line beneath it. None is shown locked. {tier: {"box": VBoxContainer, "button": Button, "line": Label}}
+var _tier_row: HBoxContainer
+var _chips: Dictionary = {}
 @onready var rail: HubRail = %Rail
 @onready var _back: Button = %BackButton
 @onready var _info: Label = %Info
@@ -70,13 +75,7 @@ func _ready() -> void:
 	_ids = _content["levels"].keys()
 	_back.pressed.connect(home_requested.emit)
 	_plan.pressed.connect(func() -> void: plan_requested.emit(_plan_target()))
-	_hard_button = Button.new()
-	_hard_button.text = "Hard"
-	_hard_button.toggle_mode = true
-	_hard_button.tooltip_text = HARD_INFO
-	_hard_button.toggled.connect(hard_requested.emit)
-	_plan.get_parent().add_child(_hard_button)
-	_plan.get_parent().move_child(_hard_button, _plan.get_index() + 1)
+	_build_tier_chips()
 	_guide_button.pressed.connect(_on_guide_pressed)
 	_map.draw.connect(_draw_map)
 	_map.resized.connect(_place)
@@ -127,10 +126,7 @@ func refresh() -> void:
 		_hard_names[id].text = _hard_line(id) if _profile.is_hard_open(id) else ""
 		_hard_names[id].size = _hard_names[id].get_minimum_size()
 		_names[id].size = _names[id].get_minimum_size()
-	var any_hard: bool = _ids.any(func(id: String) -> bool: return _profile.is_hard_open(id))
-	_hard_button.visible = any_hard
-	_hard_button.disabled = _profile.get_guided_step() != ""
-	_hard_button.set_pressed_no_signal(_profile.is_hard_on())
+	_refresh_tier_chips()
 	# The guided buy comes first: until it is made the Hero figure stays shut, like the rail's tabs.
 	var locked: bool = _profile.get_guided_step() != ""
 	_plan.disabled = locked or _guide.visible or _plan_target() == ""
@@ -141,13 +137,59 @@ func refresh() -> void:
 	_map.queue_redraw()
 
 
+## One chip per tier: a toggle with the tier's icon and word, and the pack's line beneath it.
+func _build_tier_chips() -> void:
+	_tier_row = HBoxContainer.new()
+	_tier_row.add_theme_constant_override("separation", 16)
+	var group := ButtonGroup.new()
+	for tier in TIER_ORDER:
+		var box := VBoxContainer.new()
+		box.custom_minimum_size = Vector2(CHIP_WIDTH, 0)
+		box.add_theme_constant_override("separation", 2)
+		var button := Button.new()
+		button.toggle_mode = true
+		button.button_group = group
+		button.custom_minimum_size = Vector2(0, 44)
+		button.text = HoldfastMeta.tier_label(_content, tier)
+		button.pressed.connect(func() -> void: tier_requested.emit(tier))
+		box.add_child(button)
+		var line := Label.new()
+		line.theme_type_variation = &"Caption"
+		line.text = str(_content.get("modes", {}).get(tier, {}).get("text", ""))
+		line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(line)
+		_tier_row.add_child(box)
+		_chips[tier] = {"box": box, "button": button, "line": line}
+	# The chips take the guide strip's slot when the strip is not up, so the map never moves between them.
+	var slot: Control = _guide.get_parent()
+	slot.add_child(_tier_row)
+	_tier_row.set_anchors_preset(Control.PRESET_FULL_RECT)
+
+
+## Shows the chips the player has opened (Hard and Extreme only once some level has), the picked one pressed, and
+## none while a guided buy is due.
+func _refresh_tier_chips() -> void:
+	var offered := ["easy", "normal"]
+	if _ids.any(func(id: String) -> bool: return _profile.is_hard_open(id)):
+		offered.append("hard")
+	if _ids.any(func(id: String) -> bool: return _profile.is_extreme_open(id)):
+		offered.append("extreme")
+	var picked: String = _profile.get_tier() if _profile.get_tier() in offered else "normal"
+	_tier_row.visible = not _guide.visible and _plan_target() != ""
+	for tier in TIER_ORDER:
+		_chips[tier]["box"].visible = tier in offered
+		_chips[tier]["button"].set_pressed_no_signal(tier == picked)
+
+
 ## The level the Plan button opens: the next one still to win, else the last one open ("" while
 ## none can be planned, before the castle has a tower).
 func _plan_target() -> String:
 	var open: Array = _ids.filter(func(id: String) -> bool: return _is_open(id) and not _content["levels"][id].get("tutorial", false))
-	# With Hard on, Plan opens the latest level that has a Hard replay to play.
-	if _profile.is_hard_on():
-		var replays: Array = open.filter(func(id: String) -> bool: return _profile.is_hard_open(id))
+	# With Hard or Extreme picked, Plan opens the latest level that has that replay to play.
+	var picked: String = _profile.get_tier()
+	if picked == "hard" or picked == "extreme":
+		var replays: Array = open.filter(func(id: String) -> bool: return _profile.is_hard_open(id) if picked == "hard" else _profile.is_extreme_open(id))
 		if not replays.is_empty():
 			return replays[-1]
 	for id in open:
@@ -260,6 +302,8 @@ func _level_text(id: String) -> String:
 	var text := "%s: %d waves." % [level["name"], level["waves"].size()]
 	if _profile != null and _profile.is_hard_open(id):
 		text += " Hard: %s" % _profile.get_hard_text(id)
+	if _profile != null and _profile.is_extreme_open(id):
+		text += " Extreme: %s" % _profile.get_extreme_text(id)
 	if level.get("tutorial", false):
 		text += " " + str(level["intro"])
 	return text

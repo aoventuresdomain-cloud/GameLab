@@ -25,8 +25,8 @@ var load_message := ""
 
 var _service: SaveService
 var _content: Dictionary
-## Hard is on for the next run (only for the session; see select_hard).
-var _hard := false
+## The tier the player has picked for the runs they plan next ("normal" until they pick; only for the session).
+var _tier := "normal"
 var _last_unlocks: Array = []
 
 
@@ -526,22 +526,72 @@ func get_hard_text(id: String) -> String:
 	return " ".join(HoldfastMeta.hard_modifiers(_content, id).map(func(modifier: Dictionary) -> String: return str(modifier["text"])))
 
 
-## The player turns Hard on or off for the runs they plan next. It is not saved: a new session starts on Normal.
-func select_hard(on: bool) -> void:
-	if _hard == on:
+## The stars the level's Extreme replay has paid so far (0 to 3).
+func get_extreme_stars(id: String) -> int:
+	return int(data.get("extreme_stars", {}).get(id, 0))
+
+
+## The icons and words of the level's Extreme replay (its Hard modifier and the second one).
+func get_extreme_label(id: String) -> String:
+	return HoldfastMeta.extreme_label(_content, id)
+
+
+## What the level's Extreme replay changes, in words.
+func get_extreme_text(id: String) -> String:
+	return " ".join((HoldfastMeta.hard_modifiers(_content, id) + HoldfastMeta.extreme_modifiers(_content, id)).map(func(modifier: Dictionary) -> String: return str(modifier["text"])))
+
+
+## True when `id` has an Extreme replay the player has opened by winning its Hard replay.
+func is_extreme_open(id: String) -> bool:
+	return HoldfastMeta.extreme_open(_content, data, id)
+
+
+## The tiers the level offers now, in order (see HoldfastMeta.tiers_open); no chip is ever shown for a locked one.
+func get_tiers_open(id: String) -> Array:
+	return HoldfastMeta.tiers_open(_content, data, id)
+
+
+## The icon and one word of a tier ("~ Easy").
+func get_tier_label(tier: String) -> String:
+	return HoldfastMeta.tier_label(_content, tier)
+
+
+## The line under a tier's chip: the pack's "Give me a quiet night".
+func get_tier_text(tier: String) -> String:
+	return str(_content.get("modes", {}).get(tier, {}).get("text", ""))
+
+
+## The player picks a tier for the runs they plan next. It is not saved: a new session starts on Normal.
+func select_tier(tier: String) -> void:
+	if not tier in HoldfastRules.TIERS or _tier == tier:
 		return
-	_hard = on
+	_tier = tier
 	changed.emit()
 
 
-## True while Hard is switched on, whether or not the selected level has a Hard replay open.
+## The tier the player has picked, whether or not the selected level offers it yet.
+func get_tier() -> String:
+	return _tier
+
+
+## The tier the next run on the selected level plays: the one picked when the level offers it, else Normal.
+func get_run_tier() -> String:
+	return _tier if _tier in get_tiers_open(get_level()) else "normal"
+
+
+## The player turns Hard on or off for the runs they plan next (Normal when off).
+func select_hard(on: bool) -> void:
+	select_tier("hard" if on else "normal")
+
+
+## True while Hard is the picked tier, whether or not the selected level has a Hard replay open.
 func is_hard_on() -> bool:
-	return _hard
+	return _tier == "hard"
 
 
-## True when the next run on the selected level is its Hard replay: Hard is on and the level has one open.
+## True when the next run on the selected level is its Hard replay: Hard is picked and the level has one open.
 func is_hard_selected() -> bool:
-	return _hard and is_hard_open(get_level())
+	return get_run_tier() == "hard"
 
 
 func is_near(id: String) -> bool:

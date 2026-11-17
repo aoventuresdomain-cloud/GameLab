@@ -109,7 +109,7 @@ func _ready() -> void:
 	journey.buy_requested.connect(profile.buy)
 	journey.stand_requested.connect(_begin_stand)
 	journey.plan_requested.connect(_plan_from_map)
-	journey.hard_requested.connect(profile.select_hard)
+	journey.tier_requested.connect(profile.select_tier)
 	hero_page.back_requested.connect(_show.bind(Screen.MAP))
 	hero_page.tree_requested.connect(_open_tree_at.bind("Hero"))
 	hero_page.pillar_requested.connect(profile.select_pillar)
@@ -253,7 +253,7 @@ func _open_plan() -> void:
 	planning.open(level, profile.get_layout(level) if saved else [], saved, profile.get_ring_spots(), profile.get_castle_cards(), profile.get_castle_mage_cards(), profile.get_castle_slots())
 	var draw := RandomNumberGenerator.new()
 	draw.randomize()
-	planning.set_hard(profile.get_hard_label(level) if profile.is_hard_selected() else "")
+	planning.set_tier(profile.get_run_tier(), profile.get_hard_label(level))
 	planning.set_blessings(profile.get_blessing_offer(level, draw))
 	planning.set_squad(profile.get_squad().map(func(recruit: Dictionary) -> String: return recruit["name"]), profile.get_recruits().size())
 	_show_posted()
@@ -331,8 +331,9 @@ func _start_run(stand := false, blessing := "") -> void:
 		source.upgrades = profile.get_upgrades().duplicate()
 		source.stand = stand
 		source.blessing = blessing
-		# A Hard replay is a planned run on a cleared level; the tutorial and its stand have none.
-		source.hard = not stand and profile.is_hard_selected()
+		# The tier is the player's pick where the level offers it; the tutorial and its stand have none.
+		var tier := profile.get_run_tier()
+		source.hard = false if stand or tier == "normal" else (true if tier == "hard" else tier)
 		# The tutorial and its stand are the Hero's alone; every other run takes the squad the player picked.
 		source.squad = [] if stand or profile.is_tutorial(profile.get_level()) else profile.get_squad()
 		source.posted = profile.get_posted()

@@ -28,8 +28,8 @@ var layout: Variant = null
 var stand := false
 ## The blessing picked for the run ("" for none).
 var blessing := ""
-## The run is the level's Hard replay.
-var hard := false
+## The run is the level's Hard replay (true) or plays a named tier ("easy", "normal", "hard" or "extreme").
+var hard: Variant = false
 ## The Recruits that go on the run (null: the level's own two, as the rules tests have them).
 var squad: Variant = null
 ## The Recruit set on each castle spot's post, {spot id: Recruit id} (see RecruitMeta).
