@@ -255,7 +255,7 @@ func test_a_bot_on_each_pillar_wins_some_runs_and_has_hard_ones() -> void:
 
 func test_a_run_with_no_input_is_lost_on_every_pillar() -> void:
 	for id in PILLARS:
-		for run_seed in [1, 2, 3]:
+		for run_seed in range(1, 21):
 			var config := HoldfastContent.run_config("outpost", [], {}, id)
 			var result: Dictionary = SimBotRunner.run(HoldfastRules.new(), SimController.new(), run_seed, config, 200000, HoldfastRules.TICK_RATE)["result"]
 			expect_eq(result["outcome"], HoldfastRules.OUTCOME_LOST, "%s seed %d with no input" % [id, run_seed])
