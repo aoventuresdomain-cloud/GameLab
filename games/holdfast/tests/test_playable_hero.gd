@@ -82,14 +82,16 @@ func test_wasd_arrows_and_space_are_mapped_to_physical_keys() -> void:
 	for action in expected:
 		var codes := []
 		for event in InputMap.action_get_events(action):
-			codes.append((event as InputEventKey).physical_keycode)
+			if event is InputEventKey:
+				codes.append((event as InputEventKey).physical_keycode)
 		codes.sort()
 		var want: Array = expected[action].duplicate()
 		want.sort()
 		expect_eq(codes, want, action)
 	# Calling it again doesn't double up the keys.
 	HoldfastPlayerHero.ensure_actions()
-	expect_eq(InputMap.action_get_events(HoldfastPlayerHero.ACTION_ABILITY).size(), 1)
+	expect_eq(InputMap.action_get_events(HoldfastPlayerHero.ACTION_ABILITY).filter(func(e: InputEvent) -> bool: return e is InputEventKey).size(), 1)
+	expect_eq(InputMap.action_get_events(HoldfastPlayerHero.ACTION_ABILITY).size(), 2, "the key and the pad's A, once each")
 
 
 func test_the_player_controller_reads_actions_and_keeps_a_press_until_a_tick_takes_it() -> void:

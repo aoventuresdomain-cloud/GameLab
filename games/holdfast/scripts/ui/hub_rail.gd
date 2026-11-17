@@ -2,8 +2,8 @@ class_name HubRail
 extends PanelContainer
 ## The left rail every hub screen has: Map, Tree, Hero, Menu, and Squad once a Recruit has joined.
 ## One word each. A dot on a tab means there is something worth doing there. It reads the profile
-## and asks to move through `tab_requested`; the run flow acts. L1 and R1 are reserved for stepping
-## between tabs (the controller wiring is HF-M2-69).
+## and asks to move through `tab_requested`; the run flow acts. L1 and R1 (Page Up and Page Down on a
+## keyboard) step between the tabs.
 
 signal tab_requested(tab: String)
 
@@ -27,6 +27,7 @@ var _dots := {}
 
 
 func _ready() -> void:
+	HoldfastInput.ensure_actions()
 	_place()
 	_content = HoldfastContent.base()
 	var group := ButtonGroup.new()
@@ -100,6 +101,23 @@ func refresh() -> void:
 	_dots["Squad"].visible = not locked and (not _profile.get_pending_picks().is_empty() or _profile.get_welcome() != "")
 	for tab_name in TABS:
 		_dots[tab_name].queue_redraw()
+
+
+## L1 and R1 step to the previous or next open tab, wrapping round, while this rail's screen is up.
+func _unhandled_input(event: InputEvent) -> void:
+	var step := 0
+	if event.is_action_pressed(HoldfastInput.ACTION_TAB_NEXT):
+		step = 1
+	elif event.is_action_pressed(HoldfastInput.ACTION_TAB_PREV):
+		step = -1
+	if step == 0 or not is_visible_in_tree():
+		return
+	var tabs: Array = TABS.filter(func(name: String) -> bool: return _buttons[name].visible and not _buttons[name].disabled)
+	var at := tabs.find(current)
+	if tabs.size() < 2 or at < 0:
+		return
+	get_viewport().set_input_as_handled()
+	press(tabs[posmod(at + step, tabs.size())])
 
 
 func _pressed(tab_name: String) -> void:

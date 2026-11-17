@@ -73,7 +73,6 @@ func _ready() -> void:
 	_hard_button = Button.new()
 	_hard_button.text = "Hard"
 	_hard_button.toggle_mode = true
-	_hard_button.focus_mode = Control.FOCUS_NONE
 	_hard_button.tooltip_text = HARD_INFO
 	_hard_button.toggled.connect(hard_requested.emit)
 	_plan.get_parent().add_child(_hard_button)
