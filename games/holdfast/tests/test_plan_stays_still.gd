@@ -1,5 +1,5 @@
 extends KitTestCase
-## HF-M2-81 (quick fix 14c-a): nothing on the Plan page moves when the first post is placed, so a tap
+## Quick fix 14c-a: nothing on the Plan page moves when the first post is placed, so a tap
 ## straight after Auto-place cannot miss. QA saw Start drop 32 px at 1280 x 720 when its second line
 ## ("Need a post") went and the hint line came and went above the map.
 
