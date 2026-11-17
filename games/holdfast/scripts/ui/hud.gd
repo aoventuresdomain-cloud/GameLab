@@ -11,6 +11,7 @@ extends Control
 @onready var _lost_value: Label = %LostValue
 @onready var _wave_banner: Label = %WaveBanner
 @onready var _posts_note: Label = %PostsNote
+@onready var _special_tip: Label = %SpecialTip
 @onready var _pause_button: Button = %PauseButton
 @onready var _speed_button: Button = %SpeedButton
 @onready var _call_button: Button = %CallWaveButton
@@ -215,12 +216,16 @@ func _refresh_hero() -> void:
 	var banner: String = _source.get_wave_banner()
 	_wave_banner.text = banner
 	_wave_banner.visible = banner != ""
-	# A boss's note outranks the posts line (that one is only up before wave 1).
-	var note: String = _source.get_special_note()
+	# The first-run special tip has the strip under the field, so it never covers the playfield (F-193).
+	var tip: String = _source.get_special_note()
+	_special_tip.text = tip
+	_special_tip.visible = tip != ""
+	# While the tip is up it is the only note. Else a boss's note outranks the posts line (that one is only up before wave 1).
+	var note := ""
 	# The boss bar says "Exposed: N s" itself, so only the shrouded note (what lifts the shroud) shows here.
-	if note == "" and _source.get_boss_state().get("shielded", false):
+	if tip == "" and _source.get_boss_state().get("shielded", false):
 		note = _source.get_boss_note()
-	if note == "":
+	if note == "" and tip == "":
 		note = _source.get_posts_note()
 		if note != "" and _source.is_held():
 			note += "\n" + HOLD_HINT

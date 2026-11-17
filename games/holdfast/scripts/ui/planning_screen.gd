@@ -84,6 +84,8 @@ var _hints: Node
 ## The hint's own line and the squad's, which sits under it.
 var _hint_text := ""
 var _squad_line := ""
+## The one line saying why the tier asked for is not the tier played ("" when they match).
+var _tier_line := ""
 ## The most lines the hint has had since the page opened.
 var _hint_lines := 0
 ## The squad's Recruits as [{id, name}], who is set on which spot ({spot id: Recruit id}), and the
@@ -124,13 +126,19 @@ func open(level_id: String, layout: Array, _saved: bool, spots: Array, cards: in
 	_chosen = layout.duplicate()
 	_title.text = "Plan your defence: %s" % _level["name"]
 	_hint_lines = 0
+	_tier_line = ""
 	_show_hint(HINT)
 	set_castle(spots, cards, mage_cards, slots)
 
 
 ## Marks the page with the tier it will be played on: nothing for Normal, "(Easy)", and "(Hard: icon word)" with the
-## level's modifier (`label`, "" when it has none), "(Extreme)" for the storm.
-func set_tier(tier: String, label := "") -> void:
+## level's modifier (`label`, "" when it has none), "(Extreme)" for the storm. `asked` is the tier the player
+## picked on the map: when the level does not offer it yet, one line says so and what is played instead (F-199).
+func set_tier(tier: String, label := "", asked := "") -> void:
+	_tier_line = ""
+	if asked != "" and asked != tier and asked in ["hard", "extreme"]:
+		_tier_line = "%s opens after a %s win here, so this plays %s." % [asked.capitalize(), "Hard" if asked == "extreme" else "Normal", tier.capitalize()]
+	_show_hint(_hint_text)
 	# The shorter lead keeps the title clear of the "+ Tower" button at 1280 x 720 with the longest label.
 	var level_name: String = _level["name"]
 	if tier == "easy":
@@ -273,7 +281,7 @@ func _show_hint(text: String) -> void:
 			extra = BLESSING_HINT
 			_extra_hint = HINT_BLESSINGS
 	var line := "%s %s" % [text, extra] if extra != "" else text
-	_hint.text = "%s\n%s" % [line, _squad_line] if _squad_line != "" and line != "" else (_squad_line if line == "" else line)
+	_hint.text = "\n".join(PackedStringArray([_tier_line, line, _squad_line].filter(func(each: String) -> bool: return each != "")))
 	# Once a line has stood on the page it keeps its space, so the map does not shift when it goes.
 	_hint_lines = maxi(_hint_lines, _hint.text.count("\n") + 1 if _hint.text != "" else 0)
 	_hint.custom_minimum_size.y = _hint_lines * (_hint.get_line_height() + _hint.get_theme_constant("line_spacing"))
