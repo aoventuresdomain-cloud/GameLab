@@ -44,9 +44,6 @@ enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY, RECRUITS, SETTINGS, ACH
 
 const Guidance = preload("res://scripts/ui/guidance.gd")
 
-## Shown once, on the summary that first pays stars.
-const STARS_LINE := "Stars buy slots and towers. Gold buys upgrades."
-
 var screen := Screen.HOME
 
 
@@ -245,13 +242,13 @@ func _recruit_posted(site: String, id: String) -> void:
 	_show_posted()
 
 
-## Sets the Plan page's "+ Tower" button to the next buy that adds a tower, with its price.
+## Sets the Plan page's "Add a tower" button to the next buy that adds a tower, with its price.
 func _offer_tower() -> void:
 	var id := profile.get_next_tower_node()
-	planning.set_tower_offer("" if id == "" else "+ Tower (%s)" % profile.get_cost_text(id), "" if id == "" else profile.why_not_buy(id))
+	planning.set_tower_offer("" if id == "" else "Add a tower (%s)" % profile.get_cost_text(id), "" if id == "" else profile.why_not_buy(id))
 
 
-## "+ Tower" on the Plan page buys the next slot or Archer Post at the tree's price; the posts
+## "Add a tower" on the Plan page buys the next slot or Archer Post at the tree's price; the posts
 ## already placed stay.
 func _tower_requested() -> void:
 	var id := profile.get_next_tower_node()
@@ -364,9 +361,6 @@ func _on_run_ended(result: Dictionary) -> void:
 		result["unlocks"] = profile.get_last_unlocks()
 		result["stars_paid"] = profile.get_stars_earned() - stars_before
 		result["reward_gold"] = profile.get_reward_gold(level) if first_win else 0
-		if int(result["stars_paid"]) > 0 and not profile.has_seen_stars_line():
-			result["stars_note"] = STARS_LINE
-			profile.show_stars_line()
 		# A Hard replay opens nothing: after it the player is back on the map.
 		if result["result"].get("outcome") == HoldfastRules.OUTCOME_WON and not result["result"].get("hard", false):
 			next = profile.get_next_level(level)

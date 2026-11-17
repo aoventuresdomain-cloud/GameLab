@@ -29,7 +29,6 @@ func test_a_first_visit_has_empty_slots_one_card_per_owned_post_and_nothing_to_s
 	expect_eq(plan._chosen, [])
 	expect_eq(plan._tray.get_child_count(), 2, "the player owns two Archer Posts")
 	expect_true(plan.get_node("%StartButton").disabled, "no post, no start")
-	expect_true(plan.get_node("%QuickButton").disabled, "no last layout yet")
 	expect_eq(plan.get_node("%Count").text, "Posts: 0 of 2")
 	plan.get_parent().get_parent().free()
 
@@ -106,14 +105,13 @@ func test_placed_cards_wait_greyed_and_cards_in_hand_are_lit() -> void:
 	plan.get_parent().get_parent().free()
 
 
-func test_quick_start_reuses_the_last_layout_and_is_greyed_without_one() -> void:
+func test_start_begins_with_the_last_layout_already_placed() -> void:
 	var plan := _open("shingle_beach", ["spot_1", "spot_3"], true)
-	expect_false(plan.get_node("%QuickButton").disabled)
+	expect_false(plan.get_node("%StartButton").disabled)
 	var heard := []
 	plan.start_requested.connect(func(layout: Array) -> void: heard.append(layout))
-	plan._chosen = ["spot_2"]
-	plan.get_node("%QuickButton").pressed.emit()
-	expect_eq(heard, [["spot_1", "spot_3"]], "the saved one, whatever is placed now")
+	plan.get_node("%StartButton").pressed.emit()
+	expect_eq(heard, [["spot_1", "spot_3"]], "the saved one is what Start starts")
 	plan.get_parent().get_parent().free()
 
 
@@ -123,7 +121,6 @@ func test_the_flow_opens_empty_the_first_time_then_with_the_last_layout() -> voi
 	ThroughLevelZero.apply(profile)
 	main.journey.level_requested.emit("outpost")
 	expect_eq(main.planning._chosen, [], "first visit")
-	expect_true(main.planning.get_node("%QuickButton").disabled)
 	expect_eq(main.planning._site_buttons.size(), 8, "the whole ring")
 	expect_eq(main.planning.get_node("%Count").text, "Posts: 0 of 1", "one slot, so one post")
 	main.planning._site_buttons["spot_1"].pressed.emit()
@@ -135,9 +132,9 @@ func test_the_flow_opens_empty_the_first_time_then_with_the_last_layout() -> voi
 	again.get_node("Profile").set_layout("outpost", ["spot_1"])
 	again.journey.level_requested.emit("outpost")
 	expect_eq(again.planning._chosen, ["spot_1"], "kept for the next visit")
-	expect_false(again.planning.get_node("%QuickButton").disabled)
-	again.planning.get_node("%QuickButton").pressed.emit()
-	expect_true(again.get_node("RunSource").is_running() and again.hud.visible, "Quick start starts the level")
+	expect_false(again.planning.get_node("%StartButton").disabled)
+	again.planning.get_node("%StartButton").pressed.emit()
+	expect_true(again.get_node("RunSource").is_running() and again.hud.visible, "Start starts the level with it")
 	expect_eq(again.get_node("RunSource").get_rules().layout_ids, ["spot_1"])
 	again.free()
 
@@ -187,13 +184,12 @@ func test_a_post_let_go_on_a_card_a_button_the_map_or_empty_space_returns_to_the
 	var plan: Control = main.planning
 	plan.visible = true
 	await tree.process_frame
-	for name in ["a card", "Auto-place", "Quick start", "Start level", "Journey map", "the map's empty space", "the backdrop"]:
+	for name in ["a card", "Auto-place", "Start level", "Journey map", "the map's empty space", "the backdrop"]:
 		plan.open("shingle_beach", ["spot_2"], false, HoldfastContent.base()["castle_rules"]["castle"]["spots"].slice(0, 4), 2)
 		await tree.process_frame
 		var spots := {
 			"a card": plan._tray.get_child(1).get_global_rect().get_center(),
 			"Auto-place": plan.get_node("%AutoButton").get_global_rect().get_center(),
-			"Quick start": plan.get_node("%QuickButton").get_global_rect().get_center(),
 			"Start level": plan.get_node("%StartButton").get_global_rect().get_center(),
 			"Journey map": plan.get_node("%BackButton").get_global_rect().get_center(),
 			"the map's empty space": plan._map.get_global_rect().position + Vector2(40, 40),

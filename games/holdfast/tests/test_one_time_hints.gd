@@ -157,7 +157,7 @@ func test_the_summary_points_at_the_skill_tree_while_the_note_says_to_spend_star
 	summary.show_summary({"gold_earned": 50, "waves_cleared": 2, "total_waves": 2, "result": {"outcome": "won", "level": "first_watch"}, "notes": {"guide_note": Guidance.GUIDE_NOTE}}, "")
 	summary.visible = false
 	summary.visible = true
-	expect_true(summary.get_node("%TreeButton").has_focus(), "the Skill tree is the one in front")
+	expect_true(summary.get_node("%SpendButton").has_focus(), "Spend stars is the one in front")
 	expect_false(summary.get_node("%PlayAgainButton").has_focus())
 	summary.show_summary({"gold_earned": 50, "waves_cleared": 2, "total_waves": 2, "result": {"outcome": "won", "level": "first_watch"}, "notes": {}}, "")
 	summary.visible = false

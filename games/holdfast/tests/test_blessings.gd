@@ -257,7 +257,7 @@ func test_the_plan_page_offers_the_blessings_beside_no_blessing_and_starts_as_no
 	plan.open("outpost", [], false, HoldfastMeta.ring_spots(_content()), 1, 0, 1)
 	plan.set_blessings(["steady_flame", "lamp_oil"])
 	expect_eq(plan._blessing_buttons.keys(), ["steady_flame", "lamp_oil", ""], "the two and No blessing last")
-	expect_eq(plan._blessing_buttons[""].text, "No blessing")
+	expect_eq(plan._blessing_buttons[""].text, "None")
 	expect_eq(plan._blessing_buttons["lamp_oil"].text, "Lamp Oil")
 	expect_eq(plan.blessing(), "", "nothing is picked until the player picks")
 	expect_true(plan.get_node("%Blessings").visible, "the choice shows")

@@ -506,12 +506,13 @@ func test_the_hud_note_says_whether_the_boss_is_shrouded() -> void:
 
 func test_the_summary_names_the_gear_a_run_found() -> void:
 	var main := _main()
-	main.summary.show_summary({"gold_earned": 10, "waves_cleared": 5, "total_waves": 6, "keep_fell": false, "result": {"gear_found": ["driftwood_stave", "sea_glass_charm"]}}, "")
-	var label: Label = main.summary.get_node("%GearFound")
-	expect_true(label.visible)
-	expect_eq(label.text, "Gear found: Driftwood stave, Sea-glass charm")
-	main.summary.show_summary({"gold_earned": 10, "waves_cleared": 5, "total_waves": 6, "keep_fell": false, "result": {"gear_found": []}}, "")
-	expect_false(label.visible, "nothing found, nothing said")
+	var unlocks := [{"kind": "gear", "id": "driftwood_stave", "name": "Driftwood stave", "text": "", "amount": 0}, {"kind": "gear", "id": "sea_glass_charm", "name": "Sea-glass charm", "text": "", "amount": 0}]
+	main.summary.show_summary({"gold_earned": 10, "waves_cleared": 5, "total_waves": 6, "keep_fell": false, "result": {"gear_found": ["driftwood_stave", "sea_glass_charm"]}, "unlocks": unlocks}, "")
+	var list: VBoxContainer = main.summary.get_node("%UnlockedList")
+	expect_true(main.summary.get_node("%Unlocked").visible)
+	expect_eq(list.get_children().map(func(row: Node) -> String: return row.get_child(1).text), ["Driftwood stave", "Sea-glass charm"], "each piece is a row of the Unlocked list")
+	main.summary.show_summary({"gold_earned": 10, "waves_cleared": 5, "total_waves": 6, "keep_fell": false, "result": {"gear_found": []}, "unlocks": []}, "")
+	expect_false(main.summary.get_node("%Unlocked").visible, "nothing found, nothing said")
 	main.free()
 
 

@@ -43,7 +43,7 @@ theme_override_constants/separation = 6
 layout_mode = 2
 
 [node name="Title" parent="Margin/Column/Header" index="1"]
-text = "Journey"
+text = "Map"
 
 [node name="HeroName" type="Label" parent="Margin/Column/Header/Extra"]
 unique_name_in_owner = true
@@ -97,9 +97,8 @@ layout_mode = 2
 
 [node name="Info" type="Label" parent="Margin/Column/Body/Inner"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
-autowrap_mode = 2
+text_overrun_behavior = 3
 
 [node name="Rail" parent="." instance=ExtResource("hub_rail")]
 unique_name_in_owner = true
