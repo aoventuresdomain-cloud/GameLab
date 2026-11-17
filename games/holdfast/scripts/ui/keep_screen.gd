@@ -77,8 +77,9 @@ const ZOOM_MIN := 0.375
 const ZOOM_MAX := 2.5
 ## The tree opens at the size that shows everything on show, from OVERVIEW_ZOOM_MIN (below it the
 ## player pans) to OVERVIEW_ZOOM_MAX, so a node and its name stay easy to read and press.
-## About 0.9, a binary fraction so the stored scale equals the limit exactly.
-const OVERVIEW_ZOOM_MIN := 0.90625
+## About 0.84 (it was 0.9 before the minimap column and the Can buy now strip took room from the view),
+## a binary fraction so the stored scale equals the limit exactly.
+const OVERVIEW_ZOOM_MIN := 0.84375
 const OVERVIEW_ZOOM_MAX := 1.5
 ## How visible the sections of other tabs are while a tab is in view.
 const OTHER_TAB_ALPHA := 0.3
@@ -88,6 +89,13 @@ const DRAG_PX := 6.0
 ## Space kept around a tab's sections, and the part of the web that must stay in view.
 const FIT_PAD := 12.0
 const KEEP_IN_VIEW := 120.0
+## The minimap: shown from this many nodes found, with a dot of MINIMAP_DOT for each, MINIMAP_INSET
+## clear of its edge, and MINIMAP_PAD of web round the outermost. The Can buy now strip lists at most STRIP_MAX.
+const MINIMAP_MIN_NODES := 3
+const MINIMAP_DOT := 3.0
+const MINIMAP_INSET := 8.0
+const MINIMAP_PAD := 30.0
+const STRIP_MAX := 3
 static var LINK_BOUGHT := UiTokens.colour(&"lamp", 0.9)
 static var LINK_OPEN := UiTokens.colour(&"mute", 0.6)
 static var LINK_FORK := UiTokens.colour(&"warning", 0.8)
@@ -159,6 +167,10 @@ var selected_pillar := ""
 @onready var _stars: Label = %StarsValue
 @onready var _view: Control = %View
 @onready var _web: Control = %Web
+@onready var _side: Control = %Side
+@onready var _found: Label = %FoundLabel
+@onready var _minimap: Control = %Minimap
+@onready var _strip: HBoxContainer = %BuyStrip
 @onready var _tabs: HBoxContainer = %Tabs
 @onready var _zoom_out: Button = %ZoomOut
 @onready var _zoom_in: Button = %ZoomIn
@@ -229,6 +241,12 @@ var _card_style: StyleBoxFlat
 var _card_from: Button
 ## Nodes glowing because the last purchase made them buyable.
 var _glowing: Array = []
+## What the Can buy now strip lists (so it is rebuilt only when that changes), and how the minimap
+## maps the web onto itself: the web rect it shows, and the scale and offset of that.
+var _strip_ids: Array = []
+var _map_bounds := Rect2()
+var _map_scale := 1.0
+var _map_origin := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -244,6 +262,8 @@ func _ready() -> void:
 	_view.gui_input.connect(_on_view_input)
 	_view.resized.connect(_fit_view)
 	_web.draw.connect(_draw_links)
+	_minimap.draw.connect(_draw_minimap)
+	_minimap.gui_input.connect(_on_minimap_input)
 	visibility_changed.connect(_on_visibility_changed)
 	_build_tree()
 	_build_key()
@@ -300,6 +320,7 @@ func refresh() -> void:
 		_place_heading(section)
 	_refresh_tabs()
 	_sync_labels()
+	_refresh_side()
 	_web.queue_redraw()
 	var takes_back: bool = not _profile.get_respec_nodes().is_empty()
 	_respec.disabled = not takes_back
@@ -812,6 +833,135 @@ func _sync_labels() -> void:
 		_headings[section].scale = Vector2.ONE / zoom
 
 
+# ------------------------------------------------------------------ finding your way
+
+## The nodes the tree shows the player: every one found so far.
+func found_ids() -> Array:
+	return _node_buttons.keys().filter(func(id: String) -> bool: return _node_buttons[id].visible)
+
+
+## "Found 12 of about 70": the total is only a round figure (up to the next ten) of the nodes this Hero's tree holds.
+func found_text() -> String:
+	var all := 0
+	for id in _content["upgrade_nodes"]:
+		var node: Dictionary = _content["upgrade_nodes"][id]
+		if not node.has("hero") or str(node["hero"]) == selected_pillar:
+			all += 1
+	return "Found %d of about %d" % [found_ids().size(), ceili(all / 10.0) * 10]
+
+
+## The line, the minimap and the Can buy now strip, from what the profile has.
+func _refresh_side() -> void:
+	_found.text = found_text()
+	# One or two nodes need no map.
+	_minimap.visible = found_ids().size() >= MINIMAP_MIN_NODES
+	_minimap.queue_redraw()
+	_refresh_strip()
+
+
+## What can be bought now, cheapest first; nothing while the guided buys are due (the banner asks instead).
+func buy_now_ids() -> Array:
+	if _profile == null or _profile.get_guided_step() != "":
+		return []
+	var ids: Array = _profile.get_buyable_nodes().filter(func(id: String) -> bool: return _node_buttons.has(id) and _node_buttons[id].visible)
+	var nodes: Dictionary = _content["upgrade_nodes"]
+	ids.sort_custom(func(a: String, b: String) -> bool:
+		var ca := int(nodes[a]["cost"])
+		var cb := int(nodes[b]["cost"])
+		return ca < cb or (ca == cb and a < b))
+	return ids
+
+
+func _refresh_strip() -> void:
+	var ids := buy_now_ids()
+	if ids == _strip_ids:
+		return
+	_strip_ids = ids
+	for child in _strip.get_children():
+		_strip.remove_child(child)
+		child.queue_free()
+	if ids.is_empty():
+		return
+	var caption := Label.new()
+	caption.text = "Can buy now"
+	caption.theme_type_variation = &"Caption"
+	caption.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_strip.add_child(caption)
+	for id in ids.slice(0, STRIP_MAX):
+		var node: Dictionary = _content["upgrade_nodes"][id]
+		var star := HoldfastMeta.is_star_node(node)
+		var button := _button("%s  %s" % [node["name"], str(int(node["cost"])) if star else Hud.format_number(int(node["cost"]))])
+		button.icon = _icon("star" if star else "coin")
+		button.pressed.connect(go_to.bind(id))
+		_strip.add_child(button)
+	if ids.size() > STRIP_MAX:
+		var more := Label.new()
+		more.text = "and %d more" % (ids.size() - STRIP_MAX)
+		more.theme_type_variation = &"Caption"
+		more.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		_strip.add_child(more)
+
+
+## Takes the view to a node: at real size at least, the node in the middle, the focus on it.
+func go_to(id: String) -> void:
+	if not _node_buttons.has(id) or not _node_buttons[id].visible or _view.size == Vector2.ZERO:
+		return
+	close_card()
+	var zoom := clampf(maxf(_web.scale.x, 1.0), ZOOM_MIN, ZOOM_MAX)
+	_moved_view = true
+	_fade_other_tabs(false)
+	_web.scale = Vector2.ONE * zoom
+	_web.position = _view.size * 0.5 - _point(id) * zoom
+	_sync_labels()
+	_keep_in_view()
+	_node_buttons[id].grab_focus()
+
+
+## The web, small: one dot for each node found, and a frame round what the view shows now.
+func _draw_minimap() -> void:
+	var box := Rect2(Vector2.ZERO, _minimap.size)
+	_minimap.draw_rect(box, UiTokens.colour(&"raise", 0.6))
+	_minimap.draw_rect(box, CARD_EDGE, false, 1.0)
+	var ids := found_ids()
+	if ids.is_empty() or box.size.x <= 0.0:
+		return
+	var bounds := Rect2(_point(ids[0]), Vector2.ZERO)
+	for id in ids:
+		bounds = bounds.expand(_point(id))
+	bounds = bounds.grow(MINIMAP_PAD)
+	_map_bounds = bounds
+	_map_scale = minf((box.size.x - 2.0 * MINIMAP_INSET) / bounds.size.x, (box.size.y - 2.0 * MINIMAP_INSET) / bounds.size.y)
+	_map_origin = (box.size - bounds.size * _map_scale) * 0.5
+	var owned: Array = _profile.get_upgrades() if _profile != null else []
+	for id in ids:
+		var colour := OWNED_EDGE if id in owned else (COLOUR_ACT if _profile != null and _profile.is_near(id) else FAR_EDGE)
+		_minimap.draw_circle(_map_origin + (_point(id) - bounds.position) * _map_scale, MINIMAP_DOT, colour)
+	if _web.scale.x > 0.0:
+		var shown := Rect2(-_web.position / _web.scale.x, _view.size / _web.scale.x)
+		var frame := Rect2(_map_origin + (shown.position - bounds.position) * _map_scale, shown.size * _map_scale)
+		_minimap.draw_rect(frame.intersection(box), UiTokens.colour(&"bone", 0.8), false, 1.0)
+
+
+## A press or a drag on the map takes the view there.
+func _on_minimap_input(event: InputEvent) -> void:
+	var at := Vector2.ZERO
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		at = event.position
+	elif event is InputEventMouseMotion and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+		at = event.position
+	else:
+		return
+	if _map_scale <= 0.0 or _view.size == Vector2.ZERO:
+		return
+	var point := (at - _map_origin) / _map_scale + _map_bounds.position
+	_moved_view = true
+	_fade_other_tabs(false)
+	_web.position = _view.size * 0.5 - point * _web.scale.x
+	_keep_in_view()
+	accept_event()
+
+
+
 ## The tab labels in section order, for the sections that are shown.
 func tab_names() -> PackedStringArray:
 	var out: PackedStringArray = []
@@ -878,15 +1028,17 @@ func show_tab(label: String, picked := true) -> void:
 	_moved_view = false
 	if _tab_buttons.has(label):
 		_tab_buttons[label].set_pressed_no_signal(true)
-	var rect := _tab_rect(label)
-	# Until the page is laid out the view has no size; its resized signal calls this again.
-	if rect.size == Vector2.ZERO or _view.size == Vector2.ZERO:
-		return
-	var room := _view.size - Vector2.ONE * FIT_PAD * 2.0
-	var zoom := clampf(minf(1.0, minf(room.x / rect.size.x, room.y / rect.size.y)), ZOOM_MIN, ZOOM_MAX)
-	_web.scale = Vector2.ONE * zoom
-	_web.position = _view.size * 0.5 - rect.get_center() * zoom
-	_sync_labels()
+	# The section names move out as the zoom settles, so the fit is made twice: the second time with them where they now are.
+	for pass_number in 2:
+		var rect := _tab_rect(label)
+		# Until the page is laid out the view has no size; its resized signal calls this again.
+		if rect.size == Vector2.ZERO or _view.size == Vector2.ZERO:
+			return
+		var room := _view.size - Vector2.ONE * FIT_PAD * 2.0
+		var zoom := clampf(minf(1.0, minf(room.x / rect.size.x, room.y / rect.size.y)), ZOOM_MIN, ZOOM_MAX)
+		_web.scale = Vector2.ONE * zoom
+		_web.position = _view.size * 0.5 - rect.get_center() * zoom
+		_sync_labels()
 	_keep_in_view()
 	_fade_other_tabs(true)
 	_web.queue_redraw()
@@ -897,6 +1049,12 @@ func show_tab(label: String, picked := true) -> void:
 ## When it cannot all fit at that size the view is centred on what the player owns (or on the
 ## middle of what is shown, when they own nothing yet) and they pan from there.
 func show_overview() -> void:
+	# Twice, as in show_tab: the section names move out as the zoom settles.
+	_fit_overview()
+	_fit_overview()
+
+
+func _fit_overview() -> void:
 	var holders := _section_columns.values().filter(func(holder: Control) -> bool: return holder.visible)
 	var rect := _holders_rect(holders)
 	if rect.size == Vector2.ZERO or _view.size == Vector2.ZERO:
@@ -1026,6 +1184,7 @@ func _node_clicked(id: String) -> void:
 
 ## Never lets the shown sections be panned out of sight altogether.
 func _keep_in_view() -> void:
+	_minimap.queue_redraw()
 	var holders := _section_columns.values().filter(func(holder: Control) -> bool: return holder.visible)
 	var rect := _holders_rect(holders)
 	if rect.size == Vector2.ZERO:
