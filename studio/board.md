@@ -783,14 +783,14 @@
 
 ### HF-M2-86 Build 18: call the next wave early
 - **Owner:** Gameplay Engineer
-- **Status:** Ready (Build 18 of 19, CEO 2026-11-17 17:14 "Yes build number 3", from the Advisor's Incrempire comparison, gap D). Estimate: about 1.5 to 3 h including QA, upper bound 5, medium confidence
+- **Status:** Merged (Build 18 of 19, #199, QA PASS at ef8763f, merged as dee6029 on 2026-11-17; CEO 2026-11-17 17:14 "Yes build number 3", from the Advisor's Incrempire comparison, gap D). Estimate was about 1.5 to 3 h including QA; it ran about 1.1 h from brief to merge
 - **QA:** screens (run flow and one HUD control; no save data change)
 - **Depends on:** HF-M2-64 (game speed, merged)
 - **Done when:**
-  - [ ] During a run, between waves, a clearly labelled control calls the next wave at once instead of waiting for the timer; it works with the mouse, touch, keyboard and gamepad (the same focus rules as the other run controls).
-  - [ ] Calling early never skips a wave, never starts two waves at once and cannot be pressed while a wave is already spawning or after the last wave; a test per case.
-  - [ ] Rewards are unchanged (no bonus for calling early, no penalty), and a no-input run still loses exactly as before (the no-input guard tests pass untouched).
-  - [ ] The pacing bands and the simulator do not change, and the control sits with the speed and pause controls without overlapping them at 1280x720 and 1920x1080.
+  - [x] During a run, between waves, a clearly labelled control calls the next wave at once instead of waiting for the timer; it works with the mouse, touch, keyboard and gamepad (the same focus rules as the other run controls).
+  - [x] Calling early never skips a wave, never starts two waves at once and cannot be pressed while a wave is already spawning or after the last wave; a test per case.
+  - [x] Rewards are unchanged (no bonus for calling early, no penalty), and a no-input run still loses exactly as before (the no-input guard tests pass untouched).
+  - [x] The pacing bands and the simulator do not change, and the control sits with the speed and pause controls without overlapping them at 1280x720 and 1920x1080.
 
 ### HF-M2-87 Build 19: four difficulty tiers (Easy, Normal, Hard, Extreme)
 - **Owner:** Gameplay Engineer
@@ -1290,6 +1290,7 @@
 | F-195 | HF-M2-38 | FOLLOW-UP from QA (F-new2): during the guided buys Slot II also carries the amber buyable ring and opens a detail card (greyed Buy, "Buy Archer Post first"); HF-M2-38 says the only thing the player can open is the guided step. HoE ruling: fix the build to match the line (the CEO's rule is that guided buys are compulsory); nobody can get stuck, so it rides Build 17 | Minor | UI Engineer | Closed, fixed in Build 17 (#194, QA PASS at 7f34a04) |
 | F-196 | HF-M2-77 | FOLLOW-UP from QA (F-new3): the loss panel gives two figures for one fact, "Waves 3 / 5" next to "The keep fell in wave 4 of 5". Wording only; one figure stays | Minor | UI Engineer | Closed, fixed in Build 17 (#194, QA PASS at 7f34a04) |
 | F-197 | HF-M2-77 | FOLLOW-UP from QA (F-new4): on the Plan page, once a post is placed its range disc is drawn well past the field and behind the header, "Not enough stars" and the blessing row, at both sizes. Legible and unchanged since earlier builds, so polish, not a regression. HoE ruling: left for the final polish step with F-193 | Minor | UI Engineer | Open, final polish step |
+| F-198 | HF-M2-86 | FOLLOW-UP from QA (#199, F-new5): the Call next wave button sits over the top-right corner of the playfield (about 134 by 48 px at 1280x720, same share at 1080p), so a unit or enemy there is hidden and a click there goes to the button. Same family as F-193 | Minor | UI Engineer | Open, final polish step |
 
 ## Test changes
 
@@ -1496,3 +1497,4 @@
 - 2026-11-17: CEO (17:14): build call-the-next-wave-early now (Build 18, HF-M2-86); skip further gold-progression testing for now (nothing blocks on it); build four difficulty tiers Easy, Medium, Hard and Extreme with catchier, not cheesy, lighthouse- or fog-flavoured names (Build 19, HF-M2-87). Advisor first on the tier design and names; the CEO sees the Advisor view unedited next to the team's; the name choice is parked with placeholders so the build is not blocked.
 - 2026-11-17: CEO (17:18): tier names must be instantly clear, nobody would know obscure fog terms. The Advisor's fog-flavoured shortlist is dropped; the tiers read Easy, Medium, Hard, Extreme with a short plain flavour line under each (Calm seas, Steady, Rough weather, Storm). Names stay in data. Build 19 is not blocked.
 - 2026-11-17: CEO (17:21) picked option A for the tier names: Easy, Normal, Hard, Extreme, with "Give me a quiet night", "Give me a fair fight", "Give me a long night" and "Give me the storm" beneath. HF-M2-87 uses them; Build 19 is not blocked.
+- 2026-11-17: Build 18 of 19 merged (#199, QA PASS at ef8763f, merged as dee6029; 1,163 tests, 16 new, no existing test changed): the Call next wave button, key N, pad X. One FOLLOW-UP logged (F-198, polish step). Build 19 started in parallel with the Gameplay Engineer on separate files.
