@@ -51,10 +51,10 @@ func test_every_level_still_gets_harder_wave_by_wave_in_the_pack() -> void:
 			strength = now
 
 
-func test_a_run_with_no_input_is_lost_on_the_first_two_levels() -> void:
+func test_a_run_with_no_input_is_lost_at_the_outpost_on_twenty_seeds_and_at_shingle_beach_on_three() -> void:
 	for level in ["outpost", "shingle_beach"]:
 		for pillar in PILLARS:
-			for run_seed in [1, 2, 3]:
+			for run_seed in (range(1, 21) if level == "outpost" else [1, 2, 3]):
 				var config := HoldfastContent.run_config(level, [], {}, pillar)
 				var result: Dictionary = SimBotRunner.run(HoldfastRules.new(), SimController.new(), run_seed, config, 200000, HoldfastRules.TICK_RATE)["result"]
 				expect_eq(result["outcome"], HoldfastRules.OUTCOME_LOST, "%s %s seed %d with no input" % [level, pillar, run_seed])
