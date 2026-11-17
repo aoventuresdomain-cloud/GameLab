@@ -88,7 +88,9 @@ func show_summary(summary: Dictionary, next_level: String = "") -> void:
 	# A loss says its wave once, in the line below (F-196); the Waves row is for a win's "5 / 5".
 	_waves_value.get_parent().visible = not fell_in_a_wave
 	if fell_in_a_wave:
-		moment = "The keep fell in wave %d of %d." % [mini(int(summary.get("waves_cleared", 0)) + 1, int(summary["total_waves"])), int(summary["total_waves"])]
+		# The wave the HUD showed when the keep fell; without it (a stand with no engine result), clean waves plus one.
+		var fell_in := int(summary.get("result", {}).get("wave", int(summary.get("waves_cleared", 0)) + 1))
+		moment = "The keep fell in wave %d of %d." % [clampi(fell_in, 1, int(summary["total_waves"])), int(summary["total_waves"])]
 	_set_line(_moment, moment)
 	_show_unlocks(summary.get("unlocks", []))
 	_set_line(_way_on, str(notes.get("way_on", "")))
