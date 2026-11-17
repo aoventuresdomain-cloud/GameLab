@@ -63,8 +63,13 @@ var _last := {}
 ## down rather than letting it jump ahead.
 const MAX_FRAME_SECONDS := 0.25
 
-## The one-off prompt for the special, up while the run waits for the press.
-const SPECIAL_NOTE := "Your special is ready: a burst of fire, far stronger than your arrows.\nPress Space, A or click to fire it."
+## The one-off prompt for the special, up while the run waits for the press: what each Hero pillar's special does.
+const SPECIAL_WHAT := {
+	"flare_archer": "a burst of fire, far stronger than your arrows.",
+	"dusk_mage": "a shadow pulse that pulls enemies in and slows them.",
+	"tideblade": "three dashes through enemies, and you cannot be hit.",
+}
+const SPECIAL_KEYS := "Press Space, A or click to use it."
 
 
 func _ready() -> void:
@@ -213,7 +218,9 @@ func press_special() -> void:
 
 ## What the prompt says while it waits, else "".
 func get_special_note() -> String:
-	return SPECIAL_NOTE if _teaching else ""
+	if not _teaching:
+		return ""
+	return "Your special is ready: %s\n%s" % [SPECIAL_WHAT.get(hero_path, "a move stronger than your attack."), SPECIAL_KEYS]
 
 
 ## The special is ready and an enemy is within its reach: the moment a first-time player is shown the button.
