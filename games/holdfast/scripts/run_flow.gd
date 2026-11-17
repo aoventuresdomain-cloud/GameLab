@@ -43,11 +43,24 @@ enum Screen { HOME, MAP, TREE, HERO, PLAN, RUN, SUMMARY, RECRUITS, SETTINGS, ACH
 @onready var planning: Control = get_node(planning_path)
 
 const Guidance = preload("res://scripts/ui/guidance.gd")
+## What the window (and the web page tab) is called. The project name stays the old one, which keeps the
+## user data folder and so every saved game.
+const GAME_TITLE := "Fogwatch"
 
 var screen := Screen.HOME
 
 
+## The window takes its title once the first frame is up: the engine sets its own from the project name
+## before that, which stays the old one so the user data folder and every save keep their place.
+func _name_the_window() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	await get_tree().process_frame
+	DisplayServer.window_set_title(GAME_TITLE)
+
+
 func _ready() -> void:
+	_name_the_window.call_deferred()
 	hud.bind(source)
 	hud.begin_requested.connect(source.release_hold)
 	hud.pause_requested.connect(source.set_paused)

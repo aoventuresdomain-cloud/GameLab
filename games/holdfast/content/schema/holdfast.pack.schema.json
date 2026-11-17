@@ -1,6 +1,6 @@
 {
   "$extends": "res://addons/gamelab_kit/schema/pack.v0.schema.json",
-  "title": "Holdfast content pack schema (extends GameLab pack format v0)",
+  "title": "Fogwatch content pack schema (extends GameLab pack format v0)",
   "$defs": {
     "level": {
       "required": [
