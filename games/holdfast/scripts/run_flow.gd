@@ -50,9 +50,17 @@ const GAME_TITLE := "Fogwatch"
 var screen := Screen.HOME
 
 
+## The window takes its title once the first frame is up: the engine sets its own from the project name
+## before that, which stays the old one so the user data folder and every save keep their place.
+func _name_the_window() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	await get_tree().process_frame
+	DisplayServer.window_set_title(GAME_TITLE)
+
+
 func _ready() -> void:
-	if DisplayServer.get_name() != "headless":
-		DisplayServer.window_set_title(GAME_TITLE)
+	_name_the_window.call_deferred()
 	hud.bind(source)
 	hud.begin_requested.connect(source.release_hold)
 	hud.pause_requested.connect(source.set_paused)
