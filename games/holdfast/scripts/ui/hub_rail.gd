@@ -120,11 +120,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	press(tabs[posmod(at + step, tabs.size())])
 
 
+## A real click leaves the clicked tab pressed (it is a toggle in a group), but this rail belongs to its own
+## screen: it goes on marking that screen, so it is right again whenever the screen is next shown (F-194).
 func _pressed(tab_name: String) -> void:
-	if tab_name == current:
-		_buttons[tab_name].set_pressed_no_signal(true)
-		return
-	tab_requested.emit(tab_name)
+	if tab_name != current:
+		tab_requested.emit(tab_name)
+	set_current(current)
 
 
 ## A small round dot on the top right corner of a tab, hidden until it is wanted.

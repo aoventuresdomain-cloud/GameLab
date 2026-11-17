@@ -84,7 +84,10 @@ func show_summary(summary: Dictionary, next_level: String = "") -> void:
 	_show_stars(summary)
 	_waves_value.text = "%d / %d" % [int(summary.get("waves_cleared", 0)), int(summary.get("total_waves", 0))]
 	var moment := str(notes.get("boss", ""))
-	if summary.get("keep_fell", false) and int(summary.get("total_waves", 0)) > 0:
+	var fell_in_a_wave: bool = summary.get("keep_fell", false) and int(summary.get("total_waves", 0)) > 0
+	# A loss says its wave once, in the line below (F-196); the Waves row is for a win's "5 / 5".
+	_waves_value.get_parent().visible = not fell_in_a_wave
+	if fell_in_a_wave:
 		moment = "The keep fell in wave %d of %d." % [mini(int(summary.get("waves_cleared", 0)) + 1, int(summary["total_waves"])), int(summary["total_waves"])]
 	_set_line(_moment, moment)
 	_show_unlocks(summary.get("unlocks", []))
