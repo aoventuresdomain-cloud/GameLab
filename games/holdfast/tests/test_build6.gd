@@ -376,7 +376,7 @@ func test_gear_applies_to_whichever_hero_path_is_played() -> void:
 	var dusk := _world("gull_rock", "dusk_mage", {"weapon": "gull_feather_fletching"})
 	expect_eq(dusk.hero_attack["damage"], 7.0, "Dusk Mage 5 + 2")
 	var tide := _world("gull_rock", "tideblade", {"armour": "sea_glass_charm"})
-	expect_eq(tide.hero_state["max_health"], 100.0, "Tideblade 80 + 20")
+	expect_eq(tide.hero_state["max_health"], 106.0, "Tideblade 86 + 20")
 
 
 func test_two_pieces_stack_and_a_wrong_slot_or_unknown_item_is_ignored() -> void:

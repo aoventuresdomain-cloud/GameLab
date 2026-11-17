@@ -169,7 +169,7 @@ func test_eclipse_in_the_light_gets_the_lit_bonus_instead() -> void:
 # ------------------------------------------------------------------ Tideblade
 
 func test_the_tideblade_arc_hits_what_is_in_front_and_in_range_only() -> void:
-	# Pack: arc attack, damage 9, range 60, 100 degrees (50 either side). Hero (0,80) faces the
+	# Pack: arc attack, damage 10, range 60, 100 degrees (50 either side). Hero (0,80) faces the
 	# nearest enemy A, straight up. Reach is 60 + 10 = 70.
 	var rules := _with_attack("tideblade", _drop_posts)
 	var a := _enemy(rules, Vector2(0, 40))        # 40 away, ahead: hit, and the one faced
@@ -178,8 +178,8 @@ func test_the_tideblade_arc_hits_what_is_in_front_and_in_range_only() -> void:
 	var behind := _enemy(rules, Vector2(0, 125))  # 45 away, behind
 	var far := _enemy(rules, Vector2(0, 5))       # 75 away, ahead: out of reach
 	_run(rules, 1)
-	expect_eq(a.health, 91.0, "ahead")
-	expect_eq(b.health, 91.0, "within the arc")
+	expect_eq(a.health, 90.0, "ahead")
+	expect_eq(b.health, 90.0, "within the arc")
 	expect_eq(c.health, 100.0, "outside the arc")
 	expect_eq(behind.health, 100.0, "behind")
 	expect_eq(far.health, 100.0, "out of reach")
@@ -191,7 +191,7 @@ func test_the_arc_edge_is_inclusive_at_fifty_degrees() -> void:
 	var inside := _enemy(rules, Vector2(0, 80) + Vector2(sin(deg_to_rad(49.0)), -cos(deg_to_rad(49.0))) * 50.0)
 	var outside := _enemy(rules, Vector2(0, 80) + Vector2(sin(deg_to_rad(51.0)), -cos(deg_to_rad(51.0))) * 50.0)
 	_run(rules, 1)
-	expect_eq(inside.health, 91.0, "49 degrees")
+	expect_eq(inside.health, 90.0, "49 degrees")
 	expect_eq(outside.health, 100.0, "51 degrees")
 
 

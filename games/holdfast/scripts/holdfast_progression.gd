@@ -98,7 +98,7 @@ static func _requirements_met(node: Dictionary, owned: Array) -> bool:
 ## when it is "". `avoid` lists nodes the bot never buys (the other side of a fork). `pillar` is
 ## the Hero it plays ("" keeps the profile's), `model` a skilled bot's reaction model (HoldfastSkilledBot.AVERAGE;
 ## {} keeps the plain Hero bot). The report also says when the tree was filled (`filled_at`, -1 if
-## not), the longest run of returns with nothing affordable (`dry_runs`), and when the first star, the
+## not), the longest run of returns with nothing affordable (`dry_runs`) and the median wait before a purchase (`dry_median`, in runs, 0 for a purchase on the first return), and when the first star, the
 ## first new tower (the Tower Gate) and the first boss came, in simulated seconds (-1 if never).
 ## `hard_replays` has the player play each cleared level's Hard replay once, as soon as it opens.
 static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array = [], pillar := "", model: Dictionary = {}, hard_replays := false) -> Dictionary:
@@ -120,6 +120,7 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 	var stars_at_start := HoldfastMeta.stars_earned(profile)
 	var dry := 0
 	var worst_dry := 0
+	var waits := []
 	var filled_at := -1.0
 	var first := {"star": -1.0, "tower": -1.0, "boss": -1.0}
 	while sim_time < budget:
@@ -146,6 +147,8 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 			filled_at = sim_time
 			break
 		# A run that came back to nothing affordable is a dry one; the streak is what the player feels.
+		if bought_now > 0:
+			waits.append(dry)
 		dry = 0 if bought_now > 0 else dry + 1
 		worst_dry = maxi(worst_dry, dry)
 		var run_seed := p_seed * 100003 + runs.size()
@@ -203,6 +206,7 @@ static func play(p_seed: int, sim_hours: float, level: String = "", avoid: Array
 		"runs": runs,
 		"filled_at": filled_at,
 		"dry_runs": worst_dry,
+		"dry_median": _median(waits),
 		"first_star_at": first["star"],
 		"first_new_tower_at": first["tower"],
 		"first_boss_at": first["boss"],
@@ -288,3 +292,15 @@ static func unfilled_squad_nodes(content: Dictionary, profile: Dictionary) -> Ar
 		if int(nodes[id].get("grants", {}).get("squad", 0)) > 0:
 			out.append(id)
 	return out
+
+
+## The middle value of `values` (the mean of the two middle ones for an even count), 0 for none.
+static func _median(values: Array) -> float:
+	if values.is_empty():
+		return 0.0
+	var sorted := values.duplicate()
+	sorted.sort()
+	var mid: int = sorted.size() >> 1
+	if sorted.size() % 2 == 1:
+		return float(sorted[mid])
+	return (float(sorted[mid - 1]) + float(sorted[mid])) / 2.0

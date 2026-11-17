@@ -252,24 +252,24 @@ func test_an_eclipse_of_zero_seconds_is_the_plain_blast_round_the_target() -> vo
 
 func test_dash_strike_makes_three_dashes_and_hits_each_enemy_once_per_dash() -> void:
 	# Hero (0, 80). E1 (0,-100) and E2 (0,-200) are in a line. Dash 1 runs up 300 px to y = -220 over
-	# ticks 1 to 12 and hits both (27 each). Dash 2 turns to the nearest, E2, which is now below the
+	# ticks 1 to 12 and hits both (30 each). Dash 2 turns to the nearest, E2, which is now below the
 	# Hero, and runs back down to y = 80; dash 3 turns to E1 and runs up again to y = -220. Each
-	# enemy is hit three times in all: 1000 - 81 = 919. A dash is 12 ticks (0.4 s at 750 px/s).
+	# enemy is hit three times in all: 1000 - 90 = 910. A dash is 12 ticks (0.4 s at 750 px/s).
 	var rules := _rules("tideblade")
 	var e1 := _enemy(rules, Vector2(0, -100), 1000.0)
 	var e2 := _enemy(rules, Vector2(0, -200), 1000.0)
 	_run(rules, 1, {"ability": true})
 	_run(rules, 12)
 	expect_near(rules.hero_position.y, -220.0, 0.01, "first dash: 300 px up")
-	expect_near(e1.health, 973.0, 0.001, "hit once in the first dash, however many ticks it touched it")
-	expect_near(e2.health, 973.0, 0.001)
+	expect_near(e1.health, 970.0, 0.001, "hit once in the first dash, however many ticks it touched it")
+	expect_near(e2.health, 970.0, 0.001)
 	_run(rules, 12)
 	expect_near(rules.hero_position.y, 80.0, 0.01, "second dash: back down")
-	expect_near(e1.health, 946.0, 0.001)
+	expect_near(e1.health, 940.0, 0.001)
 	_run(rules, 12)
 	expect_near(rules.hero_position.y, -220.0, 0.01, "third dash: up again, and the chain is over")
-	expect_near(e1.health, 919.0, 0.001)
-	expect_near(e2.health, 919.0, 0.001)
+	expect_near(e1.health, 910.0, 0.001)
+	expect_near(e2.health, 910.0, 0.001)
 	expect_eq(rules.hero_dash_left, 0.0)
 	expect_near(rules.hero_ability_ready_in, 12.0 - 36 * DT, 0.0001, "cooldown 12 s from the press, nothing refunded")
 
@@ -302,7 +302,7 @@ func test_a_dash_chain_of_one_and_of_zero_seconds() -> void:
 	_run(one, 1, {"ability": true})
 	_run(one, 20)
 	expect_near(one.hero_position.y, -220.0, 0.01)
-	expect_near(e.health, 973.0, 0.001, "hit once")
+	expect_near(e.health, 970.0, 0.001, "hit once")
 	var plain := _rules("tideblade", func(c: Dictionary) -> void: c["hero_paths"]["tideblade"]["ability"]["dash_seconds"] = 0.0)
 	_enemy(plain, Vector2(0, -100), 1000.0)
 	_run(plain, 1, {"ability": true})
