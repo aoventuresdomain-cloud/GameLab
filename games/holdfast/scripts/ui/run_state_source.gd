@@ -87,6 +87,16 @@ func set_speed(_speed: int) -> void:
 	pass
 
 
+## True while the next wave can be called at once: between waves, the run moving (not paused or held).
+func is_wave_callable() -> bool:
+	return false
+
+
+## The player's press on "Call wave": the next wave comes now. Does nothing when it cannot be called.
+func call_wave() -> void:
+	pass
+
+
 ## Ends the run without a result: no run_ended, so nothing is banked or paid.
 func leave_run() -> void:
 	pass

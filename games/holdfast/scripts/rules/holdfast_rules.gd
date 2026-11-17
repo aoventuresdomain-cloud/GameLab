@@ -1983,6 +1983,30 @@ func _wave_gone(w: int, killed: bool) -> void:
 		waves_cleared += 1
 
 
+## True between waves: the run is on, a wave is still to come, none is spawning (the one before has
+## spawned its last enemy, or none has started), and the next is not already due this tick.
+func can_call_next_wave() -> bool:
+	if outcome != OUTCOME_RUNNING or wave >= total_waves or _next_spawn >= _schedule.size():
+		return false
+	if int(_schedule[_next_spawn][1]) != wave:
+		return false
+	return _wave_starts[wave] - time > TIME_EPSILON
+
+
+## Calls the next wave now: everything still to come moves up by the wait that was left, so the wave
+## spawns on the next tick and the waves after it keep their gaps. Never skips a wave, and a second
+## call before it spawns does nothing. Nothing else changes (enemies, gold and XP are the level's own).
+func call_next_wave() -> bool:
+	if not can_call_next_wave():
+		return false
+	var shift := _wave_starts[wave] - time
+	for i in range(_next_spawn, _schedule.size()):
+		_schedule[i][0] = float(_schedule[i][0]) - shift
+	for w in range(wave, total_waves):
+		_wave_starts[w] -= shift
+	return true
+
+
 ## What the banner says: "Wave N" for the last `wave_pause` seconds before wave N starts
 ## (so it is up as the wave arrives); "" at any other time, and always with no pause.
 func wave_banner() -> String:

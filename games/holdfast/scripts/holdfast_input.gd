@@ -1,11 +1,12 @@
 class_name HoldfastInput
 extends RefCounted
 ## The input actions the screens use beyond Godot's built-in ui_* ones (those cover the d-pad and the
-## left stick; A to accept and B to cancel are added here when the build's map lacks them): pausing and the game speed in a run, and stepping
+## left stick; A to accept and B to cancel are added here when the build's map lacks them): pausing, the game speed and calling the next wave in a run, and stepping
 ## between the hub tabs. Keys and pad buttons for the Hero's own actions are in HoldfastPlayerHero.
 
 const ACTION_PAUSE := "run_pause"
 const ACTION_SPEED := "run_speed"
+const ACTION_CALL_WAVE := "run_call_wave"
 const ACTION_TAB_PREV := "tab_prev"
 const ACTION_TAB_NEXT := "tab_next"
 
@@ -17,12 +18,14 @@ static func ensure_actions() -> void:
 	var keys := {
 		ACTION_PAUSE: [KEY_ESCAPE, KEY_P],
 		ACTION_SPEED: [KEY_F],
+		ACTION_CALL_WAVE: [KEY_N],
 		ACTION_TAB_PREV: [KEY_PAGEUP],
 		ACTION_TAB_NEXT: [KEY_PAGEDOWN],
 	}
 	var pads := {
 		ACTION_PAUSE: JOY_BUTTON_START,
 		ACTION_SPEED: JOY_BUTTON_Y,
+		ACTION_CALL_WAVE: JOY_BUTTON_X,
 		ACTION_TAB_PREV: JOY_BUTTON_LEFT_SHOULDER,
 		ACTION_TAB_NEXT: JOY_BUTTON_RIGHT_SHOULDER,
 	}
