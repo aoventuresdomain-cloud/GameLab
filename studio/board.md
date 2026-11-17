@@ -807,14 +807,25 @@
 
 ### HF-M2-88 Build 19a: known-bug quick fix (call-wave button, tier chips, first-run tip, Plan range disc)
 - **Owner:** UI Engineer
-- **Status:** Ready (Build 19a, CEO 2026-11-17 19:47: fix any known bug before he plays). Estimate: about 1 to 2.5 h including QA, upper bound 4, medium confidence (interface only, no data or balance change)
+- **Status:** Merged (#204, QA PASS at 14da8b9, 1,187 tests, merged as b5dfbc4). Build 19a, CEO 2026-11-17 19:47: fix any known bug before he plays. Ran about 1 h from brief to PR; F-199 took the one-line option on the Plan page, the map chip is F-205
 - **QA:** screens (sanity plus a walk of the changed screens)
 - **Depends on:** HF-M2-87
 - **Done when:**
-  - [ ] The Call next wave button no longer covers any part of the playfield (F-198): a unit or enemy in the top-right corner is visible and clicking there does not reach the button, checked at 1280x720 and 1920x1080 by the layout test.
-  - [ ] Picking a tier a level cannot play never silently plays another tier (F-199): the chips show only tiers that level offers, or the card says in one line why a tier is unavailable ("Hard opens after a Normal win here"), and the run's tier matches the chip shown.
-  - [ ] The first-run special tip (F-193) and the Plan page range disc (F-197) no longer sit over the playfield or behind the header and rows, at both sizes, with nothing overlapping.
-  - [ ] No gameplay, balance, data or save change; every existing test passes unchanged (any change OK'd by the Head of Engineering first and logged).
+  - [x] The Call next wave button no longer covers any part of the playfield (F-198): a unit or enemy in the top-right corner is visible and clicking there does not reach the button, checked at 1280x720 and 1920x1080 by the layout test.
+  - [x] Picking a tier a level cannot play never silently plays another tier (F-199): the chips show only tiers that level offers, or the card says in one line why a tier is unavailable ("Hard opens after a Normal win here"), and the run's tier matches the chip shown.
+  - [x] The first-run special tip (F-193) and the Plan page range disc (F-197) no longer sit over the playfield or behind the header and rows, at both sizes, with nothing overlapping.
+  - [x] No gameplay, balance, data or save change; every existing test passes unchanged (any change OK'd by the Head of Engineering first and logged).
+
+### HF-M2-89 Exploratory bug-hunt round (CEO 2026-11-17 19:49)
+- **Owner:** Head of QA
+- **Status:** In progress on b5dfbc4 (Build 19a merged). Estimate: about 1.5 to 3 h, upper bound 5, medium confidence; the fix build (Build 20) is quoted once the findings are in
+- **QA:** full
+- **Depends on:** HF-M2-88
+- **Done when:**
+  - [ ] One full end-to-end round on one named commit hash (b5dfbc4, or the hash of any blocker fix), covering all four tiers on every level, call-wave early, every hub screen, saves including one from before Build 19, keyboard and controller input, and a production-shaped run.
+  - [ ] Every finding reproduces without test-only helpers, is graded MUST FIX or FOLLOW-UP, and is sent to the Head of Engineering to be boarded with one owner before anyone fixes it.
+  - [ ] Earlier findings F-200 to F-205 are re-checked on the final hash.
+  - [ ] Merges stay frozen to blocker or major fixes until QA reports.
 
 ### HF-M2-72 Menus and look: tokens, shared header and the no-overlap test
 - **Owner:** UI Engineer
@@ -1296,13 +1307,19 @@
 | F-190 | HF-M2-28 | FOLLOW-UP from QA (#188): the Done-when line "the known-miss list is empty" is not met as written (one Flare Archer pin plus three hours pins remain, each with a stated cause). HoE ruling: the line is reworded to "every remaining known miss has a stated cause and an Advisor note"; the Advisor confirmed the Flare Archer no-special Outpost pin, which cannot be lifted without a no-input run winning Outpost (9 of 9) | Minor | Head of Engineering | Closed, the Advisor accepted all four pins on 2026-11-17 |
 | F-191 | HF-M2-69 | FOLLOW-UP from QA (#188, also on main): the first-run special tip reads "a burst of fire, far stronger than your arrows" for the Tideblade, whose special is the dash | Minor | UI Engineer | Closed (#191, QA clear at 6d2b90d) |
 | F-192 | HF-M2-28 | FOLLOW-UP from QA observation (#188, not a finding: it used a test-style helper): with no input, Shingle Beach was won by 1 of 20 seeds for the Dusk Mage and 2 of 20 for the Tideblade (main: 1 and 1); the guard tests use seeds 1 to 3. Consider widening the guard to more seeds, which needs my OK as a test change | Minor | Gameplay Engineer | Closed (#190, QA clear at bbef2c0): the Outpost guard now runs 20 seeds per Hero (all lost with no input); Shingle Beach stays at 3 seeds with the Advisor's conditions (Advisor views table) |
-| F-193 | HF-M2-83 | FOLLOW-UP from QA (#191, cosmetic): the first-run special tip is drawn over the playfield, so a unit can sit under it | Minor | UI Engineer | Open, Build 19a (HF-M2-88) |
+| F-193 | HF-M2-83 | FOLLOW-UP from QA (#191, cosmetic): the first-run special tip is drawn over the playfield, so a unit can sit under it | Minor | UI Engineer | Closed, fixed in Build 19a (#204, QA PASS at 14da8b9) |
 | F-194 | HF-M2-73 | MUST FIX from QA (Gate 2 round on 6846b93, F-new1; reproduces with a real mouse, no helpers): the left rail highlights the wrong tab after real clicks. On the Map click Tree, then click Map: the Map page shows Tree highlighted (3 of 3 tries); the Tree page showed Map (2 of 3), the Hero page showed Menu once. A screen's first visit is right, later visits are not. Likely each hub screen keeps its own rail and the clicked tab's pressed state outlives the visit; `test_hub_rail` only checks a freshly built screen | Major | UI Engineer | Closed, fixed in Build 17 (#194, QA PASS at 7f34a04) |
 | F-195 | HF-M2-38 | FOLLOW-UP from QA (F-new2): during the guided buys Slot II also carries the amber buyable ring and opens a detail card (greyed Buy, "Buy Archer Post first"); HF-M2-38 says the only thing the player can open is the guided step. HoE ruling: fix the build to match the line (the CEO's rule is that guided buys are compulsory); nobody can get stuck, so it rides Build 17 | Minor | UI Engineer | Closed, fixed in Build 17 (#194, QA PASS at 7f34a04) |
 | F-196 | HF-M2-77 | FOLLOW-UP from QA (F-new3): the loss panel gives two figures for one fact, "Waves 3 / 5" next to "The keep fell in wave 4 of 5". Wording only; one figure stays | Minor | UI Engineer | Closed, fixed in Build 17 (#194, QA PASS at 7f34a04) |
-| F-197 | HF-M2-77 | FOLLOW-UP from QA (F-new4): on the Plan page, once a post is placed its range disc is drawn well past the field and behind the header, "Not enough stars" and the blessing row, at both sizes. Legible and unchanged since earlier builds, so polish, not a regression. HoE ruling: left for the final polish step with F-193 | Minor | UI Engineer | Open, Build 19a (HF-M2-88) |
-| F-198 | HF-M2-86 | FOLLOW-UP from QA (#199, F-new5): the Call next wave button sits over the top-right corner of the playfield (about 134 by 48 px at 1280x720, same share at 1080p), so a unit or enemy there is hidden and a click there goes to the button. Same family as F-193 | Minor | UI Engineer | Open, Build 19a (HF-M2-88) |
-| F-199 | HF-M2-87 | FOLLOW-UP from QA (#202, F-new6): the tier chips are global, so picking Hard on a level with no Hard replay quietly plays Normal. Needs the chip hidden or one line saying why. Small and interface only, so it rides Build 19a on the CEO's ask | Minor | UI Engineer | Open, Build 19a (HF-M2-88) |
+| F-197 | HF-M2-77 | FOLLOW-UP from QA (F-new4): on the Plan page, once a post is placed its range disc is drawn well past the field and behind the header, "Not enough stars" and the blessing row, at both sizes. Legible and unchanged since earlier builds, so polish, not a regression. HoE ruling: left for the final polish step with F-193 | Minor | UI Engineer | Closed, fixed in Build 19a (#204, QA PASS at 14da8b9) |
+| F-198 | HF-M2-86 | FOLLOW-UP from QA (#199, F-new5): the Call next wave button sits over the top-right corner of the playfield (about 134 by 48 px at 1280x720, same share at 1080p), so a unit or enemy there is hidden and a click there goes to the button. Same family as F-193 | Minor | UI Engineer | Closed, fixed in Build 19a (#204, QA PASS at 14da8b9) |
+| F-199 | HF-M2-87 | FOLLOW-UP from QA (#202, F-new6): the tier chips are global, so picking Hard on a level with no Hard replay quietly plays Normal. Needs the chip hidden or one line saying why. Small and interface only, so it rides Build 19a on the CEO's ask | Minor | UI Engineer | Closed, fixed in Build 19a (#204, QA PASS at 14da8b9) |
+| F-200 | HF-M2-76 | FOLLOW-UP from QA (HF-M2-89 batch 1, B1-1): in Settings the Volume slider, the top row, is last in the keyboard Tab order, after Achievements and one unidentified stop. Repro: Home, Settings, press Tab repeatedly | Minor | UI Engineer | Open, Build 20 |
+| F-201 | HF-M2-76 | FOLLOW-UP from QA (B1-2): the focused Volume slider shows only a slightly brighter bar, no focus ring like every other control. Same repro | Minor | UI Engineer | Open, Build 20 |
+| F-202 | HF-M2-87 | FOLLOW-UP from QA (B2-1): Extreme is not described where the player looks. The Plan title reads "Plan: The Outpost (Extreme)" while Hard names its modifier, so the two Extreme modifiers are not listed, and the map's per-level line shows the Hard record only, not the Extreme one | Minor | UI Engineer | Open, Build 20 |
+| F-203 | HF-M2-73 | FOLLOW-UP from QA (B2-2): the home Continue label follows the last level played, not the next step. After Hard and Extreme replays of The Outpost it reads "Continue Level 1 · The Outpost" while the map says "Next: Gull Rock" | Minor | UI Engineer | Open, Build 20 |
+| F-204 | HF-M2-83 | FOLLOW-UP from QA (B3-1, on 14da8b9): the first-run special tip says "Press Space, A or click to use it" but A is move-left on the keyboard and does not fire it. The tip should name only keys that work (or say which is the pad button) | Minor | UI Engineer | Open, Build 20 |
+| F-205 | HF-M2-88 | FOLLOW-UP from QA (F-new6, softened by the F-199 Plan line): on a level without a Hard replay the map chip still reads Hard while the Plan page says it plays Normal | Minor | UI Engineer | Open, Build 20 |
 
 ## Test changes
 
@@ -1516,3 +1533,5 @@
 - 2026-11-17: Build 18 of 19 merged (#199, QA PASS at ef8763f, merged as dee6029; 1,163 tests, 16 new, no existing test changed): the Call next wave button, key N, pad X. One FOLLOW-UP logged (F-198, polish step). Build 19 started in parallel with the Gameplay Engineer on separate files.
 - 2026-11-17: Advisor ruled on the Build 19 simulator findings (`holdfast/m2/advisor-tiers-simulator-rulings.md`): Easy guard unchanged and judged by the poor bot; Extreme judged on Gull Rock only with the poor-bot pin at 13%. Accepted by the Head of Engineering; no CEO decision needed.
 - 2026-11-17: CEO (19:47): fix any known bug before he plays. Build 19a (HF-M2-88) takes F-193, F-197, F-198 and F-199, interface only; gameplay and balance follow-ups stay out so the bands are not touched.
+- 2026-11-17: CEO (19:49): run another QA round hunting for bugs, then fix them. HF-M2-89 (Head of QA, full round on b5dfbc4) runs now; every finding is boarded with an owner and graded before anyone fixes it; the fix build (Build 20) is quoted once the findings are in; merges are frozen to blocker or major fixes until QA reports. No stop for feedback.
+- 2026-11-17: Build 19a merged (#204, QA PASS at 14da8b9, 1,187 tests, merged as b5dfbc4): F-193, F-197, F-198 and F-199 closed.
