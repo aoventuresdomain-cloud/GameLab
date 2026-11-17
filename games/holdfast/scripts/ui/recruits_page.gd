@@ -261,6 +261,8 @@ func _select(id: String) -> void:
 func _fill_detail() -> void:
 	var recruit: Dictionary = _profile.get_recruit(_selected)
 	_detail_name.editable = not recruit.is_empty()
+	# With nobody hired there is no name to edit: no empty box.
+	_detail_name.visible = not recruit.is_empty()
 	_squad_button.visible = not recruit.is_empty()
 	if recruit.is_empty():
 		_detail_name.text = ""

@@ -107,8 +107,9 @@ text = "Hero"
 [node name="StatsInfoButton" type="Button" parent="Margin/Column/Body/Inner/Main/StatColumn/StatHeader"]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Show where each number comes from"
 toggle_mode = true
-text = "i"
+text = "Details"
 
 [node name="Stats" type="Label" parent="Margin/Column/Body/Inner/Main/StatColumn"]
 unique_name_in_owner = true
