@@ -254,11 +254,6 @@ func begin_stand() -> void:
 	_apply(HoldfastMeta.begin_stand(data))
 
 
-## True once the line on what stars buy has been shown.
-func has_seen_stars_line() -> bool:
-	return bool(data["stars_line_seen"])
-
-
 func show_stars_line() -> void:
 	_apply(HoldfastMeta.show_stars_line(data))
 

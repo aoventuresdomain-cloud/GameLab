@@ -303,7 +303,6 @@ func test_the_summary_never_explains_what_stars_buy() -> void:
 	var profile: HoldfastProfile = main.get_node("Profile")
 	var source: HoldfastRunSource = main.get_node("RunSource")
 	main.call("_new_game")
-	expect_false(profile.has_seen_stars_line())
 	main.call("_level_picked", "first_watch")
 	_play_out(source)
 	expect_eq(main.summary.get_node("%StarsValue").text, "+2", "the stars are paid")

@@ -692,9 +692,14 @@ static func see_gear(profile: Dictionary) -> Dictionary:
 
 ## True when the tutorial's stand is due: Level 0 won, both guided buys made and the stand not
 ## begun yet. It follows the second buy at once, and a profile that has begun it never meets it again.
+## A player who has already won a real level has moved on, so the stand is not offered then and the
+## Journey map keeps its "Next:" goal.
 static func stand_due(content: Dictionary, profile: Dictionary) -> bool:
 	var first := tutorial_level(content)
-	return first != "" and content["levels"][first].has("stand") and first in profile["levels_won"] and not profile["stand_done"] and guide_node(content, profile) == "" and has_a_tower(content, profile)
+	if first == "" or not content["levels"][first].has("stand") or not first in profile["levels_won"] or profile["stand_done"]:
+		return false
+	var moved_on: bool = profile["levels_won"].any(func(id: String) -> bool: return not _tutorial(content["levels"][id]))
+	return not moved_on and guide_node(content, profile) == "" and has_a_tower(content, profile)
 
 
 ## The posts the stand is fought with: the castle spot nearest where the first spawn arc comes
