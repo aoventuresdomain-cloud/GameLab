@@ -313,7 +313,8 @@ func test_continue_names_the_level_from_a_real_json_save() -> void:
 	expect_eq(int(parsed.get("gold", -1)), 300, "with the gold in it")
 	var main := _main(path)
 	var profile: HoldfastProfile = main.get_node("Profile")
-	var level: Dictionary = HoldfastContent.base()["levels"][profile.get_level()]
+	var next: String = preload("res://scripts/ui/guidance.gd").next_level(HoldfastContent.base(), profile)
+	var level: Dictionary = HoldfastContent.base()["levels"][next if next != "" else profile.get_level()]
 	var button: Button = main.home.get_node("%ContinueButton")
 	expect_false(button.disabled, "the save is there to continue")
 	expect_true(button.text.begins_with("Continue\n") and button.text.contains(str(level["name"])), "Continue names the level: %s" % button.text)

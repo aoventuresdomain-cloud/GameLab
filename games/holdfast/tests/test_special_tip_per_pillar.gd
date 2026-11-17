@@ -3,7 +3,7 @@ extends KitTestCase
 
 const Hud := preload("res://scenes/ui/hud.tscn")
 const OWN_WORD := {"flare_archer": "fire", "dusk_mage": "pulls", "tideblade": "dash"}
-const KEYS := "Press Space, A or click to use it."
+const KEYS := "Press Space, A on a pad, or click to use it."
 
 
 func _note_for(pillar: String) -> String:

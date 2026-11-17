@@ -13,6 +13,15 @@ const PILLARS_LINE := "A new Hero path is open. Pick one above to try it."
 const FALLBACK_TIP := "Try the posts on other spots, or send the Hero to where the monsters come in."
 
 
+## The level the player should play next: the first one after the tutorial, in the pack's order, that is open and
+## not yet won ("" before there is one, and once every open level is won). The map's "Next:" line names it.
+static func next_level(content: Dictionary, profile: Node) -> String:
+	for id in content["levels"]:
+		if not content["levels"][id].get("tutorial", false) and id in profile.get_unlocked_levels() and not profile.is_level_won(id):
+			return str(id)
+	return ""
+
+
 ## The line the Journey map shows when nothing is hovered, in the order the player can act on it: an
 ## upgrade nearly affordable, the next level, the next boss ("" while the guide has the player's
 ## attention, or before there is anything to say). Past the last level it says more is coming.

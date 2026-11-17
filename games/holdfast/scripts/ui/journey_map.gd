@@ -32,6 +32,7 @@ static var COLOUR_KEEP := UiTokens.colour(&"bone")
 static var COLOUR_HERO := UiTokens.colour(&"lamp_hot")
 ## Clear of the glow ring (12 out, 4 thick), so a name never touches it.
 const LABEL_GAP := 20.0
+const CAPTION_MARGIN := 6.0
 const HERO_FIGURE := Vector2(44, 64)
 const HERO_INFO := "Hero and gear"
 ## The tier chips sit under the map, in this order.
@@ -291,10 +292,15 @@ func _build_nodes() -> void:
 	_map.add_child(_hero_figure)
 
 
-## The line under a cleared level's stars: its Hard replay's icon and word, and what that replay has paid.
+## The line under a cleared level's stars: its Hard replay's icon and word, and what that replay has paid; once the
+## level's Extreme replay is open, a second line gives that record the same way (F-202).
 func _hard_line(id: String) -> String:
 	var paid: int = _profile.get_hard_stars(id)
-	return "%s%s" % [_profile.get_hard_label(id), "" if paid == 0 else ", %d of %d" % [paid, HoldfastMeta.MAX_LEVEL_STARS]]
+	var line := "%s%s" % [_profile.get_hard_label(id), "" if paid == 0 else ", %d of %d" % [paid, HoldfastMeta.MAX_LEVEL_STARS]]
+	if _profile.is_extreme_open(id):
+		var extreme: int = _profile.get_extreme_stars(id)
+		line += "\nExtreme%s" % ("" if extreme == 0 else ": %d of %d" % [extreme, HoldfastMeta.MAX_LEVEL_STARS])
+	return line
 
 
 func _level_text(id: String) -> String:
@@ -314,7 +320,7 @@ func _node_at(i: int, n: int) -> Vector2:
 	var area := _map.size
 	var t := float(i) / maxf(float(n - 1), 1.0)
 	var x := lerpf(area.x * 0.22, area.x * 0.9, t)
-	var y := lerpf(area.y * 0.7, area.y * 0.3, t) + sin(float(i) * 1.835) * area.y * 0.07
+	var y := lerpf(area.y * 0.66, area.y * 0.3, t) + sin(float(i) * 1.835) * area.y * 0.07
 	return Vector2(x, y)
 
 
@@ -345,6 +351,7 @@ func path_points() -> PackedVector2Array:
 func _place() -> void:
 	if _ids.is_empty() or _hero_figure == null:
 		return
+	var placed: Array[Rect2] = []
 	for i in _ids.size():
 		var at := _node_at(i, _ids.size())
 		_buttons[_ids[i]].position = at - Vector2.ONE * NODE_RADIUS
@@ -353,6 +360,16 @@ func _place() -> void:
 		label.position = Vector2(clampf(at.x - label.size.x * 0.5, 0.0, _map.size.x - label.size.x), at.y + NODE_RADIUS + LABEL_GAP)
 		var modifier: Label = _hard_names[_ids[i]]
 		modifier.position = Vector2(clampf(at.x - modifier.size.x * 0.5, 0.0, _map.size.x - modifier.size.x), label.position.y + label.size.y)
+		# A level with Hard and Extreme lines has a tall caption: step it right of any caption already placed that it touches.
+		var shift := 0.0
+		for caption in [label, modifier]:
+			for other in placed:
+				if Rect2(caption.position, caption.size).grow(CAPTION_MARGIN).intersects(other):
+					shift = maxf(shift, other.end.x + CAPTION_MARGIN - caption.position.x)
+		for caption in [label, modifier]:
+			caption.position.x = minf(caption.position.x + shift, _map.size.x - caption.size.x)
+			if caption.text != "":
+				placed.append(Rect2(caption.position, caption.size))
 	_hero_figure.position = _hero_at() - HERO_FIGURE * 0.5 + Vector2(0, -4)
 
 
