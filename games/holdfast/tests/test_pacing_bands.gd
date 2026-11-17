@@ -217,6 +217,18 @@ func test_a_pillar_is_judged_on_its_scope_and_the_rest_is_reported_as_not_played
 	expect_true(HoldfastBands.scope_problems(bad).size() >= 1, "so is a level that does not exist")
 
 
+func test_the_dusk_mage_has_its_own_ceiling_and_the_others_keep_the_levels() -> void:
+	var bands := HoldfastBands.load_bands()
+	var cells := {}
+	for pillar in HoldfastBands.PILLARS:
+		for cell in ["average", "poor", "volley", "sniper", "no_special"]:
+			cells["%s/%s" % [pillar, cell]] = []
+	var figs := HoldfastBands.figures(bands, cells)
+	expect_eq(float(figs["dusk_mage/average/gull_rock"]["hi"]), 1.0, "the Dusk Mage may win Gull Rock as often as it likes")
+	expect_eq(float(figs["tideblade/average/gull_rock"]["hi"]), float(bands["bands"]["gull_rock"]["average"][1]), "the Tideblade is held to the level's band")
+	expect_eq(float(figs["dusk_mage/average/gull_rock"]["lo"]), float(bands["bands"]["gull_rock"]["average"][0]), "the floor of the level still holds for the Dusk Mage")
+
+
 func test_the_fork_feel_is_the_larger_gap_in_keep_health_or_clear_time() -> void:
 	var a := [{"_feel": {"outpost": {"keep": 0.8, "seconds": 100.0}}}, {"_feel": {"outpost": {"keep": 0.6, "seconds": 120.0}}}]
 	var same := [{"_feel": {"outpost": {"keep": 0.7, "seconds": 110.0}}}]

@@ -33,7 +33,8 @@ func _tree_failures(judged: Dictionary) -> PackedStringArray:
 func test_the_bands_file_states_the_tree_band_and_the_dry_run_limit() -> void:
 	var tree: Dictionary = HoldfastBands.load_bands()["tree"]
 	expect_eq([float(tree["hours_min"]), float(tree["hours_max"])], [3.0, 4.0], "3 to 4 hours to fill the tree")
-	expect_eq(int(tree["dry_max"]), 3, "never more than 3 dry runs in a row")
+	expect_eq(int(tree["dry_max"]), 6, "no wait for a purchase passes 6 runs")
+	expect_eq(float(tree["dry_median_max"]), 2.0, "the median wait stays at 2 or less")
 	expect_false(str(tree["how"]).is_empty(), "it says how the simulator measures it")
 	expect_true(HoldfastBands.load_bands()["seeds"].has("tree"), "and how many players")
 
@@ -45,7 +46,7 @@ func test_the_figures_are_the_mean_hours_and_the_worst_dry_run() -> void:
 	expect_eq([hours["lo"], hours["hi"]], [3.0, 4.0], "held to the band in the file")
 	var dry: Dictionary = figs["dusk_mage/tree/dry_runs"]
 	expect_eq(dry["value"], 3.0, "the worst of the players")
-	expect_eq([dry["lo"], dry["hi"]], [0.0, 3.0], "never more than 3")
+	expect_eq([dry["lo"], dry["hi"]], [0.0, 6.0], "never more than 6")
 	for pillar in HoldfastBands.PILLARS:
 		expect_true(figs.has("%s/tree/hours" % pillar) and figs.has("%s/tree/dry_runs" % pillar), "%s has both figures" % pillar)
 
@@ -69,13 +70,27 @@ func test_a_tree_that_fills_too_fast_or_too_slow_fails_the_gate() -> void:
 	expect_eq(_tree_failures(inside), PackedStringArray(), "3.5 hours and no dry run passes")
 
 
-func test_more_than_three_dry_runs_in_a_row_fails_the_gate() -> void:
-	var judged := HoldfastBands.evaluate(_tree_figures([_row(3.5, 2), _row(3.5, 4)]), {})
-	expect_eq(judged["flare_archer/tree/dry_runs"]["state"], "MISSED", "four in a row is one too many")
+func test_more_than_six_dry_runs_in_a_row_fails_the_gate() -> void:
+	var judged := HoldfastBands.evaluate(_tree_figures([_row(3.5, 2), _row(3.5, 7)]), {})
+	expect_eq(judged["flare_archer/tree/dry_runs"]["state"], "MISSED", "seven in a row is one too many")
 	var failures := _tree_failures(judged)
 	expect_eq(failures.size(), 3, "all three pillars")
-	expect_true(failures[0].contains("tree/dry_runs: MISSED") and failures[0].contains("4 runs, band 0 runs to 3 runs"), "the failure counts runs: %s" % failures[0])
-	expect_eq(HoldfastBands.evaluate(_tree_figures([_row(3.5, 3)]), {})["flare_archer/tree/dry_runs"]["state"], "met", "three is allowed")
+	expect_true(failures[0].contains("tree/dry_runs: MISSED") and failures[0].contains("7 runs, band 0 runs to 6 runs"), "the failure counts runs: %s" % failures[0])
+	expect_eq(HoldfastBands.evaluate(_tree_figures([_row(3.5, 6)]), {})["flare_archer/tree/dry_runs"]["state"], "met", "six is allowed")
+
+
+func test_a_median_wait_of_three_runs_fails_the_gate() -> void:
+	var slow := _row(3.5, 4)
+	slow["dry_median"] = 3.0
+	var judged := HoldfastBands.evaluate(_tree_figures([slow]), {})
+	expect_eq(judged["flare_archer/tree/dry_median"]["state"], "MISSED", "a typical wait of three returns is too slow")
+	expect_true(_tree_failures(judged)[0].contains("tree/dry_median: MISSED"), "the failure names the figure: %s" % _tree_failures(judged)[0])
+
+
+func test_a_median_wait_of_two_runs_passes_the_gate() -> void:
+	var quick := _row(3.5, 5)
+	quick["dry_median"] = 2.0
+	expect_eq(HoldfastBands.evaluate(_tree_figures([quick]), {})["flare_archer/tree/dry_median"]["state"], "met", "two is allowed")
 
 
 func test_a_pinned_tree_miss_may_not_get_worse_or_come_back_in_band() -> void:
@@ -92,7 +107,7 @@ func test_the_report_has_a_tree_and_stars_table() -> void:
 	var text := HoldfastBands.report(bands, judged, cells)
 	expect_true(text.contains("## Tree and stars"), "the section is there")
 	expect_true(text.contains("| flare_archer | 4 | 30 | -1 | 3.5 | 1 of 2 | 17 / 44 |"), "minutes to the first star and new tower, nobody reached a boss, mean hours, how many filled, stars against the tree's price")
-	expect_true(text.contains("| 3.5 h | 3.0 h to 4.0 h |") and text.contains("| 2 runs | 0 runs to 3 runs |"), "the judged figures are in hours and runs, not per cent")
+	expect_true(text.contains("| 3.5 h | 3.0 h to 4.0 h |") and text.contains("| 2 runs | 0 runs to 6 runs |"), "the judged figures are in hours and runs, not per cent")
 	expect_false(HoldfastBands.report(bands, judged).contains("## Tree and stars"), "no table without a tree cell")
 
 

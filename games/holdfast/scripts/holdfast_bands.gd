@@ -153,6 +153,7 @@ static func tree_cell(pillar: String, seeds: int, sim_hours: float) -> Array:
 			"hours": (float(played["filled_at"]) if filled else float(played["sim_seconds"])) / 3600.0,
 			"filled": filled,
 			"dry": int(played["dry_runs"]),
+			"dry_median": float(played["dry_median"]),
 			"first_star": _minutes(float(played["first_star_at"])),
 			"first_tower": _minutes(float(played["first_new_tower_at"])),
 			"first_boss": _minutes(float(played["first_boss_at"])),
@@ -247,6 +248,7 @@ static func figures(bands: Dictionary, cells: Dictionary) -> Dictionary:
 		var never: Array = cells.get("%s/auto" % pillar, cells["%s/no_special" % pillar])
 		for level in inside:
 			var avg: Array = bands["bands"][level]["average"]
+			avg = [avg[0], maxf(float(avg[1]), float(bands.get("pillar_ceilings", {}).get(pillar, 0.0)))]
 			var poor_min := float(bands["bands"][level]["poor_min"])
 			var on := rate(cells["%s/average" % pillar], level)
 			low = minf(low, on)
@@ -284,11 +286,14 @@ static func figures(bands: Dictionary, cells: Dictionary) -> Dictionary:
 			var tree: Dictionary = bands["tree"]
 			var hours := 0.0
 			var dry := 0
+			var dry_median := 0.0
 			for row in cells["%s/tree" % pillar]:
 				hours += float(row["hours"])
 				dry = maxi(dry, int(row["dry"]))
+				dry_median = maxf(dry_median, float(row.get("dry_median", 0.0)))
 			out["%s/tree/hours" % pillar] = {"value": hours / maxi(cells["%s/tree" % pillar].size(), 1), "lo": float(tree["hours_min"]), "hi": float(tree["hours_max"]), "unit": "h", "how": "hours of play until every gold node the Hero can reach is bought, average bot, mean of %d players" % seeds["tree"]}
 			out["%s/tree/dry_runs" % pillar] = {"value": float(dry), "lo": 0.0, "hi": float(tree["dry_max"]), "unit": "runs", "how": "the longest run of returns to the tree with nothing affordable, average bot, worst of %d players" % seeds["tree"]}
+			out["%s/tree/dry_median" % pillar] = {"value": dry_median, "lo": 0.0, "hi": float(tree["dry_median_max"]), "unit": "runs", "how": "the median wait before a purchase, in returns to the tree with nothing affordable, average bot, worst of %d players (the first hour stays quick)" % seeds["tree"]}
 	var post: Dictionary = bands["one_post"]
 	if str(post["level"]) in scope(bands, str(post["pillar"])):
 		out["%s/one_post/%s" % [post["pillar"], post["level"]]] = {"value": rate(cells["%s/one_post" % post["pillar"]], str(post["level"])), "lo": float(post["min"]), "hi": 1.0, "how": "first-time win rate of the average bot with one post, %d players" % seeds["one_post"]}

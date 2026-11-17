@@ -92,9 +92,9 @@
       ],
       "attack": {
         "kind": "arc",
-        "damage": 9,
+        "damage": 10.5,
         "range": 60,
-        "cooldown": 0.4,
+        "cooldown": 0.38,
         "arc_degrees": 100
       },
       "ability": {

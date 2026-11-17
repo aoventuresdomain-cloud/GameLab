@@ -21,8 +21,9 @@
     "sim_hours": 16,
     "hours_min": 3,
     "hours_max": 4,
-    "dry_max": 3,
-    "how": "the average bot plays on from the end of the tutorial, spending stars and gold between runs, playing each cleared level's Hard replay once and replaying its latest level; the hours are the play time until it owns every gold node its Hero can reach (the whole budget if it never does), and a dry run is a return to the tree with nothing affordable. The stars the five levels pay cannot fill the tree, so the star side is reported, not judged, until more levels exist."
+    "dry_max": 6,
+    "dry_median_max": 2,
+    "how": "the average bot plays on from the end of the tutorial, spending stars and gold between runs, playing each cleared level's Hard replay once and replaying its latest level; the hours are the play time until it owns every gold node its Hero can reach (the whole budget if it never does), and a dry run is a return to the tree with nothing affordable. No wait for a purchase may pass 6 runs (the dearest node alone is allowed that long, Advisor view 17 Nov 2026) and the median wait before a purchase is at most 2, so the first hour stays quick. The stars the five levels pay cannot fill the tree, so the star side is reported, not judged, until more levels exist."
   },
   "first_time_floor": 0.3,
   "pillar_levels": {
@@ -34,6 +35,10 @@
     ]
   },
   "pillar_levels_note": "Which levels each pillar is judged on (a pillar not named is judged on all five). The Dusk Mage unlocks at the level 5 boss and the Tideblade at the next biome boss, so both are tuned to the biomes they unlock into (Advisor view 2026-10-30, Head of Engineering decision). Gull Rock, the hardest level that exists, stands in for them. WIDEN THE SCOPE when a later biome exists. The gate fails if a pillar's scope is empty. Levels outside a scope are reported as not played by that pillar yet.",
+  "pillar_ceilings": {
+    "dusk_mage": 1.0
+  },
+  "pillar_ceilings_note": "A pillar's own ceiling for the average bot's first-time win rate, in place of the level's when higher (Advisor view 17 Nov 2026, Head of Engineering decision): the Dusk Mage unlocks after the level 5 boss and is meant to be strong late in the dark, so a pillar a little easier than the starter does no harm, and Gull Rock is shared by every pillar so it is not hardened for it. Re-check when a second biome exists; if the extra ease shows at a second level, trim the Dusk Mage's own numbers.",
   "bands": {
     "outpost": {
       "average": [
