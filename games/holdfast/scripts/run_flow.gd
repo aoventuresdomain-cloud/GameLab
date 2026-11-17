@@ -65,6 +65,7 @@ func _ready() -> void:
 	hud.begin_requested.connect(source.release_hold)
 	hud.pause_requested.connect(source.set_paused)
 	hud.speed_requested.connect(_on_speed_requested)
+	hud.call_wave_requested.connect(source.call_wave)
 	hud.leave_requested.connect(_leave_run)
 	hud.special_requested.connect(_on_special_requested)
 	home.bind(profile)

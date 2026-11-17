@@ -186,6 +186,16 @@ func set_speed(speed: int) -> void:
 	_speed = 2 if speed == 2 else 1
 
 
+func is_wave_callable() -> bool:
+	return _running and not _paused and not _held and _rules.can_call_next_wave()
+
+
+## Calls the next wave now (see HoldfastRules.call_next_wave); refused while paused, held or mid-wave.
+func call_wave() -> void:
+	if is_wave_callable():
+		_rules.call_next_wave()
+
+
 ## Ends the run without a result: nothing is banked or paid and no run_ended is sent.
 func leave_run() -> void:
 	if not _running:
