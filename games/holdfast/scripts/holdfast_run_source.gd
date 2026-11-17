@@ -64,7 +64,7 @@ var _last := {}
 const MAX_FRAME_SECONDS := 0.25
 
 ## The one-off prompt for the special, up while the run waits for the press.
-const SPECIAL_NOTE := "Your special is ready: a burst of fire, far stronger than your arrows.\nPress Space (or click) to fire it."
+const SPECIAL_NOTE := "Your special is ready: a burst of fire, far stronger than your arrows.\nPress Space, A or click to fire it."
 
 
 func _ready() -> void:

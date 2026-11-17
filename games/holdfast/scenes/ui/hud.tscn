@@ -169,7 +169,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 focus_mode = 0
-tooltip_text = "Pause (Esc or P)"
+tooltip_text = "Pause (Esc, P or Start)"
 text = "II"
 
 [node name="SpeedButton" type="Button" parent="TopBar/Row/Controls"]
@@ -177,7 +177,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 focus_mode = 0
-tooltip_text = "Game speed"
+tooltip_text = "Game speed (F or Y)"
 text = "1x"
 
 [node name="WaveBanner" type="Label" parent="."]
