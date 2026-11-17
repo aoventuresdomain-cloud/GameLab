@@ -22,7 +22,9 @@ const MAX_TICKS := 200000
 ## played once, as nothing comes after it. `prefer` is a chain the player saves up for (see
 ## HoldfastProgression.buy_for_profile). `hard_replay` has the player play each level's Hard replay once
 ## (first attempt, win or lose) right after clearing it, and adds "hard" (won it) to the level's row.
-static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", level_count := 5, skip: Array = [], first_only := false, prefer: Array = [], hard_replay := false) -> Dictionary:
+## `watch` lists nodes to follow: each level's row then says whether the player owned one at its first attempt ("watched")
+## and in which run that attempt was ("arrival"), and the result's "watch_run" is the first run played owning one (-1 if never).
+static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", level_count := 5, skip: Array = [], first_only := false, prefer: Array = [], hard_replay := false, watch: Array = []) -> Dictionary:
 	var content := HoldfastContent.base()
 	var nodes: Dictionary = content.get("upgrade_nodes", {})
 	var avoid := HoldfastProgression.other_hero_nodes(nodes, pillar) + skip
@@ -34,6 +36,7 @@ static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", leve
 	var dry := 0
 	var worst_dry := 0
 	var gaps := []
+	var watch_run := -1
 	for level in _levels(content).slice(0, level_count):
 		var attempts := 0
 		var won := false
@@ -47,13 +50,18 @@ static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", leve
 				profile = bought[-1]["profile"]
 				dry = 0
 			worst_dry = maxi(worst_dry, dry)
+			var owns_watched := false
+			for id in watch:
+				owns_watched = owns_watched or id in profile["upgrades"]
+			if owns_watched and watch_run < 0:
+				watch_run = runs
 			var config := HoldfastContent.run_config(level, profile["upgrades"], content, pillar, HoldfastMeta.layout_for(content, profile, level), HoldfastMeta.worn_gear(profile), profile["gear"]["owned"], false, RecruitMeta.bot_squad(content, profile))
 			var result: Dictionary = SimBotRunner.run(HoldfastRules.new(), HoldfastSkilledBot.new(model), p_seed * 100003 + runs, config, MAX_TICKS, HoldfastRules.TICK_RATE)["result"]
 			profile = RecruitMeta.bot_picks(content, HoldfastMeta.bank_run(content, profile, result))
 			profile = HoldfastMeta.wear_free_slots(content, profile)
 			won = result["outcome"] == HoldfastRules.OUTCOME_WON
 			if attempts == 0:
-				levels[level] = {"first": won, "keep": float(result.get("keep_health", 0.0)) / maxf(float(result.get("keep_health_max", 1.0)), 1.0), "seconds": float(result.get("seconds", 0.0))}
+				levels[level] = {"first": won, "keep": float(result.get("keep_health", 0.0)) / maxf(float(result.get("keep_health_max", 1.0)), 1.0), "seconds": float(result.get("seconds", 0.0)), "watched": owns_watched, "arrival": runs}
 			attempts += 1
 			runs += 1
 		levels[level]["attempts"] = attempts
@@ -66,7 +74,7 @@ static func climb(p_seed: int, model: Dictionary, pillar := "flare_archer", leve
 			levels[level]["hard"] = replay["won"]
 			levels[level]["hard_keep"] = replay["keep"]
 			runs += 1
-	return {"levels": levels, "dry_runs": worst_dry, "gaps": gaps, "runs": runs}
+	return {"levels": levels, "dry_runs": worst_dry, "gaps": gaps, "runs": runs, "watch_run": watch_run}
 
 
 ## One run on `level` after the player's buying: Normal or `hard`. Returns {profile (the run banked), won, keep (the

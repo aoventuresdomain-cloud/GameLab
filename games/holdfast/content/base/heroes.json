@@ -82,7 +82,7 @@
       "id": "tideblade",
       "name": "Tideblade",
       "move_speed": 190,
-      "health": 80,
+      "health": 86,
       "radius": 12,
       "pickup_radius": 30,
       "knockdown_delays": [
@@ -92,15 +92,15 @@
       ],
       "attack": {
         "kind": "arc",
-        "damage": 10.5,
+        "damage": 10,
         "range": 60,
-        "cooldown": 0.38,
+        "cooldown": 0.4,
         "arc_degrees": 100
       },
       "ability": {
         "name": "Dash-Strike",
         "kind": "arc",
-        "damage": 27,
+        "damage": 30,
         "range": 40,
         "cooldown": 12,
         "dash_distance": 300,

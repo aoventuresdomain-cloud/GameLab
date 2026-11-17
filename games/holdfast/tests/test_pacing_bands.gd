@@ -103,7 +103,7 @@ func test_the_figures_are_the_gaps_and_floors_the_bands_describe() -> void:
 	expect_eq(figs["flare_archer/floor"]["value"], 0.25, "the lowest level rate")
 	expect_eq(figs["dusk_mage/one_post/shingle_beach"]["value"], 0.5, "the one-post rate")
 	expect_eq(figs["dusk_mage/average/%s" % level]["value"], 0.0, "nobody reached the level")
-	expect_eq(figs.size(), 3 * (5 * 4 + 4 + 3) + 1, "every pillar has 4 figures a level, the fork feel on the four levels from Shingle Beach on, a floor, a mean gap and the first level without the special, plus the one-post figure")
+	expect_eq(figs.size(), 3 * (5 * 4 + 3) + 1, "every pillar has 4 figures a level, a floor, a mean gap and the first level without the special, plus the one-post figure (the fork feel only appears where fork nodes are owned, so none with empty cells)")
 	# Each figure is held to the bound the file states for it.
 	expect_eq([figs["flare_archer/fork_gap/%s" % level]["lo"], figs["flare_archer/fork_gap/%s" % level]["hi"]], [0.0, float(bands["fork_gap"]["max"])], "the fork gap bound")
 	expect_eq([figs["flare_archer/special_gap/mean"]["lo"], figs["flare_archer/special_gap/mean"]["hi"]], [float(bands["special_gap"]["mean_min"]), float(bands["special_gap"]["mean_max"])], "the mean special gap bound")
@@ -241,15 +241,61 @@ func test_the_fork_feel_is_the_larger_gap_in_keep_health_or_clear_time() -> void
 	expect_eq(HoldfastBands.feel_gap(a, [{"_feel": {}}], "outpost"), 0.0, "a side that never got there has no gap to measure")
 
 
-func test_the_fork_feel_is_judged_from_the_first_level_a_fork_node_can_be_bought() -> void:
+func test_the_fork_feel_is_judged_from_the_first_level_most_players_own_a_fork_node() -> void:
 	var bands := HoldfastBands.load_bands()
+	var figs := HoldfastBands.figures(bands, _fork_cells("tidewrack_cove", 2))
+	expect_false(figs.has("flare_archer/fork_feel/outpost") or figs.has("flare_archer/fork_feel/shingle_beach"), "no fork node is owned before Tidewrack Cove")
+	expect_true(figs.has("flare_archer/fork_feel/tidewrack_cove") and figs.has("flare_archer/fork_feel/gull_rock"), "judged from Tidewrack Cove on")
+
+
+func _fork_cells(owned_from: String, first: int, arrival_tidewrack := 2) -> Dictionary:
 	var cells := {}
 	for pillar in HoldfastBands.PILLARS:
 		for cell in ["average", "poor", "volley", "sniper", "no_special"]:
 			cells["%s/%s" % [pillar, cell]] = []
-	var figs := HoldfastBands.figures(bands, cells)
-	expect_false(figs.has("flare_archer/fork_feel/outpost"), "no fork node is affordable at Outpost")
-	expect_true(figs.has("flare_archer/fork_feel/shingle_beach"), "judged from Shingle Beach on")
+	var owned := {}
+	var arrival := {}
+	var seen := false
+	for level in HoldfastBands.levels():
+		seen = seen or level == owned_from
+		owned[level] = seen
+		arrival[level] = HoldfastBands.levels().find(level)
+	arrival["tidewrack_cove"] = arrival_tidewrack
+	var row := {HoldfastBands.FEEL: {}, HoldfastBands.WATCH: {"owned": owned, "arrival": arrival, "first": first}}
+	for side in ["volley", "sniper"]:
+		cells["flare_archer/%s" % side] = [row, row]
+	return cells
+
+
+func test_the_fork_feel_starts_where_half_the_players_own_a_fork_node() -> void:
+	var bands := HoldfastBands.load_bands()
+	var cells := _fork_cells("shingle_beach", 1)
+	expect_eq(HoldfastBands.fork_start(bands, cells["flare_archer/volley"], cells["flare_archer/sniper"]), "shingle_beach", "owned from the second level on: judged from it")
+	expect_eq(HoldfastBands.fork_start(bands, _fork_cells("old_pier", 3)["flare_archer/volley"], []), "old_pier", "the rule moves by itself with the pacing")
+	var nobody := _fork_cells("none", -1)
+	expect_eq(HoldfastBands.fork_start(bands, nobody["flare_archer/volley"], nobody["flare_archer/sniper"]), "", "no fork node anywhere: no start level")
+	var figs := HoldfastBands.figures(bands, nobody)
+	for level in HoldfastBands.levels():
+		expect_false(figs.has("flare_archer/fork_feel/%s" % level), "%s: nothing to feel without a fork node" % level)
+
+
+func test_the_first_fork_must_be_owned_within_three_runs_of_reaching_tidewrack_cove() -> void:
+	var bands := HoldfastBands.load_bands()
+	var reach := "flare_archer/fork_reach/tidewrack_cove"
+	var three := HoldfastBands.evaluate(HoldfastBands.figures(bands, _fork_cells("old_pier", 5, 2)), {})
+	expect_eq(float(three[reach]["value"]), 3.0, "reached Tidewrack Cove in run 2, first fork in run 5: three runs")
+	expect_eq(three[reach]["state"], "met", "three is allowed")
+	var four := HoldfastBands.evaluate(HoldfastBands.figures(bands, _fork_cells("old_pier", 6, 2)), {})
+	expect_eq(four[reach]["state"], "MISSED", "four is one too many")
+	var early := HoldfastBands.figures(bands, _fork_cells("shingle_beach", 1, 2))
+	expect_eq(float(early[reach]["value"]), 0.0, "a fork node owned before arriving costs no wait")
+	var never := HoldfastBands.figures(bands, _fork_cells("none", -1))
+	expect_eq(float(never[reach]["value"]), float(HoldfastBands.FORK_NEVER), "a player who never owns one counts as the longest wait")
+	var empty := {}
+	for pillar in HoldfastBands.PILLARS:
+		for cell in ["average", "poor", "volley", "sniper", "no_special"]:
+			empty["%s/%s" % [pillar, cell]] = []
+	expect_false(HoldfastBands.figures(bands, empty).has(reach), "no players, no figure")
 
 
 func test_a_climb_row_keeps_how_the_first_attempt_felt() -> void:

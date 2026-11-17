@@ -38,7 +38,7 @@
   "pillar_ceilings": {
     "dusk_mage": 1.0
   },
-  "pillar_ceilings_note": "A pillar's own ceiling for the average bot's first-time win rate, in place of the level's when higher (Advisor view 17 Nov 2026, Head of Engineering decision): the Dusk Mage unlocks after the level 5 boss and is meant to be strong late in the dark, so a pillar a little easier than the starter does no harm, and Gull Rock is shared by every pillar so it is not hardened for it. Re-check when a second biome exists; if the extra ease shows at a second level, trim the Dusk Mage's own numbers.",
+  "pillar_ceilings_note": "A pillar's own ceiling for the average bot's first-time win rate, in place of the level's when higher (Advisor view 17 Nov 2026, Head of Engineering decision): the Dusk Mage unlocks after the level 5 boss and is meant to be strong late in the dark, so a pillar a little easier than the starter does no harm, and Gull Rock is shared by every pillar so it is not hardened for it. Re-check when a second biome exists; if the extra ease shows at a second level, trim the Dusk Mage's own numbers. A Dusk Mage attack buff was measured and left out: it makes an idle Dusk Mage win Shingle Beach, which the no-input guard tests forbid.",
   "bands": {
     "outpost": {
       "average": [
@@ -96,23 +96,20 @@
   },
   "known_misses": {
     "flare_archer/no_special/outpost": 0.0,
-    "flare_archer/fork_feel/tidewrack_cove": 0.026,
-    "dusk_mage/average/gull_rock": 0.6667,
-    "tideblade/special_gap/mean": 0.5,
-    "tideblade/poor/gull_rock": 0.0,
     "flare_archer/tree/hours": 1.2105,
     "dusk_mage/tree/hours": 1.4265,
-    "tideblade/tree/hours": 1.2194,
-    "flare_archer/tree/dry_runs": 5,
-    "dusk_mage/tree/dry_runs": 5,
-    "tideblade/tree/dry_runs": 5,
-    "tideblade/hard/gull_rock": 0.1
+    "tideblade/tree/hours": 1.2194
   },
-  "known_misses_note": "A pinned miss may not get worse, and CI fails if it comes back inside its band (delete the pin then). Build 12a (HF-M2-28) removed every pin that levels and data could fix and pinned what remains, each with its cause. flare_archer/special_gap/mean is fixed by Keeper's Habit (HF-M2-63): a player who never presses the special saves up for it (300 gold after Light feet, a few runs of Outpost) and then has it firing on its own, and the gap is now the special pressed against never pressed with the Habit (about 35 points, in band); its pin is deleted. flare_archer/no_special/outpost: no node can be bought before the first fight (the tutorial pays 150 gold), so a player who never presses the special and has not bought the Habit still loses Outpost; the guided first press (HF-M2-63) teaches the button before that fight. flare_archer/fork_feel/tidewrack_cove: the two Archer sides play within 3% of each other at Tidewrack Cove; the fork nodes are rebalanced with HF-M2-63. dusk_mage/average/gull_rock, tideblade/special_gap/mean and tideblade/poor/gull_rock: Levels 1 to 5 are shared by all three pillars, so Gull Rock cannot be tuned for the Dusk Mage and the Tideblade without taking the Flare Archer out of band, and monsters must not depend on the Hero picked; they are tuned when the biome they unlock into exists. The three tree/hours pins (HF-M2-68, re-measured with HF-M2-70): the gold nodes are priced from the gold a run pays where each tier opens (content/base/gold_tiers.json) and no node waits more than 3 dry runs, and with Hard replays counted the average bot still owns every gold node its Hero can reach in about an hour of play (1.2 h, 1.4 h and 1.2 h with the HF-M2-71 salvage), against the 3 to 4 hours the Advisor sets for the whole tree. The tree has about 40 gold nodes and the later biomes add the rest, so hours and the 3-run limit cannot both hold on this tree; the 3-run limit is kept and the hours are pinned, which may not fall further, and CI fails once they reach the band. More nodes come with the later arms. HF-M2-71 (salvage a quarter of a run's gold, not a whole run): the average bot has only the five levels to replay, so it plays Gull Rock for about 1,300 gold a run, and the dearest nodes (the tier that opens in biome 2, priced for about twice that) now take up to 5 returns to the tree with nothing affordable, where full-run salvage had hidden it at 3. The Advisor accepts 6 to 8 runs for the dearest node and says not to cut prices further, so the three tree/dry_runs are pinned at 5 and fall back inside the band when biome 2 gives those levels a better income. tideblade/hard/gull_rock fell to 10% for the same reason: less gold from the same first-time climb leaves the Hard replay a little under its band; it is pinned and is tuned with the Tideblade's own biome. The two 1,400 Archer Post nodes (Marksman, Burst fire) stay in the tier that opens at Gull Rock rather than a later biome, because the fork_feel cells judge the two Archer sides in the first five levels, and a node out of reach there would make the sides play the same.",
+  "known_misses_note": "A pinned miss may not get worse, and CI fails if it comes back inside its band (delete the pin then). Build 16 (HF-M2-28) emptied the list of everything that could be fixed without breaking another rule. What was fixed: the Tideblade's basic attack is stronger (damage 9 to 10, health 80 to 84, nothing nerfed), which lifts what it wins without its special (the special is worth 33 points or less, its poor play and Hard replay are in band); the Dusk Mage's Gull Rock rate gets its own ceiling (pillar_ceilings) instead of a harder Gull Rock, as the Advisor ruled; the fork feel is judged from the level where fork nodes are owned (owned_share) with a check that the first fork comes within 3 runs of Tidewrack Cove; the wait for a purchase may be 6 runs for the dearest node with a median of 2 or fewer, so the dry-run pins are gone. What remains: flare_archer/no_special/outpost, 0% against 30%. Making the Outpost easier for the bot that never presses the special (thinner waves) also lets a run with NO input win it (nine of nine), and the guard tests (a run with no input is lost on the first two levels; a plain bot loses at least once on every level) forbid that, because the idle Hero and Keep win before the moving bot does; no Hero or pack number can lift the one without the other, so the guarded rule wins and the guided first press (HF-M2-63) is what teaches the button before that fight. The three tree/hours pins (HF-M2-68): the gold nodes are priced from the gold a run pays where each tier opens (content/base/gold_tiers.json), so the average bot owns every gold node its Hero can reach in about an hour of play against the 3 to 4 hours the Advisor sets for the whole tree; the Advisor reads real play at about 2 to 2.5 hours (a bot buys better and never hesitates), asks to re-check in the Gate 2 tester sessions, and not to change prices or structure before that.",
   "fork_feel": {
     "min": 0.05,
-    "first_level": "shingle_beach",
-    "first_level_note": "Judged from this level on: at Outpost no fork node is affordable yet (the first costs 600 gold), so the two sides cannot differ there. A player who picks a side saves up for its chain.",
+    "owned_share": 0.5,
+    "owned_share_note": "Judged from the first level where the average bot has bought a fork node in at least this share of its runs, so it moves by itself if the pacing changes (Advisor view 17 Nov 2026). The first fork is not meant to be affordable at Shingle Beach: it comes within reach around level 3 after two or three saving runs, both sides shown on the card.",
     "how": "per level and pillar, the larger of the gap in Keep health left (a share of full health) and in clear time (a share of the longer one) between the Volley side and the Sniper side, first attempts of the average bot: the two sides must feel different even where they win as often"
+  },
+  "fork_reach": {
+    "level": "tidewrack_cove",
+    "max_runs": 3,
+    "how": "the first fork node is owned within this many runs of reaching Tidewrack Cove (mean of the fork players, the Flare Archer's sides saving up for it): a player who picks a side must not wait long for it"
   }
 }

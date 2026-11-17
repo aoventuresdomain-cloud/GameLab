@@ -59,6 +59,12 @@ const ONE_POST_SKIP := ["castle_slot_2"]
 const PIN_TOLERANCE := 0.0001
 ## The key in a climb's row that holds how each level's first attempt went (Keep health left, seconds).
 const FEEL := "_feel"
+## What a fork cell remembers about the fork nodes: {"owned": {level: owned at its first attempt}, "arrival": {level: run}, "first": first run played owning one}.
+const WATCH := "_watch"
+## The nodes that make an Archer side a side: the 600 gold node and the 1,400 gold one of each (the tier 1 nodes before them are shared by habit).
+const FORK_NODES := ["post_scope", "post_marksman", "post_twin", "post_burst"]
+## What a fork player who never buys a fork node counts as when the wait is averaged (runs).
+const FORK_NEVER := 8
 
 
 static func load_bands() -> Dictionary:
@@ -113,14 +119,17 @@ static func scope_problems(bands: Dictionary, content: Dictionary = {}) -> Packe
 
 ## One cell of the sweep: the climbs of seeds 1..`seeds`, as one {level: won first time} per seed
 ## (a level the climb never reached is left out), with how its first attempt felt under the FEEL key.
-static func cell(model: Dictionary, pillar: String, seeds: int, skip: Array = [], prefer: Array = []) -> Array:
+static func cell(model: Dictionary, pillar: String, seeds: int, skip: Array = [], prefer: Array = [], watch: Array = []) -> Array:
 	var out := []
 	for run_seed in range(1, seeds + 1):
-		var row := {FEEL: {}}
-		var climb := HoldfastCurve.climb(run_seed, model, pillar, levels().size(), skip, true, prefer)
+		var row := {FEEL: {}, WATCH: {"owned": {}, "arrival": {}, "first": -1}}
+		var climb := HoldfastCurve.climb(run_seed, model, pillar, levels().size(), skip, true, prefer, false, watch)
 		for id in climb["levels"]:
 			row[id] = climb["levels"][id]["first"]
 			row[FEEL][id] = {"keep": climb["levels"][id]["keep"], "seconds": climb["levels"][id]["seconds"]}
+			row[WATCH]["owned"][id] = climb["levels"][id]["watched"]
+			row[WATCH]["arrival"][id] = climb["levels"][id]["arrival"]
+		row[WATCH]["first"] = int(climb["watch_run"])
 		out.append(row)
 	return out
 
@@ -175,7 +184,7 @@ static func measure(bands: Dictionary) -> Dictionary:
 		for bot in BOTS:
 			out["%s/%s" % [pillar, bot]] = cell(BOTS[bot], pillar, int(seeds["band"]))
 		for side in FORK_SKIPS:
-			out["%s/%s" % [pillar, side]] = cell(HoldfastSkilledBot.AVERAGE, pillar, int(seeds["fork"]), FORK_SKIPS[side] + auto_nodes(), FORK_PREFER[side] if pillar == FORK_PREFER_PILLAR else [])
+			out["%s/%s" % [pillar, side]] = cell(HoldfastSkilledBot.AVERAGE, pillar, int(seeds["fork"]), FORK_SKIPS[side] + auto_nodes(), FORK_PREFER[side] if pillar == FORK_PREFER_PILLAR else [], FORK_NODES)
 		out["%s/no_special" % pillar] = cell(HoldfastSkilledBot.AVERAGE_NO_SPECIAL, pillar, int(seeds["special"]), auto_nodes())
 		if bands.has("hard"):
 			out["%s/hard" % pillar] = hard_cell(pillar, int(seeds["hard"]))
@@ -233,16 +242,51 @@ static func feel_gap(a: Array, b: Array, level: String) -> float:
 	return maxf(absf(keep_a - keep_b), absf(time_a - time_b) / maxf(maxf(time_a, time_b), 1.0))
 
 
+## The first level where the players of the two fork cells own a fork node at their first attempt in at least `fork_feel.owned_share` of
+## the runs ("" if there is none): the level from which the two sides can feel different, so it moves by itself when the pacing does.
+static func fork_start(bands: Dictionary, volley: Array, sniper: Array) -> String:
+	var share := float(bands["fork_feel"]["owned_share"])
+	for level in levels():
+		var reached := 0
+		var owned := 0
+		for row in volley + sniper:
+			var owned_at: Dictionary = row.get(WATCH, {}).get("owned", {})
+			if owned_at.has(level):
+				reached += 1
+				owned += 1 if owned_at[level] else 0
+		if reached > 0 and float(owned) / float(reached) >= share:
+			return level
+	return ""
+
+
+## The mean number of runs between a fork player reaching `level` and playing a run that owns a fork node (0 when one was owned on
+## arrival, FORK_NEVER for a player who never owned one), or -1 when nobody reached the level.
+static func fork_wait(volley: Array, sniper: Array, level: String) -> float:
+	var total := 0.0
+	var count := 0
+	for row in volley + sniper:
+		var watch: Dictionary = row.get(WATCH, {})
+		if not watch.get("arrival", {}).has(level):
+			continue
+		var first := int(watch.get("first", -1))
+		total += float(FORK_NEVER) if first < 0 else maxf(float(first - int(watch["arrival"][level])), 0.0)
+		count += 1
+	return total / float(count) if count > 0 else -1.0
+
+
 ## Every figure the bands judge, as {key: {"value", "lo", "hi", "how"}}. A pillar is judged on its scope.
 static func figures(bands: Dictionary, cells: Dictionary) -> Dictionary:
 	var out := {}
 	var seeds: Dictionary = bands["seeds"]
 	var fork_max := float(bands["fork_gap"]["max"])
 	var feel_min := float(bands["fork_feel"]["min"])
-	var feel_from: int = maxi(levels().find(str(bands["fork_feel"].get("first_level", ""))), 0)
 	var special: Dictionary = bands["special_gap"]
 	for pillar in PILLARS:
 		var inside := scope(bands, pillar)
+		var volley: Array = cells["%s/volley" % pillar]
+		var sniper: Array = cells["%s/sniper" % pillar]
+		var feel_start := fork_start(bands, volley, sniper)
+		var feel_from: int = levels().find(feel_start) if feel_start != "" else levels().size()
 		var low := 1.0
 		var gaps := []
 		var never: Array = cells.get("%s/auto" % pillar, cells["%s/no_special" % pillar])
@@ -266,6 +310,10 @@ static func figures(bands: Dictionary, cells: Dictionary) -> Dictionary:
 				# The special's worth with and without the node, for the report (nothing to judge).
 				out["%s/special_worth/%s/without_node" % [pillar, level]] = {"value": pressed - rate(cells["%s/no_special" % pillar], level), "lo": -1.0, "hi": 1.0, "how": "special pressed less never pressed, no Keeper's Habit"}
 				out["%s/special_worth/%s/with_node" % [pillar, level]] = {"value": diff, "lo": -1.0, "hi": 1.0, "how": "special pressed less never pressed, saved up for Keeper's Habit"}
+		var reach: Dictionary = bands["fork_reach"]
+		var wait := fork_wait(volley, sniper, str(reach["level"]))
+		if pillar == FORK_PREFER_PILLAR and str(reach["level"]) in inside and wait >= 0.0:
+			out["%s/fork_reach/%s" % [pillar, reach["level"]]] = {"value": wait, "lo": 0.0, "hi": float(reach["max_runs"]), "unit": "runs", "how": "the first fork node is owned within this many runs of reaching the level, mean of the fork players (%d each side)" % seeds["fork"]}
 		out["%s/floor" % pillar] = {"value": low, "lo": float(bands["first_time_floor"]), "hi": 1.0, "how": "the lowest average-bot first-time win rate over the levels judged"}
 		var mean := 0.0
 		for g in gaps:
