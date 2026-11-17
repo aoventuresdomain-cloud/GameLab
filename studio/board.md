@@ -399,7 +399,7 @@
 
 ### HF-M2-28 Recalibrate levels and balance all pillars
 - **Owner:** Gameplay Engineer
-- **Status:** Ready, Build 12 of 13 with HF-M2-58 (CEO 2026-10-30: "m2b should also be built"), after Build 11
+- **Status:** Building (Build 16 of 16, Gameplay Engineer, briefed 2026-11-17; QA full when handed off). Advisor rulings of 2026-11-17 are in the Advisor views table
 - **QA:** full (pack retune changes outcomes)
 - **Done when:**
   - [ ] Bands per pillar and per bot (average, poor) for every level, with a per-pillar first-time floor, from the Advisor's targets (pillar balance view, 2026-10-22, in the Advisor views table). Hero stats are not nerfed.
@@ -724,13 +724,33 @@
 
 ### HF-M2-80 Rename the game to Fogwatch (player-facing and docs)
 - **Owner:** UI Engineer
-- **Status:** Planned, built first as a small PR before Build 14a (it touches the home screen file that HF-M2-73 rewrites). CEO chose the name Fogwatch on 2026-11-16 (replaces "Holdfast", which clashes with an existing Steam game and a trademark). HoE ruling: internal names stay (folder `games/holdfast`, class and file names, `user://holdfast_*.sav` save files, CI job names, `HF_` achievement ids, `HF-M2-` board ids), so no save is lost and no pipeline path moves; revisit before any Steam page. No Steam page, trademark search or spend (CEO go needed)
+- **Status:** Merged for the player-facing text and docs (#184, QA clear at 1d2dcb7 after F-185, merged as 1f22f55). CEO chose the name Fogwatch on 2026-11-16 (replaces "Holdfast", which clashes with an existing Steam game and a trademark). HoE ruling: internal names stay (folder `games/holdfast`, class and file names, `user://holdfast_*.sav` save files, the project name that decides the user data folder, CI job names, `HF_` achievement ids, `HF-M2-` board ids), so no save is lost and no pipeline path moves; the window and tab title are set in code. Not done and split out: the Windows and Mac export names and product name (HoE decides after the Mac check, HF-M2-00) and the itch page title (Setup Desk). No Steam page, trademark search or spend (CEO go needed)
 - **QA:** screens
 - **Done when:**
   - [ ] Every player-facing "Holdfast" reads Fogwatch: the window title (`project.godot`), the home title, the win panel line ("Fogwatch holds!"), the Windows and Mac export names and product name, the pack display name and the schema title; a test scans the shipped UI scenes, scripts' UI strings and content for "Holdfast" and fails on any left (internal class and file names are excluded by name).
   - [ ] `README.md` and `games/holdfast/README.md` and `plan.md` say Fogwatch, with one line saying the folder and code keep the old working name; studio notes and the board keep "Holdfast" as history.
   - [ ] An old save and old settings file still load (a test through a real JSON save).
   - [ ] The itch page title is changed by hand through the Setup Desk (the page URL slug stays); recorded here when done.
+
+### HF-M2-81 Quick fix 14c-a: Plan page keeps still, late saves skip the stand line, name boxes in the look
+- **Owner:** UI Engineer
+- **Status:** Merged (#183, QA clear at 0157ca4, merged as 5164efe). Folds the FOLLOW-UPs from the 14c QA rounds
+- **QA:** screens
+- **Done when:**
+  - [x] The Plan page rects do not move when the first post is placed.
+  - [x] The Map keeps its Next goal line on a save past a real level.
+  - [x] The Hero room assertion is restored and the Keep and Hero name boxes are in the look; the Squad empty name box is hidden (test added in #186).
+  - [x] Existing-test changes are logged in the Test changes table.
+
+### HF-M2-82 Quick fix 14c-b: boss strip and first-run prompt keys
+- **Owner:** UI Engineer
+- **Status:** Merged (#185, QA clear at 40e1c7e, merged as c33c33c)
+- **QA:** screens
+- **Done when:**
+  - [x] The boss bar has its own strip under the field, clear of the field edge and the HUD, and the exposed line above the field is gone.
+  - [x] Esc, Start and B open the pause card on the first-run prompt and close it again.
+  - [x] No existing test changed.
+
 
 ### HF-M2-72 Menus and look: tokens, shared header and the no-overlap test
 - **Owner:** UI Engineer
@@ -744,7 +764,7 @@
 
 ### HF-M2-73 Left rail, Menu tab and home screen
 - **Owner:** UI Engineer
-- **Status:** In review (#175; QA FAIL at 2a6227b on F-177, fix in progress). Build 14a (first playable build; the CEO's standing go is build-through, no stop for feedback). Taste calls taken from the Advisor's picks: left rail, animated beam
+- **Status:** Merged (#175, QA clear at 87aa208 after the F-177 to F-180 fixes, merged as bd16905). Build 14a
 - **QA:** screens
 - **Depends on:** HF-M2-72
 - **Done when:**
@@ -755,7 +775,7 @@
 
 ### HF-M2-74 Tree nodes and detail card per the CEO's label rule
 - **Owner:** UI Engineer
-- **Status:** In review (#176, QA clear at 007492a, merges after #175). Build 14b. Folds F-155 and F-176 (exact price on the buy card when it first matters)
+- **Status:** Merged (#176, QA clear at 007492a, restack 76f2be0, merged as 4e727b6). Build 14b. Folds F-155 and F-176
 - **QA:** screens
 - **Depends on:** HF-M2-72
 - **Done when:**
@@ -766,7 +786,7 @@
 
 ### HF-M2-75 Tree navigation: chips, found count, minimap and Can buy now
 - **Owner:** UI Engineer
-- **Status:** In review (#177, with QA). Build 14b
+- **Status:** Merged (#177, QA clear at 9b3a561, restack 70f11ef, merged as 2fd0785). Build 14b
 - **QA:** screens
 - **Depends on:** HF-M2-74
 - **Done when:**
@@ -786,7 +806,7 @@
 
 ### HF-M2-77 Map, Plan and result screens
 - **Owner:** UI Engineer
-- **Status:** In review (#178, queued at QA). Build 14c. Folds F-079 and F-136 (result panel tight, lighter band) and F-144 (next-goal line) if still open when built
+- **Status:** Merged (#178, merged as b77bcb7; QA clear at 39f9870 and 8e7a32b; the restack at 4163a78 FAILED on F-183, fixed at 233fc5c and passed, final restack 95277bf passed by diff). Build 14c
 - **QA:** screens
 - **Depends on:** HF-M2-72, HF-M2-73, HF-M2-76, HF-M2-71 (both change the result panel; #169 merges first)
 - **Done when:**
@@ -796,7 +816,7 @@
 
 ### HF-M2-78 Hero and Squad pages
 - **Owner:** UI Engineer
-- **Status:** Planned, Build 14d. Folds F-169 (Salvaged line on the Hero tab if the CEO's play shows it is missed) and F-130 (how to wear gear)
+- **Status:** Merged (#180, QA clear at b2c5be0, restack b5ba3a1 passed qa:screens with a walk, merged as f387d21). Build 14d
 - **QA:** screens
 - **Depends on:** HF-M2-72, HF-M2-73
 - **Done when:**
@@ -806,7 +826,7 @@
 
 ### HF-M2-79 In-run screen: HUD, pause panel and boss cue
 - **Owner:** UI Engineer (Gameplay Engineer only if the boss's exposed state cannot be read from the sim)
-- **Status:** Planned, Build 14e. Placeholder art; the field and unit look wait for the art step
+- **Status:** Merged (#181, QA clear at f6b95f5, restack fb5a3b2 by diff, merged as 73e1351). Build 14e
 - **QA:** screens
 - **Depends on:** HF-M2-72
 - **Done when:**
@@ -816,7 +836,7 @@
 
 ### HF-M2-69 Controller and keyboard input
 - **Owner:** UI Engineer
-- **Status:** Planned, after the Build 14 series (it follows the new rail, HF-M2-73). CEO answered yes on 2026-11-16: the Steam Deck is a first-release target and the controller is its own build before the demo. QA has not confirmed that no gamepad handling exists (F-148; the Advisor found none for play)
+- **Status:** Merged (#182, QA qa:full clear at b1cd0d4, restack 481e338 passed qa:full: kit 52/52, Holdfast 1115/0, keyboard pass; merged as 18877fc). Build 15. A real gamepad or Steam Deck could not be tested by QA; key and pad mapping is covered by test_controller_input, and the CEO's Deck check is the real test
 - **QA:** full (touches every screen)
 - **Depends on:** HF-M2-73 (the rail takes L1 and R1; build the controller after the new screens so the focus order is written once)
 - **Done when:**
@@ -1202,6 +1222,11 @@
 | F-180 | HF-M2-73 | FOLLOW-UP from QA (#175): Settings "Reduce motion: On" has no outline while Screen shake and Flashes do | Minor | UI Engineer | Open, fix with F-177 or in 14e |
 | F-181 | HF-M2-73 | NOTE from QA (#175): Continue shows the selected level, not the next unplayed one; matches its test | Minor | UI Engineer | Closed, as designed |
 | F-182 | HF-M2-74 | FOLLOW-UP from QA (#176): the owned-node card's refund line reads "Needed to start / +1 star, fee 50 gold" with a tick and looks like a requirement; the Fourth Slot card has an empty gap under "+1 castle slot" | Minor | UI Engineer | Open, wording and spacing, in a later 14 build |
+| F-183 | HF-M2-77 | MUST FIX from QA (#178 restack at 4163a78): an `-X ours` restack duplicated the Rail and HeroName nodes in `journey_map.tscn`; Godot loads duplicates silently. Fixed at 233fc5c (whole-file take) and `tests/test_scene_integrity.gd` added; later hand re-applies were checked blob-identical | Major | UI Engineer | Closed (#178) |
+| F-184 | HF-M2-81 | FOLLOW-UP from QA (#183): nothing tested the empty Squad box being hidden | Minor | UI Engineer | Closed (#186, test_squad_empty_box, QA clear at e755e66) |
+| F-185 | HF-M2-80 | MUST FIX from QA (#184 at 787b23f): the rename changed `config/name`, which moves Godot's user data folder, so every existing save was orphaned (Continue greyed out; reproduced in the web export with no test helper). Fixed at 1d2dcb7: the project name stays "Holdfast" on purpose, the title is set in code, and a test asserts the user folder name. A custom user dir was checked and rejected because it also moves the folder | Major | UI Engineer | Closed (#184, QA clear at 1d2dcb7) |
+| F-186 | HF-M2-80 | FOLLOW-UP from QA (#184): the window title was thought to be set every frame | Minor | UI Engineer | Closed, withdrawn by QA (the head sets it once after the first frame) |
+| F-187 | HF-M2-81 | FOLLOW-UP from QA (#183): the "already won a real level" stand branch had no test of its own | Minor | UI Engineer | Closed, covered on main by test_plan_stays_still |
 
 ## Test changes
 
@@ -1281,6 +1306,12 @@
 | 2026-11-16 | `test_build5`, `test_interface_tidy`, `test_radial_web`, `test_stars_and_castle` (#176, HF-M2-74) | Read the node's mark state or the price tag instead of the text inside the button; each still asserts price, owned and closed states | The CEO's label rule moved the price out of the node; QA (007492a) confirms the intent is kept | Head of Engineering |
 | 2026-11-16 | The dot, Skill tree and Hero button tests, Continue text and Plan height tests; `run_ui_tests.gd` (a scrolling page may scroll down) (#175, HF-M2-73) | Buttons moved to the left rail, Continue reads level number and name, Plan is a 44 px target; two are weaker (the map no longer names the chosen pillar; scroll exemption), both ruled back in F-179 | The approved design pass; QA names the weakening (2a6227b) | Head of Engineering |
 | 2026-11-16 | `test_any_spots`, `test_blessings`, `test_build6`, `test_first_stand`, `test_guidance`, `test_rework_a_plan`, `test_one_time_hints`, `run_ui_tests.gd` summary sample (#178, HF-M2-77) | Labels follow the new wording (Add a tower, None, Unlocked list rows, Start, SpendButton) and the stars-line test asserts the line is gone | The Advisor's cut list and the approved design; QA to confirm each keeps its intent, and that no-blessing is still always offered | Head of Engineering |
+| 2026-11-16 | `test_radial_web` failure-message string (#177, HF-M2-75) | Message text only; the assertion is unchanged | QA (9b3a561) | Head of Engineering |
+| 2026-11-17 | `test_guidance` wear cue, `test_hero_page_header` slot gaps, `test_interface_tidy` figure check, `test_build6` bag type (#180, HF-M2-78) | Follow the new Hero page layout; the figure-size assertion is restored in #183 | QA (b2c5be0) keeps the intent | Head of Engineering |
+| 2026-11-17 | `run_ui_tests.gd` additive with the new `tests/test_hud_frame.gd` (7 tests) (#181, HF-M2-79) | New tests registered; nothing removed | QA (f6b95f5) | Head of Engineering |
+| 2026-11-17 | `test_playable_hero::test_wasd_arrows_and_space_are_mapped_to_physical_keys` (#182, HF-M2-69) | Checks key events only and is stronger | QA (b1cd0d4) | Head of Engineering |
+| 2026-11-17 | `test_interface_tidy.gd` gains the slot-column gap (100 px or more) and Hero figure (150 px high or more) assertions; line 306 `expect_false(profile.has_seen_stars_line())` in `test_first_stand.gd` removed with the dead function (#183, HF-M2-81) | The Hero room assertion is restored; the removed line only guarded a function nothing calls | Old and new text are in the PR body; QA (0157ca4) keeps the intent | Head of Engineering |
+| 2026-11-17 | `test_tree_numbers.gd`: dry_max 3 to 6, new dry_median_max 2.0, the dry range 0 to 6, the more-than-three test becomes more-than-six (rows 7 and 6), the report line "0 runs to 6 runs"; two new median tests (HF-M2-28, Build 16, in progress) | The Advisor widened the dry-runs band and added a median check | Advisor ruling of 2026-11-17; nothing weakened (the new check is stricter) | Head of Engineering |
 
 ## Advisor views
 
@@ -1302,6 +1333,9 @@
 | 2026-10-24 | HF-M2-54 radial skill web, one critique round | The web is the right idea; ring spacing is even but angular spacing is uneven (one 30 degree slice holds 1 node, others 7) and spoke lengths vary (Tithe reaches radius 472, most stop at 352); aim for 72 or more between any two nodes. All of the Advisor's points accepted by the Designer. Full view in `/mnt/project-files/holdfast/m2/advisor-radial-web-critique.md` (unedited) | Mockup `radial-skill-web.html` shown to the CEO; no build (HF-M2-55) until the CEO accepts |
 | 2026-10-30 | HF-M2-56 six blessings | Six blessings (Steady Flame, Lamp Oil, Long Sight, Second Wind, Tide's Gift, Thick Fog): four boosts and two trade-offs, all stat changes on existing keys, Steady Flame offered first, No blessing always offered; stars never change. Full view in `/mnt/project-files/holdfast/m2/advisor-blessings.md` (unedited) | CEO said yes to all three taste calls; built as Build 10 (HF-M2-04) |
 | 2026-10-30 | HF-M2-01 pacing bands, view on the bands | Keep ±12 and the fork gap of 34 as the gate; special too relied on; Dusk Mage and Tideblade pins are right for now; tune those two to the biomes they unlock into. Full view in `/mnt/project-files/holdfast/m2/advisor-bands-view.md` (unedited) | Findings F-123 to F-125; taste call to the CEO in the handoff |
+| 2026-11-17 | HF-M2-28 pillar balance (Build 16) | Tideblade: buff its basic attack more than its health, nobody nerfed. Dusk Mage: widen its ceiling in the bands, do not harden Gull Rock (levels are shared); if the extra ease shows at a second level, trim its own numbers. Full view in `/mnt/project-files/holdfast/m2/advisor-build16-balance-answers.md` (unedited) | Accepted |
+| 2026-11-17 | HF-M2-28 gold tree dry runs and hours | dry_max 3 to 6 and drop the three dry_runs pins, plus a check that the median stretch without an affordable purchase stays at 2 or less. Gold fill time stays pinned; the Advisor reads real play at about 2 to 2.5 h and wants it re-checked in the Gate 2 tester sessions | Accepted; no CEO decision needed |
+| 2026-11-17 | HF-M2-28 fork feel | Judge fork feel from the first level where the average bot has bought a fork node in at least half its runs, not a hand-set level, with one check: the first fork is affordable within three runs of reaching Tidewrack Cove. The first fork is not meant to be affordable at Shingle Beach; a stronger first-tier fork node is rejected | Accepted (option A as a rule); the test change is OK once the engineer sends the old and new text |
 
 ## Decisions and open questions
 
@@ -1379,3 +1413,4 @@
 - 2026-11-16: CEO approved the menus-and-look design pass ("much better") with one rule: icons, titles and price tags never tightly packed or overlapping. Boarded as HF-M2-72 to HF-M2-79 in builds 14a to 14e (UI Engineer; the Gameplay Engineer only for HF-M2-76). Taste calls from the Advisor's picks: left rail, animated beam. 14a (look, rail, home) is the first playable build; the team stops for the CEO's feedback after it. HF-M2-69 (controller) now follows HF-M2-73. HF-M2-71 (#169, QA clear at 0510989) merges before HF-M2-77 because both change the result panel.
 - 2026-11-16: CEO named the game Fogwatch (replaces Holdfast). Boarded as HF-M2-80, built before Build 14a. Internal names (folder, classes, save files, CI, achievement ids) keep "holdfast" so saves and the pipeline are untouched; revisit before any Steam page. Win line becomes "Fogwatch holds!" unless the CEO wants other words. The itch page title is a hands-on step for the Setup Desk. No Steam page, trademark search or spend.
 - 2026-11-16: CEO answered "yes to all" on the three open calls: Hard replays and modifiers stay in (built, HF-M2-65), game speed is in now with calling the next wave early later, and the Steam Deck is a first-release target with the controller as its own build before the demo (HF-M2-69, off hold, after Build 14).
+- 2026-11-17: Builds 14c-a (#183), 14c-b (#185), the Fogwatch text rename (#184) and the F-new1 test (#186) merged, each with a QA clear at a named commit. QA caught the save-folder orphaning in the rename (F-185) before it merged. Build 15 (controller and keyboard, #182) is on the itch draft; a real pad or Steam Deck is the CEO's check. Build 16 (balance, HF-M2-28) is with the Gameplay Engineer; the Advisor's rulings are in the Advisor views table. Export, product and Mac names stay Holdfast until the Mac check.
