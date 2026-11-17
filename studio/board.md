@@ -734,7 +734,7 @@
 
 ### HF-M2-72 Menus and look: tokens, shared header and the no-overlap test
 - **Owner:** UI Engineer
-- **Status:** Planned, Build 14a. CEO approved the design pass on 16 Nov 2026 (`holdfast/m2/menus-and-look-design-pass.md`, Advisor critique `advisor-menus-look-critique.md`, kept unedited); standing CEO rule: icons, titles and labels are never tightly packed and never overlap. Placeholder art only, final art stays last (HF-M2-08 is not decided by this skin)
+- **Status:** Merged (#173, QA clear at 25f40cd after the F-172 and F-173 fixes, merged as b956f7a). Build 14a. CEO approved the design pass on 16 Nov 2026 (`holdfast/m2/menus-and-look-design-pass.md`, Advisor critique `advisor-menus-look-critique.md`, kept unedited); standing CEO rule: icons, titles and labels are never tightly packed and never overlap. Placeholder art only, final art stays last (HF-M2-08 is not decided by this skin)
 - **QA:** screens (interface only)
 - **Done when:**
   - [ ] The look is one set of colour and type tokens in a theme (night, panel, bone text, lantern amber, owned green, warning red; soft serif for titles, sans at 14 px or more; main, second and quiet buttons; blue focus ring kept), with no colour or font set directly in a screen; section colours are not tokens for nodes (the Advisor: no rim).
@@ -744,7 +744,7 @@
 
 ### HF-M2-73 Left rail, Menu tab and home screen
 - **Owner:** UI Engineer
-- **Status:** Planned, Build 14a (first playable build; the team stops for the CEO's feedback after it). Taste calls taken from the Advisor's picks: left rail, animated beam
+- **Status:** In review (#175; QA FAIL at 2a6227b on F-177, fix in progress). Build 14a (first playable build; the CEO's standing go is build-through, no stop for feedback). Taste calls taken from the Advisor's picks: left rail, animated beam
 - **QA:** screens
 - **Depends on:** HF-M2-72
 - **Done when:**
@@ -755,7 +755,7 @@
 
 ### HF-M2-74 Tree nodes and detail card per the CEO's label rule
 - **Owner:** UI Engineer
-- **Status:** Planned, Build 14b. Folds F-155 (exact price on the buy card when it first matters)
+- **Status:** In review (#176, QA clear at 007492a, merges after #175). Build 14b. Folds F-155 and F-176 (exact price on the buy card when it first matters)
 - **QA:** screens
 - **Depends on:** HF-M2-72
 - **Done when:**
@@ -766,7 +766,7 @@
 
 ### HF-M2-75 Tree navigation: chips, found count, minimap and Can buy now
 - **Owner:** UI Engineer
-- **Status:** Planned, Build 14b
+- **Status:** In review (#177, with QA). Build 14b
 - **QA:** screens
 - **Depends on:** HF-M2-74
 - **Done when:**
@@ -786,7 +786,7 @@
 
 ### HF-M2-77 Map, Plan and result screens
 - **Owner:** UI Engineer
-- **Status:** Planned, Build 14c. Folds F-079 and F-136 (result panel tight, lighter band) and F-144 (next-goal line) if still open when built
+- **Status:** In review (#178, queued at QA). Build 14c. Folds F-079 and F-136 (result panel tight, lighter band) and F-144 (next-goal line) if still open when built
 - **QA:** screens
 - **Depends on:** HF-M2-72, HF-M2-73, HF-M2-76, HF-M2-71 (both change the result panel; #169 merges first)
 - **Done when:**
@@ -1191,11 +1191,17 @@
 | F-169 | HF-M2-70 | FOLLOW-UP from QA (#167): the "Salvaged" line shows on the result panel only; the Hero tab has nothing for it | Minor | UI Engineer | Open, add only if the CEO's play shows it is missed |
 | F-170 | HF-M2-66 | FOLLOW-UP from QA (#164): the twelve HF_ Steam achievement names do not exist on Steam's side yet, so a real Steam check needs Holdfast's own app | Minor | Setup Desk (via the Chief of Staff) | Open, needs the Steam app, CEO go for any fee |
 | F-171 | HF-M2-71 | FOLLOW-UP from QA (#169): the four new pinned zero-headroom misses (tree dry runs 5 on all three pillars, Tideblade Hard at Gull Rock 10%) | Minor | Gameplay Engineer | Open, re-measure when level 6 lands |
-| F-172 | HF-M2-72 | MUST FIX from QA (#173 at c6f142e): Hero page gold and stars always read 0 and 0; hero_page.gd never sets them, and the corner test checked position, not values | Major | UI Engineer | Open, fix pushed to #173 |
-| F-173 | HF-M2-72 | MUST FIX from QA (#173): Hero gear slot rows are 35 px high with 4 px between them and are pressable; the layout test measures Buttons and text only | Major | UI Engineer | Open, fix pushed to #173 |
+| F-172 | HF-M2-72 | MUST FIX from QA (#173 at c6f142e): Hero page gold and stars always read 0 and 0; hero_page.gd never sets them, and the corner test checked position, not values | Major | UI Engineer | Closed (#173, QA clear at 25f40cd) |
+| F-173 | HF-M2-72 | MUST FIX from QA (#173): Hero gear slot rows are 35 px high with 4 px between them and are pressable; the layout test measures Buttons and text only | Major | UI Engineer | Closed (#173, QA clear at 25f40cd) |
 | F-174 | HF-M2-72 | FOLLOW-UP from QA (#173): Plan, Settings and Achievements hide the gold and stars chips. HoE ruling: they are not hub screens for the chips; record it in the HF-M2-72 line | Minor | UI Engineer | Open |
 | F-175 | HF-M2-79 | FOLLOW-UP from QA (#173): the in-run Pause and speed buttons straddle the HUD panel's bottom edge | Minor | UI Engineer | Open, folded into HF-M2-79 |
-| F-176 | HF-M2-72 | FOLLOW-UP from QA (#173): disabled "Start level (place a post first)" text is low contrast | Minor | UI Engineer | Open, fix in #173 if trivial, else HF-M2-74 |
+| F-176 | HF-M2-72 | FOLLOW-UP from QA (#173): disabled "Start level (place a post first)" text is low contrast | Minor | UI Engineer | Closed (#176, QA 007492a: Start text dark on amber, readable) |
+| F-177 | HF-M2-73 | MUST FIX from QA (#175 at 2a6227b): in the web export at 1280x720 the left rail covers the page header on Map, Tree, Hero and Menu (back chevron hidden, titles clipped); Squad is correct. The UI Engineer cannot reproduce it in the Main flow, so the rail will follow the header's real bottom edge and the repro is being compared | Major | UI Engineer | Open, fix pending on #175 |
+| F-178 | HF-M2-73 | FOLLOW-UP from QA (#175): the rail tabs sit at different heights on Squad and Menu moves to the bottom there | Minor | UI Engineer | Open, folded into the F-177 fix |
+| F-179 | HF-M2-73 | FOLLOW-UP from QA (#175): two tests weakened. (a) the map no longer names the chosen pillar (two assertions removed); (b) the fits-on-screen check exempts anything in a ScrollContainer. HoE ruling: restore (a), tighten (b) so a scroll may overflow vertically only if the container itself fits | Minor | UI Engineer | Open, folded into the F-177 fix |
+| F-180 | HF-M2-73 | FOLLOW-UP from QA (#175): Settings "Reduce motion: On" has no outline while Screen shake and Flashes do | Minor | UI Engineer | Open, fix with F-177 or in 14e |
+| F-181 | HF-M2-73 | NOTE from QA (#175): Continue shows the selected level, not the next unplayed one; matches its test | Minor | UI Engineer | Closed, as designed |
+| F-182 | HF-M2-74 | FOLLOW-UP from QA (#176): the owned-node card's refund line reads "Needed to start / +1 star, fee 50 gold" with a tick and looks like a requirement; the Fourth Slot card has an empty gap under "+1 castle slot" | Minor | UI Engineer | Open, wording and spacing, in a later 14 build |
 
 ## Test changes
 
@@ -1272,6 +1278,9 @@
 | 2026-11-16 | `test_gold_pacing` (salvage expectation 1,200 to 300) and the `test_a_new_tier_is_a_row_...` tier_8 row (gains `salvage_share: 0.25`) (#169, HF-M2-71) | Salvage figures follow the new quarter-of-a-run ceiling; assertions unchanged | The item changes the salvage rule (QA, 0510989) | Head of Engineering |
 | 2026-11-16 | `test_radial_web::test_no_name_sits_on_a_node_or_another_name_at_real_size` renamed `..._no_name_on_show_...` (mid-game web, names on show only) and `test_plan_and_map_layout` map-header test (icons and chips replace captions, lower bound 8 to 6 px) (#173, HF-M2-72) | Names with no room are hidden by design; the header uses icons; the CEO's 6 px rule | Spec changed under the tests; QA confirms the intent is kept (c6f142e) | Head of Engineering |
 | 2026-11-16 | `run_ui_tests.gd` font-size checks skip windows smaller than 1280x720 (#173, HF-M2-72) | Type size is checked at 1280x720 and 1920x1080 only | The layout is the same at 960x540 and the export only scales it | Head of Engineering |
+| 2026-11-16 | `test_build5`, `test_interface_tidy`, `test_radial_web`, `test_stars_and_castle` (#176, HF-M2-74) | Read the node's mark state or the price tag instead of the text inside the button; each still asserts price, owned and closed states | The CEO's label rule moved the price out of the node; QA (007492a) confirms the intent is kept | Head of Engineering |
+| 2026-11-16 | The dot, Skill tree and Hero button tests, Continue text and Plan height tests; `run_ui_tests.gd` (a scrolling page may scroll down) (#175, HF-M2-73) | Buttons moved to the left rail, Continue reads level number and name, Plan is a 44 px target; two are weaker (the map no longer names the chosen pillar; scroll exemption), both ruled back in F-179 | The approved design pass; QA names the weakening (2a6227b) | Head of Engineering |
+| 2026-11-16 | `test_any_spots`, `test_blessings`, `test_build6`, `test_first_stand`, `test_guidance`, `test_rework_a_plan`, `test_one_time_hints`, `run_ui_tests.gd` summary sample (#178, HF-M2-77) | Labels follow the new wording (Add a tower, None, Unlocked list rows, Start, SpendButton) and the stars-line test asserts the line is gone | The Advisor's cut list and the approved design; QA to confirm each keeps its intent, and that no-blessing is still always offered | Head of Engineering |
 
 ## Advisor views
 
