@@ -13,6 +13,7 @@ extends Control
 @onready var _posts_note: Label = %PostsNote
 @onready var _pause_button: Button = %PauseButton
 @onready var _speed_button: Button = %SpeedButton
+@onready var _call_button: Button = %CallWaveButton
 @onready var _auto_tag: Label = %AutoTag
 @onready var _boss_bar: Control = %BossBar
 @onready var _boss_name: Label = %BossName
@@ -25,6 +26,8 @@ signal begin_requested
 signal pause_requested(paused: bool)
 ## The player asked for 1x or 2x game speed.
 signal speed_requested(speed: int)
+## The player asked for the next wave now (between waves only; the run says whether it can).
+signal call_wave_requested
 ## The player confirmed leaving the run from the pause screen.
 signal leave_requested
 ## The player pressed while the special's first-time prompt waited; the run flow lets the Hero fire.
@@ -52,6 +55,7 @@ func _ready() -> void:
 func _build_controls() -> void:
 	_pause_button.pressed.connect(func() -> void: pause_requested.emit(not _paused()))
 	_speed_button.pressed.connect(func() -> void: speed_requested.emit(1 if _speed() == 2 else 2))
+	_call_button.pressed.connect(_ask_for_the_next_wave)
 	_pause_screen = ColorRect.new()
 	(_pause_screen as ColorRect).color = UiTokens.colour(&"night", 0.7)
 	_pause_screen.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -87,6 +91,12 @@ func _build_controls() -> void:
 	_leave_button.pressed.connect(_on_leave_pressed)
 	column.add_child(_leave_button)
 	add_child(_pause_screen)
+
+
+## Asks for the next wave, but only when the run can give it (the button is grey otherwise and the key does nothing).
+func _ask_for_the_next_wave() -> void:
+	if _source != null and _source.is_wave_callable():
+		call_wave_requested.emit()
 
 
 func _paused() -> bool:
@@ -140,6 +150,10 @@ func _input(event: InputEvent) -> void:
 			speed_requested.emit(1 if _speed() == 2 else 2)
 			get_viewport().set_input_as_handled()
 			return
+		if event.is_action_pressed(HoldfastInput.ACTION_CALL_WAVE, false) and not _paused():
+			_ask_for_the_next_wave()
+			get_viewport().set_input_as_handled()
+			return
 		# B on a pad closes the pause card.
 		if _paused() and event.is_action_pressed("ui_cancel", false):
 			pause_requested.emit(false)
@@ -186,6 +200,7 @@ func _refresh_hero() -> void:
 			_leave_button.text = LEAVE_TEXT
 		_pause_button.text = ">" if paused else "II"
 		_speed_button.text = "%dx" % _speed()
+	_call_button.disabled = not _source.is_wave_callable()
 	var down: float = _source.get_hero_down_seconds()
 	if down > 0.0:
 		_hero_value.text = "Down %d s" % ceili(down)
