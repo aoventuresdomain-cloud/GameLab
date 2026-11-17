@@ -31,7 +31,7 @@ signal leave_requested
 signal special_requested
 
 ## Under a teaching note while the run waits.
-const HOLD_HINT := "Click, tap or press a key to begin."
+const HOLD_HINT := "Click, tap or press a key or button to begin."
 
 const LEAVE_TEXT := "Back to map"
 const LEAVE_CONFIRM_TEXT := "Leave? Nothing is banked.\nClick again to leave"
@@ -39,10 +39,12 @@ const LEAVE_CONFIRM_TEXT := "Leave? Nothing is banked.\nClick again to leave"
 var _source: Node
 var _pause_screen: Control
 var _leave_button: Button
+var _resume_button: Button
 var _confirming_leave := false
 
 
 func _ready() -> void:
+	HoldfastInput.ensure_actions()
 	_build_controls()
 
 
@@ -78,6 +80,7 @@ func _build_controls() -> void:
 	resume.custom_minimum_size = Vector2(0, 56)
 	resume.pressed.connect(func() -> void: pause_requested.emit(false))
 	column.add_child(resume)
+	_resume_button = resume
 	_leave_button = Button.new()
 	_leave_button.text = LEAVE_TEXT
 	_leave_button.custom_minimum_size = Vector2(0, 56)
@@ -128,10 +131,20 @@ func _process(_delta: float) -> void:
 
 ## A click, tap or key asks to lift a teaching run's hold; the press is spent on that and nothing else.
 func _input(event: InputEvent) -> void:
-	if visible and _source != null and _source.is_running() and not _source.is_held() and event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_ESCAPE or event.physical_keycode == KEY_P):
-		pause_requested.emit(not _paused())
-		get_viewport().set_input_as_handled()
-		return
+	if visible and _source != null and _source.is_running() and not _source.is_held():
+		if event.is_action_pressed(HoldfastInput.ACTION_PAUSE, false):
+			pause_requested.emit(not _paused())
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed(HoldfastInput.ACTION_SPEED, false) and not _paused():
+			speed_requested.emit(1 if _speed() == 2 else 2)
+			get_viewport().set_input_as_handled()
+			return
+		# B on a pad closes the pause card.
+		if _paused() and event.is_action_pressed("ui_cancel", false):
+			pause_requested.emit(false)
+			get_viewport().set_input_as_handled()
+			return
 	if not visible or _source == null or not _source.is_held():
 		return
 	if _source.is_teaching_special():
@@ -145,6 +158,7 @@ func _input(event: InputEvent) -> void:
 		return
 	var pressed: bool = (event is InputEventKey and event.pressed and not event.echo) \
 		or (event is InputEventMouseButton and event.pressed) \
+		or (event is InputEventJoypadButton and event.pressed) \
 		or (event is InputEventScreenTouch and event.pressed)
 	if pressed:
 		begin_requested.emit()
@@ -156,6 +170,8 @@ func _input(event: InputEvent) -> void:
 func _refresh_hero() -> void:
 	var paused := _paused()
 	if _pause_screen != null:
+		if paused and not _pause_screen.visible:
+			_resume_button.grab_focus()
 		_pause_screen.visible = paused
 		if not paused and _confirming_leave:
 			_confirming_leave = false

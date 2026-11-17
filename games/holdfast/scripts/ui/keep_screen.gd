@@ -520,6 +520,7 @@ func _build_tree() -> void:
 			button.button_down.connect(_node_pressed)
 			button.button_up.connect(_node_released)
 			button.pressed.connect(_node_clicked.bind(id))
+			button.focus_entered.connect(_node_focused.bind(id))
 			holder.add_child(button)
 			_node_buttons[id] = button
 			var mark := Control.new()
@@ -915,6 +916,21 @@ func go_to(id: String) -> void:
 	_sync_labels()
 	_keep_in_view()
 	_node_buttons[id].grab_focus()
+
+
+## A pad or the keyboard took the focus to a node: if it is off the edge of the view, the view moves
+## to put it in the middle, so the focus is never out of sight.
+func _node_focused(id: String) -> void:
+	if _view.size == Vector2.ZERO or not is_visible_in_tree():
+		return
+	var rect: Rect2 = _node_buttons[id].get_global_rect()
+	var view := _view.get_global_rect().grow(-NODE_SIZE.x * 0.5)
+	if view.encloses(rect):
+		return
+	_moved_view = true
+	_web.position += _view.get_global_rect().get_center() - rect.get_center()
+	_sync_labels()
+	_keep_in_view()
 
 
 ## The web, small: one dot for each node found, and a frame round what the view shows now.
