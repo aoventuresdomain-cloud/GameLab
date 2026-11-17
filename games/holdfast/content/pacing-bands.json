@@ -18,8 +18,7 @@
     "gull_rock": {"average": [0.15, 0.55]}
   },
   "easy": {
-    "about": "Easy is judged by the poor bot (Advisor rulings, 17 Nov 2026), on the same players, builds and seeds as the poor bot's Normal row (an Easy run is a probe at each level's first attempt, nothing banked). Levels 3 to 5 (gain_levels): the poor bot wins at least gain_min more often than on Normal. Levels 1 and 2 (mild_levels): Easy is mild there because a hands-off Hero must still lose (the no-input guard tests), so it is judged as at least as forgiving as Normal (no fewer wins) and as leaving at least keep_gain_min more of the Keep's health.",
-    "gain_levels": ["tidewrack_cove", "old_pier", "gull_rock"],
+    "about": "Easy is judged by the poor bot (Advisor rulings, 17 Nov 2026), on the same players, builds and seeds as the poor bot's Normal row (an Easy run is a probe at each level's first attempt, nothing banked). Every level but the mild ones (levels 3 to 5 today): the poor bot wins at least gain_min more often than on Normal. Levels 1 and 2 (mild_levels): Easy is mild there because a hands-off Hero must still lose (the no-input guard tests), so it is judged as at least as forgiving as Normal (no fewer wins) and as leaving at least keep_gain_min more of the Keep's health.",
     "gain_min": 0.15,
     "mild_levels": ["outpost", "shingle_beach"],
     "keep_gain_min": 0.02

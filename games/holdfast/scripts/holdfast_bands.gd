@@ -108,8 +108,6 @@ static func scope_problems(bands: Dictionary, content: Dictionary = {}) -> Packe
 			out.append("%s has no band entry (`bands`): give it first-time bands before it ships" % level)
 		if not pack["levels"][level].get("modifiers", []).is_empty() and not bands.get("hard", {}).has(level):
 			out.append("%s has a Hard replay but no `hard` band entry" % level)
-		if bands.has("easy") and not level in bands["easy"]["gain_levels"] and not level in bands["easy"]["mild_levels"]:
-			out.append("%s is in neither `easy` list (gain_levels, mild_levels)" % level)
 	for pillar in PILLARS:
 		var named: Variant = bands.get("pillar_levels", {}).get(pillar)
 		if named is Array:
@@ -387,13 +385,15 @@ static func figures(bands: Dictionary, cells: Dictionary) -> Dictionary:
 			continue
 		var easy: Dictionary = bands["easy"]
 		var poor: Array = cells["%s/poor" % pillar]
+		if poor.is_empty() or not poor[0].keys().any(func(key: Variant) -> bool: return str(key).begins_with("easy:")):
+			continue  # no Easy probes were played
 		for level in scope(bands, pillar):
 			var gap := rate(poor, "easy:%s" % level) - rate(poor, level)
-			if level in easy["gain_levels"]:
-				out["%s/easy_gain/%s" % [pillar, level]] = {"value": gap, "lo": float(easy["gain_min"]), "hi": 1.0, "how": "the poor bot's first-time win rate on Easy less on Normal, same players and builds, %d players" % seeds["band"]}
-			else:
+			if level in easy["mild_levels"]:
 				out["%s/easy_gain/%s" % [pillar, level]] = {"value": gap, "lo": 0.0, "hi": 1.0, "how": "the poor bot's first-time win rate on Easy less on Normal: at least as forgiving, %d players" % seeds["band"]}
 				out["%s/easy_keep/%s" % [pillar, level]] = {"value": easy_keep_gain(poor, level), "lo": float(easy["keep_gain_min"]), "hi": 1.0, "how": "the Keep's health left (a share of full) on Easy less on Normal, poor bot, first attempts of the same players and builds"}
+			else:
+				out["%s/easy_gain/%s" % [pillar, level]] = {"value": gap, "lo": float(easy["gain_min"]), "hi": 1.0, "how": "the poor bot's first-time win rate on Easy less on Normal, same players and builds, %d players" % seeds["band"]}
 	# Extreme is held to the Advisor's target (a full build wins 30 to 50% for the average bot, at most 10% for the poor
 	# bot) on the level a full build is stretched by, for the pillar the bands name; every other level must stay winnable.
 	if bands.has("extreme") and cells.has("%s/tree" % bands["extreme"]["pillar"]):

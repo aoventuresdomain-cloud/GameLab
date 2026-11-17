@@ -365,16 +365,11 @@ func test_a_run_with_no_input_cannot_win_easy_at_the_outpost_and_wins_at_most_tw
 
 func test_the_bands_name_what_easy_and_extreme_are_judged_on() -> void:
 	var bands := HoldfastBands.load_bands()
-	var listed: Array = bands["easy"]["gain_levels"] + bands["easy"]["mild_levels"]
-	listed.sort()
-	var all: Array = HoldfastBands.levels()
-	all.sort()
-	expect_eq(listed, all, "every level is in exactly one of Easy's two lists")
+	for level in bands["easy"]["mild_levels"]:
+		expect_true(level in HoldfastBands.levels(), "%s is a level" % level)
+	expect_eq(bands["easy"]["mild_levels"], ["outpost", "shingle_beach"], "Easy is mild at the first two levels, where a hands-off Hero must still lose")
 	expect_true(str(bands["extreme"]["level"]) in HoldfastBands.levels(), "Extreme names the level it is judged on")
 	expect_eq(HoldfastBands.scope_problems(bands), PackedStringArray(), "the file is sound")
-	var bad := bands.duplicate(true)
-	bad["easy"]["mild_levels"] = []
-	expect_true(HoldfastBands.scope_problems(bad).size() >= 1, "a level in neither list is a problem")
 
 
 func test_easy_is_judged_by_the_poor_bot_and_extreme_on_one_level() -> void:
@@ -387,11 +382,12 @@ func test_easy_is_judged_by_the_poor_bot_and_extreme_on_one_level() -> void:
 	var poor := []
 	for i in 10:
 		poor.append({
-			"tidewrack_cove": i < 4, "easy:tidewrack_cove": i < 7,
+			"tidewrack_cove": i < 4, "easy:tidewrack_cove": i < 7, "easy_keep:tidewrack_cove": 0.5,
 			"outpost": i < 8, "easy:outpost": i < 8, "easy_keep:outpost": 0.7,
 			HoldfastBands.FEEL: {"outpost": {"keep": 0.5, "seconds": 100.0}, "tidewrack_cove": {"keep": 0.5, "seconds": 100.0}},
 		})
 	cells["flare_archer/poor"] = poor
+	cells["dusk_mage/poor"] = [{"gull_rock": false, "easy:gull_rock": true, "easy_keep:gull_rock": 0.5, HoldfastBands.FEEL: {"gull_rock": {"keep": 0.1, "seconds": 100.0}}}]
 	cells["flare_archer/tree"] = [{"hours": 1.0, "filled": true, "dry": 0, "dry_median": 0.0, "extreme": {"gull_rock": [4, 10], "outpost": [3, 3]}, "extreme_poor": {"gull_rock": [2, 10]}}]
 	var judged := HoldfastBands.evaluate(HoldfastBands.figures(bands, cells), {})
 	expect_true(absf(float(judged["flare_archer/easy_gain/tidewrack_cove"]["value"]) - 0.3) < 0.0001, "Easy's gain is the poor bot's win rate on Easy less on Normal")
