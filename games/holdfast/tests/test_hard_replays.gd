@@ -145,11 +145,13 @@ func test_the_tutorial_has_no_hard_replay_even_when_asked() -> void:
 	expect_eq(HoldfastMeta.hard_modifiers(content, "first_watch"), [], "and has no modifiers")
 
 
-func test_nightmare_is_a_stub_in_data_that_nothing_offers() -> void:
+func test_the_four_tiers_are_built_in_data_and_open_in_order() -> void:
 	var modes: Dictionary = _content()["modes"]
-	expect_true(modes.has("hard") and modes["hard"]["built"], "Hard is built")
-	expect_true(modes.has("nightmare") and not modes["nightmare"]["built"], "Nightmare is only a stub: it shows where it goes")
-	expect_eq(modes["nightmare"]["unlock"], "hard_cleared", "after Hard")
+	expect_eq(modes.keys(), ["easy", "normal", "hard", "extreme"], "the four tiers, in order")
+	for id in modes:
+		expect_true(modes[id]["built"], "%s is built" % id)
+	expect_eq(["level_reached", "level_reached", "normal_won", "hard_won"], ["easy", "normal", "hard", "extreme"].map(func(id: String) -> String: return modes[id]["unlock"]), "Easy and Normal open with the level, Hard on a Normal win, Extreme on a Hard win")
+	expect_eq(["easy", "normal", "hard", "extreme"].map(func(id: String) -> String: return modes[id]["text"]), ["Give me a quiet night", "Give me a fair fight", "Give me a long night", "Give me the storm"], "each has its line")
 
 
 # ------------------------------------------------------------------ opening and paying
@@ -262,24 +264,26 @@ func _main() -> Node:
 	return main
 
 
-func test_the_map_shows_a_cleared_levels_modifier_and_a_switch_turns_hard_on() -> void:
+func test_the_map_shows_a_cleared_levels_modifier_and_a_chip_turns_hard_on() -> void:
 	var main := _main()
 	var profile: Node = main.profile
 	ThroughLevelZero.apply(profile)
 	var journey: Control = main.journey
-	expect_false(journey._hard_button.visible, "no Hard switch before a level is cleared")
+	expect_false(journey._chips["hard"]["box"].visible, "no Hard chip before a level is cleared")
+	expect_true(journey._chips["easy"]["box"].visible and journey._chips["normal"]["box"].visible, "Easy and Normal are always there")
 	expect_eq(journey._hard_names["outpost"].text, "", "nor a modifier")
 	profile.bank_run({"gold": 0, "outcome": "won", "level": "outpost", "keep_left": 0.6})
-	expect_true(journey._hard_button.visible, "the switch appears once a level is cleared")
+	expect_true(journey._chips["hard"]["box"].visible, "the chip appears once a level is cleared")
+	expect_false(journey._chips["extreme"]["box"].visible, "and Extreme's not until a Hard replay is won")
 	expect_eq(journey._hard_names["outpost"].text, ">> Swift", "the cleared level names its modifier on a line under its caption")
 	expect_eq(journey._hard_names["shingle_beach"].text, "", "a level not cleared does not")
 	expect_false(journey._names["outpost"].text.contains("Swift"), "the caption itself is as it was")
 	expect_false(profile.is_hard_selected(), "Normal is the default")
-	journey._hard_button.button_pressed = true
-	expect_true(profile.is_hard_on(), "the switch turns Hard on")
-	journey._hard_button.button_pressed = false
-	expect_false(profile.is_hard_on(), "and off")
-	journey._hard_button.button_pressed = true
+	journey.tier_requested.emit("hard")
+	expect_true(profile.is_hard_on(), "the chip turns Hard on")
+	journey.tier_requested.emit("normal")
+	expect_false(profile.is_hard_on(), "and Normal turns it off")
+	journey.tier_requested.emit("hard")
 	profile.select_level("outpost")
 	expect_true(profile.is_hard_selected(), "the cleared level plays as its Hard replay")
 	profile.select_level("shingle_beach")

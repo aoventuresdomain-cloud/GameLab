@@ -12,6 +12,8 @@ extends RefCounted
 ##   achievements: [ids]   the achievements unlocked, in order (see HoldfastAchievements)
 ##   counters: {name: int} what the profile cannot work out from the rest: clean_wins, the levels won with no tower lost
 ##   hard_stars: {level: int} the most stars each cleared level's Hard replay has paid (1 to 3), on top of `stars`
+##   extreme_stars: {level: int} the same for its Extreme replay (opened by a Hard win)
+##   easy_only: [ids]      levels won on Easy and not yet on Normal: they count as won (the next level opens) but do not open Hard
 ##   levels_won: [ids],
 ##   unlocked: [ids],      levels opened beyond the first, by winning the one before
 ##   level: id,            the level the next run plays
@@ -100,6 +102,8 @@ static func new_profile(content: Dictionary) -> Dictionary:
 		"achievements": [],
 		"counters": {"clean_wins": 0},
 		"hard_stars": {},
+		"extreme_stars": {},
+		"easy_only": [],
 		"levels_won": [],
 		"unlocked": [],
 		"level": levels[0] if not levels.is_empty() else "",
@@ -145,13 +149,22 @@ static func from_save(content: Dictionary, data: Dictionary) -> Dictionary:
 		for level in saved_stars:
 			if levels.has(level) and (saved_stars[level] is int or saved_stars[level] is float):
 				profile["stars"][level] = clampi(int(saved_stars[level]), 0, MAX_LEVEL_STARS)
-	# Hard stars count only on a level the save has won and that has a Hard replay.
+	# Easy-only wins are levels the save has won (and no more); Hard stars count only on a level it has won on
+	# Normal and that has a Hard replay, Extreme stars only on a level whose Hard replay has paid.
+	var won := _list(data.get("levels_won"))
+	for level in _list(data.get("easy_only")):
+		if level in won and levels.has(level) and not level in profile["easy_only"]:
+			profile["easy_only"].append(level)
 	var saved_hard: Variant = data.get("hard_stars", {})
 	if saved_hard is Dictionary:
-		var won := _list(data.get("levels_won"))
 		for level in saved_hard:
-			if level in won and hard_modifiers(content, str(level)).size() > 0 and (saved_hard[level] is int or saved_hard[level] is float):
+			if level in won and not level in profile["easy_only"] and hard_modifiers(content, str(level)).size() > 0 and (saved_hard[level] is int or saved_hard[level] is float):
 				profile["hard_stars"][level] = clampi(int(saved_hard[level]), 0, MAX_LEVEL_STARS)
+	var saved_extreme: Variant = data.get("extreme_stars", {})
+	if saved_extreme is Dictionary:
+		for level in saved_extreme:
+			if int(profile["hard_stars"].get(level, 0)) > 0 and extreme_modifiers(content, str(level)).size() > 0 and (saved_extreme[level] is int or saved_extreme[level] is float):
+				profile["extreme_stars"][level] = clampi(int(saved_extreme[level]), 0, MAX_LEVEL_STARS)
 	for id in _list(data.get("upgrades")):
 		if nodes.has(id) and not id in profile["upgrades"] and _closed_by(nodes, profile["upgrades"], id) == "":
 			# A save cannot hold more star nodes than the stars it has earned.
@@ -483,13 +496,15 @@ static func cost_text(node: Dictionary) -> String:
 	return "%d gold" % cost
 
 
-## Stars the player has earned in all: the most each level has paid, on Normal and on Hard, added up.
+## Stars the player has earned in all: the most each level has paid, on Normal (Easy shares its record), Hard and Extreme, added up.
 static func stars_earned(profile: Dictionary) -> int:
 	var total := 0
 	for level in profile["stars"]:
 		total += int(profile["stars"][level])
 	for level in profile.get("hard_stars", {}):
 		total += int(profile["hard_stars"][level])
+	for level in profile.get("extreme_stars", {}):
+		total += int(profile["extreme_stars"][level])
 	return total
 
 
@@ -506,15 +521,67 @@ static func hard_modifiers(content: Dictionary, level: String) -> Array:
 	return out
 
 
-## True when the player can replay `level` on Hard: they have won it and it has a modifier.
+## The second modifiers a level's Extreme replay adds to its Hard ones ([] for a level with none).
+static func extreme_modifiers(content: Dictionary, level: String) -> Array:
+	var data: Dictionary = content.get("levels", {}).get(level, {})
+	var out := []
+	if data.is_empty() or _tutorial(data):
+		return out
+	for id in data.get("extreme_modifiers", []):
+		if content.get("modifiers", {}).has(id):
+			out.append(content["modifiers"][id])
+	return out
+
+
+## True when the player has won `level` on Normal (an Easy win clears the level but does not count).
+static func normal_won(profile: Dictionary, level: String) -> bool:
+	return level in profile["levels_won"] and not level in profile.get("easy_only", [])
+
+
+## True when the player can replay `level` on Hard: they have won it on Normal and it has a modifier.
 static func hard_open(content: Dictionary, profile: Dictionary, level: String) -> bool:
-	return level in profile["levels_won"] and not hard_modifiers(content, level).is_empty()
+	return normal_won(profile, level) and not hard_modifiers(content, level).is_empty()
+
+
+## True when the player can replay `level` on Extreme: they have won its Hard replay and it has a second modifier.
+static func extreme_open(content: Dictionary, profile: Dictionary, level: String) -> bool:
+	return int(profile.get("hard_stars", {}).get(level, 0)) > 0 and not extreme_modifiers(content, level).is_empty()
+
+
+## The tier ids a level offers the player now, in order: Easy and Normal for any level past the tutorial, Hard once it
+## is won on Normal, Extreme once its Hard replay is won. A level that is not reachable or a tutorial offers none.
+static func tiers_open(content: Dictionary, profile: Dictionary, level: String) -> Array:
+	var data: Dictionary = content.get("levels", {}).get(level, {})
+	if data.is_empty() or _tutorial(data) or not (level in profile.get("unlocked", []) or level in profile["levels_won"]):
+		return []
+	var out := ["easy", "normal"]
+	if hard_open(content, profile, level):
+		out.append("hard")
+	if extreme_open(content, profile, level):
+		out.append("extreme")
+	return out
+
+
+## The icon and one word of a tier ("~ Easy"), from the pack's modes.
+static func tier_label(content: Dictionary, tier: String) -> String:
+	var mode: Dictionary = content.get("modes", {}).get(tier, {})
+	return "%s %s" % [mode.get("icon", ""), mode.get("name", tier.capitalize())] if not mode.is_empty() else tier.capitalize()
 
 
 ## The icon and the one word of a level's Hard replay ("" when it has none), such as ">> Swift".
 static func hard_label(content: Dictionary, level: String) -> String:
 	var parts := []
 	for modifier in hard_modifiers(content, level):
+		parts.append("%s %s" % [modifier["icon"], modifier["name"]])
+	return ", ".join(parts)
+
+
+## The icons and words of a level's Extreme replay: its Hard modifier and the second one ("" when it has none).
+static func extreme_label(content: Dictionary, level: String) -> String:
+	if extreme_modifiers(content, level).is_empty():
+		return ""
+	var parts := []
+	for modifier in hard_modifiers(content, level) + extreme_modifiers(content, level):
 		parts.append("%s %s" % [modifier["icon"], modifier["name"]])
 	return ", ".join(parts)
 
@@ -1194,17 +1261,32 @@ static func bank_run(content: Dictionary, profile: Dictionary, result: Dictionar
 	out["gold"] = int(out["gold"]) + maxi(int(result.get("gold", 0)), 0)
 	out["runs"] = int(out["runs"]) + 1
 	var level := str(result.get("level", ""))
-	var hard: bool = bool(result.get("hard", false))
-	var first_win: bool = not hard and result.get("outcome") == HoldfastRules.OUTCOME_WON and level != "" and not level in out["levels_won"]
+	var tier := str(result.get("tier", "hard" if bool(result.get("hard", false)) else "normal"))
+	var won: bool = result.get("outcome") == HoldfastRules.OUTCOME_WON
+	var replay := tier == "hard" or tier == "extreme"
+	# A first win on Normal or Easy clears the level; only Normal opens its Hard replay (an Easy-only level is listed).
+	var first_win: bool = not replay and won and level != "" and not level in out["levels_won"]
 	if first_win:
 		out["levels_won"].append(level)
 		out["gold"] = int(out["gold"]) + int(content.get("levels", {}).get(level, {}).get("reward", {}).get("gold", 0))
+		if tier == "easy" and not _tutorial(content.get("levels", {}).get(level, {})):
+			out["easy_only"] = out.get("easy_only", []).duplicate()
+			out["easy_only"].append(level)
+	elif tier == "normal" and won and level in out.get("easy_only", []):
+		out["easy_only"] = out["easy_only"].filter(func(id: Variant) -> bool: return id != level)
 	var stars := stars_for_run(content, result)
-	if hard:
+	if tier == "easy":
+		# Easy pays one star and shares Normal's record, so Easy and Normal together never pass three.
+		stars = mini(stars, 1)
+	if tier == "hard":
 		# A Hard replay pays its own stars once: only the best of them is kept, and only on a cleared level.
 		if hard_open(content, out, level) and stars > int(out.get("hard_stars", {}).get(level, 0)):
 			out["hard_stars"] = out.get("hard_stars", {})
 			out["hard_stars"][level] = stars
+	elif tier == "extreme":
+		if extreme_open(content, out, level) and stars > int(out.get("extreme_stars", {}).get(level, 0)):
+			out["extreme_stars"] = out.get("extreme_stars", {})
+			out["extreme_stars"][level] = stars
 	elif stars > int(out["stars"].get(level, 0)):
 		out["stars"][level] = stars
 	# Gear a run found is kept whatever its outcome. It goes to the inventory; the player equips it.
@@ -1214,10 +1296,10 @@ static func bank_run(content: Dictionary, profile: Dictionary, result: Dictionar
 			continue
 		out["gear"]["owned"].append(id)
 	# A win that lost no tower counts toward "Not a Stone Lost" (a run result with no towers_lost does not).
-	if result.get("outcome") == HoldfastRules.OUTCOME_WON and result.has("towers_lost") and int(result["towers_lost"]) == 0 and not _tutorial(content.get("levels", {}).get(level, {})):
+	if result.get("outcome") == HoldfastRules.OUTCOME_WON and tier != "easy" and result.has("towers_lost") and int(result["towers_lost"]) == 0 and not _tutorial(content.get("levels", {}).get(level, {})):
 		out["counters"] = out.get("counters", {}).duplicate()
 		out["counters"]["clean_wins"] = int(out["counters"].get("clean_wins", 0)) + 1
-	var next := next_level(content, level) if result.get("outcome") == HoldfastRules.OUTCOME_WON and not hard else ""
+	var next := next_level(content, level) if won and not replay else ""
 	if next != "" and not next in out["unlocked"]:
 		out["unlocked"].append(next)
 	return RecruitMeta.bank_run(content, out, result)

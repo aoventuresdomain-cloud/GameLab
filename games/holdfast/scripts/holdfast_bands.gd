@@ -65,6 +65,8 @@ const WATCH := "_watch"
 const FORK_NODES := ["post_scope", "post_marksman", "post_twin", "post_burst"]
 ## What a fork player who never buys a fork node counts as when the wait is averaged (runs).
 const FORK_NEVER := 8
+## Keeps the Extreme probes' seeds apart from the players' own runs.
+const EXTREME_SEED := 60013
 
 
 static func load_bands() -> Dictionary:
@@ -118,14 +120,19 @@ static func scope_problems(bands: Dictionary, content: Dictionary = {}) -> Packe
 
 
 ## One cell of the sweep: the climbs of seeds 1..`seeds`, as one {level: won first time} per seed
-## (a level the climb never reached is left out), with how its first attempt felt under the FEEL key.
-static func cell(model: Dictionary, pillar: String, seeds: int, skip: Array = [], prefer: Array = [], watch: Array = []) -> Array:
+## (a level the climb never reached is left out), with how its first attempt felt under the FEEL key. With `tiers` each
+## row also says how an Easy run from the same build and seed as the first attempt went ("easy:<level>": won, "easy_keep:<level>":
+## the share of the Keep's health left; a probe, nothing banked).
+static func cell(model: Dictionary, pillar: String, seeds: int, skip: Array = [], prefer: Array = [], watch: Array = [], tiers := false) -> Array:
 	var out := []
 	for run_seed in range(1, seeds + 1):
 		var row := {FEEL: {}, WATCH: {"owned": {}, "arrival": {}, "first": -1}}
-		var climb := HoldfastCurve.climb(run_seed, model, pillar, levels().size(), skip, true, prefer, false, watch)
+		var climb := HoldfastCurve.climb(run_seed, model, pillar, levels().size(), skip, true, prefer, false, watch, tiers)
 		for id in climb["levels"]:
 			row[id] = climb["levels"][id]["first"]
+			if tiers:
+				row["easy:%s" % id] = climb["levels"][id]["easy"]
+				row["easy_keep:%s" % id] = climb["levels"][id]["easy_keep"]
 			row[FEEL][id] = {"keep": climb["levels"][id]["keep"], "seconds": climb["levels"][id]["seconds"]}
 			row[WATCH]["owned"][id] = climb["levels"][id]["watched"]
 			row[WATCH]["arrival"][id] = climb["levels"][id]["arrival"]
@@ -152,8 +159,11 @@ static func hard_cell(pillar: String, seeds: int) -> Array:
 ## average bot, as one summary per seed ({hours: until every gold node the Hero can reach is bought,
 ## or the whole budget if it never was; filled; dry: the longest run of returns with nothing
 ## affordable; the first star, new tower and boss in minutes, -1 for never; stars earned and the
-## stars the tree costs}).
-static func tree_cell(pillar: String, seeds: int, sim_hours: float) -> Array:
+## stars the tree costs}). With an `extreme` entry of the bands naming this pillar, each row also says how the player
+## fared on every level's Extreme replay from the build it ended on (the full gold tree, gear worn), as {level: [wins,
+## runs]} for the average bot ("extreme") and, on the judged level, the poor bot ("extreme_poor"): Extreme is held to a
+## full build.
+static func tree_cell(pillar: String, seeds: int, sim_hours: float, extreme := {}) -> Array:
 	var out := []
 	for run_seed in range(1, seeds + 1):
 		var played := HoldfastProgression.play(run_seed, sim_hours, "", [], pillar, BOTS["average"], true)
@@ -168,7 +178,28 @@ static func tree_cell(pillar: String, seeds: int, sim_hours: float) -> Array:
 			"first_boss": _minutes(float(played["first_boss_at"])),
 			"stars": int(played["stars_earned"]),
 			"stars_in_tree": int(played["stars_in_tree"]),
+			"extreme": _extreme_wins(played["profile"], pillar, run_seed, extreme, BOTS["average"], false),
+			"extreme_poor": _extreme_wins(played["profile"], pillar, run_seed, extreme, BOTS["poor"], true),
 		})
+	return out
+
+
+## {level: [Extreme runs won, runs played]} for a player with `profile` and the bot `model`: `runs` on every level and
+## `judged_runs` on the judged one (alone when `judged_only`); {} for a pillar the bands do not judge Extreme on.
+static func _extreme_wins(profile: Dictionary, pillar: String, run_seed: int, extreme: Dictionary, model: Dictionary, judged_only: bool) -> Dictionary:
+	var out := {}
+	if extreme.is_empty() or str(extreme["pillar"]) != pillar:
+		return out
+	var content := HoldfastContent.base()
+	for level in levels():
+		var judged: bool = level == str(extreme["level"])
+		if judged_only and not judged:
+			continue
+		var runs := int(extreme["judged_runs"]) if judged else int(extreme["runs"])
+		var wins := 0
+		for k in runs:
+			wins += 1 if HoldfastCurve.probe(content, profile, level, pillar, model, run_seed * 100003 + k + EXTREME_SEED, "extreme") else 0
+		out[level] = [wins, runs]
 	return out
 
 
@@ -182,7 +213,7 @@ static func measure(bands: Dictionary) -> Dictionary:
 	var out := {}
 	for pillar in PILLARS:
 		for bot in BOTS:
-			out["%s/%s" % [pillar, bot]] = cell(BOTS[bot], pillar, int(seeds["band"]))
+			out["%s/%s" % [pillar, bot]] = cell(BOTS[bot], pillar, int(seeds["band"]), [], [], [], bot == "poor" and bands.has("easy"))
 		for side in FORK_SKIPS:
 			out["%s/%s" % [pillar, side]] = cell(HoldfastSkilledBot.AVERAGE, pillar, int(seeds["fork"]), FORK_SKIPS[side] + auto_nodes(), FORK_PREFER[side] if pillar == FORK_PREFER_PILLAR else [], FORK_NODES)
 		out["%s/no_special" % pillar] = cell(HoldfastSkilledBot.AVERAGE_NO_SPECIAL, pillar, int(seeds["special"]), auto_nodes())
@@ -191,7 +222,7 @@ static func measure(bands: Dictionary) -> Dictionary:
 		if _has_auto_node(pillar):
 			out["%s/auto" % pillar] = cell(HoldfastSkilledBot.AVERAGE_NO_SPECIAL, pillar, int(seeds["special"]), [], auto_chain())
 		if bands.has("tree"):
-			out["%s/tree" % pillar] = tree_cell(pillar, int(seeds["tree"]), float(bands["tree"]["sim_hours"]))
+			out["%s/tree" % pillar] = tree_cell(pillar, int(seeds["tree"]), float(bands["tree"]["sim_hours"]), bands.get("extreme", {}))
 	var one_post: Dictionary = bands["one_post"]
 	if str(one_post["level"]) in scope(bands, str(one_post["pillar"])):
 		out["%s/one_post" % one_post["pillar"]] = cell(HoldfastSkilledBot.AVERAGE, str(one_post["pillar"]), int(seeds["one_post"]), ONE_POST_SKIP)
@@ -217,6 +248,30 @@ static func rate(climbs: Array, level: String, seeds := 0) -> float:
 			reached += 1
 			won += 1 if row[level] else 0
 	return float(won) / float(reached) if reached > 0 else 0.0
+
+
+## The share of Extreme runs won at `level` over the players of the tree cell `rows`, by the bot `field` names
+## ("extreme" or "extreme_poor"); 0.0 when none was played.
+static func extreme_rate(rows: Array, field: String, level: String) -> float:
+	var played := 0
+	var won := 0
+	for row in rows:
+		if row.get(field, {}).has(level):
+			won += int(row[field][level][0])
+			played += int(row[field][level][1])
+	return float(won) / float(played) if played > 0 else 0.0
+
+
+## How much more of the Keep's health is left on the Easy probe than on the first attempt at `level`, over the players
+## who reached it (as a share of full health, so a sturdier Keep does not count by itself); 0.0 when nobody did.
+static func easy_keep_gain(climbs: Array, level: String) -> float:
+	var total := 0.0
+	var count := 0
+	for row in climbs:
+		if row.has("easy_keep:%s" % level) and row.get(FEEL, {}).has(level):
+			total += float(row["easy_keep:%s" % level]) - float(row[FEEL][level]["keep"])
+			count += 1
+	return total / float(count) if count > 0 else 0.0
 
 
 ## The mean of `field` ("keep" or "seconds") over the first attempts at `level` in `climbs`, or -1 when nobody reached it.
@@ -322,6 +377,36 @@ static func figures(bands: Dictionary, cells: Dictionary) -> Dictionary:
 		var first: String = levels()[0]
 		if first in inside:
 			out["%s/no_special/%s" % [pillar, first]] = {"value": rate(cells["%s/no_special" % pillar], first), "lo": float(special["first_level_off_min"]), "hi": 1.0, "how": "first-time win rate of the average bot that never presses the special, %d players" % seeds["special"]}
+	# Easy is judged by the poor bot (Advisor ruling, 17 Nov 2026): on the levels where it is meant to help the poor
+	# bot wins clearly more often than on Normal; where it is mild it is at least as forgiving and leaves the Keep
+	# healthier. Both runs are of the same players, build and seed.
+	for pillar in PILLARS:
+		if not bands.has("easy"):
+			continue
+		var easy: Dictionary = bands["easy"]
+		var poor: Array = cells["%s/poor" % pillar]
+		if poor.is_empty() or not poor[0].keys().any(func(key: Variant) -> bool: return str(key).begins_with("easy:")):
+			continue  # no Easy probes were played
+		for level in scope(bands, pillar):
+			var gap := rate(poor, "easy:%s" % level) - rate(poor, level)
+			if level in easy["mild_levels"]:
+				out["%s/easy_gain/%s" % [pillar, level]] = {"value": gap, "lo": 0.0, "hi": 1.0, "how": "the poor bot's first-time win rate on Easy less on Normal: at least as forgiving, %d players" % seeds["band"]}
+				out["%s/easy_keep/%s" % [pillar, level]] = {"value": easy_keep_gain(poor, level), "lo": float(easy["keep_gain_min"]), "hi": 1.0, "how": "the Keep's health left (a share of full) on Easy less on Normal, poor bot, first attempts of the same players and builds"}
+			else:
+				out["%s/easy_gain/%s" % [pillar, level]] = {"value": gap, "lo": float(easy["gain_min"]), "hi": 1.0, "how": "the poor bot's first-time win rate on Easy less on Normal, same players and builds, %d players" % seeds["band"]}
+	# Extreme is held to the Advisor's target (a full build wins 30 to 50% for the average bot, at most 10% for the poor
+	# bot) on the level a full build is stretched by, for the pillar the bands name; every other level must stay winnable.
+	if bands.has("extreme") and cells.has("%s/tree" % bands["extreme"]["pillar"]):
+		var extreme: Dictionary = bands["extreme"]
+		var pillar := str(extreme["pillar"])
+		var rows: Array = cells["%s/tree" % pillar]
+		var average_band: Array = extreme["average"]
+		for level in levels():
+			if level == str(extreme["level"]):
+				out["%s/extreme/%s" % [pillar, level]] = {"value": extreme_rate(rows, "extreme", level), "lo": float(average_band[0]), "hi": float(average_band[1]), "how": "win rate of the average bot on the Extreme replay, from the full build, %d players of %d runs" % [seeds["tree"], extreme["judged_runs"]]}
+				out["%s/extreme_poor/%s" % [pillar, level]] = {"value": extreme_rate(rows, "extreme_poor", level), "lo": 0.0, "hi": float(extreme["poor_max"]), "how": "win rate of the poor bot on the Extreme replay, from the full build, %d players of %d runs" % [seeds["tree"], extreme["judged_runs"]]}
+			else:
+				out["%s/extreme/%s" % [pillar, level]] = {"value": extreme_rate(rows, "extreme", level), "lo": float(extreme["winnable_min"]), "hi": 1.0, "how": "win rate of the average bot on the Extreme replay, from the full build, %d players of %d runs: it must be winnable" % [seeds["tree"], extreme["runs"]]}
 	# Each cleared level's Hard replay is held to a band of its own (first attempt, the average bot).
 	for pillar in PILLARS:
 		if not bands.has("hard") or not cells.has("%s/hard" % pillar):

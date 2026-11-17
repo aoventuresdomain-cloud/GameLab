@@ -69,7 +69,7 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="GuideSlot" type="Control" parent="Margin/Column/Body/Inner"]
-custom_minimum_size = Vector2(0, 64)
+custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 
 [node name="Guide" type="HBoxContainer" parent="Margin/Column/Body/Inner/GuideSlot"]

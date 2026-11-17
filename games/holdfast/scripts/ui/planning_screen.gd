@@ -128,10 +128,24 @@ func open(level_id: String, layout: Array, _saved: bool, spots: Array, cards: in
 	set_castle(spots, cards, mage_cards, slots)
 
 
-## Marks the page as a Hard replay of the level: the modifier's icon and word ("" for a Normal run).
-func set_hard(label: String) -> void:
+## Marks the page with the tier it will be played on: nothing for Normal, "(Easy)", and "(Hard: icon word)" with the
+## level's modifier (`label`, "" when it has none), "(Extreme)" for the storm.
+func set_tier(tier: String, label := "") -> void:
 	# The shorter lead keeps the title clear of the "+ Tower" button at 1280 x 720 with the longest label.
-	_title.text = "Plan: %s (Hard: %s)" % [_level["name"], label] if label != "" else "Plan your defence: %s" % _level["name"]
+	var level_name: String = _level["name"]
+	if tier == "easy":
+		_title.text = "Plan: %s (Easy)" % level_name
+	elif tier == "hard" and label != "":
+		_title.text = "Plan: %s (Hard: %s)" % [level_name, label]
+	elif tier == "extreme":
+		_title.text = "Plan: %s (Extreme)" % level_name
+	else:
+		_title.text = "Plan your defence: %s" % level_name
+
+
+## The Hard replay's mark (see set_tier); "" for a Normal run.
+func set_hard(label: String) -> void:
+	set_tier("hard" if label != "" else "normal", label)
 
 
 ## Sets what the player has: the ring's `spots`, the Archer Post `cards` and Mage Post

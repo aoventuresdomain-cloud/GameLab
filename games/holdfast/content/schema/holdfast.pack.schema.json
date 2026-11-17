@@ -232,6 +232,36 @@
             "x-ref": "modifiers"
           }
         },
+        "extreme_modifiers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "x-ref": "modifiers"
+          }
+        },
+        "easy_effects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "stat"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "stat": {
+                "type": "string",
+                "pattern": "^(gold_multiplier|keep_health|enemy_speed|enemy_health|enemy_damage)$"
+              },
+              "add": {
+                "type": "number"
+              },
+              "multiply": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          }
+        },
         "reward": {
           "type": "object",
           "required": [
@@ -1248,6 +1278,7 @@
       "required": [
         "id",
         "name",
+        "icon",
         "built",
         "unlock",
         "text"
@@ -1260,18 +1291,47 @@
         "name": {
           "$ref": "#/$defs/name"
         },
+        "icon": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4
+        },
         "built": {
           "type": "boolean"
         },
         "unlock": {
           "enum": [
-            "level_won",
-            "hard_cleared"
+            "level_reached",
+            "normal_won",
+            "hard_won"
           ]
         },
         "text": {
           "type": "string",
           "minLength": 1
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "stat"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "stat": {
+                "type": "string",
+                "pattern": "^(gold_multiplier|keep_health|enemy_speed|enemy_health|enemy_damage)$"
+              },
+              "add": {
+                "type": "number"
+              },
+              "multiply": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          }
         }
       }
     },

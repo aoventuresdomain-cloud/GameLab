@@ -17,6 +17,22 @@
     "old_pier": {"average": [0.4, 0.9]},
     "gull_rock": {"average": [0.15, 0.55]}
   },
+  "easy": {
+    "about": "Easy is judged by the poor bot (Advisor rulings, 17 Nov 2026), on the same players, builds and seeds as the poor bot's Normal row (an Easy run is a probe at each level's first attempt, nothing banked). Every level but the mild ones (levels 3 to 5 today): the poor bot wins at least gain_min more often than on Normal. Levels 1 and 2 (mild_levels): Easy is mild there because a hands-off Hero must still lose (the no-input guard tests), so it is judged as at least as forgiving as Normal (no fewer wins) and as leaving at least keep_gain_min more of the Keep's health.",
+    "gain_min": 0.15,
+    "mild_levels": ["outpost", "shingle_beach"],
+    "keep_gain_min": 0.02
+  },
+  "extreme": {
+    "about": "Extreme's target (Advisor, 17 Nov 2026): from a full build the average bot wins 30 to 50 per cent and the poor bot at most 10. Played by the Flare Archer players of the tree cell once they own every gold node their Hero can reach (gear worn, the stars they earned spent), nothing banked. The five levels cannot all be held to it: a full build is far past Outpost to Old Pier, where any pair of the five modifiers is won nearly always, so the target is judged on Gull Rock, the one level that stretches it, and every other level is only held to stay winnable. The Dusk Mage and the Tideblade are not judged on Extreme yet (they are judged on Gull Rock alone for Normal and Hard).",
+    "pillar": "flare_archer",
+    "level": "gull_rock",
+    "runs": 3,
+    "judged_runs": 20,
+    "average": [0.3, 0.5],
+    "poor_max": 0.1,
+    "winnable_min": 0.05
+  },
   "tree": {
     "sim_hours": 16,
     "hours_min": 3,
@@ -95,12 +111,13 @@
     "how": "the Dusk Mage with only the first castle slot bought, average bot, 12 players"
   },
   "known_misses": {
+    "flare_archer/extreme_poor/gull_rock": 0.1333,
     "flare_archer/no_special/outpost": 0.0,
     "flare_archer/tree/hours": 1.2105,
     "dusk_mage/tree/hours": 1.4265,
     "tideblade/tree/hours": 1.2194
   },
-  "known_misses_note": "A pinned miss may not get worse, and CI fails if it comes back inside its band (delete the pin then). Build 16 (HF-M2-28) emptied the list of everything that could be fixed without breaking another rule. What was fixed: the Tideblade's basic attack is stronger (damage 9 to 10, health 80 to 86, nothing nerfed), which lifts what it wins without its special (the special is worth 33 points or less, its poor play and Hard replay are in band); the Dusk Mage's Gull Rock rate gets its own ceiling (pillar_ceilings) instead of a harder Gull Rock, as the Advisor ruled; the fork feel is judged from the level where fork nodes are owned (owned_share) with a check that the first fork comes within 3 runs of Tidewrack Cove; the wait for a purchase may be 6 runs for the dearest node with a median of 2 or fewer, so the dry-run pins are gone. What remains: flare_archer/no_special/outpost, 0% against 30%. Making the Outpost easier for the bot that never presses the special (thinner waves) also lets a run with NO input win it (nine of nine), and the guard tests (a run with no input is lost on the first two levels; a plain bot loses at least once on every level) forbid that, because the idle Hero and Keep win before the moving bot does; no Hero or pack number can lift the one without the other, so the guarded rule wins and the guided first press (HF-M2-63) is what teaches the button before that fight. The three tree/hours pins (HF-M2-68): the gold nodes are priced from the gold a run pays where each tier opens (content/base/gold_tiers.json), so the average bot owns every gold node its Hero can reach in about an hour of play against the 3 to 4 hours the Advisor sets for the whole tree; the Advisor reads real play at about 2 to 2.5 hours (a bot buys better and never hesitates), asks to re-check in the Gate 2 tester sessions, and not to change prices or structure before that.",
+  "known_misses_note": "A pinned miss may not get worse, and CI fails if it comes back inside its band (delete the pin then). Build 16 (HF-M2-28) emptied the list of everything that could be fixed without breaking another rule. What was fixed: the Tideblade's basic attack is stronger (damage 9 to 10, health 80 to 86, nothing nerfed), which lifts what it wins without its special (the special is worth 33 points or less, its poor play and Hard replay are in band); the Dusk Mage's Gull Rock rate gets its own ceiling (pillar_ceilings) instead of a harder Gull Rock, as the Advisor ruled; the fork feel is judged from the level where fork nodes are owned (owned_share) with a check that the first fork comes within 3 runs of Tidewrack Cove; the wait for a purchase may be 6 runs for the dearest node with a median of 2 or fewer, so the dry-run pins are gone. What remains: flare_archer/extreme_poor/gull_rock (HF-M2-87), 13% against the Advisor's 10% ceiling for the poor bot on Extreme: the only pair of the five modifiers that brings a full build down to 30% for the average bot (Fierce plus Armoured) lets the poor bot win 13%, and no pair gets the one without the other (the average bot's 30% is the floor of its band); the Head of Engineering rules on it. flare_archer/no_special/outpost, 0% against 30%. Making the Outpost easier for the bot that never presses the special (thinner waves) also lets a run with NO input win it (nine of nine), and the guard tests (a run with no input is lost on the first two levels; a plain bot loses at least once on every level) forbid that, because the idle Hero and Keep win before the moving bot does; no Hero or pack number can lift the one without the other, so the guarded rule wins and the guided first press (HF-M2-63) is what teaches the button before that fight. The three tree/hours pins (HF-M2-68): the gold nodes are priced from the gold a run pays where each tier opens (content/base/gold_tiers.json), so the average bot owns every gold node its Hero can reach in about an hour of play against the 3 to 4 hours the Advisor sets for the whole tree; the Advisor reads real play at about 2 to 2.5 hours (a bot buys better and never hesitates), asks to re-check in the Gate 2 tester sessions, and not to change prices or structure before that.",
   "fork_feel": {
     "min": 0.05,
     "owned_share": 0.5,

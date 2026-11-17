@@ -288,8 +288,11 @@ var repair_share := 0.0
 ## A Hard replay's changes to every monster (multipliers on its health and damage), from the level's modifiers.
 var enemy_health_scale := 1.0
 var enemy_damage_scale := 1.0
-## This is a Hard replay: the level's modifiers apply.
+## This is a Hard or Extreme replay: the level's modifiers apply.
 var hard := false
+## The difficulty the run plays: "easy", "normal", "hard" or "extreme" (a tutorial is always normal).
+var difficulty := "normal"
+const TIERS := ["easy", "normal", "hard", "extreme"]
 ## Tower health restored per second while no enemy is on the field (between waves).
 var total_waves := 0
 
@@ -529,11 +532,21 @@ func setup(config: Dictionary, rng: SimRng) -> void:
 		nodes.merge(blessed)
 		purchased.append_array(blessed.keys())
 		stats = HoldfastRules.upgrade_stats(nodes, purchased)
-	# A Hard replay takes the level's modifiers on top of the tree, the gear and the blessing.
-	hard = bool(config.get("hard", false)) and not tutorial
-	if hard:
+	# A tier takes its changes on top of the tree, the gear and the blessing: Easy's (the pack's mode, with the
+	# level's own softening), the level's modifier on Hard, and its second modifier as well on Extreme. A tutorial has none.
+	difficulty = str(config.get("tier", "hard" if bool(config.get("hard", false)) else "normal"))
+	if tutorial or not difficulty in TIERS:
+		difficulty = "normal"
+	hard = difficulty == "hard" or difficulty == "extreme"
+	if difficulty != "normal":
 		var changes := []
-		for modifier_id in level.get("modifiers", []):
+		if difficulty == "easy":
+			changes.append_array(content.get("modes", {}).get("easy", {}).get("effects", []))
+			changes.append_array(level.get("easy_effects", []))
+		var modifier_ids: Array = level.get("modifiers", []) if hard else []
+		if difficulty == "extreme":
+			modifier_ids = modifier_ids + level.get("extreme_modifiers", [])
+		for modifier_id in modifier_ids:
 			if not content.get("modifiers", {}).has(modifier_id):
 				_fail("unknown modifier %s" % modifier_id)
 				return
@@ -2044,6 +2057,8 @@ func result() -> Dictionary:
 		out["salvaged"] = salvaged
 	if hard:
 		out["hard"] = true
+	if difficulty != "normal":
+		out["tier"] = difficulty
 	if _blessed or hard:
 		# The Keep's health as the tree builds it, whatever a blessing or a modifier did to it, for the stars.
 		out["keep_left"] = 1.0 - float(_keep_damage) / _keep_star_max if _keep_star_max > 0.0 else 0.0
