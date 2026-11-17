@@ -254,12 +254,17 @@ func _open_plan() -> void:
 	planning.open(level, profile.get_layout(level) if saved else [], saved, profile.get_ring_spots(), profile.get_castle_cards(), profile.get_castle_mage_cards(), profile.get_castle_slots())
 	var draw := RandomNumberGenerator.new()
 	draw.randomize()
-	planning.set_tier(profile.get_run_tier(), profile.get_hard_label(level), profile.get_tier())
+	var tier := profile.get_run_tier()
+	planning.set_tier(tier, profile.get_extreme_label(level) if tier == "extreme" else profile.get_hard_label(level), profile.get_tier())
 	planning.set_blessings(profile.get_blessing_offer(level, draw))
 	planning.set_squad(profile.get_squad().map(func(recruit: Dictionary) -> String: return recruit["name"]), profile.get_recruits().size())
 	_show_posted()
 	_offer_tower()
 	_show(Screen.PLAN)
+	# A tier this level does not offer was said on the page and is played as Normal, so the map's chip goes back to
+	# Normal too, and never reads Hard where Normal is played (F-205).
+	if profile.get_tier() != tier:
+		profile.select_tier("normal")
 
 
 ## Tells the Plan page who is on the squad and who is set on which post.

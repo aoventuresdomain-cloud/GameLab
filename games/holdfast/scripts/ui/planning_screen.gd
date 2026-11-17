@@ -132,12 +132,15 @@ func open(level_id: String, layout: Array, _saved: bool, spots: Array, cards: in
 
 
 ## Marks the page with the tier it will be played on: nothing for Normal, "(Easy)", and "(Hard: icon word)" with the
-## level's modifier (`label`, "" when it has none), "(Extreme)" for the storm. `asked` is the tier the player
+## level's modifier (`label`, "" when it has none), "(Extreme)" for the storm, with both modifiers on the line under it. `asked` is the tier the player
 ## picked on the map: when the level does not offer it yet, one line says so and what is played instead (F-199).
 func set_tier(tier: String, label := "", asked := "") -> void:
 	_tier_line = ""
 	if asked != "" and asked != tier and asked in ["hard", "extreme"]:
 		_tier_line = "%s opens after a %s win here, so this plays %s." % [asked.capitalize(), "Hard" if asked == "extreme" else "Normal", tier.capitalize()]
+	# The Extreme replay's two modifiers go on the line under the title: both together are too long for the header.
+	if tier == "extreme" and label != "":
+		_tier_line = "Extreme: %s" % label
 	_show_hint(_hint_text)
 	# The shorter lead keeps the title clear of the "+ Tower" button at 1280 x 720 with the longest label.
 	var level_name: String = _level["name"]

@@ -46,12 +46,24 @@ text = "Volume"
 
 [node name="VolumeSlider" type="HSlider" parent="Centre/Column/VolumeRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(240, 0)
+custom_minimum_size = Vector2(240, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
 max_value = 100.0
 step = 5.0
+
+[node name="FocusRing" type="Panel" parent="Centre/Column/VolumeRow/VolumeSlider"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"FocusRing"
 
 [node name="VolumeValue" type="Label" parent="Centre/Column/VolumeRow"]
 unique_name_in_owner = true

@@ -69,7 +69,7 @@ const SPECIAL_WHAT := {
 	"dusk_mage": "a shadow pulse that pulls enemies in and slows them.",
 	"tideblade": "three dashes through enemies, and you cannot be hit.",
 }
-const SPECIAL_KEYS := "Press Space, A or click to use it."
+const SPECIAL_KEYS := "Press Space, A on a pad, or click to use it."
 
 
 func _ready() -> void:

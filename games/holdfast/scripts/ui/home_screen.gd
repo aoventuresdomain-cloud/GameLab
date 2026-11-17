@@ -10,6 +10,8 @@ signal quit_requested
 
 const CONFIRM_TEXT := "Erase your progress?\nClick again to start over"
 
+const Guidance = preload("res://scripts/ui/guidance.gd")
+
 @onready var _continue: Button = %ContinueButton
 @onready var _new_game: Button = %NewGameButton
 @onready var _settings: Button = %SettingsButton
@@ -49,9 +51,12 @@ func refresh() -> void:
 		_new_game.text = "New game"
 
 
-## "Continue", and under it where the player is: the level's number and name.
+## "Continue", and under it the level to play next: the one the map names as next, else (at Level 0, or once every
+## open level is won) the level the player is on.
 func _continue_text() -> String:
-	var level: Dictionary = HoldfastContent.base()["levels"][_profile.get_level()]
+	var content := HoldfastContent.base()
+	var next: String = Guidance.next_level(content, _profile)
+	var level: Dictionary = content["levels"][next if next != "" else _profile.get_level()]
 	return "Continue\nLevel %d · %s" % [int(level.get("number", 0)), level["name"]]
 
 

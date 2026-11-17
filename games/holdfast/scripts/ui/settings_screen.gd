@@ -11,6 +11,7 @@ signal achievements_requested
 
 @onready var _volume: HSlider = %VolumeSlider
 @onready var _volume_value: Label = %VolumeValue
+@onready var _volume_ring: Panel = %FocusRing
 @onready var _shake: CheckButton = %ShakeButton
 @onready var _flashes: CheckButton = %FlashesButton
 @onready var _motion: CheckButton = %MotionButton
@@ -23,6 +24,9 @@ var _settings: Node
 
 func _ready() -> void:
 	_volume.value_changed.connect(func(value: float) -> void: volume_requested.emit(value / 100.0))
+	# A slider draws no focus ring of its own, so it has the same ring as every other control (F-201).
+	_volume.focus_entered.connect(func() -> void: _volume_ring.visible = true)
+	_volume.focus_exited.connect(func() -> void: _volume_ring.visible = false)
 	_shake.toggled.connect(shake_requested.emit)
 	_flashes.toggled.connect(flashes_requested.emit)
 	_motion.toggled.connect(reduced_motion_requested.emit)
