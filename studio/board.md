@@ -841,24 +841,24 @@
 
 ### HF-M2-91 Build 21a: Fog Warden hint and reach ring
 - **Owner:** Gameplay Engineer
-- **Status:** Queued (CEO bug hunt, F-209; Advisor rulings in `holdfast/m2/advisor-fog-warden-hint.md`). Estimate: about 1 to 2 h, upper bound 3, medium confidence
+- **Status:** Merged (#210, QA PASS at c743589, 1,203 tests, merged as 68b701d). Build 21a, about 2 h from brief to PR
 - **QA:** screens
 - **Depends on:** HF-M2-90
 - **Done when:**
-  - [ ] While the Fog Warden is shrouded and the special is ready, the special's reach is drawn as a ring around the Hero, and the prompt reads "Fog Warden shrouded: press Space with it in reach", naming the pad button on a pad as the first-run tip does.
-  - [ ] The shroud still lifts on any press anywhere (position-independent) and the special's damage, cooldown and the pacing bands are unchanged.
-  - [ ] When the special is not ready the prompt says when it will be ("Special ready in 9 s") and the ring is not drawn.
-  - [ ] Nothing overlaps at 1280x720 and 1920x1080; any existing test change is OK'd by the Head of Engineering first and logged.
+  - [x] While the Fog Warden is shrouded and the special is ready, the special's reach is drawn as a ring around the Hero, and the prompt reads "Fog Warden shrouded: press Space with it in reach", naming the pad button on a pad as the first-run tip does.
+  - [x] The shroud still lifts on any press anywhere (position-independent) and the special's damage, cooldown and the pacing bands are unchanged.
+  - [x] When the special is not ready the prompt says when it will be ("Special ready in 9 s") and the ring is not drawn.
+  - [x] Nothing overlaps at 1280x720 and 1920x1080; any existing test change is OK'd by the Head of Engineering first and logged.
 
 ### HF-M2-92 Build 21b: loss panel wave number matches the HUD
 - **Owner:** UI Engineer
-- **Status:** Queued (CEO bug hunt, F-210). Estimate: about 0.5 to 1 h, upper bound 2, high confidence
+- **Status:** Merged (#209, QA PASS at 45caddc, 1,197 tests, merged as 5122c64). Build 21b, about 25 min from brief to PR
 - **QA:** screens
 - **Depends on:** HF-M2-90
 - **Done when:**
-  - [ ] The loss panel's "The keep fell in wave N of M" uses the wave the HUD showed when the keep fell, on all heroes and levels (QA saw HUD 6 of 6 against panel 4 and 3).
-  - [ ] A test makes a run lose after a leaked wave and asserts panel and HUD agree.
-  - [ ] No gameplay, balance, data or save change; existing tests pass unchanged (any change OK'd by the Head of Engineering first and logged).
+  - [x] The loss panel's "The keep fell in wave N of M" uses the wave the HUD showed when the keep fell, on all heroes and levels (QA saw HUD 6 of 6 against panel 4 and 3).
+  - [x] A test makes a run lose after a leaked wave and asserts panel and HUD agree.
+  - [x] No gameplay, balance, data or save change; existing tests pass unchanged (any change OK'd by the Head of Engineering first and logged).
 
 ### HF-M2-72 Menus and look: tokens, shared header and the no-overlap test
 - **Owner:** UI Engineer
@@ -1356,8 +1356,8 @@
 | F-206 | HF-M2-90 | FOLLOW-UP from QA (HF-M2-89 batch 4): map captions step into each other or the path on some levels | Minor | UI Engineer | Closed, fixed in Build 20 (#206, QA PASS at e405f36) |
 | F-207 | HF-M2-90 | FOLLOW-UP from QA (B4-2): chip spacing at 960x540 is unverified; the headless window cannot render that size | Minor | UI Engineer | Open, needs a real 960x540 render; not blocking |
 | F-208 | HF-M2-90 | MUST FIX from QA (#206 at 651370650c3c): the Plan page overflowed its bounds at 1280x720 on some level and tier | Major | UI Engineer | Closed, fixed at e405f36 with a regression test; QA PASS |
-| F-209 | HF-M2-91 | FOLLOW-UP from QA (HF-M2-89, Gull Rock Normal, real presses on e405f36: the shroud lifted on 3 of 3 presses, no MUST FIX) with Advisor rulings (`advisor-fog-warden-hint.md`): the shroud lifts on any press anywhere (kept position-independent) but the special's damage needs the boss in reach, and the prompt does not say so. Accepted: draw the special's reach as a ring around the Hero while the boss is shrouded and the special is ready, and word the prompt "Fog Warden shrouded: press Space with it in reach" (naming the key or button). Cooldown: base values are 14 (Flare Barrage), 16 (Eclipse) and 12 s (Dash-Strike), so the 12 to 16 s range stands; QA's 9.7 s on a heavily upgraded save is expected, no change | Minor | Gameplay Engineer | Open, Build 21a (HF-M2-91); no CEO decision needed |
-| F-210 | HF-M2-92 | FOLLOW-UP from QA (HF-M2-89 batches 2 and 3, on a4ddeea, reproduced on Dusk Mage and Tideblade): the loss panel's wave number disagrees with the HUD. HUD "Wave 4 / 5" against panel "wave 2 of 5" (Outpost), HUD 6 of 6 against panel 4 (Dusk Mage) and 3 (Tideblade) on Shingle Beach; the panel seems to count clean waves plus one, same root as the old "Waves 5 / 6" display | Minor | UI Engineer | Open, Build 21b (HF-M2-92) |
+| F-209 | HF-M2-91 | FOLLOW-UP from QA (HF-M2-89, Gull Rock Normal, real presses on e405f36: the shroud lifted on 3 of 3 presses, no MUST FIX) with Advisor rulings (`advisor-fog-warden-hint.md`): the shroud lifts on any press anywhere (kept position-independent) but the special's damage needs the boss in reach, and the prompt does not say so. Accepted: draw the special's reach as a ring around the Hero while the boss is shrouded and the special is ready, and word the prompt "Fog Warden shrouded: press Space with it in reach" (naming the key or button). Cooldown: base values are 14 (Flare Barrage), 16 (Eclipse) and 12 s (Dash-Strike), so the 12 to 16 s range stands; QA's 9.7 s on a heavily upgraded save is expected, no change | Minor | Gameplay Engineer | Closed, fixed in Build 21a (#210, QA PASS at c743589) |
+| F-210 | HF-M2-92 | FOLLOW-UP from QA (HF-M2-89 batches 2 and 3, on a4ddeea, reproduced on Dusk Mage and Tideblade): the loss panel's wave number disagrees with the HUD. HUD "Wave 4 / 5" against panel "wave 2 of 5" (Outpost), HUD 6 of 6 against panel 4 (Dusk Mage) and 3 (Tideblade) on Shingle Beach; the panel seems to count clean waves plus one, same root as the old "Waves 5 / 6" display | Minor | UI Engineer | Closed, fixed in Build 21b (#209, QA PASS at 45caddc) |
 
 ## Test changes
 
@@ -1455,6 +1455,9 @@
 | 2026-11-17 | `tests/tree_card.gd::can_buy` (helper used by `test_guided_start.gd`): now also requires the detail card to be visible (#194, F-195) | A node that opens no card must not count as buyable | Tighter, same intent; the test still fails if a refused node opens a card with an enabled Buy | Head of Engineering |
 | 2026-11-17 | `tests/test_special_tip_per_pillar.gd` KEYS const | Now "Press Space, A on a pad, or click to use it." (#206, F-204) | The old text named A, which is move-left on the keyboard | Head of Engineering |
 | 2026-11-17 | `tests/test_hub_rail.gd::test_continue_names_the_level_from_a_real_json_save` | Expected level is the map's next level, else `profile.get_level()` (#206, F-203) | The test pinned the old last-played rule the finding replaces on purpose | Head of Engineering |
+| 2026-11-18 | `test_build6.gd:501` | Expected boss note is now "Fog Warden shrouded: press Space (A on a pad) with it in reach" (#210, F-209) | The test pinned the old wording the finding replaces on purpose | Head of Engineering |
+| 2026-11-18 | `test_boss_strip_and_tip.gd:61` | Same new text; message now "shrouded, special ready: what lifts it" (#210) | Same reason | Head of Engineering |
+| 2026-11-18 | `run_ui_tests.gd:197` layout string | New note text, the longest note (#210) | The layout check should cover the longer note | Head of Engineering |
 
 ## Advisor views
 
@@ -1577,3 +1580,4 @@
 - 2026-11-17: Build 19a merged (#204, QA PASS at 14da8b9, 1,187 tests, merged as b5dfbc4): F-193, F-197, F-198 and F-199 closed.
 - 2026-11-17: Build 20 merged (#206, QA PASS at e405f36, 1,196 tests, merged as a4ddeea). F-200 withdrawn, F-201 to F-206 and F-208 closed, F-207 open, F-209 (Fog Warden hint) boarded. QA continues HF-M2-89.
 - 2026-11-17: QA stopped the exploratory hunt (HF-M2-89 done). Build 21 is two small items: HF-M2-91 Fog Warden hint and reach ring (Gameplay Engineer, F-209) and HF-M2-92 loss panel wave number (UI Engineer, F-210). F-207 stays open for a real 960x540 render. No CEO decision needed.
+- 2026-11-18: Build 21 merged: 21b loss panel wave number (#209, QA PASS at 45caddc, 5122c64) and 21a Fog Warden hint and reach ring (#210, QA PASS at c743589, 68b701d). F-209 and F-210 closed. Build 21a sat green overnight because I had not sent it to QA; QA passed it within minutes of the handoff. F-207 stays open for a real 960x540 render.
