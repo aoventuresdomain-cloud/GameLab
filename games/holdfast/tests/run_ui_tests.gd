@@ -194,7 +194,7 @@ func _test_readable_layout() -> void:
 		hud.get_node("%PostsNote").visible = true
 		for screen in [_main.home, _main.journey, _main.hero_page, _main.recruits_page, _main.menu, _main.keep_screen, hud, _main.summary, _main.planning]:
 			await _check_layout(screen, window, scale, view)
-		hud.get_node("%PostsNote").text = "Fog Warden shrouded: use your special"
+		hud.get_node("%PostsNote").text = "Fog Warden shrouded: press Space (A on a pad) with it in reach"
 		await _check_layout(hud, window, scale, view)
 		hud.get_node("%PostsNote").visible = false
 		# The longest wave banner, a boss on the field and the pause panel over it.

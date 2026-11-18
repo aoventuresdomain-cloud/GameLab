@@ -121,6 +121,11 @@ func get_boss_note() -> String:
 	return ""
 
 
+## The special's reach in pixels while a shrouded boss is on the field and the special is ready; 0 otherwise.
+func get_special_reach() -> float:
+	return 0.0
+
+
 ## The Hero's health now and at most.
 func get_hero_health() -> int:
 	return 0

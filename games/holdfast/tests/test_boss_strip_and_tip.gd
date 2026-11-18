@@ -58,7 +58,7 @@ func test_only_the_shrouded_note_shows_above_the_field_and_the_bar_says_exposed(
 	var rules: HoldfastRules = run["source"].get_rules()
 	var boss := _boss(rules, Vector2(300, 300))
 	hud._refresh_hero()
-	expect_eq(hud.get_node("%PostsNote").text, "Fog Warden shrouded: use your special", "shrouded: what lifts it")
+	expect_eq(hud.get_node("%PostsNote").text, "Fog Warden shrouded: press Space (A on a pad) with it in reach", "shrouded, special ready: what lifts it")
 	boss.exposed_left = 4.0
 	hud._refresh_hero()
 	expect_false(hud.get_node("%PostsNote").text.to_lower().contains("exposed"), "exposed: no line above the field")
